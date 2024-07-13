@@ -1,0 +1,16 @@
+package com.taskmanagement.kotazk.service;
+
+import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
+import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
+import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
+
+import java.io.IOException;
+
+public interface IUserService {
+    UserLoginResponseDto login(UserLoginRequestDto login);
+    UserLoginResponseDto signup(UserSignupRequestDto signupRequest) throws IOException, InterruptedException;
+    Boolean logout(Long id);
+    User verifyIDToken(String idToken);
+    String processOAuthPostLogin(String idToken);
+}

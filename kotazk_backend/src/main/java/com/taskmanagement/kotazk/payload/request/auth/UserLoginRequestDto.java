@@ -1,0 +1,25 @@
+package com.taskmanagement.kotazk.payload.request.auth;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Builder
+public class UserLoginRequestDto {
+    @NotNull(message = "error.auth.email_not_null")
+    @Email(message = "error.auth.email_invalid_format")
+    private String email;
+
+    @NotNull(message = "error.auth.password_not_null")
+    @Size(min = 8, max = 50, message = "error.auth.password_invalid_format")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$", message = "error.auth.password_invalid_format")
+    private String password;
+}
