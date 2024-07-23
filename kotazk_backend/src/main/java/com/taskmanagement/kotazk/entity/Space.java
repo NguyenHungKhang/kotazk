@@ -22,33 +22,44 @@ public class Space {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; // Người tạo không gian
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "customization_id", nullable = false)
+    private Customization customization;
 
     @Column(name = "name", nullable = false)
-    private String name; // Tên không gian
+    private String name;
 
     @Column(name = "description")
-    private String description; // Mô tả không gian
-
-    @Column(name = "archive_at")
-    private Timestamp archiveAt; // Thời gian lưu trữ
+    private String description;
 
     @Column(name = "space_key", unique = true, nullable = false)
-    private String spaceKey; // Khóa không gian, duy nhất cho mỗi không gian
+    private String spaceKey;
+
+    @Column(name = "is_pinned")
+    private Boolean isPinned;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false)
-    private Visibility visibility; // Trạng thái visibility (PUBLIC, PRIVATE, LIMITED)
+    private Visibility visibility;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "space_status", nullable = false)
+    private SpaceStatus status;
+
+    @Column(name = "archive_at")
+    private Timestamp archivedAt;
 
     @CreationTimestamp
     @Column(name = "created_at")
-    private Timestamp createdAt; // Thời gian tạo
+    private Timestamp createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    private Timestamp updatedAt; // Thời gian cập nhật
+    private Timestamp updatedAt;
 
     @Column(name = "deleted_at")
-    private Timestamp deletedAt; // Thời gian xóa (nếu có)
+    private Timestamp deletedAt;
 }
 

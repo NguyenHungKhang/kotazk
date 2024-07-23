@@ -1,9 +1,11 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.CategoryField;
-import com.taskmanagement.kotazk.entity.enums.FieldType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "issue_type_field_option")
@@ -12,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @Getter
 @Setter
-public class IssueTypeFieldOption {
+public class TaskTypeFieldOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,4 +33,15 @@ public class IssueTypeFieldOption {
 
     @Column(name = "default_value")
     private Boolean defaultValue;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
+
+    @Column(name = "deleted_at")
+    private Timestamp deletedAt;
 }

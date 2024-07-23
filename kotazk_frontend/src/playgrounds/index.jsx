@@ -29,6 +29,7 @@ import ReorderIcon from '@mui/icons-material/Reorder';
 import ShareTwoToneIcon from '@mui/icons-material/ShareTwoTone';
 import AutoAwesomeTwoToneIcon from '@mui/icons-material/AutoAwesomeTwoTone';
 import CustomTab from '../components/CustomTab';
+import StarIcon from '@mui/icons-material/Star';
 
 const drawerWidth = 240;
 
@@ -184,16 +185,17 @@ function Playground(props) {
                         width: {
                             sm: `calc(100% - ${drawerWidth}px)`
                         },
-                        backgroundImage: 'url(https://media.greatbigphotographyworld.com/wp-content/uploads/2014/11/Landscape-Photography-steps.jpg)',
+                        backgroundImage: 'url(https://t4.ftcdn.net/jpg/05/79/25/43/360_F_579254301_VQ75mtrG9AP45Txrd76TG2xatiBqqms2.jpg)',
                         overflow: 'hidden',
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                     }}
                 >
                     <Toolbar />
-                    <Box
+                    <Card
                         sx={{
-                            bgcolor: alpha(theme.palette.background.default, 0.8),
+                            m: 2,
+                            // bgcolor: alpha(theme.palette.background.default, 0.9),
                             backdropFilter: 'blur(5px)'
                         }}
                     >
@@ -223,7 +225,39 @@ function Playground(props) {
                                             <IconButton size="small">
                                                 <MoreHorizIcon fontSize='inherit' />
                                             </IconButton>
+                                            <IconButton size="small">
+                                                <StarIcon sx={{color: 'yellow'}} />
+                                            </IconButton>
+
+                                            <Stack direction='row' alignItems='center' spacing={1}>
+                                                <Avatar sx={{
+                                                    width: 30,
+                                                    height: 30
+                                                }}>
+                                                    1
+                                                </Avatar>
+                                                <Avatar sx={{
+                                                    width: 30,
+                                                    height: 30
+                                                }}>
+                                                    2
+                                                </Avatar>
+                                                <Avatar sx={{
+                                                    width: 30,
+                                                    height: 30
+                                                }}>
+                                                    3
+                                                </Avatar>
+                                                <Button size='small' color='primary' variant='outlined' startIcon={<AddIcon />}
+                                                    sx={{
+                                                        borderRadius: 50
+                                                    }}
+                                                >
+                                                    Add Member
+                                                </Button>
+                                            </Stack>
                                         </Stack>
+
 
                                     </Stack>
                                 </Stack>
@@ -248,11 +282,14 @@ function Playground(props) {
                                 </Box>
                             </Stack>
                         </CardContent>
-                    </Box>
-                    <Box bgcolor='background.paper'>
+                    </Card>
+                    <Card sx={{
+                        m: 2,
+                        bgcolor: 'background.paper'
+                    }}>
                         <CustomTab />
-                    </Box>
-                    <Box p={4}>
+                    </Card>
+                    <Box p={2}>
                         <Stack direction='column' spacing={2}>
 
                             <Stack direction='row' spacing={4}>

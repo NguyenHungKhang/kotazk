@@ -1,7 +1,5 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.Permission;
-import com.taskmanagement.kotazk.entity.enums.StatusType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,13 +8,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "status")
+@Table(name = "task_type")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Status {
+public class TaskType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,9 +29,8 @@ public class Status {
     @Column(name = "description")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private StatusType type;
+    @Column(name = "order", nullable = false)
+    private Long order;
 
     @CreationTimestamp
     @Column(name = "created_at")

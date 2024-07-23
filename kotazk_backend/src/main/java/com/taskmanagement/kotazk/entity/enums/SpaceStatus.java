@@ -4,5 +4,7 @@ public enum SpaceStatus {
     ACTIVE,
     ARCHIVED,
     COMPLETED,
-    ON_HOLD
+    ON_HOLD,
+    PLANNING,
+    IN_PROGRESS
 }

@@ -22,21 +22,20 @@ public class Project {
 
     @ManyToOne
     @JoinColumn(name = "space_id", nullable = false)
-    private Space space; // Không gian chứa dự án
+    private Space space;
+
+    @ManyToOne
+    @JoinColumn(name = "customization_id", nullable = false)
+    private Customization customization;
 
     @Column(name = "name", nullable = false)
-    private String name; // Tên dự án
+    private String name;
+
+    @Column(name = "position", nullable = false)
+    private Long position;
 
     @Column(name = "description")
-    private String description; // Mô tả dự án
-
-//    @ManyToOne
-//    @JoinColumn(name = "category_id")
-//    private ProjectCategory category; // Category của dự án
-//
-//    @ManyToOne
-//    @JoinColumn(name = "team_type_id")
-//    private TeamType teamType; // Loại nhóm dự án
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
