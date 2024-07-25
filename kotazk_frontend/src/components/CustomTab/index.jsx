@@ -57,7 +57,7 @@ export default function CustomTab() {
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Box sx={{ bgcolor: '#fff' }}>
+            <Box>
 
                 <Stack direction='row' spacing={2} alignItems='center'>
                     <AntTabs value={value} onChange={handleChange} aria-label="ant example">

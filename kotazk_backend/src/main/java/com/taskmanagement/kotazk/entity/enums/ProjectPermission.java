@@ -1,34 +1,40 @@
 package com.taskmanagement.kotazk.entity.enums;
 
 public enum ProjectPermission {
-    // Quyền liên quan đến nhiệm vụ
-    TASK_CREATE,       // Tạo nhiệm vụ
-    TASK_EDIT,         // Chỉnh sửa nhiệm vụ
-    TASK_DELETE,       // Xóa nhiệm vụ
-    ASSIGN_TASK,       // Giao nhiệm vụ
-    LOG_TIME,          // Theo dõi thời gian
-    COMMENT,           // Bình luận
-    CREATE_SUBTASK,    // Tạo công việc con
-    ADD_ATTACHMENT,    // Thêm đính kèm
-    EDIT_CUSTOM_FIELD, // Chỉnh sửa trường tùy chỉnh
-    SET_DEPENDENCY,    // Đặt quan hệ phụ thuộc
-    EDIT_TAG,          // Chỉnh sửa thẻ
 
-    // Quyền liên quan đến quản lý thành viên
-    ADD_MEMBER,        // Thêm thành viên
-    REMOVE_MEMBER,     // Gỡ bỏ thành viên
-    MANAGE_ROLES,      // Quản lý vai trò và quyền của thành viên
+    // Status Permissions
+    VIEW_STATUS,                  // Ability to view status
+    CREATE_STATUS,                // Ability to create new statuses
+    EDIT_STATUS,                  // Ability to edit statuses
+    DELETE_STATUS,                // Ability to delete statuses
 
-    // Quyền liên quan đến cấu hình và cài đặt
-    MANAGE_SETTINGS,   // Quản lý cài đặt dự án
-    MANAGE_WORKFLOWS,  // Quản lý quy trình công việc
+    // Task Permissions
+    VIEW_TASKS,                   // Ability to view tasks
+    CREATE_TASK,                  // Ability to create new tasks
+    EDIT_TASK,                    // Ability to edit tasks
+    DELETE_TASK,                  // Ability to delete tasks
+    MANAGE_TASK_ASSIGNMENTS,      // Ability to manage task assignments
+    MANAGE_TASK_LABELS,           // Ability to manage labels on tasks
+    ADD_TASK_COMMENTS,            // Ability to add comments on tasks
+    DELETE_TASK_COMMENTS,         // Ability to delete comments on tasks
+    MANAGE_TASK_ATTACHMENTS,      // Ability to manage attachments on tasks
+    MANAGE_TASK_CUSTOM_FIELDS,    // Ability to manage custom fields on tasks
 
-    // Quyền liên quan đến bảng điều khiển và hiển thị
-    CUSTOM_VIEWS,      // Tạo và chỉnh sửa các chế độ xem tùy chỉnh
-    FILTERS,           // Sử dụng và chỉnh sửa bộ lọc
-    SORTING,           // Sắp xếp nhiệm vụ
+    // Workflow Permissions
+    VIEW_WORKFLOWS,               // Ability to view workflows
+    CREATE_WORKFLOW,              // Ability to create new workflows
+    EDIT_WORKFLOW,                // Ability to edit workflows
+    DELETE_WORKFLOW,              // Ability to delete workflows
 
-    // Quyền khác
-    VIEW_ANALYTICS,    // Xem báo cáo phân tích
-    EXPORT_DATA        // Xuất dữ liệu
+    // View Permissions
+    VIEW_VIEWS,                   // Ability to view views
+    CREATE_VIEW,                  // Ability to create new views
+    EDIT_VIEW,                    // Ability to edit views
+    DELETE_VIEW,                  // Ability to delete views
+
+    // Member Permissions
+    VIEW_MEMBERS,                 // Ability to view members
+    INVITE_MEMBERS,               // Ability to invite new members
+    REMOVE_MEMBERS,               // Ability to remove members
+    EDIT_MEMBER_ROLES,            // Ability to edit member roles
 }

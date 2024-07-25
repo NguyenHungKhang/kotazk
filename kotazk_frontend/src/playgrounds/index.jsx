@@ -30,6 +30,9 @@ import ShareTwoToneIcon from '@mui/icons-material/ShareTwoTone';
 import AutoAwesomeTwoToneIcon from '@mui/icons-material/AutoAwesomeTwoTone';
 import CustomTab from '../components/CustomTab';
 import StarIcon from '@mui/icons-material/Star';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import SwapVertIcon from '@mui/icons-material/SwapVert';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 
 const drawerWidth = 240;
 
@@ -127,7 +130,7 @@ function Playground(props) {
                         bgcolor: theme.palette.background.default,
                     }}
                 >
-                    <Toolbar>
+                    {/* <Toolbar>
                         <IconButton
                             color="inherit"
                             aria-label="open drawer"
@@ -140,7 +143,7 @@ function Playground(props) {
                         <Typography variant="h6" noWrap component="div">
                             Project
                         </Typography>
-                    </Toolbar>
+                    </Toolbar> */}
                 </Box>
                 <Box
                     component="nav"
@@ -191,17 +194,15 @@ function Playground(props) {
                         backgroundPosition: 'center',
                     }}
                 >
-                    <Toolbar />
+                    {/* <Toolbar /> */}
                     <Card
                         sx={{
-                            m: 2,
+                            m: 1,
                             // bgcolor: alpha(theme.palette.background.default, 0.9),
                             backdropFilter: 'blur(5px)'
                         }}
                     >
                         <CardContent>
-
-
                             <Stack direction='row' spacing={4} alignItems='center'>
                                 <Stack flexGrow={1} direction='row' spacing={4} alignItems='center'>
                                     <Avatar
@@ -226,7 +227,7 @@ function Playground(props) {
                                                 <MoreHorizIcon fontSize='inherit' />
                                             </IconButton>
                                             <IconButton size="small">
-                                                <StarIcon sx={{color: 'yellow'}} />
+                                                <StarIcon sx={{ color: 'yellow' }} />
                                             </IconButton>
 
                                             <Stack direction='row' alignItems='center' spacing={1}>
@@ -282,12 +283,39 @@ function Playground(props) {
                                 </Box>
                             </Stack>
                         </CardContent>
+                        {/* </Card>
+                    <Card sx={{
+                        m: 1,
+                        bgcolor: 'background.paper'
+                    }}> */}
+                        <Box mx={2}>
+                            <CustomTab />
+                        </Box>
+
                     </Card>
                     <Card sx={{
-                        m: 2,
+                        m: 1,
+                        p: 2,
                         bgcolor: 'background.paper'
                     }}>
-                        <CustomTab />
+                        <Stack direction='row' spacing={2} m={2}>
+                            <Button color='success' size='small' variant='contained' sx={{ fontWeight: 650 }} startIcon={<AddIcon />}>
+                                Add Task
+                            </Button>
+                            <Button size='small' variant='outlined' sx={{ fontWeight: 650, textTransform: 'none' }} startIcon={<ListAltIcon />}>
+                                Group
+                            </Button>
+                            <Button size='small' variant='outlined' sx={{ fontWeight: 650, textTransform: 'none'  }}  startIcon={<SwapVertIcon />}>
+                                Sort
+                            </Button>
+                            <Button size='small' variant='outlined' sx={{ fontWeight: 650, textTransform: 'none'  }}  startIcon={<FilterListIcon />}>
+                                Filter
+                            </Button>
+                            <Button size='small' variant='outlined' sx={{ fontWeight: 650, textTransform: 'none'  }}>
+                                Clear All
+                            </Button>
+                        </Stack>
+
                     </Card>
                     <Box p={2}>
                         <Stack direction='column' spacing={2}>

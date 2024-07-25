@@ -141,9 +141,9 @@ const App = () => {
         variants: [
           {
             props: { variant: 'outlined' },
-            style: {
-              backgroundColor: lightBackgroundColor,
-            },
+            // style: {
+            //   backgroundColor: lightBackgroundColor,
+            // },
           },
         ],
       },
