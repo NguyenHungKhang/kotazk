@@ -14,12 +14,14 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class UserLoginRequestDto {
-    @NotNull(message = "error.auth.email_not_null")
-    @Email(message = "error.auth.email_invalid_format")
+    @NotNull(message = "Email cannot be null")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "error.auth.password_not_null")
-    @Size(min = 8, max = 50, message = "error.auth.password_invalid_format")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$", message = "error.auth.password_invalid_format")
+    @NotNull(message = "Password cannot be null")
+    @Size(min = 8, max = 50, message = "Password must be between 8 and 50 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$",
+            message = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
     private String password;
 }
+

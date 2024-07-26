@@ -3,7 +3,6 @@ package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.RefreshToken;
 import com.taskmanagement.kotazk.entity.User;
-import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.repository.IRefreshTokenRepository;
 import com.taskmanagement.kotazk.repository.IUserRepository;
@@ -38,7 +37,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(new Timestamp(System.currentTimeMillis())) < 0) {
             refreshTokenRepository.delete(token);
-            throw new ResourceNotFoundException("Refresh token");
+//            throw new ResourceNotFoundException("Refresh token");
         }
 
         return token;
@@ -47,7 +46,7 @@ public class RefreshTokenService {
     @Transactional
     public int deleteByUserId(Long userId) {
         User existUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("user"));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
         return refreshTokenRepository.deleteByUser(existUser);
     }
 }

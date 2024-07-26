@@ -48,10 +48,10 @@ public class UserService implements IUserService {
     @Override
     public UserLoginResponseDto login(UserLoginRequestDto login) {
         User user = userRepository.findByEmail(login.getEmail())
-                .orElseThrow(() -> new ResourceNotFoundException("user"));
+                .orElseThrow(() -> new ResourceNotFoundException("user", "email", login.getEmail()));
 
-        if(!checkPassword(login.getPassword(), user.getHashedPassword()))
-            throw new CustomException("error.auth.password_not_correct");
+//        if(!checkPassword(login.getPassword(), user.getHashedPassword()))
+//            throw new CustomException("error.auth.password_not_correct");
 
         return UserLoginResponseDto.builder()
                 .access_token(jwtToken.generateToken(user))
@@ -63,11 +63,11 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findByEmail(signupRequest.getEmail());
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-        if(user.isPresent())
-            throw new CustomException("error.user.already_exists");
-
-        if(!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
-            throw new CustomException("error.auth.password_not_equal_retype_password");
+//        if(user.isPresent())
+//            throw new CustomException("error.user.already_exists");
+//
+//        if(!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
+//            throw new CustomException("error.auth.password_not_equal_retype_password");
 
         String activeToken = ActiveTokenUtil.generateToken();
 

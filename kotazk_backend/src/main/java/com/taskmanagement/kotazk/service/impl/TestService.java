@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 public class TestService {
     public Boolean testPost() {
         if (true)
-            throw new ResourceNotFoundException("user");
+            throw new ResourceNotFoundException("user", "test value", "test");
         return true;
     }
 }

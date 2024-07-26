@@ -39,11 +39,11 @@ public class Setting {
 
     @ManyToOne
     @JoinColumn(name = "attachment_id")
-    private Section attachment;
+    private Attachment attachment;
 
     @ManyToOne
     @JoinColumn(name = "folder_id")
-    private Section folder;
+    private Folder folder;
 
     @CreationTimestamp
     @Column(name = "created_at")

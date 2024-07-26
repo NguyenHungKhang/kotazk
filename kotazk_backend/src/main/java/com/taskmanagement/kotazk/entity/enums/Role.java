@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.entity.enums;
 
-public enum TaskLinkRelationship {
-    TEST
+public enum Role {
+    ADMIN,
+    USER
 }
