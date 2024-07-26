@@ -75,6 +75,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Goal> goals;
+
     @Column(name = "deleted_at")
     private Timestamp deletedAt;
 
