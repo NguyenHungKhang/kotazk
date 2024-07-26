@@ -4,6 +4,7 @@ import com.taskmanagement.kotazk.entity.enums.Permission;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
 
@@ -20,18 +21,36 @@ public class TeamMember {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "team_id", nullable = false)
-    private Team team; // Team
+    @JoinColumn(name = "space_id", nullable = false)
+    private WorkSpace space;
 
     @ManyToOne
-    @JoinColumn(name = "space_member_id", nullable = false)
-    private SpaceMember spaceMember; // Thành viên của không gian
+    @JoinColumn(name = "project_id")
+    private Project project;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "permission", nullable = false)
-    private Permission permission;
+    @ManyToOne
+    @JoinColumn(name = "team_id", nullable = false)
+    private Team team;
+
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
+    @Column(name = "is_team_leader", nullable = false)
+    private Boolean isTeamLeader = false;
 
     @CreationTimestamp
     @Column(name = "joined_at")
-    private Timestamp joinedAt; // Thời gian tham gia
+    private Timestamp joinedAt;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private Timestamp createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private Timestamp updatedAt;
+
+    @Column(name = "deleted_at")
+    private Timestamp deletedAt;
 }

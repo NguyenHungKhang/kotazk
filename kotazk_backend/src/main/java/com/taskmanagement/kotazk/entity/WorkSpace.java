@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
+
 @Entity
 @Table(name = "spaces")
 @Builder
@@ -15,7 +17,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Space {
+public class WorkSpace {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -24,7 +26,7 @@ public class Space {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "customization_id", nullable = false)
     private Customization customization;
 
@@ -34,11 +36,8 @@ public class Space {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "space_key", unique = true, nullable = false)
-    private String spaceKey;
-
-    @Column(name = "is_pinned")
-    private Boolean isPinned;
+    @Column(name = "key", unique = true, nullable = false)
+    private String key;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false)
@@ -47,6 +46,21 @@ public class Space {
     @Enumerated(EnumType.STRING)
     @Column(name = "space_status", nullable = false)
     private SpaceStatus status;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> tasks;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Project> projects;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Section> sections;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActivityLog> activityLogs;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Setting> settings;
 
     @Column(name = "archive_at")
     private Timestamp archivedAt;

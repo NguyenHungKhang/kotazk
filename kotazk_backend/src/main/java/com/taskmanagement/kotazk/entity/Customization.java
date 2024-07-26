@@ -27,4 +27,16 @@ public class Customization {
     @Column(nullable = false, length = 255) // Đường dẫn tới avatar
     private String avatar;
 
+    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
+    private WorkSpace workSpace;
+
+    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
+    private Project project;
+
+    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
+    private Team team;
+
+    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
+    private Section section;
+
 }

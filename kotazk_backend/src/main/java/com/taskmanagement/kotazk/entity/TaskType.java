@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "task_type")
@@ -21,7 +22,13 @@ public class TaskType {
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Không gian chứa dự án
+    private Project project;
+
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -29,8 +36,14 @@ public class TaskType {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "order", nullable = false)
-    private Long order;
+    @Column(name = "position", nullable = false)
+    private Long position;
+
+    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> tasks;
+
+    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Field> fields;
 
     @CreationTimestamp
     @Column(name = "created_at")

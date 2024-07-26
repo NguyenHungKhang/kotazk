@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
+
 @Entity
 @Table(name = "project")
 @Builder
@@ -21,10 +23,10 @@ public class Project {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "space_id", nullable = false)
-    private Space space;
+    @JoinColumn(name = "work_space_id", nullable = false)
+    private WorkSpace workSpace;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "customization_id", nullable = false)
     private Customization customization;
 
@@ -39,14 +41,32 @@ public class Project {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private ProjectStatus status; // Trạng thái dự án
+    private ProjectStatus status;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false)
     private Visibility visibility;
 
-    @Column(name = "project_key", nullable = false, unique = true)
-    private String projectKey; // Mã định danh
+    @Column(name = "key", nullable = false, unique = true)
+    private String key;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> tasks;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Status> statuses;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Section> sections;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TaskType> taskTypes;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActivityLog> activityLogs;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Setting> settings;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -60,5 +80,5 @@ public class Project {
     private Timestamp deletedAt;
 
     @Column(name = "archive_at")
-    private Timestamp archiveAt; // Thời gian lưu trữ
+    private Timestamp archiveAt;
 }

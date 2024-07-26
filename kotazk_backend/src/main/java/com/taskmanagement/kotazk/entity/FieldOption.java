@@ -1,42 +1,45 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
-import com.taskmanagement.kotazk.entity.enums.SpacePermission;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
-import java.util.Set;
 
-
-@Table(name = "project_role")
+@Entity
+@Table(name = "field_option")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ProjectRole {
+public class FieldOption {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "space_id", nullable = false)
-    private Space space;
+    @JoinColumn(name = "field_id", nullable = false)
+    private Field field;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
+
+    @Column(name = "value", nullable = false)
+    private String value;
 
     @Column(name = "description")
     private String description;
 
-    @ElementCollection(targetClass = ProjectPermission.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "project_role_permissions", joinColumns = @JoinColumn(name = "project_role_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "permission")
-    private Set<ProjectPermission> permissions;
+    @Column(name = "position", nullable = false)
+    private Long position;
+
+    @Column(name = "iss_default_value", nullable = false)
+    private Boolean isDefaultValue;
 
     @CreationTimestamp
     @Column(name = "created_at")

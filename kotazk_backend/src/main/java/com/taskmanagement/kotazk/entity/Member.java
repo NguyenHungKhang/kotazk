@@ -1,40 +1,59 @@
 package com.taskmanagement.kotazk.entity;
 
 import com.taskmanagement.kotazk.entity.enums.MemberStatus;
-import com.taskmanagement.kotazk.entity.enums.Permission;
+import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
-@Table(name = "project_members")
+@Table(name = "member")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ProjectMember {
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Dự án
+    @JoinColumn(name = "work_space_id", nullable = false)
+    private WorkSpace workSpace;
 
     @ManyToOne
-    @JoinColumn(name = "space_member_id", nullable = false)
-    private SpaceMember spaceMember; // Thành viên của không gian
+    @JoinColumn(name = "project_id")
+    private Project project;
 
-    @Column(name = "project_role_id", nullable = false)
-    private ProjectRole projectRole;
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private MemberStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "member_for", nullable = false)
+    private EntityBelongsTo memberFor;
+
+    @OneToOne
+    @JoinColumn(name = "member_role_id", nullable = false)
+    private MemberRole role;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActivityLog> activityLogs;
 
     @CreationTimestamp
     @Column(name = "joined_at")

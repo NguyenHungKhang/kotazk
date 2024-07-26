@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "transition")
@@ -26,18 +27,21 @@ public class Transition {
     @JoinColumn(name = "from_status_id", nullable = false)
     private Status fromStatus;
 
-    @Column(name = "is_from_any", nullable = false)
-    private Boolean isFromAny = true;
-
-    @Column(name = "is_from_start", nullable = false)
-    private Boolean isFromStart = false;
-
     @ManyToOne
     @JoinColumn(name = "to_status_id", nullable = false)
     private Status toStatus;
 
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
+
     @Column(name = "description")
     private String description;
+
+    @OneToMany(mappedBy = "transition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Rule> rules;
 
     @CreationTimestamp
     @Column(name = "created_at")

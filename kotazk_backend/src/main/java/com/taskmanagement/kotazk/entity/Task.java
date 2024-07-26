@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "task")
@@ -19,30 +20,45 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
     @ManyToOne
-    @JoinColumn(name = "space_id", nullable = false)
-    private Space space; // Không gian chứa dự án
+    @JoinColumn(name = "work_space_id", nullable = false)
+    private WorkSpace workSpace;
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Dự án chứa nhiệm vụ
-
-    @Column(name = "position", nullable = false)
-    private Long position;
+    private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "parent_task_id") // Chỉ định là nhiệm vụ cha
-    private Task parentTask; // Nhiệm vụ cha
-
-    @Column(name = "description")
-    private String description;
+    @JoinColumn(name = "parent_task_id")
+    private Task parentTask;
 
     @ManyToOne
     @JoinColumn(name = "task_type_id", nullable = false)
     private TaskType taskType;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "position", nullable = false)
+    private Long position;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TaskField> taskFields;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Attachment> Attachments;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Folder> Folders;
+
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> tasks;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ActivityLog> activityLogs;
 
     @CreationTimestamp
     @Column(name = "created_at")

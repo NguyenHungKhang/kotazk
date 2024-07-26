@@ -20,19 +20,22 @@ public class TaskComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "text", nullable = false, columnDefinition = "TEXT")
-    private String text;
+    @Column(name = "content", columnDefinition = "TEXT")
+    private String content;
 
     @ManyToOne
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
     @ManyToOne
-    @JoinColumn(name = "author_id", nullable = false)
-    private ProjectMember projectMember;
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Attachment> attachments;
+
+    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Folder> folders;
 
     @CreationTimestamp
     @Column(name = "created_at")

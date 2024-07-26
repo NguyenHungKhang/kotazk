@@ -1,7 +1,7 @@
 package com.taskmanagement.kotazk.entity.enums;
 
 
-public enum SpacePermission {
+public enum WorkSpacePermission {
     // Create project
     CREATE_PROJECT,
 

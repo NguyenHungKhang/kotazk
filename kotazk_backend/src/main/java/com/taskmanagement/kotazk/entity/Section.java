@@ -1,6 +1,6 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.ActivityLogType;
+import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
 import com.taskmanagement.kotazk.entity.enums.SectionType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,13 +11,13 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
-@Table(name = "activity_log")
+@Table(name = "section")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ActivityLog {
+public class Section {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,28 +26,16 @@ public class ActivityLog {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id")
+    @JoinColumn(name = "work_space_id", nullable = false)
     private WorkSpace workSpace;
 
     @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @ManyToOne
-    @JoinColumn(name = "task_id")
-    private Task task;
-
-    @ManyToOne
-    @JoinColumn(name = "member_id")
-    private Member member;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    // Goal
-
-    // Sprint
+    @OneToOne
+    @JoinColumn(name = "customization_id", nullable = false)
+    private Customization customization;
 
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
@@ -55,30 +43,24 @@ public class ActivityLog {
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
-    @Column(name = "content")
-    private String content;
+    @Column(name = "position", nullable = false)
+    private Long position;
 
-    @Column(name = "first_parameter", nullable = false)
-    private String firstParameter;
-
-    @Column(name = "secondParameter", nullable = false)
-    private String secondParameter;
-
-    @Column(name = "first_url", nullable = false)
-    private String firstUrl;
-
-    @Column(name = "second_url", nullable = false)
-    private String secondUrl;
-
-    @Column(name = "first_entity", nullable = false)
-    private String firstEntity;
-
-    @Column(name = "second_entity", nullable = false)
-    private String secondEntity;
+    @Column(name = "description")
+    private String description;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
-    private ActivityLogType type;
+    private SectionType type;
+
+    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Setting> settings;
+
+    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<GroupBySetting> groupBySettings;
+
+    @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<FilterSetting> filterSettings;
 
     @CreationTimestamp
     @Column(name = "created_at")

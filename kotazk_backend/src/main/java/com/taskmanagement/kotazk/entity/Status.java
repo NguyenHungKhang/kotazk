@@ -25,6 +25,18 @@ public class Status {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project; // Không gian chứa dự án
 
+    @Column(name = "is_from_any", nullable = false)
+    private Boolean isFromAny = true;
+
+    @Column(name = "is_from_start", nullable = false)
+    private Boolean isFromStart = false;
+
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -34,6 +46,12 @@ public class Status {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private StatusType type;
+
+    @OneToMany(mappedBy = "fromStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Transition transitionFromStatus;
+
+    @OneToMany(mappedBy = "toStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Transition transitionToStatus;
 
     @CreationTimestamp
     @Column(name = "created_at")

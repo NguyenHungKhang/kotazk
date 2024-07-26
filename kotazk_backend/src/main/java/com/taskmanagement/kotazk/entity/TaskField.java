@@ -8,31 +8,27 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "issue_type_field_option")
+@Table(name = "task_field")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class TaskTypeFieldOption {
+public class TaskField {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
+
+    @ManyToOne
+    @JoinColumn(name = "field_id", nullable = false)
+    private Field field;
+
     @Column(name = "value", nullable = false)
     private String value;
-
-    @Column(name = "description")
-    private String description;
-
-    @Column(name = "order")
-    private Long order;
-
-    @Column(name = "required")
-    private Boolean required;
-
-    @Column(name = "default_value")
-    private Boolean defaultValue;
 
     @CreationTimestamp
     @Column(name = "created_at")

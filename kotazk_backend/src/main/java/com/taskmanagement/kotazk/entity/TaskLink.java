@@ -1,5 +1,7 @@
 package com.taskmanagement.kotazk.entity;
 
+import com.taskmanagement.kotazk.entity.enums.StatusType;
+import com.taskmanagement.kotazk.entity.enums.TaskLinkRelationship;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,13 +9,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
 
-@Table(name = "task_relation")
+@Table(name = "task_link")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class TaskRelation {
+public class TaskLink {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,15 +28,16 @@ public class TaskRelation {
     @JoinColumn(name = "second_task_id", nullable = false)
     private Task secondTask;
 
-    @ManyToOne
-    @JoinColumn(name = "task_type_field_id", nullable = false)
-    private TaskTypeField taskTypeField;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @Column(name = "value_1", nullable = false)
-    private String value1;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "first_task_relationship", nullable = false)
+    private TaskLinkRelationship firstTaskRelationship;
 
-    @Column(name = "value_2", nullable = false)
-    private String value2;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "second_task_relationship", nullable = false)
+    private TaskLinkRelationship secondTaskRelationship;
 
     @CreationTimestamp
     @Column(name = "created_at")

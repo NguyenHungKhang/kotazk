@@ -1,12 +1,15 @@
 package com.taskmanagement.kotazk.entity;
 
 
+import com.taskmanagement.kotazk.entity.enums.AttachmentType;
+import com.taskmanagement.kotazk.entity.enums.ProjectStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "attachment")
@@ -20,29 +23,42 @@ public class Attachment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "file_name", nullable = false)
-    private String fileName; // Tên tệp đính kèm
-
-    @Column(name = "file_type", nullable = false)
-    private String fileType; // Loại tệp (ví dụ: image/png, application/pdf)
-
-    @Column(name = "file_url", nullable = false)
-    private String fileUrl; // Dữ liệu tệp đính kèm
-
-    @Column(name = "position", nullable = false)
-    private Boolean position;
-
-    @ManyToOne
-    @JoinColumn(name = "project_member_id", nullable = false)
-    private ProjectMember projectMember;
-
     @ManyToOne
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
     @ManyToOne
     @JoinColumn(name = "task_comment_id", nullable = false)
-    private TaskComment taskComment; // Liên kết với bình luận
+    private TaskComment taskComment;
+
+    @ManyToOne
+    @JoinColumn(name = "folder_id")
+    private Folder folder;
+
+    @Column(name = "file_name", nullable = false)
+    private String fileName;
+
+    @Column(name = "file_type", nullable = false)
+    private String fileType;
+
+    @Column(name = "file_size")
+    private String fileSize;
+
+    @Column(name = "file_url", nullable = false)
+    private String fileUrl;
+
+    @Column(name = "position", nullable = false)
+    private Long position;
+
+    @Column(name = "is_hidden", nullable = false)
+    private Boolean isHidden;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private AttachmentType type;
+
+    @OneToMany(mappedBy = "attachment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Setting> settings;
 
     @CreationTimestamp
     @Column(name = "created_at")
