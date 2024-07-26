@@ -20,7 +20,7 @@ public class TaskComment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content")
     private String content;
 
     @ManyToOne

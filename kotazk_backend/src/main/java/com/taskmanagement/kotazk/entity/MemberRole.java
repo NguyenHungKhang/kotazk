@@ -11,6 +11,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 import java.util.Set;
 
+@Entity
 @Table(name = "member_role")
 @Builder
 @NoArgsConstructor

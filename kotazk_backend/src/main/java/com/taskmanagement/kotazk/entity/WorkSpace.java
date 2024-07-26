@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
-@Table(name = "spaces")
+@Table(name = "work_space")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

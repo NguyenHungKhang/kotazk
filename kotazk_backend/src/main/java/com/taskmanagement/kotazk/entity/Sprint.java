@@ -33,7 +33,7 @@ public class Sprint {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description")
     private String description;
 
     @Column(name = "position", nullable = false)

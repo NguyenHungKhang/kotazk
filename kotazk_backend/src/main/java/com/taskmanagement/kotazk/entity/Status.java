@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "status")
@@ -48,10 +49,10 @@ public class Status {
     private StatusType type;
 
     @OneToMany(mappedBy = "fromStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Transition transitionFromStatus;
+    private Set<Transition> transitionFromStatuses;
 
     @OneToMany(mappedBy = "toStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Transition transitionToStatus;
+    private Set<Transition> transitionToStatuses;
 
     @CreationTimestamp
     @Column(name = "created_at")
