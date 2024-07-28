@@ -22,12 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -50,8 +47,11 @@ public class UserService implements IUserService {
         User user = userRepository.findByEmail(login.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("user", "email", login.getEmail()));
 
-//        if(!checkPassword(login.getPassword(), user.getHashedPassword()))
-//            throw new CustomException("error.auth.password_not_correct");
+        if(!checkPassword(login.getPassword(), user.getHashedPassword()))
+            throw new CustomException("Wrong password!");
+
+        if(!user.getAccountStatus().equals(UserActiveStatus.ACTIVE))
+            throw new CustomException("Account have not activated!");
 
         return UserLoginResponseDto.builder()
                 .access_token(jwtToken.generateToken(user))
@@ -63,11 +63,11 @@ public class UserService implements IUserService {
         Optional<User> user = userRepository.findByEmail(signupRequest.getEmail());
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-//        if(user.isPresent())
-//            throw new CustomException("error.user.already_exists");
-//
-//        if(!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
-//            throw new CustomException("error.auth.password_not_equal_retype_password");
+        if (user.isPresent())
+            throw new CustomException("User already exists with the provided details.");
+
+        if (!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
+            throw new CustomException("Password and Retype Password do not match.");
 
         String activeToken = ActiveTokenUtil.generateToken();
 

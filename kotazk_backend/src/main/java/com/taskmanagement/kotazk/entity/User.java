@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.entity;
 
+import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.entity.enums.UserActiveStatus;
 import com.taskmanagement.kotazk.entity.enums.UserOnlineStatus;
 import jakarta.persistence.*;
@@ -89,18 +90,14 @@ public class User implements UserDetails {
     @Column(name = "updated_at")
     private Timestamp modifiedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return Collections.singleton(new SimpleGrantedAuthority(role.name()));
     }
-
-//    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//        Role userRole = this.role;
-//        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(userRole.toString());
-//        return Collections.singletonList(authority);
-//    }
-
     @Override
     public String getPassword() {
         return this.hashedPassword;

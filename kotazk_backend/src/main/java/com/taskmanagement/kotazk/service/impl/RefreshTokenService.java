@@ -3,6 +3,7 @@ package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.RefreshToken;
 import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.repository.IRefreshTokenRepository;
 import com.taskmanagement.kotazk.repository.IUserRepository;
@@ -13,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
-
 @Service
 public class RefreshTokenService {
     @Autowired
@@ -27,19 +27,22 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
         RefreshToken refreshToken = RefreshToken.builder()
-                .user(userRepository.findById(userId).get())
-                .expiryDate(new Timestamp(System.currentTimeMillis() + 14L * 24L * 60L * 60L * 1000L))
-                .token(UUID.randomUUID().toString()).build();
+                .user(user)
+                .expiryDate(new Timestamp(System.currentTimeMillis() + 14L * 24L * 60L * 60L * 1000L)) // 14 days
+                .token(UUID.randomUUID().toString())
+                .build();
         return refreshTokenRepository.save(refreshToken);
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(new Timestamp(System.currentTimeMillis())) < 0) {
             refreshTokenRepository.delete(token);
-//            throw new ResourceNotFoundException("Refresh token");
+            throw new CustomException("Refresh token expired"); // Custom exception for token issues
         }
-
         return token;
     }
 
