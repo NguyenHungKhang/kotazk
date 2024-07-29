@@ -32,7 +32,7 @@ public class RefreshTokenService {
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
-                .expiryDate(new Timestamp(System.currentTimeMillis() + 14L * 24L * 60L * 60L * 1000L)) // 14 days
+                .expiryDate(new Timestamp(System.currentTimeMillis() + 14L * 24L * 60L * 60L * 1000L))
                 .token(UUID.randomUUID().toString())
                 .build();
         return refreshTokenRepository.save(refreshToken);
@@ -41,7 +41,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(new Timestamp(System.currentTimeMillis())) < 0) {
             refreshTokenRepository.delete(token);
-            throw new CustomException("Refresh token expired"); // Custom exception for token issues
+            throw new CustomException("Refresh token expired");
         }
         return token;
     }

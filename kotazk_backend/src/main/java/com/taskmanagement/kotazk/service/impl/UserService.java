@@ -20,6 +20,7 @@ import com.taskmanagement.kotazk.util.TimeUtil;
 import io.jsonwebtoken.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +40,8 @@ public class UserService implements IUserService {
     private GoogleIdTokenVerifier verifier;
     @Autowired
     private JwtToken jwtToken;
-
+    @Autowired
+    private RefreshTokenService refreshTokenService = new RefreshTokenService();
     @Value("${app.googleClientId}")
     private String googleClientId;
     @Override
@@ -85,12 +87,16 @@ public class UserService implements IUserService {
 
         return null;
     }
-
     @Override
-    public Boolean logout(Long id) {
-        return null;
+    public Boolean logout() {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (currentUser != null) {
+            refreshTokenService.deleteByUserId(currentUser.getId());
+            return true;
+        } else {
+            throw new SecurityException("User does not have permission to logout this account.");
+        }
     }
-
     @Override
     public String processOAuthPostLogin(String idToken) {
         User user = verifyIDToken(idToken);

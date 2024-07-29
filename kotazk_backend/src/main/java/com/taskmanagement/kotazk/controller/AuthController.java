@@ -66,7 +66,7 @@ public class AuthController {
     // normal logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {
-
+        Boolean userLogoutResponse = userService.logout();
         ResponseCookie accessTokenCookie = ResponseCookie.from("AUTH-TOKEN", "")
                 .httpOnly(true).maxAge(0).path("/").secure(false).build();
         ResponseCookie refreshTokenCookie = ResponseCookie.from("REFRESH-TOKEN", "")

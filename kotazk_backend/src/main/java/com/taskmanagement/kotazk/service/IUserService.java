@@ -10,7 +10,7 @@ import java.io.IOException;
 public interface IUserService {
     UserLoginResponseDto login(UserLoginRequestDto login);
     UserLoginResponseDto signup(UserSignupRequestDto signupRequest) throws IOException, InterruptedException;
-    Boolean logout(Long id);
+    Boolean logout();
     User verifyIDToken(String idToken);
     String processOAuthPostLogin(String idToken);
 }
