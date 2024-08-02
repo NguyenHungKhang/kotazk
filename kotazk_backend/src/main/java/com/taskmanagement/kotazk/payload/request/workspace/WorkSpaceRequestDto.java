@@ -4,6 +4,7 @@ import com.taskmanagement.kotazk.entity.Setting;
 import com.taskmanagement.kotazk.entity.enums.SpaceStatus;
 import com.taskmanagement.kotazk.entity.enums.Visibility;
 import com.taskmanagement.kotazk.payload.request.customization.CustomizationRequestDto;
+import com.taskmanagement.kotazk.payload.request.setting.SettingRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,5 +24,5 @@ public class WorkSpaceRequestDto {
     String description;
     Visibility visibility;
     SpaceStatus status;
-    Set<Setting> settings = new HashSet<>();
+    Set<SettingRequestDto> settings = new HashSet<>();
 }

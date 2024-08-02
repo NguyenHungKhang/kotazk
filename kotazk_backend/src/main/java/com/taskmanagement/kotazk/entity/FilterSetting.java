@@ -1,7 +1,6 @@
 package com.taskmanagement.kotazk.entity;
 
 import com.taskmanagement.kotazk.entity.enums.FilterOperator;
-import com.taskmanagement.kotazk.entity.enums.Visibility;
 import jakarta.persistence.*;
 import lombok.*;
 

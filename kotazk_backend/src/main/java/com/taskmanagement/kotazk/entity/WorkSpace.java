@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.entity;
 
+import com.querydsl.core.annotations.QueryEntity;
 import com.taskmanagement.kotazk.entity.enums.SpaceStatus;
 import com.taskmanagement.kotazk.entity.enums.Visibility;
 import jakarta.persistence.*;
