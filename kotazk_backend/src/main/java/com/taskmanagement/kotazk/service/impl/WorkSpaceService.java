@@ -16,6 +16,7 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailRespo
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
+import com.taskmanagement.kotazk.specification.WorkSpaceSpecification;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
@@ -24,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -196,11 +198,56 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Override
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
-        return null;
+        Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
+
+        Specification<WorkSpace> specification = buildSpecification(searchParam);
+
+        Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
+
+        List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
     }
 
     @Override
     public PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
-        return null;
+        Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
+
+        Specification<WorkSpace> specification = buildSpecification(searchParam);
+
+        Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
+
+        List<WorkSpaceDetailResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceDetailResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    private Specification<WorkSpace> buildSpecification(SearchParamRequestDto searchParam) {
+        // Convert SearchParamRequestDto to List<FilterCriteriaRequestDto>
+        List<FilterCriteriaRequestDto> filters = searchParam.getFilters(); // Assuming `getFilters()` returns List<FilterCriteriaRequestDto>
+
+        Specification<WorkSpace> specification = Specification.where(null);
+
+        for (FilterCriteriaRequestDto filter : filters) {
+            specification = specification.and(WorkSpaceSpecification.filterByCriteria(filter));
+        }
+
+        return specification;
     }
 }

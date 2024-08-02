@@ -8,5 +8,5 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface IWorkSpaceRepository extends JpaRepository<WorkSpace, Long> {
+public interface IWorkSpaceRepository extends JpaRepository<WorkSpace, Long>, JpaSpecificationExecutor<WorkSpace>  {
 }
