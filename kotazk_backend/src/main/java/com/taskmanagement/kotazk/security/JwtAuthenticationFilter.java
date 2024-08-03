@@ -37,19 +37,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = null;
         String token = null;
 
+
         if (requestToken != null && requestToken.startsWith("Bearer ")) {
             token = requestToken.substring(7);
             try {
                 username = this.jwtToken.getUsernameFromToken(token);
             } catch (IllegalArgumentException ex) {
-                throw new JwtException("Unable to get JWT Token", ex);
+                logger.warn("Unable to get JWT Token", ex);
             } catch (ExpiredJwtException ex) {
-                throw new JwtException("JWT Token has expired", ex);
+                logger.warn("JWT Token has expired", ex);
             } catch (MalformedJwtException ex) {
-                throw new JwtException("Invalid JWT Token", ex);
+                logger.warn("Invalid JWT Token", ex);
             }
         } else {
-            throw new JwtException("JWT Token is null or does not begin with Bearer");
+            logger.warn("JWT Token is null or does not begin with Bearer");
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -62,10 +63,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             } else {
-                throw new JwtException("Invalid JWT Token");
+                logger.warn("Invalid JWT Token");
             }
-        } else {
-            throw new JwtException("Username is null or SecurityContextHolder is not null");
         }
 
         filterChain.doFilter(request, response);

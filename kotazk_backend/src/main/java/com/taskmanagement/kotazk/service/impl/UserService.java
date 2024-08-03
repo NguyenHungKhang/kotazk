@@ -6,6 +6,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.entity.enums.UserActiveStatus;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
@@ -24,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.Console;
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -67,10 +69,8 @@ public class UserService implements IUserService {
 
         if (user.isPresent())
             throw new CustomException("User already exists with the provided details.");
-
         if (!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
             throw new CustomException("Password and Retype Password do not match.");
-
         String activeToken = ActiveTokenUtil.generateToken();
 
         User newUser = User.builder()
@@ -81,6 +81,7 @@ public class UserService implements IUserService {
                 .accountStatus(UserActiveStatus.PENDING)
                 .activeToken(activeToken)
                 .activeDeadline(new Timestamp(currentTime.getTime() + (3 * 60 * 1000)))
+                .role(Role.USER)
                 .build();
 
         userRepository.save(newUser);

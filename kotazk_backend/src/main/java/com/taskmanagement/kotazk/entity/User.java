@@ -35,42 +35,42 @@ public class User implements UserDetails {
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(name = "bio", nullable = false)
+    @Column(name = "bio")
     private String bio;
 
-    @Column(name = "avatar", nullable = false)
+    @Column(name = "avatar")
     private String avatar;
 
     @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(name = "google_id", nullable = false)
+    @Column(name = "google_id")
     private String googleId;
 
-    @Column(name = "hashed_password", nullable = false)
+    @Column(name = "hashed_password")
     private String hashedPassword;
 
-    @Column(name = "salt", nullable = false)
+    @Column(name = "salt")
     private String salt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_status", nullable = false)
-    private UserActiveStatus accountStatus;
+    @Column(name = "account_status")
+    private UserActiveStatus accountStatus = UserActiveStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "online_status", nullable = false)
+    @Column(name = "online_status")
     private UserOnlineStatus onlineStatus = UserOnlineStatus.OFFLINE;
 
-    @Column(name = "active_token", nullable = true)
+    @Column(name = "active_token")
     private String activeToken;
 
-    @Column(name = "active_deadline", nullable = true)
+    @Column(name = "active_deadline")
     private Timestamp activeDeadline;
 
-    @Column(name = "reset_password_token", nullable = true)
+    @Column(name = "reset_password_token")
     private String resetPasswordToken;
 
-    @Column(name = "reset_password_deadline", nullable = true)
+    @Column(name = "reset_password_deadline")
     private Timestamp resetPasswordDeadline;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

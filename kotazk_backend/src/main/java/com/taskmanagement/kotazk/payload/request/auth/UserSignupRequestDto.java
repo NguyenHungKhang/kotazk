@@ -15,26 +15,26 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserSignupRequestDto {
 
-    @NotNull(message = "error.auth.first_name_not_null")
-    @Size(min = 1, max = 50, message = "error.auth.first_name_invalid_format")
-    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "error.auth.first_name_invalid_characters")
+    @NotNull(message = "First name cannot be null")
+    @Size(min = 1, max = 50, message = "First name must be between 1 and 50 characters")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "First name must contain only letters and spaces")
     private String firstName;
 
-    @NotNull(message = "error.auth.last_name_not_null")
-    @Size(min = 1, max = 50, message = "error.auth.last_name_invalid_format")
-    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "error.auth.last_name_invalid_characters")
+    @NotNull(message = "Last name cannot be null")
+    @Size(min = 1, max = 50, message = "Last name must be between 1 and 50 characters")
+    @Pattern(regexp = "^[a-zA-Z\\s]+$", message = "Last name must contain only letters and spaces")
     private String lastName;
 
-    @NotNull(message = "error.auth.email_not_null")
-    @Email(message = "error.auth.email_invalid_format")
+    @NotNull(message = "Email cannot be null")
+    @Email(message = "Email should be valid")
     private String email;
 
-    @NotNull(message = "error.auth.password_not_null")
-    @Size(min = 8, max = 50, message = "error.auth.password_invalid_format")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$", message = "error.auth.password_invalid_format")
+    @NotNull(message = "Password cannot be null")
+    @Size(min = 8, max = 50, message = "Password must be between 8 and 50 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,50}$", message = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
     private String password;
 
-    @NotNull(message = "error.auth.retype_password_not_null")
-    @Size(min = 8, max = 50, message = "error.auth.retype_password_invalid_format")
+    @NotNull(message = "Retype password cannot be null")
+    @Size(min = 8, max = 50, message = "Retype password must be between 8 and 50 characters")
     private String retypePassword;
 }

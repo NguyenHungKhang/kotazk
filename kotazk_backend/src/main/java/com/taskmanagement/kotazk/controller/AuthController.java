@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/test/auth")
 public class AuthController {
     @Autowired
     IUserService userService = new UserService();
@@ -46,6 +46,7 @@ public class AuthController {
     // signup
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequestDto signupRequest) throws IOException, InterruptedException {
+        System.out.println(1);
         return new ResponseEntity<UserLoginResponseDto>(userService.signup(signupRequest), HttpStatus.OK);
     }
 
