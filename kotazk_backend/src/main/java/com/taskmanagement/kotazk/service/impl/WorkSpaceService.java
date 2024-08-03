@@ -199,13 +199,9 @@ public class WorkSpaceService implements IWorkSpaceService {
     @Override
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
         Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
-
         Specification<WorkSpace> specification = buildSpecification(searchParam);
-
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
-
         List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
-
         return new PageResponse<>(
                 dtoList,
                 page.getNumber(),
