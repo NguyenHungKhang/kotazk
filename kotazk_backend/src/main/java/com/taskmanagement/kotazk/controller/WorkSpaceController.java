@@ -31,7 +31,6 @@ public class WorkSpaceController {
     public WorkSpaceDetailResponseDto update(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
         return workSpaceService.update(id, workSpaceRequest);
     }
-
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Boolean delete(@PathVariable Long id) {
@@ -47,7 +46,7 @@ public class WorkSpaceController {
     @PatchMapping("/archive/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Boolean archive(@PathVariable Long id) throws IOException, InterruptedException {
-        return workSpaceService.archived(id);
+        return workSpaceService.archive(id);
     }
 
     @PatchMapping("/restore/{id}")

@@ -1,11 +1,7 @@
 package com.taskmanagement.kotazk.service.impl;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.QWorkSpace;
-import com.taskmanagement.kotazk.entity.enums.FilterOperator;
-import com.taskmanagement.kotazk.entity.enums.SpaceStatus;
-import com.taskmanagement.kotazk.entity.enums.Visibility;
+import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
@@ -32,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -154,7 +148,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     }
 
     @Override
-    public Boolean archived(Long id) throws IOException, InterruptedException {
+    public Boolean archive(Long id) throws IOException, InterruptedException {
 
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
@@ -188,6 +182,17 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Override
     public WorkSpaceDetailResponseDto getDetail(Long id) {
+//        WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
+//        User currentUser = SecurityUtil.getCurrentUser();
+//        Long userId = currentUser.getId();
+//        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+//
+//        Specification<WorkSpace> specification = Specification
+//                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin));
+//
+
+
         return null;
     }
 
@@ -198,8 +203,16 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Override
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
         Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
-        Specification<WorkSpace> specification = buildSpecification(searchParam);
+
+        Specification<WorkSpace> specification = Specification
+                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin))
+                .and(buildSpecification(searchParam));
+
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
         return new PageResponse<>(
@@ -215,14 +228,18 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Override
     public PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
         Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
 
-        Specification<WorkSpace> specification = buildSpecification(searchParam);
+        Specification<WorkSpace> specification = Specification
+                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin))
+                .and(buildSpecification(searchParam));
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
-
         List<WorkSpaceDetailResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceDetailResponseDto.class);
-
         return new PageResponse<>(
                 dtoList,
                 page.getNumber(),

@@ -13,7 +13,7 @@ public interface IWorkSpaceService {
     WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
-    Boolean archived(Long id) throws IOException, InterruptedException;
+    Boolean archive(Long id) throws IOException, InterruptedException;
     Boolean restore(Long id);
     WorkSpaceDetailResponseDto getDetail(Long id);
     WorkSpaceSummaryResponseDto getSummary(Long id);
