@@ -24,7 +24,7 @@ public class MemberRole {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "space_id", nullable = false)
+    @JoinColumn(name = "space_id")
     private WorkSpace space;
 
     @ManyToOne
@@ -57,7 +57,7 @@ public class MemberRole {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role_for", nullable = false)
-    private EntityBelongsTo role_for;
+    private EntityBelongsTo roleFor;
 
     @OneToOne(mappedBy = "role", fetch = FetchType.LAZY)
     private Member member;

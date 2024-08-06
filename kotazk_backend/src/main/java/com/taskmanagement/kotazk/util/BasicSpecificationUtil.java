@@ -1,13 +1,15 @@
-package com.taskmanagement.kotazk.specification;
+package com.taskmanagement.kotazk.util;
 
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 import static org.springframework.data.jpa.domain.Specification.where;
 
-public class WorkSpaceSpecification<T> {
+@Component
+public class BasicSpecificationUtil<T> {
 
     private Specification<T> createSpecification(FilterCriteriaRequestDto input) {
         return switch (input.getOperation()) {
@@ -60,7 +62,7 @@ public class WorkSpaceSpecification<T> {
         return lists;
     }
 
-    private Specification<T> getSpecificationFromFilters(List<FilterCriteriaRequestDto> filters){
+    public Specification<T> getSpecificationFromFilters(List<FilterCriteriaRequestDto> filters){
         Specification<T> specification = where(null);
         for (FilterCriteriaRequestDto filter : filters) {
             specification = specification.and(createSpecification(filter));

@@ -12,7 +12,7 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailRespo
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
-import com.taskmanagement.kotazk.specification.WorkSpaceSpecification;
+import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
@@ -39,6 +39,9 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Autowired
     private TimeUtil timeUtil;
+
+    @Autowired
+    BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
     public WorkSpaceDetailResponseDto create(WorkSpaceRequestDto workSpace) {
@@ -207,11 +210,13 @@ public class WorkSpaceService implements IWorkSpaceService {
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<WorkSpace> specification = Specification
-                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin))
-                .and(buildSpecification(searchParam));
+        Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
@@ -232,11 +237,13 @@ public class WorkSpaceService implements IWorkSpaceService {
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        Pageable pageable = PageRequest.of(pageNum.intValue(), pageSize.intValue(), Sort.by("id").descending());
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<WorkSpace> specification = Specification
-                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin))
-                .and(buildSpecification(searchParam));
+        Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceDetailResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceDetailResponseDto.class);
@@ -249,18 +256,5 @@ public class WorkSpaceService implements IWorkSpaceService {
                 page.hasNext(),
                 page.hasPrevious()
         );
-    }
-
-    private Specification<WorkSpace> buildSpecification(SearchParamRequestDto searchParam) {
-        // Convert SearchParamRequestDto to List<FilterCriteriaRequestDto>
-        List<FilterCriteriaRequestDto> filters = searchParam.getFilters(); // Assuming `getFilters()` returns List<FilterCriteriaRequestDto>
-
-        Specification<WorkSpace> specification = Specification.where(null);
-
-        for (FilterCriteriaRequestDto filter : filters) {
-            specification = specification.and(WorkSpaceSpecification.filterByCriteria(filter));
-        }
-
-        return specification;
     }
 }

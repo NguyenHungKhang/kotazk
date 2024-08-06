@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -13,5 +15,6 @@ import lombok.NoArgsConstructor;
 public class FilterCriteriaRequestDto {
     private String filterKey;
     private FilterOperator operation;
-    private Object value;
+    private String value;
+    private List<String> values;
 }

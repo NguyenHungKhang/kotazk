@@ -23,7 +23,7 @@ public class Member {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id", nullable = false)
+    @JoinColumn(name = "work_space_id")
     private WorkSpace workSpace;
 
     @ManyToOne

@@ -1,8 +1,7 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.querydsl.core.annotations.QueryEntity;
-import com.taskmanagement.kotazk.entity.enums.SpaceStatus;
 import com.taskmanagement.kotazk.entity.enums.Visibility;
+import com.taskmanagement.kotazk.entity.enums.WorkSpaceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -46,7 +45,7 @@ public class WorkSpace {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "space_status", nullable = false)
-    private SpaceStatus status;
+    private WorkSpaceStatus status;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Task> tasks;

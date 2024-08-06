@@ -14,7 +14,7 @@ import java.util.List;
 public class SearchParamRequestDto {
     private List<FilterCriteriaRequestDto> filters; // Các điều kiện lọc
     private String sortBy; // Trường để sắp xếp
-    private String sortDirection; // Hướng sắp xếp (asc/desc)
+    private Boolean sortDirectionAsc; // Hướng sắp xếp (asc/desc)
     private int pageNum; // Số trang hiện tại
     private int pageSize; // Kích thước trang
 }
