@@ -145,7 +145,6 @@ public class WorkSpaceService implements IWorkSpaceService {
             throw new CustomException("User can not delete this work space!");
 
         currentWorkSpace.setDeletedAt(currentTime);
-
         workSpaceRepository.save(currentWorkSpace);
         return true;
     }

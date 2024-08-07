@@ -32,10 +32,10 @@ public class MemberRole {
     private Project project;
 
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    private Boolean systemRequired = false;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -47,7 +47,7 @@ public class MemberRole {
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "work_space_permissions", joinColumns = @JoinColumn(name = "work_space_id"))
     @Column(name = "permission")
-    private Set<WorkSpacePermission> spacePermissions;
+    private Set<WorkSpacePermission> workSpacePermissions;
 
     @ElementCollection(targetClass = ProjectPermission.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
@@ -59,8 +59,8 @@ public class MemberRole {
     @Column(name = "role_for", nullable = false)
     private EntityBelongsTo roleFor;
 
-    @OneToOne(mappedBy = "role", fetch = FetchType.LAZY)
-    private Member member;
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    private Set<Member> member;
 
     @CreationTimestamp
     @Column(name = "created_at")

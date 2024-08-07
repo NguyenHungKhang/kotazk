@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public interface IMemberRoleService {
     MemberRoleResponseDto create(MemberRoleRequestDto memberRole);
-    MemberRoleResponseDto update(MemberRoleRequestDto memberRole);
+    MemberRoleResponseDto update(Long id, MemberRoleRequestDto memberRole);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberRoleRequestDto getOne(Long id);

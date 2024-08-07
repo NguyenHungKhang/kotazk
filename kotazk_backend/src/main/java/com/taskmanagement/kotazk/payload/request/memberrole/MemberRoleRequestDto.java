@@ -19,11 +19,9 @@ import java.util.Set;
 public class MemberRoleRequestDto {
     Long workSpaceId;
     Long projectId;
-    Boolean systemInitial;
-    Boolean systemRequired;
     String name;
     String description;
-    Set<WorkSpacePermission> spacePermissions;
+    Set<WorkSpacePermission> workSpacePermissions;
     Set<ProjectPermission> projectPermissions;
     EntityBelongsTo roleFor;
 }
