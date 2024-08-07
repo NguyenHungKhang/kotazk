@@ -24,8 +24,8 @@ public class MemberRole {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "space_id")
-    private WorkSpace space;
+    @JoinColumn(name = "work_space_id")
+    private WorkSpace workSpace;
 
     @ManyToOne
     @JoinColumn(name = "project_id")
