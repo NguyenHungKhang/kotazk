@@ -5,16 +5,16 @@ import com.taskmanagement.kotazk.entity.Project;
 import com.taskmanagement.kotazk.entity.User;
 import com.taskmanagement.kotazk.entity.WorkSpace;
 import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
+import com.taskmanagement.kotazk.entity.enums.FilterOperator;
 import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
-import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
-import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.IMemberRoleRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
@@ -34,7 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -53,7 +55,7 @@ public class MemberRoleService implements IMemberRoleService {
     private TimeUtil timeUtil;
 
     @Autowired
-    BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
+    BasicSpecificationUtil<MemberRole> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
     public MemberRoleResponseDto create(MemberRoleRequestDto memberRole) {
@@ -140,20 +142,71 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
-    public MemberRoleRequestDto getOne(Long id) {
-        return null;
+    public MemberRoleResponseDto getOne(Long id) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        MemberRole currentMemberRole = memberRoleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", id));
+
+        // Add check user permission
+        return ModelMapperUtil.mapOne(currentMemberRole, MemberRoleResponseDto.class);
     }
 
     @Override
     public Boolean rePosition(RepositionMemberRoleRequestDto repositionMemberRole) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        MemberRole currentMemberRole = memberRoleRepository.findById(repositionMemberRole.getRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", repositionMemberRole.getRoleId()));
+
+        Specification<MemberRole> specification = null;
+        FilterCriteriaRequestDto filterRequest = null;
+
+        // Add check user permission
+        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
+            filterRequest = FilterCriteriaRequestDto.builder()
+                    .filterKey("workspace.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(currentMemberRole.getWorkSpace().getId().toString())
+                    .build();
+        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
+            filterRequest = FilterCriteriaRequestDto.builder()
+                    .filterKey("project.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(currentMemberRole.getWorkSpace().getId().toString())
+                    .build();
+        else throw new CustomException("Something wrong!");
+
+        specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+        List<MemberRole> memberRoles = memberRoleRepository.findAll(specification);
+
+        Long oldPosition = currentMemberRole.getPosition();
+        memberRoles.stream().peek(memberRole -> {
+            Long changePositionValue = 0L;
+            if(oldPosition < repositionMemberRole.getNewPosition()) {
+                if (memberRole.getPosition() > oldPosition && memberRole.getPosition() <= repositionMemberRole.getNewPosition())
+                    changePositionValue = 1L;
+            } else if (oldPosition > repositionMemberRole.getNewPosition()) {
+                if (memberRole.getPosition() < oldPosition && memberRole.getPosition() >= repositionMemberRole.getNewPosition())
+                    changePositionValue = -1L;
+            }
+            memberRole.setPosition(memberRole.getPosition() + changePositionValue);
+        }).collect(Collectors.toSet());
+
+        // Return list position
+
         return null;
     }
 
     @Override
-    public PageResponse<WorkSpaceSummaryResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public PageResponse<MemberRoleResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        // Add check user permission
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -161,10 +214,10 @@ public class MemberRoleService implements IMemberRoleService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<MemberRole> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
 
-        Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
-        List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
+        Page<MemberRole> page = memberRoleRepository.findAll(specification, pageable);
+        List<MemberRoleResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberRoleResponseDto.class);
         return new PageResponse<>(
                 dtoList,
                 page.getNumber(),

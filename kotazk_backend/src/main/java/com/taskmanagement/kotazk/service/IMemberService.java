@@ -8,8 +8,8 @@ import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import java.io.IOException;
 
 public interface IMemberService {
-    MemberResponseDto create(MemberRequestDto memberRole);
-    MemberResponseDto update(MemberRequestDto memberRole);
+    MemberResponseDto create(MemberRequestDto member);
+    MemberResponseDto update(Long id, MemberRequestDto member);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);

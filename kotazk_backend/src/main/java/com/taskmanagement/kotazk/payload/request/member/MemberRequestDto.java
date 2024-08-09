@@ -19,5 +19,5 @@ public class MemberRequestDto {
     Long userId;
     MemberStatus status;
     EntityBelongsTo memberFor;
-    Long roleId;
+    Long memberRoleId;
 }

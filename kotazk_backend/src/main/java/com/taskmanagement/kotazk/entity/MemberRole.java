@@ -43,6 +43,9 @@ public class MemberRole {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "position", nullable = false)
+    private Long position;
+
     @ElementCollection(targetClass = WorkSpacePermission.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(name = "work_space_permissions", joinColumns = @JoinColumn(name = "work_space_id"))

@@ -14,7 +14,7 @@ public interface IMemberRoleService {
     MemberRoleResponseDto update(Long id, MemberRoleRequestDto memberRole);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
-    MemberRoleRequestDto getOne(Long id);
+    MemberRoleResponseDto getOne(Long id);
     Boolean rePosition(RepositionMemberRoleRequestDto repositionMemberRole);
-    PageResponse<WorkSpaceSummaryResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
+    PageResponse<MemberRoleResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
 }
