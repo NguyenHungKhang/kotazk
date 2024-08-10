@@ -48,7 +48,7 @@ public class Member {
     @Column(name = "member_for", nullable = false)
     private EntityBelongsTo memberFor;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "member_role_id", nullable = false)
     private MemberRole role;
 

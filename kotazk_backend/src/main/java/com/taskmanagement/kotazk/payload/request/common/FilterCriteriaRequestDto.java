@@ -13,7 +13,7 @@ import java.util.List;
 @Data
 @Builder
 public class FilterCriteriaRequestDto {
-    private String filterKey;
+    private String key;
     private FilterOperator operation;
     private String value;
     private List<String> values;

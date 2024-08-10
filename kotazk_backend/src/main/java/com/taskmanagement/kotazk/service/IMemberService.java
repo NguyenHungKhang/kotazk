@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.service;
 
+import com.taskmanagement.kotazk.entity.Member;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
@@ -13,5 +14,6 @@ public interface IMemberService {
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
-    PageResponse<MemberResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
+    PageResponse<MemberResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
+    Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission);
 }

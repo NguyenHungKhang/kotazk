@@ -17,6 +17,6 @@ public interface IWorkSpaceService {
     Boolean restore(Long id);
     WorkSpaceDetailResponseDto getDetail(Long id);
     WorkSpaceSummaryResponseDto getSummary(Long id);
-    PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize);
-    PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize);
+    PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam);
+    PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam);
 }

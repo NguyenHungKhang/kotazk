@@ -10,12 +10,10 @@ import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
+import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
-import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,27 +34,32 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Autowired
     private IWorkSpaceRepository workSpaceRepository;
+    @Autowired
+    private ICustomizationRepository customizationRepository;
 
     @Autowired
     private TimeUtil timeUtil;
 
     @Autowired
-    BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
+    private final BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
     public WorkSpaceDetailResponseDto create(WorkSpaceRequestDto workSpace) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
+        newWorkSpace.setId(null);
         newWorkSpace.setUser(currentUser);
+        if(workSpace.getCustomization() != null) {
+            Customization customization = Customization.builder()
+                    .avatar(workSpace.getCustomization().getAvatar())
+                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
+                    .fontColor(workSpace.getCustomization().getFontColor())
+                    .icon(workSpace.getCustomization().getIcon())
+                    .build();
 
-        Customization customization = Customization.builder()
-                .avatar(workSpace.getCustomization().getAvatar())
-                .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-                .fontColor(workSpace.getCustomization().getFontColor())
-                .icon(workSpace.getCustomization().getIcon())
-                .build();
-
-        newWorkSpace.setCustomization(customization);
+            Customization savedCustomization = customizationRepository.save(customization);
+            newWorkSpace.setCustomization(savedCustomization);
+        } else newWorkSpace.setCustomization(null);
 
         // Chuyển đổi danh sách settings từ WorkSpaceRequestDto sang WorkSpace
         Set<Setting> settings = workSpace.getSettings().stream()
@@ -70,11 +73,16 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         newWorkSpace.setSettings(settings);
 
+        String key = null;
+        do {
+            key = RandomStringGeneratorUtil.generateKey();
+        } while (workSpaceRepository.findByKey(key).isPresent());
+        newWorkSpace.setKey(key);
 
         // Lưu WorkSpace vào database
-        workSpaceRepository.save(newWorkSpace);
+        WorkSpace savedWorkspace = workSpaceRepository.save(newWorkSpace);
 
-        return ModelMapperUtil.mapOne(newWorkSpace, WorkSpaceDetailResponseDto.class);
+        return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
     }
 
     @Override
@@ -204,7 +212,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     }
 
     @Override
-    public PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
+    public PageResponse<WorkSpaceSummaryResponseDto> getSummaryList(SearchParamRequestDto searchParam) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
@@ -213,7 +221,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 searchParam.getPageNum(),
                 searchParam.getPageSize(),
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
-                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
 
         Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
 
@@ -231,7 +239,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     }
 
     @Override
-    public PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam, Long pageNum, Long pageSize) {
+    public PageResponse<WorkSpaceDetailResponseDto> getDetailList(SearchParamRequestDto searchParam) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);

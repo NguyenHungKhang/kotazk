@@ -27,7 +27,7 @@ public class Customization {
     @Column(nullable = false, length = 255) // Đường dẫn tới avatar
     private String avatar;
 
-    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "customization", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private WorkSpace workSpace;
 
     @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)

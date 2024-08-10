@@ -27,7 +27,7 @@ public class WorkSpace {
     private User user;
 
     @OneToOne
-    @JoinColumn(name = "customization_id", nullable = false)
+    @JoinColumn(name = "customization_id")
     private Customization customization;
 
     @Column(name = "name", nullable = false)
@@ -47,19 +47,19 @@ public class WorkSpace {
     @Column(name = "space_status", nullable = false)
     private WorkSpaceStatus status;
 
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Task> tasks;
 
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Project> projects;
 
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Section> sections;
 
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<ActivityLog> activityLogs;
 
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Setting> settings;
 
     @Column(name = "archive_at")

@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class MemberRoleResponseDto {
+    String name;
 }

@@ -167,13 +167,13 @@ public class MemberRoleService implements IMemberRoleService {
         // Add check user permission
         if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
             filterRequest = FilterCriteriaRequestDto.builder()
-                    .filterKey("workspace.id")
+                    .key("workspace.id")
                     .operation(FilterOperator.EQUAL)
                     .value(currentMemberRole.getWorkSpace().getId().toString())
                     .build();
         else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
             filterRequest = FilterCriteriaRequestDto.builder()
-                    .filterKey("project.id")
+                    .key("project.id")
                     .operation(FilterOperator.EQUAL)
                     .value(currentMemberRole.getWorkSpace().getId().toString())
                     .build();
@@ -201,7 +201,7 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
-    public PageResponse<MemberRoleResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public PageResponse<MemberRoleResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);

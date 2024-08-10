@@ -2,9 +2,11 @@ package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
+import com.taskmanagement.kotazk.entity.enums.FilterOperator;
 import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
@@ -25,11 +27,16 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 
+@Service
+@Transactional
 public class MemberService implements IMemberService {
 
     @Autowired
@@ -147,7 +154,7 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public PageResponse<MemberResponseDto> getList(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public PageResponse<MemberResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
@@ -173,5 +180,31 @@ public class MemberService implements IMemberService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    @Override
+    public Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission) {
+        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
+                .key("user.id")
+                .operation(FilterOperator.EQUAL)
+                .value(userId.toString())
+                .build();
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+        Member currentMember = memberRepository.findOne(specification)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
+
+        boolean checkPermission = false;
+        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE) &&
+                currentMember.getWorkSpace().getId().equals(workspaceId)
+        )
+            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(permission);
+        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT) &&
+                !currentMember.getProject().getId().equals(projectId)
+        )
+            checkPermission = currentMember.getRole().getProjectPermissions().contains(permission);
+        else throw new CustomException("Invalid Input!");
+
+        if(!checkPermission) throw new  CustomException("Member does not have this permission");
+        return currentMember;
     }
 }

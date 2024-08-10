@@ -12,30 +12,30 @@ public class WorkSpaceSpecification<T> {
     private Specification<T> createSpecification(FilterCriteriaRequestDto input) {
         return switch (input.getOperation()) {
             case EQUAL -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.equal(root.get(input.getFilterKey()),
-                            castToRequiredType(root.get(input.getFilterKey()).getJavaType(),
+                    criteriaBuilder.equal(root.get(input.getKey()),
+                            castToRequiredType(root.get(input.getKey()).getJavaType(),
                                     input.getValue()));
             case NOT_EQUAL -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.notEqual(root.get(input.getFilterKey()),
-                            castToRequiredType(root.get(input.getFilterKey()).getJavaType(),
+                    criteriaBuilder.notEqual(root.get(input.getKey()),
+                            castToRequiredType(root.get(input.getKey()).getJavaType(),
                                     input.getValue()));
             case GREATER_THAN -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.gt(root.get(input.getFilterKey()),
+                    criteriaBuilder.gt(root.get(input.getKey()),
                             (Number) castToRequiredType(
-                                    root.get(input.getFilterKey()).getJavaType(),
+                                    root.get(input.getKey()).getJavaType(),
                                     input.getValue()));
             case LESS_THAN -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.lt(root.get(input.getFilterKey()),
+                    criteriaBuilder.lt(root.get(input.getKey()),
                             (Number) castToRequiredType(
-                                    root.get(input.getFilterKey()).getJavaType(),
+                                    root.get(input.getKey()).getJavaType(),
                                     input.getValue()));
             case LIKE -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(root.get(input.getFilterKey()),
+                    criteriaBuilder.like(root.get(input.getKey()),
                             "%" + input.getValue() + "%");
             case IN -> (root, query, criteriaBuilder) ->
-                    criteriaBuilder.in(root.get(input.getFilterKey()))
+                    criteriaBuilder.in(root.get(input.getKey()))
                             .value(castToRequiredType(
-                                    root.get(input.getFilterKey()).getJavaType(),
+                                    root.get(input.getKey()).getJavaType(),
                                     input.getValues()));
             default -> throw new RuntimeException("Operation not supported yet");
         };

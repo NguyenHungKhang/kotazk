@@ -16,7 +16,7 @@ import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
 import com.taskmanagement.kotazk.repository.IUserRepository;
 import com.taskmanagement.kotazk.security.JwtToken;
 import com.taskmanagement.kotazk.service.IUserService;
-import com.taskmanagement.kotazk.util.ActiveTokenUtil;
+import com.taskmanagement.kotazk.util.RandomStringGeneratorUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
 import io.jsonwebtoken.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.io.Console;
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
 import java.util.Collections;
@@ -71,7 +70,7 @@ public class UserService implements IUserService {
             throw new CustomException("User already exists with the provided details.");
         if (!signupRequest.getPassword().equals(signupRequest.getRetypePassword()))
             throw new CustomException("Password and Retype Password do not match.");
-        String activeToken = ActiveTokenUtil.generateToken();
+        String activeToken = RandomStringGeneratorUtil.generateToken();
 
         User newUser = User.builder()
                 .firstName(signupRequest.getFirstName())
