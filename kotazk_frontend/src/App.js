@@ -4,6 +4,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { alpha } from '@mui/material';
 import Playground from './playgrounds';
+import TestDND from './playgrounds/components/TestDND';
+import TestGantt from './playgrounds/components/TestGantt';
 
 const App = () => {
   const [primaryColor, setPrimaryColor] = useState('#7F77F1'); // Màu chủ đạo mặc định
@@ -166,7 +168,9 @@ const App = () => {
       <CssBaseline />
       {/* <CustomDarkModeSwitch darkMode={darkMode} onDarkModeChange={handleDarkModeChange} /> */}
       {/* <CustomPrimaryColorThemePicker onColorChange={handleColorChange} /> */}
-      <Playground />
+      {/* <TestDND /> */}
+      {/* <Playground /> */}
+      <TestGantt/>
     </ThemeProvider>
   );
 };
