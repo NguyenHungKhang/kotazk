@@ -1,17 +1,25 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
+import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
+import com.taskmanagement.kotazk.entity.enums.MemberStatus;
 import com.taskmanagement.kotazk.entity.enums.Role;
+import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
+import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
+import com.taskmanagement.kotazk.repository.IMemberRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
+import com.taskmanagement.kotazk.service.IMemberRoleService;
+import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
 import com.taskmanagement.kotazk.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.management.relation.RoleStatus;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
@@ -35,16 +44,39 @@ public class WorkSpaceService implements IWorkSpaceService {
     @Autowired
     private IWorkSpaceRepository workSpaceRepository;
     @Autowired
+    private IMemberService memberService = new MemberService();
+    @Autowired
+    private IMemberRoleService memberRoleService = new MemberRoleService();
+    @Autowired
     private ICustomizationRepository customizationRepository;
-
     @Autowired
     private TimeUtil timeUtil;
-
     @Autowired
     private final BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public WorkSpaceDetailResponseDto create(WorkSpaceRequestDto workSpace) {
+    public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpace) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace newWorkSpace = create(workSpace);
+        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(newWorkSpace.getId(), null);
+        Optional<MemberRole> memberRole = memberRoles.stream()
+                .filter(item -> Objects.equals(item.getName(), "Admin"))
+                .findFirst();
+        MemberRequestDto memberRequest = MemberRequestDto.builder()
+                .workSpaceId(newWorkSpace.getId())
+                .systemInitial(true)
+                .systemRequired(true)
+                .memberRoleId(memberRole.get().getId())
+                .memberFor(EntityBelongsTo.WORK_SPACE)
+                .userId(currentUser.getId())
+                .status(MemberStatus.ACTIVE)
+                .build();
+        memberService.create(memberRequest);
+        return ModelMapperUtil.mapOne(newWorkSpace, WorkSpaceDetailResponseDto.class);
+    }
+
+    @Override
+    public WorkSpace create(WorkSpaceRequestDto workSpace) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
         newWorkSpace.setId(null);
@@ -61,18 +93,6 @@ public class WorkSpaceService implements IWorkSpaceService {
             newWorkSpace.setCustomization(savedCustomization);
         } else newWorkSpace.setCustomization(null);
 
-        // Chuyển đổi danh sách settings từ WorkSpaceRequestDto sang WorkSpace
-        Set<Setting> settings = workSpace.getSettings().stream()
-                .map(dto -> {
-                    Setting setting = new Setting();
-                    setting.setKey(dto.getKey());
-                    setting.setValue(dto.getValue());
-                    return setting;
-                })
-                .collect(Collectors.toSet());
-
-        newWorkSpace.setSettings(settings);
-
         String key = null;
         do {
             key = RandomStringGeneratorUtil.generateKey();
@@ -82,14 +102,15 @@ public class WorkSpaceService implements IWorkSpaceService {
         // Lưu WorkSpace vào database
         WorkSpace savedWorkspace = workSpaceRepository.save(newWorkSpace);
 
-        return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
+        return savedWorkspace;
     }
 
     @Override
     public WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace) {
+        User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
-        User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(), currentWorkSpace.getId(), null, MemberStatus.ACTIVE, String.valueOf(WorkSpacePermission.WORKSPACE_SETTING));
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not modify this work space!");

@@ -1,9 +1,7 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
-import com.taskmanagement.kotazk.entity.enums.FilterOperator;
-import com.taskmanagement.kotazk.entity.enums.Role;
+import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
@@ -205,6 +203,45 @@ public class MemberService implements IMemberService {
         else throw new CustomException("Invalid Input!");
 
         if(!checkPermission) throw new  CustomException("Member does not have this permission");
+        return currentMember;
+    }
+
+    @Override
+    public Member checkMemberStatusAndPermission(Long userId, Long workspaceId, Long projectId, MemberStatus status, String permission) {
+        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
+                .key("user.id")
+                .operation(FilterOperator.EQUAL)
+                .value(userId.toString())
+                .build();
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+        Member currentMember = memberRepository.findOne(specification)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
+
+        if(!currentMember.getStatus().equals(status)) throw new  CustomException(String.format("Member status: %s", status));
+
+        boolean checkPermission;
+        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
+        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
+        else throw new CustomException("Invalid Input!");
+
+        if(!checkPermission) throw new  CustomException("Member does not have this permission");
+        return currentMember;
+    }
+
+    @Override
+    public Member checkMemberStatus(Long userId, Long workspaceId, Long projectId, MemberStatus status) {
+        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
+                .key("user.id")
+                .operation(FilterOperator.EQUAL)
+                .value(userId.toString())
+                .build();
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+        Member currentMember = memberRepository.findOne(specification)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
+
+        if(!currentMember.getStatus().equals(status)) throw new  CustomException(String.format("Member status: %s", status));
         return currentMember;
     }
 }

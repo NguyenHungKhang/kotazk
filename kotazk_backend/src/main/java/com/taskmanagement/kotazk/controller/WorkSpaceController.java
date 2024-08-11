@@ -25,13 +25,23 @@ public class WorkSpaceController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkSpaceDetailResponseDto create(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest) {
-        return workSpaceService.create(workSpaceRequest);
+        try {
+            return workSpaceService.initialWorkSpace(workSpaceRequest);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public WorkSpaceDetailResponseDto update(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
-        return workSpaceService.update(id, workSpaceRequest);
+        try {
+            return workSpaceService.update(id, workSpaceRequest);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 
     @DeleteMapping("/{id}")
@@ -73,12 +83,7 @@ public class WorkSpaceController {
     @PostMapping("/page/summary")
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryPage(@Valid @RequestBody SearchParamRequestDto searchParam) {
-        try {
             return workSpaceService.getSummaryList(searchParam);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
     }
 
     @PostMapping("/page/detail")

@@ -4,9 +4,7 @@ import com.taskmanagement.kotazk.entity.MemberRole;
 import com.taskmanagement.kotazk.entity.Project;
 import com.taskmanagement.kotazk.entity.User;
 import com.taskmanagement.kotazk.entity.WorkSpace;
-import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
-import com.taskmanagement.kotazk.entity.enums.FilterOperator;
-import com.taskmanagement.kotazk.entity.enums.Role;
+import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
@@ -34,9 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.taskmanagement.kotazk.config.ConstantConfig.*;
 
 @Service
 @Transactional
@@ -227,5 +226,55 @@ public class MemberRoleService implements IMemberRoleService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    @Override
+    public List<MemberRole> initialMemberRole(Long workSpaceId, Long projectId) {
+        Optional<WorkSpace> workSpace = workSpaceId != null ? workSpaceRepository.findById(workSpaceId) : Optional.empty();
+        Optional<Project> project = projectId != null ? projectRepository.findById(projectId) : Optional.empty();
+
+
+        MemberRole adminRole = MemberRole.builder()
+                .name("Admin") // Tên vai trò
+                .description("This role has all permissions") // Mô tả
+                .workSpacePermissions(EnumSet.allOf(WorkSpacePermission.class)) // Tất cả quyền WorkSpace
+                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpace(workSpace.orElse(null))
+                .project(project.orElse(null))
+                .systemInitial(true)
+                .systemRequired(true)
+                .position(1L)
+                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
+                .build();
+
+        MemberRole editorRole = MemberRole.builder()
+                .name("Editor") // Tên vai trò
+                .description("This role can edit something in workspace") // Mô tả
+                .workSpacePermissions(DEFAULT_EDITOR_ROLE_PERMISSION) // Tất cả quyền WorkSpace
+                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpace(workSpace.orElse(null))
+                .project(project.orElse(null))
+                .systemInitial(true)
+                .systemRequired(true)
+                .position(2L)
+                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
+                .build();
+
+        MemberRole guestRole = MemberRole.builder()
+                .name("Guest") // Tên vai trò
+                .description("This role can view something in workspace") // Mô tả
+                .workSpacePermissions(DEFAULT_GUEST_ROLE_PERMISSION) // Tất cả quyền WorkSpace
+                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpace(workSpace.orElse(null))
+                .project(project.orElse(null))
+                .systemInitial(true)
+                .systemRequired(true)
+                .position(3L)
+                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
+                .build();
+
+        List<MemberRole> savedMemberRole = memberRoleRepository.saveAll(List.of(adminRole, editorRole, guestRole));
+
+        return savedMemberRole;
     }
 }

@@ -48,6 +48,12 @@ public class WorkSpace {
     private WorkSpaceStatus status;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
+    private Set<MemberRole> memberRoles;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
+    private Set<Member> members;
+
+    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Task> tasks;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)

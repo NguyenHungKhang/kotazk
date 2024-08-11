@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.service;
 
+import com.taskmanagement.kotazk.entity.WorkSpace;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
@@ -9,7 +10,8 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResp
 import java.io.IOException;
 
 public interface IWorkSpaceService {
-    WorkSpaceDetailResponseDto create(WorkSpaceRequestDto workSpace);
+    WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpace);
+    WorkSpace create(WorkSpaceRequestDto workSpace);
     WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
