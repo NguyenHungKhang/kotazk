@@ -6,6 +6,20 @@ import { alpha } from '@mui/material';
 import Playground from './playgrounds';
 import TestDND from './playgrounds/components/TestDND';
 import TestGantt from './playgrounds/components/TestGantt';
+import "./syncfusion-license"
+import '../node_modules/@syncfusion/ej2-base/styles/material.css';
+import '../node_modules/@syncfusion/ej2-buttons/styles/material.css';
+import '../node_modules/@syncfusion/ej2-calendars/styles/material.css';
+import '../node_modules/@syncfusion/ej2-dropdowns/styles/material.css';
+import '../node_modules/@syncfusion/ej2-inputs/styles/material.css';
+import '../node_modules/@syncfusion/ej2-lists/styles/material.css';
+import '../node_modules/@syncfusion/ej2-layouts/styles/material.css';
+import '../node_modules/@syncfusion/ej2-navigations/styles/material.css';
+import '../node_modules/@syncfusion/ej2-popups/styles/material.css';
+import '../node_modules/@syncfusion/ej2-splitbuttons/styles/material.css';
+import '../node_modules/@syncfusion/ej2-grids/styles/material.css';
+import '../node_modules/@syncfusion/ej2-treegrid/styles/material.css';
+import '../node_modules/@syncfusion/ej2-react-gantt/styles/material.css';
 
 const App = () => {
   const [primaryColor, setPrimaryColor] = useState('#7F77F1'); // Màu chủ đạo mặc định
