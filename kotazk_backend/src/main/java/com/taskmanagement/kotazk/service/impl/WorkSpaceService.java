@@ -40,7 +40,6 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class WorkSpaceService implements IWorkSpaceService {
-
     @Autowired
     private IWorkSpaceRepository workSpaceRepository;
     @Autowired
@@ -110,7 +109,14 @@ public class WorkSpaceService implements IWorkSpaceService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(), currentWorkSpace.getId(), null, MemberStatus.ACTIVE, String.valueOf(WorkSpacePermission.WORKSPACE_SETTING));
+
+        // WORKSPACE_PERMISSION: MODIFY_OWN_PROJECT (check id), MODIFY_ALL_PROJECT,
+
+        // PROJECT_PERMISSION: PROJECT_SETTING
+
+        // Find new way to verify member permission of this work space or project
+
+        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), currentWorkSpace.getId(), null, MemberStatus.ACTIVE);
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not modify this work space!");
@@ -129,19 +135,6 @@ public class WorkSpaceService implements IWorkSpaceService {
                 currentWorkSpace.getCustomization().setFontColor(workSpace.getCustomization().getFontColor());
             if (workSpace.getCustomization().getIcon() != null)
                 currentWorkSpace.getCustomization().setIcon(workSpace.getCustomization().getIcon());
-        }
-
-        // Chuyển đổi danh sách settings từ WorkSpaceRequestDto sang WorkSpace
-        if (workSpace.getSettings() != null) {
-            Set<Setting> settings = workSpace.getSettings().stream()
-                    .map(dto -> {
-                        Setting setting = new Setting();
-                        setting.setKey(dto.getKey());
-                        setting.setValue(dto.getValue());
-                        return setting;
-                    })
-                    .collect(Collectors.toSet());
-            currentWorkSpace.setSettings(settings);
         }
 
         workSpaceRepository.save(currentWorkSpace);

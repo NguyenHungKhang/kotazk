@@ -17,6 +17,7 @@ import com.taskmanagement.kotazk.repository.IMemberRoleRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
+import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
@@ -43,13 +44,12 @@ public class MemberRoleService implements IMemberRoleService {
 
     @Autowired
     private IMemberRoleRepository memberRoleRepository;
-
     @Autowired
     private IWorkSpaceRepository workSpaceRepository;
-
     @Autowired
     private IProjectRepository projectRepository;
-
+    @Autowired
+    private IMemberService memberService =  new MemberService();
     @Autowired
     private TimeUtil timeUtil;
 
@@ -75,7 +75,15 @@ public class MemberRoleService implements IMemberRoleService {
         } else
             throw new CustomException("Invalid Input!");
 
-        // Add check user permission
+        if(!systemExec)
+            memberService.checkMemberStatusAndPermission(
+                    currentUser.getId(),
+                    workSpace != null ? workSpace.getId() : null,
+                    project != null ? project.getId() : null,
+                    MemberStatus.ACTIVE,
+                    "MANAGE_ROLE_SETTING"
+            );
+            // Add check user permission
 
         MemberRole newMemberRole = ModelMapperUtil.mapOne(memberRole, MemberRole.class);
         newMemberRole.setProject(project);

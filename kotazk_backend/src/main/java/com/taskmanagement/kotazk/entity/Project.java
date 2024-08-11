@@ -26,12 +26,19 @@ public class Project {
     @JoinColumn(name = "work_space_id", nullable = false)
     private WorkSpace workSpace;
 
+    @ManyToOne
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
     @OneToOne
     @JoinColumn(name = "customization_id", nullable = false)
     private Customization customization;
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "is_pinned", nullable = false)
+    private Boolean isPinned;
 
     @Column(name = "position", nullable = false)
     private Long position;
