@@ -51,7 +51,7 @@ public class MemberService implements IMemberService {
     BasicSpecificationUtil<Member> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public MemberResponseDto create(MemberRequestDto member) {
+    public MemberResponseDto create(MemberRequestDto member, Boolean systemExec) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = null;
         Project project = null;
@@ -69,6 +69,15 @@ public class MemberService implements IMemberService {
         } else
             throw new CustomException("Invalid Input!");
 
+        if(!systemExec)
+            checkMemberStatusAndPermission(
+                    currentUser.getId(),
+                    workSpace != null ? workSpace.getId() : null,
+                    project != null ? project.getId() : null,
+                    MemberStatus.ACTIVE,
+                    "INVITE_MEMBER"
+                    );
+
         MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getMemberRoleId()));
 
@@ -82,6 +91,7 @@ public class MemberService implements IMemberService {
         newMember.setProject(project);
         newMember.setWorkSpace(workSpace);
         newMember.setRole(memberRole);
+        if(!systemExec) newMember.setStatus(MemberStatus.ACTIVE);
 
         Member savedMember = memberRepository.save(newMember);
 

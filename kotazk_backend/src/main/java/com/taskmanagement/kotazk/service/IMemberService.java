@@ -10,7 +10,7 @@ import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import java.io.IOException;
 
 public interface IMemberService {
-    MemberResponseDto create(MemberRequestDto member);
+    MemberResponseDto create(MemberRequestDto member, Boolean systemExec);
     MemberResponseDto update(Long id, MemberRequestDto member);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;

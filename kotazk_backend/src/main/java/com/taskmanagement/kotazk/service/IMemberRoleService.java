@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface IMemberRoleService {
-    MemberRoleResponseDto create(MemberRoleRequestDto memberRole);
+    MemberRoleResponseDto create(MemberRoleRequestDto memberRole, Boolean systemExec);
     MemberRoleResponseDto update(Long id, MemberRoleRequestDto memberRole);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;

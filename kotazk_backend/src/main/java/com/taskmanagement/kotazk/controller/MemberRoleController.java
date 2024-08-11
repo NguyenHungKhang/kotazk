@@ -28,7 +28,7 @@ public class MemberRoleController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public MemberRoleResponseDto create(@Valid @RequestBody MemberRoleRequestDto memberRoleRequest) {
-        return memberRoleService.create(memberRoleRequest);
+        return memberRoleService.create(memberRoleRequest, false);
     }
 
     @PutMapping("/{id}")

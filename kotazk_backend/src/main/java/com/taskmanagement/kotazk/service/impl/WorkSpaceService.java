@@ -71,7 +71,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .userId(currentUser.getId())
                 .status(MemberStatus.ACTIVE)
                 .build();
-        memberService.create(memberRequest);
+        memberService.create(memberRequest, true);
         return ModelMapperUtil.mapOne(newWorkSpace, WorkSpaceDetailResponseDto.class);
     }
 
@@ -154,6 +154,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+        );
 
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
@@ -168,6 +174,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+        );
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
@@ -185,6 +197,12 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+        );
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not archive this work space!");
@@ -201,6 +219,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+        );
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not archive this work space!");
