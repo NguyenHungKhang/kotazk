@@ -2,7 +2,8 @@ package com.taskmanagement.kotazk.entity.enums;
 
 public enum ProjectPermission {
     PROJECT_BASIC_INFO,
-    PROJECT_SETTING,
+    MODIFY_PROJECT,
+    DELETE_PROJECT,
     MANAGE_ROLE_SETTING,
     INVITE_MEMBER,
     BAN_KICK_MEMBER,

@@ -202,14 +202,10 @@ public class MemberService implements IMemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
         boolean checkPermission = false;
-        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE) &&
-                currentMember.getWorkSpace().getId().equals(workspaceId)
-        )
-            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(permission);
-        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT) &&
-                !currentMember.getProject().getId().equals(projectId)
-        )
-            checkPermission = currentMember.getRole().getProjectPermissions().contains(permission);
+        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
+        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
         else throw new CustomException("Invalid Input!");
 
         if(!checkPermission) throw new  CustomException("Member does not have this permission");
@@ -227,7 +223,7 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
-        if(!currentMember.getStatus().equals(status)) throw new  CustomException(String.format("Member status: %s", status));
+        if(!currentMember.getStatus().equals(status)) throw new CustomException(String.format("Member status: %s", status));
 
         boolean checkPermission;
         if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))

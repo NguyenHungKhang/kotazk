@@ -110,12 +110,6 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
 
-        // WORKSPACE_PERMISSION: MODIFY_OWN_PROJECT (check id), MODIFY_ALL_PROJECT,
-
-        // PROJECT_PERMISSION: PROJECT_SETTING
-
-        // Find new way to verify member permission of this work space or project
-
         Member currentMember = memberService.checkMemberStatus(currentUser.getId(), currentWorkSpace.getId(), null, MemberStatus.ACTIVE);
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
