@@ -8,27 +8,31 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "task_field")
+@Table(name = "label")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class TaskField {
+public class Label {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "task_id", nullable = false)
-    private Task task;
+    @JoinColumn(name = "work_space_id", nullable = false)
+    private WorkSpace workSpace;
 
     @ManyToOne
-    @JoinColumn(name = "field_id", nullable = false)
-    private Field field;
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
 
-    @Column(name = "value", nullable = false)
-    private String value;
+    @OneToOne
+    @JoinColumn(name = "customization_id")
+    private Customization customization;
+
+    @Column(name = "name", nullable = false)
+    private String name;
 
     @CreationTimestamp
     @Column(name = "created_at")

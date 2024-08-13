@@ -54,10 +54,6 @@ public class Field {
     private Boolean isHideWhenEmpty;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "nature", nullable = false)
-    private NatureField nature;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private FieldType type;
 

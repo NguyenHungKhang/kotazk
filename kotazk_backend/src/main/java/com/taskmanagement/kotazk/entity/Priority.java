@@ -1,7 +1,5 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.StatusType;
-import com.taskmanagement.kotazk.entity.enums.TaskLinkRelationship;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,32 +8,34 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "task_link")
+@Table(name = "priority")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class TaskLink {
+public class Priority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "fist_task_id", nullable = false)
-    private Task firstTask;
+    @JoinColumn(name = "work_space_id", nullable = false)
+    private WorkSpace workSpace;
 
     @ManyToOne
-    @JoinColumn(name = "second_task_id", nullable = false)
-    private Task secondTask;
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "first_task_relationship", nullable = false)
-    private TaskLinkRelationship firstTaskRelationship;
+    @OneToOne
+    @JoinColumn(name = "customization_id")
+    private Customization customization;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "second_task_relationship", nullable = false)
-    private TaskLinkRelationship secondTaskRelationship;
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "position", nullable = false)
+    private Long position;
 
     @CreationTimestamp
     @Column(name = "created_at")

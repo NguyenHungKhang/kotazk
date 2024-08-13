@@ -38,6 +38,9 @@ public class Status {
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
+    @Column(name = "position", nullable = false)
+    private Long position;
+
     @Column(name = "name", nullable = false)
     private String name;
 

@@ -26,7 +26,7 @@ public class Section {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id", nullable = false)
+    @JoinColumn(name = "work_space_id")
     private WorkSpace workSpace;
 
     @ManyToOne
@@ -34,7 +34,7 @@ public class Section {
     private Project project;
 
     @OneToOne
-    @JoinColumn(name = "customization_id", nullable = false)
+    @JoinColumn(name = "customization_id")
     private Customization customization;
 
     @Column(name = "system_initial", nullable = false)
