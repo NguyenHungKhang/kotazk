@@ -1,5 +1,4 @@
 package com.taskmanagement.kotazk.service;
 
-public interface ISectionService {
-
+public interface IFieldOptionService {
 }

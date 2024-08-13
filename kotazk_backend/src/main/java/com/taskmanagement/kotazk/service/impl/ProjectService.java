@@ -156,9 +156,13 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckAccessPermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Member currentMember = memberService.checkMemberStatusAndPermission(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                MemberStatus.ACTIVE,
+                String.valueOf(ProjectPermission.BROWSE_PROJECT)
+        );
 
         return ModelMapperUtil.mapOne(currentProject, ProjectResponseDto.class);
     }

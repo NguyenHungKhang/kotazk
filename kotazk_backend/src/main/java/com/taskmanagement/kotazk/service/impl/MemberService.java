@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -192,12 +193,31 @@ public class MemberService implements IMemberService {
 
     @Override
     public Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission) {
+        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
         FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
                 .key("user.id")
                 .operation(FilterOperator.EQUAL)
                 .value(userId.toString())
                 .build();
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+
+        if(projectId != null) {
+            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
+                    .key("project.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(projectId.toString())
+                    .build();
+            filterRequestList.add(filterForProjectRequest);
+        }
+        if(workspaceId != null) {
+            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
+                    .key("workspace.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(workspaceId.toString())
+                    .build();
+            filterRequestList.add(filterForWorkspaceRequest);
+        }
+
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
@@ -214,12 +234,32 @@ public class MemberService implements IMemberService {
 
     @Override
     public Member checkMemberStatusAndPermission(Long userId, Long workspaceId, Long projectId, MemberStatus status, String permission) {
+        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
         FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
                 .key("user.id")
                 .operation(FilterOperator.EQUAL)
                 .value(userId.toString())
                 .build();
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+
+        if(projectId != null) {
+            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
+                    .key("project.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(projectId.toString())
+                    .build();
+            filterRequestList.add(filterForProjectRequest);
+        }
+        if(workspaceId != null) {
+            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
+                    .key("workspace.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(workspaceId.toString())
+                    .build();
+            filterRequestList.add(filterForWorkspaceRequest);
+        }
+
+        filterRequestList.add(filterRequest);
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
@@ -238,12 +278,31 @@ public class MemberService implements IMemberService {
 
     @Override
     public Member checkMemberStatus(Long userId, Long workspaceId, Long projectId, MemberStatus status) {
+        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
         FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
                 .key("user.id")
                 .operation(FilterOperator.EQUAL)
                 .value(userId.toString())
                 .build();
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
+
+        if(projectId != null) {
+            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
+                    .key("project.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(projectId.toString())
+                    .build();
+            filterRequestList.add(filterForProjectRequest);
+        }
+        if(workspaceId != null) {
+            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
+                    .key("workspace.id")
+                    .operation(FilterOperator.EQUAL)
+                    .value(workspaceId.toString())
+                    .build();
+            filterRequestList.add(filterForWorkspaceRequest);
+        }
+
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 

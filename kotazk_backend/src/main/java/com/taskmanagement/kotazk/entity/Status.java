@@ -26,6 +26,10 @@ public class Status {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project; // Không gian chứa dự án
 
+    @OneToOne
+    @JoinColumn(name = "customization_id")
+    private Customization customization;
+
     @Column(name = "is_from_any", nullable = false)
     private Boolean isFromAny = true;
 
@@ -33,10 +37,10 @@ public class Status {
     private Boolean isFromStart = false;
 
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    private Boolean systemRequired = false;
 
     @Column(name = "position", nullable = false)
     private Long position;
@@ -47,9 +51,9 @@ public class Status {
     @Column(name = "description")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private StatusType type;
+//    @Enumerated(EnumType.STRING)
+//    @Column(name = "type", nullable = false)
+//    private StatusType type;
 
     @OneToMany(mappedBy = "fromStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Transition> transitionFromStatuses;
