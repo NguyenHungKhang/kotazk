@@ -100,7 +100,7 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
-    public Boolean softDelete(Long id) throws IOException, InterruptedException {
+    public Boolean softDelete(Long id) {
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
@@ -117,7 +117,7 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
-    public Boolean archive(Long id) throws IOException, InterruptedException {
+    public Boolean archive(Long id)  {
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();

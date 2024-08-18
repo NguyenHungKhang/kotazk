@@ -110,10 +110,6 @@ function TestDND() {
     <div className="layout__wrapper">
       <div className="card">
         <DragDropContext onDragEnd={handleDragAndDrop}>
-          <div className="header">
-            <h1>Shopping List</h1>
-          </div>
-
           <Droppable droppableId="ROOT" type="group" direction="horizontal">
 
             {(provided) => (
@@ -185,13 +181,15 @@ function StoreList({ name, items, id }) {
             <Stack spacing={2} mt={2}>
               {items.map((item, index) => (
                 <Draggable draggableId={item.id} index={index} key={item.id}>
-                  {(provided) => (
+                  {(provided, snapshot) => (
                     <div
                       {...provided.dragHandleProps}
                       {...provided.draggableProps}
                       ref={provided.innerRef}
                     >
-                      <Card>
+                      <Card style={{
+                        transform: snapshot.isDragging ? "rotate(2deg)": null,
+                      }}>
                         <CardContent>
                           <Typography variant='body2' fontWeight='bold'>
                             Task name

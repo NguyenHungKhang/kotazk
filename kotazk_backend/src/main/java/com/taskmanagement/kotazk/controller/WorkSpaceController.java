@@ -83,7 +83,13 @@ public class WorkSpaceController {
     @PostMapping("/page/summary")
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryPage(@Valid @RequestBody SearchParamRequestDto searchParam) {
+        try {
             return workSpaceService.getSummaryList(searchParam);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+
     }
 
     @PostMapping("/page/detail")

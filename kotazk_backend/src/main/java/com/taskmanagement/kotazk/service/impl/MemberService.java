@@ -210,7 +210,7 @@ public class MemberService implements IMemberService {
         }
         if(workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workspace.id")
+                    .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
                     .value(workspaceId.toString())
                     .build();
@@ -251,7 +251,7 @@ public class MemberService implements IMemberService {
         }
         if(workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workspace.id")
+                    .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
                     .value(workspaceId.toString())
                     .build();
@@ -295,7 +295,7 @@ public class MemberService implements IMemberService {
         }
         if(workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workspace.id")
+                    .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
                     .value(workspaceId.toString())
                     .build();

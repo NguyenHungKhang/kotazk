@@ -37,12 +37,8 @@ public class TaskRecord {
     @Column(name = "time_value")
     private Timestamp timeValue;
 
-    @ManyToMany
-    @JoinTable(
-            name = "task_record_select",
-            joinColumns = @JoinColumn(name = "task_record_id"),
-            inverseJoinColumns = @JoinColumn(name = "field_option_id")
-    )
+    @ManyToOne
+    @JoinColumn(name = "field_option_id", nullable = false)
     private FieldOption selectOption;
 
     @ManyToMany

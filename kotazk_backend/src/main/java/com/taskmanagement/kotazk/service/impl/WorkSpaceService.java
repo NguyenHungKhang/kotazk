@@ -1,10 +1,7 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
-import com.taskmanagement.kotazk.entity.enums.MemberStatus;
-import com.taskmanagement.kotazk.entity.enums.Role;
-import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
+import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
@@ -13,6 +10,7 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
@@ -22,6 +20,7 @@ import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
 import com.taskmanagement.kotazk.util.*;
+import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -80,7 +79,7 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
         newWorkSpace.setId(null);
         newWorkSpace.setUser(currentUser);
-        if(workSpace.getCustomization() != null) {
+        if (workSpace.getCustomization() != null) {
             Customization customization = Customization.builder()
                     .avatar(workSpace.getCustomization().getAvatar())
                     .backgroundColor(workSpace.getCustomization().getBackgroundColor())
@@ -110,10 +109,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), currentWorkSpace.getId(), null, MemberStatus.ACTIVE);
+        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING));
 
-        if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
-            throw new CustomException("User can not modify this work space!");
 
         if (workSpace.getName() != null) currentWorkSpace.setName(workSpace.getName());
         if (workSpace.getDescription() != null) currentWorkSpace.setDescription(workSpace.getDescription());
@@ -157,7 +158,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     }
 
     @Override
-    public Boolean softDelete(Long id) throws IOException, InterruptedException {
+    public Boolean softDelete(Long id) {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
@@ -178,7 +179,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     }
 
     @Override
-    public Boolean archive(Long id) throws IOException, InterruptedException {
+    public Boolean archive(Long id) {
 
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
@@ -224,23 +225,32 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     @Override
     public WorkSpaceDetailResponseDto getDetail(Long id) {
-//        WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
-//        User currentUser = SecurityUtil.getCurrentUser();
-//        Long userId = currentUser.getId();
-//        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
-//
-//        Specification<WorkSpace> specification = Specification
-//                .where(WorkSpaceSpecification.isOwnerOrMember(userId, isAdmin));
-//
-
-
-        return null;
+        WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
+        User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(
+                currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.VIEW_WORKSPACE_INFO)
+        );
+        return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceDetailResponseDto.class);
     }
 
     @Override
     public WorkSpaceSummaryResponseDto getSummary(Long id) {
-        return null;
+        WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
+        User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberService.checkMemberStatusAndPermission(
+                currentUser.getId(),
+                currentWorkSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.VIEW_WORKSPACE_INFO)
+        );
+        return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceSummaryResponseDto.class);
     }
 
     @Override
@@ -255,7 +265,11 @@ public class WorkSpaceService implements IWorkSpaceService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
 
-        Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<WorkSpace> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<WorkSpace> specification = isAdmin ? filterSpecification :
+                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO))
+                        .and(filterSpecification);
+
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
@@ -282,7 +296,10 @@ public class WorkSpaceService implements IWorkSpaceService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<WorkSpace> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<WorkSpace> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<WorkSpace> specification = isAdmin ? filterSpecification :
+                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO))
+                        .and(filterSpecification);
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceDetailResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceDetailResponseDto.class);
@@ -295,5 +312,28 @@ public class WorkSpaceService implements IWorkSpaceService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    public static Specification<WorkSpace> hasUserPermissions(Long userId, List<WorkSpacePermission> permissions) {
+        return (Root<WorkSpace> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            // Join với bảng Members
+            Join<WorkSpace, Member> memberJoin = root.join("members");
+
+            // Điều kiện để lọc theo userId
+            Predicate userPredicate = criteriaBuilder.equal(memberJoin.get("user").get("id"), userId);
+
+            // Join với bảng MemberRole để lấy workSpacePermissions
+            Join<Member, MemberRole> roleJoin = memberJoin.join("role");
+
+            // Tạo điều kiện kiểm tra ít nhất một phần tử trong workSpacePermissions có nằm trong permissions
+            Predicate permissionsPredicate = criteriaBuilder.disjunction();
+            for (WorkSpacePermission permission : permissions) {
+                Predicate singlePermissionPredicate = criteriaBuilder.isMember(permission, roleJoin.get("workSpacePermissions"));
+                permissionsPredicate = criteriaBuilder.or(permissionsPredicate, singlePermissionPredicate);
+            }
+
+            // Kết hợp điều kiện lọc userId và permissionsPredicate
+            return criteriaBuilder.and(userPredicate, permissionsPredicate);
+        };
     }
 }

@@ -73,7 +73,8 @@ public class Task {
     )
     private Set<Label> labels;
 
-    @Column(name = "priority_id")
+    @ManyToOne
+    @JoinColumn(name = "priority_id")
     private Priority priority;
 
     @Column(name = "time_estimate")
@@ -99,9 +100,6 @@ public class Task {
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Folder> Folders;
-
-    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Task> tasks;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;
