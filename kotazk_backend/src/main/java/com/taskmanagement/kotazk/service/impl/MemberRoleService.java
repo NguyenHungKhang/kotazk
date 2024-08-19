@@ -292,8 +292,6 @@ public class MemberRoleService implements IMemberRoleService {
                 .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
                 .build();
 
-        List<MemberRole> savedMemberRole = memberRoleRepository.saveAll(List.of(adminRole, editorRole, guestRole));
-
-        return savedMemberRole;
+        return memberRoleRepository.saveAll(List.of(adminRole, editorRole, guestRole));
     }
 }

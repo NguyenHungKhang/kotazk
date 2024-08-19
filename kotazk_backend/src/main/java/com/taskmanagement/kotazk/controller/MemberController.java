@@ -29,7 +29,7 @@ public class MemberController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public MemberResponseDto create(@Valid @RequestBody MemberRequestDto memberRequest) {
-        return memberService.create(memberRequest, false);
+        return memberService.create(memberRequest);
     }
 
     @PutMapping("/{id}")

@@ -62,7 +62,7 @@ public class MemberService implements IMemberService {
                 workSpace = workSpaceRepository.findById(member.getWorkSpaceId())
                         .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", member.getWorkSpaceId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
-                        Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
+                        !Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
                     throw new CustomException("This member's role is not suitable with this workspace!");
 
             }
@@ -71,7 +71,7 @@ public class MemberService implements IMemberService {
                 project = projectRepository.findById(member.getProjectId())
                         .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getProjectId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
-                        Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
+                        !Objects.equals(memberRole.getProject().getId(), project.getId()))
                     throw new CustomException("This member's role is not suitable with this project!");
             }
         } else
@@ -124,12 +124,12 @@ public class MemberService implements IMemberService {
         } else
             throw new CustomException("Invalid Input!");
 
-        checkMemberStatusAndPermission(
+        checkMemberStatusesAndPermissions(
                 currentUser.getId(),
                 project != null ? project.getId() : null,
                 workSpace != null ? workSpace.getId() : null,
-                MemberStatus.ACTIVE,
-                "INVITE_MEMBER"
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList("INVITE_MEMBER")
         );
 
         memberRepository.findByUserAndProjectOrWorkSpace(
@@ -364,4 +364,37 @@ public class MemberService implements IMemberService {
             throw new CustomException(String.format("Member status: %s", status));
         return currentMember;
     }
+
+    @Override
+    public Member checkMemberStatusesAndPermissions(Long userId, Long workspaceId, Long projectId, List<MemberStatus> statuses, List<String> permissions) {
+        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
+
+        filterRequestList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
+        if (projectId != null) {
+            filterRequestList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>()));
+        }
+        if (workspaceId != null) {
+            filterRequestList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>()));
+        }
+
+        Member currentMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(filterRequestList))
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
+
+        if (statuses != null && !statuses.isEmpty() && !statuses.contains(currentMember.getStatus())) {
+            throw new CustomException(String.format("Member status is not in the allowed list: %s", statuses));
+        }
+
+        if (permissions != null && !permissions.isEmpty()) {
+            boolean hasPermission = currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)
+                    ? currentMember.getRole().getWorkSpacePermissions().stream().anyMatch(p -> permissions.contains(p.name()))
+                    : currentMember.getRole().getProjectPermissions().stream().anyMatch(p -> permissions.contains(p.name()));
+
+            if (!hasPermission) {
+                throw new CustomException("Member does not have the required permissions.");
+            }
+        }
+
+        return currentMember;
+    }
+
 }

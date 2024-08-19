@@ -97,7 +97,6 @@ public class WorkSpaceService implements IWorkSpaceService {
         } while (workSpaceRepository.findByKey(key).isPresent());
         newWorkSpace.setKey(key);
 
-        // Lưu WorkSpace vào database
         WorkSpace savedWorkspace = workSpaceRepository.save(newWorkSpace);
 
         return savedWorkspace;

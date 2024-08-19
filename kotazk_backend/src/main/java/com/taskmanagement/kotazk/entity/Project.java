@@ -31,14 +31,14 @@ public class Project {
     private Member member;
 
     @OneToOne
-    @JoinColumn(name = "customization_id", nullable = false)
+    @JoinColumn(name = "customization_id")
     private Customization customization;
 
     @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "is_pinned", nullable = false)
-    private Boolean isPinned;
+    private Boolean isPinned = false;
 
     @Column(name = "position", nullable = false)
     private Long position;

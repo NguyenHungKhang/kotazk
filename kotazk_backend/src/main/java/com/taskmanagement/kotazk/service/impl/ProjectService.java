@@ -9,17 +9,13 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
-import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
+import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IProjectService;
-import com.taskmanagement.kotazk.service.IWorkSpaceService;
-import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -29,8 +25,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,6 +43,8 @@ public class ProjectService implements IProjectService {
     @Autowired
     private IMemberRoleService memberRoleService = new MemberRoleService();
     @Autowired
+    private ICustomizationRepository customizationRepository;
+    @Autowired
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<Project> specificationUtil = new BasicSpecificationUtil<>();
@@ -56,17 +54,39 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+
+        Member currentMember = memberService.checkMemberStatusesAndPermissions(
                 currentUser.getId(),
                 workSpace.getId(),
                 null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.CREATE_PROJECT)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(String.valueOf(WorkSpacePermission.CREATE_PROJECT))
         );
 
+
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
+
+        if (workSpace.getCustomization() != null) {
+            Customization customization = Customization.builder()
+                    .avatar(workSpace.getCustomization().getAvatar())
+                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
+                    .fontColor(workSpace.getCustomization().getFontColor())
+                    .icon(workSpace.getCustomization().getIcon())
+                    .build();
+
+            Customization savedCustomization = customizationRepository.save(customization);
+            newProject.setCustomization(savedCustomization);
+        } else newProject.setCustomization(null);
+
+        String key = null;
+        do {
+            key = RandomStringGeneratorUtil.generateKey();
+        } while (projectRepository.findByKey(key).isPresent());
+        newProject.setKey(key);
+        newProject.setPosition((long) workSpace.getProjects().size());
         newProject.setId(null);
         newProject.setMember(currentMember);
+        newProject.setWorkSpace(workSpace);
 
         Project savedProject = projectRepository.save(newProject);
 
@@ -74,6 +94,7 @@ public class ProjectService implements IProjectService {
         Optional<MemberRole> memberRole = memberRoles.stream()
                 .filter(item -> Objects.equals(item.getName(), "Admin"))
                 .findFirst();
+
         MemberRequestDto memberRequest = MemberRequestDto.builder()
                 .workSpaceId(savedProject.getWorkSpace().getId())
                 .projectId(savedProject.getId())
@@ -85,7 +106,7 @@ public class ProjectService implements IProjectService {
                 .status(MemberStatus.ACTIVE)
                 .build();
         memberService.initialMember(memberRequest);
-        return null;
+        return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
     }
 
     @Override
@@ -104,6 +125,7 @@ public class ProjectService implements IProjectService {
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
         newProject.setId(null);
         newProject.setMember(currentMember);
+        newProject.setWorkSpace(workSpace);
 
         Project savedProject = projectRepository.save(newProject);
         return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
@@ -117,9 +139,10 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckModifyPermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Member currentProjectMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
+        Member currentWorkSpaceMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), null, MemberStatus.ACTIVE);
+        int checkPermission = checkModifyPermission(currentWorkSpaceMember, currentProjectMember);
+        if (checkPermission == 0) throw new CustomException("This user does not have permission for this action");
 
         if (project.getName() != null) currentProject.setName(project.getName());
         if (project.getDescription() != null) currentProject.setDescription(project.getDescription());
@@ -130,6 +153,8 @@ public class ProjectService implements IProjectService {
         Project savedProject = projectRepository.save(currentProject);
         return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
     }
+
+
 
     @Override
     public Boolean delete(Long id) {
@@ -241,17 +266,15 @@ public class ProjectService implements IProjectService {
         );
     }
 
-    private static boolean isCheckModifyPermission(Member currentMember, Project currentProject) {
-        boolean checkPermission = false;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
-            if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT))
-                checkPermission = true;
-            else if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_OWN_PROJECT))
-                if (currentProject.getMember().getId().equals(currentMember.getId()))
-                    checkPermission = true;
-        } else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            if (currentMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
-                checkPermission = true;
+
+    private static int checkModifyPermission(Member currentWorkSpaceMember, Member currentProjectMember) {
+        int checkPermission = 0;
+        if (currentWorkSpaceMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            if (currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT))
+                checkPermission = 1;
+        if (currentProjectMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            if (currentProjectMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
+                checkPermission = 2;
         return checkPermission;
     }
 

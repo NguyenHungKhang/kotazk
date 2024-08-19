@@ -61,7 +61,7 @@ public class StatusService implements IStatusService {
                 project.getWorkSpace().getId(),
                 project.getId(),
                 MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.EDIT_WORKFLOW));
+                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
 
         Status newStatus = ModelMapperUtil.mapOne(status, Status.class);
         newStatus.setId(null);
@@ -86,7 +86,7 @@ public class StatusService implements IStatusService {
                 currentProject.getWorkSpace().getId(),
                 currentProject.getId(),
                 MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.EDIT_WORKFLOW));
+                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
 
         if (status.getName() != null) currentStatus.setName(status.getName());
         if (status.getDescription() != null) currentStatus.setDescription(status.getDescription());
@@ -108,7 +108,7 @@ public class StatusService implements IStatusService {
                 currentProject.getWorkSpace().getId(),
                 currentProject.getId(),
                 MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.EDIT_WORKFLOW));
+                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
 
         statusRepository.deleteById(currentStatus.getId());
         return true;
@@ -125,7 +125,7 @@ public class StatusService implements IStatusService {
                 currentProject.getWorkSpace().getId(),
                 currentProject.getId(),
                 MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.EDIT_WORKFLOW));
+                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
         currentStatus.setDeletedAt(currentTime);
