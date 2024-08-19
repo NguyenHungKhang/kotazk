@@ -26,10 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -60,8 +57,9 @@ public class ProjectService implements IProjectService {
                 workSpace.getId(),
                 null,
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(String.valueOf(WorkSpacePermission.CREATE_PROJECT))
-        );
+                Collections.singletonList(WorkSpacePermission.CREATE_PROJECT),
+                new ArrayList<>()
+        ).get("workspaceMember");
 
 
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
@@ -139,10 +137,17 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
 
-        Member currentProjectMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        Member currentWorkSpaceMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), null, MemberStatus.ACTIVE);
-        int checkPermission = checkModifyPermission(currentWorkSpaceMember, currentProjectMember);
-        if (checkPermission == 0) throw new CustomException("This user does not have permission for this action");
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+        );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
 
         if (project.getName() != null) currentProject.setName(project.getName());
         if (project.getDescription() != null) currentProject.setDescription(project.getDescription());
@@ -163,9 +168,17 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckDeletePermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
+                Collections.singletonList(ProjectPermission.DELETE_PROJECT)
+        );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
 
         projectRepository.deleteById(currentProject.getId());
         return true;
@@ -179,9 +192,18 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = currentProject.getWorkSpace();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckDeletePermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
+                Collections.singletonList(ProjectPermission.DELETE_PROJECT)
+        );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+
 
         currentProject.setDeletedAt(currentTime);
         projectRepository.deleteById(currentProject.getId());
@@ -196,9 +218,17 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = currentProject.getWorkSpace();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckDeletePermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+        );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
 
         currentProject.setArchiveAt(currentTime);
         projectRepository.deleteById(currentProject.getId());
@@ -212,9 +242,17 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatus(currentUser.getId(), workSpace.getId(), currentProject.getId(), MemberStatus.ACTIVE);
-        boolean checkPermission = isCheckDeletePermission(currentMember, currentProject);
-        if (!checkPermission) throw new CustomException("This user does not have permission for this action");
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+                currentUser.getId(),
+                workSpace.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+        );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
 
         currentProject.setArchiveAt(null);
         projectRepository.deleteById(currentProject.getId());
@@ -228,13 +266,19 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+
+        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
                 currentUser.getId(),
                 workSpace.getId(),
                 currentProject.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.BROWSE_PROJECT)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_PUBLIC_PROJECT),
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT)
         );
+
+        Member currentProjectMember = currentMemberMap.get("projectMember");
+        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+
 
         return ModelMapperUtil.mapOne(currentProject, ProjectResponseDto.class);
     }
