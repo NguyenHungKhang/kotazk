@@ -10,6 +10,7 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResp
 import java.io.IOException;
 
 public interface IProjectService {
+    ProjectResponseDto initialProject(ProjectRequestDto project);
     ProjectResponseDto create(ProjectRequestDto project);
     ProjectResponseDto update(Long id, ProjectRequestDto project);
     Boolean delete(Long id);

@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.config;
 
+import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
 import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
 
 import java.util.ArrayList;
@@ -32,4 +33,65 @@ public class ConstantConfig {
             WorkSpacePermission.VIEW_PUBLIC_PROJECT, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_GOAL // ADMIN, EDITOR, GUEST
     );
+
+
+    public static final Set<ProjectPermission> DEFAULT_PROJECT_ADMIN_PERMISSIONS = Set.of(
+            ProjectPermission.BROWSE_PROJECT,
+            ProjectPermission.MODIFY_PROJECT,
+            ProjectPermission.DELETE_PROJECT,
+            ProjectPermission.MANAGE_ROLE,
+            ProjectPermission.INVITE_MEMBER,
+            ProjectPermission.REVOKE_MEMBER,
+            ProjectPermission.DELETE_MEMBER,
+            ProjectPermission.CHANGE_MEMBER_ROLE,
+            ProjectPermission.CHANGE_MEMBER_STATUS,
+            ProjectPermission.MANAGE_SPRINTS,
+            ProjectPermission.START_COMPLETE_SPRINTS,
+            ProjectPermission.EDIT_SPRINTS,
+            ProjectPermission.ASSIGN_TASKS,
+            ProjectPermission.ASSIGNABLE_USER,
+            ProjectPermission.CLOSE_TASKS,
+            ProjectPermission.CREATE_TASKS,
+            ProjectPermission.DELETE_TASKS,
+            ProjectPermission.EDIT_TASKS,
+            ProjectPermission.LINK_TASKS,
+            ProjectPermission.MOVE_TASKS,
+            ProjectPermission.SCHEDULE_TASKS,
+            ProjectPermission.MANAGE_WORKFLOW,
+            ProjectPermission.MANAGE_LABEL,
+            ProjectPermission.MANAGE_TASK_TYPE,
+            ProjectPermission.ADD_COMMENT,
+            ProjectPermission.DELETE_ALL_COMMENT,
+            ProjectPermission.DELETE_OWN_COMMENT,
+            ProjectPermission.EDIT_ALL_COMMENT,
+            ProjectPermission.EDIT_OWN_COMMENT,
+            ProjectPermission.CREATE_ATTACHMENTS,
+            ProjectPermission.DELETE_ALL_ATTACHMENTS,
+            ProjectPermission.DELETE_OWN_ATTACHMENTS,
+            ProjectPermission.ARCHIVE_TASK_FOR_PROJECT,
+            ProjectPermission.RESTORE_TASK_FOR_PROJECT,
+            ProjectPermission.BROWSE_ARCHIVE
+    );
+
+    public static final Set<ProjectPermission> DEFAULT_PROJECT_EDITOR_PERMISSIONS = Set.of(
+            ProjectPermission.BROWSE_PROJECT,
+            ProjectPermission.ASSIGNABLE_USER,
+            ProjectPermission.CLOSE_TASKS,
+            ProjectPermission.CREATE_TASKS,
+            ProjectPermission.DELETE_TASKS,
+            ProjectPermission.EDIT_TASKS,
+            ProjectPermission.LINK_TASKS,
+            ProjectPermission.MOVE_TASKS,
+            ProjectPermission.SCHEDULE_TASKS,
+            ProjectPermission.ADD_COMMENT,
+            ProjectPermission.DELETE_OWN_COMMENT,
+            ProjectPermission.EDIT_OWN_COMMENT,
+            ProjectPermission.CREATE_ATTACHMENTS,
+            ProjectPermission.DELETE_OWN_ATTACHMENTS
+    );
+
+    public static final Set<ProjectPermission> DEFAULT_PROJECT_GUEST_PERMISSIONS = Set.of(
+            ProjectPermission.BROWSE_PROJECT
+    );
+
 }

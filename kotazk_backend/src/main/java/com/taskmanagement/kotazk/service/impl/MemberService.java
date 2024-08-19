@@ -10,10 +10,7 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
-import com.taskmanagement.kotazk.repository.IMemberRepository;
-import com.taskmanagement.kotazk.repository.IMemberRoleRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
@@ -30,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 @Transactional
@@ -43,6 +38,8 @@ public class MemberService implements IMemberService {
     @Autowired
     private IMemberRoleRepository memberRoleRepository;
     @Autowired
+    private IUserRepository userRepository;
+    @Autowired
     private IWorkSpaceRepository workSpaceRepository;
     @Autowired
     private IProjectRepository projectRepository;
@@ -52,47 +49,103 @@ public class MemberService implements IMemberService {
     BasicSpecificationUtil<Member> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public MemberResponseDto create(MemberRequestDto member, Boolean systemExec) {
-        User currentUser = SecurityUtil.getCurrentUser();
+    public Member initialMember(MemberRequestDto member) {
+        User user = userRepository.findById(member.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", member.getWorkSpaceId()));
+        MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("member role", "id", member.getMemberRoleId()));
         WorkSpace workSpace = null;
         Project project = null;
 
-        if(member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
+        if (member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
             if (member.getWorkSpaceId() != null) {
                 workSpace = workSpaceRepository.findById(member.getWorkSpaceId())
                         .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", member.getWorkSpaceId()));
+                if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
+                        Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
+                    throw new CustomException("This member's role is not suitable with this workspace!");
+
             }
-        } else if(member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
+        } else if (member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
             if (member.getProjectId() != null) {
                 project = projectRepository.findById(member.getProjectId())
                         .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getProjectId()));
+                if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
+                        Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
+                    throw new CustomException("This member's role is not suitable with this project!");
             }
         } else
             throw new CustomException("Invalid Input!");
 
-        if(!systemExec)
-            checkMemberStatusAndPermission(
-                    currentUser.getId(),
-                    workSpace != null ? workSpace.getId() : null,
-                    project != null ? project.getId() : null,
-                    MemberStatus.ACTIVE,
-                    "INVITE_MEMBER"
-                    );
-
-        MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getMemberRoleId()));
-
-        if (!member.getMemberFor().equals(memberRole.getRoleFor())) {
-            throw new CustomException("This member's role is not suitable with this request!");
-        }
-
-        // Add check user permission
+        memberRepository.findByUserAndProjectOrWorkSpace(
+                user.getId(),
+                project != null ? project.getId() : null,
+                workSpace != null ? workSpace.getId() : null
+        ).ifPresent(existMember -> {
+            throw new CustomException("This user is already a member");
+        });
 
         Member newMember = ModelMapperUtil.mapOne(member, Member.class);
         newMember.setProject(project);
         newMember.setWorkSpace(workSpace);
         newMember.setRole(memberRole);
-        if(!systemExec) newMember.setStatus(MemberStatus.ACTIVE);
+        newMember.setStatus(MemberStatus.ACTIVE);
+
+        return memberRepository.save(newMember);
+    }
+
+    @Override
+    public MemberResponseDto create(MemberRequestDto member) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        User user = userRepository.findById(member.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", member.getWorkSpaceId()));
+        MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("member role", "id", member.getMemberRoleId()));
+        WorkSpace workSpace = null;
+        Project project = null;
+
+        if (member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
+            if (member.getWorkSpaceId() != null) {
+                workSpace = workSpaceRepository.findById(member.getWorkSpaceId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", member.getWorkSpaceId()));
+                if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
+                        Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
+                    throw new CustomException("This member's role is not suitable with this workspace!");
+
+            }
+        } else if (member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
+            if (member.getProjectId() != null) {
+                project = projectRepository.findById(member.getProjectId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getProjectId()));
+                if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
+                        Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
+                    throw new CustomException("This member's role is not suitable with this project!");
+            }
+        } else
+            throw new CustomException("Invalid Input!");
+
+        checkMemberStatusAndPermission(
+                currentUser.getId(),
+                project != null ? project.getId() : null,
+                workSpace != null ? workSpace.getId() : null,
+                MemberStatus.ACTIVE,
+                "INVITE_MEMBER"
+        );
+
+        memberRepository.findByUserAndProjectOrWorkSpace(
+                user.getId(),
+                project != null ? project.getId() : null,
+                workSpace != null ? workSpace.getId() : null
+        ).ifPresent(existMember -> {
+            throw new CustomException("This user is already a member");
+        });
+
+
+        Member newMember = ModelMapperUtil.mapOne(member, Member.class);
+        newMember.setProject(project);
+        newMember.setWorkSpace(workSpace);
+        newMember.setRole(memberRole);
+        newMember.setStatus(MemberStatus.ACTIVE);
 
         Member savedMember = memberRepository.save(newMember);
 
@@ -108,7 +161,7 @@ public class MemberService implements IMemberService {
 
         // Add check user permission
 
-        if(member.getStatus() != null) currentMember.setStatus(member.getStatus());
+        if (member.getStatus() != null) currentMember.setStatus(member.getStatus());
 
         Member savedMember = memberRepository.save(currentMember);
 
@@ -124,7 +177,7 @@ public class MemberService implements IMemberService {
 
         // Add check user permission
 
-        if(currentMember.getSystemRequired().equals(true))
+        if (currentMember.getSystemRequired().equals(true))
             throw new CustomException("This member cannot be deleted");
 
 
@@ -142,7 +195,7 @@ public class MemberService implements IMemberService {
 
         // Add check user permission
 
-        if(currentMember.getSystemRequired().equals(true))
+        if (currentMember.getSystemRequired().equals(true))
             throw new CustomException("This member cannot be deleted");
 
         currentMember.setDeletedAt(currentTime);
@@ -200,7 +253,7 @@ public class MemberService implements IMemberService {
                 .value(userId.toString())
                 .build();
 
-        if(projectId != null) {
+        if (projectId != null) {
             FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
                     .key("project.id")
                     .operation(FilterOperator.EQUAL)
@@ -208,7 +261,7 @@ public class MemberService implements IMemberService {
                     .build();
             filterRequestList.add(filterForProjectRequest);
         }
-        if(workspaceId != null) {
+        if (workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
                     .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
@@ -222,13 +275,13 @@ public class MemberService implements IMemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
         boolean checkPermission = false;
-        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
             checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
-        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
             checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
         else throw new CustomException("Invalid Input!");
 
-        if(!checkPermission) throw new  CustomException("Member does not have this permission");
+        if (!checkPermission) throw new CustomException("Member does not have this permission");
         return currentMember;
     }
 
@@ -241,7 +294,7 @@ public class MemberService implements IMemberService {
                 .value(userId.toString())
                 .build();
 
-        if(projectId != null) {
+        if (projectId != null) {
             FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
                     .key("project.id")
                     .operation(FilterOperator.EQUAL)
@@ -249,7 +302,7 @@ public class MemberService implements IMemberService {
                     .build();
             filterRequestList.add(filterForProjectRequest);
         }
-        if(workspaceId != null) {
+        if (workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
                     .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
@@ -263,16 +316,17 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
-        if(!currentMember.getStatus().equals(status)) throw new CustomException(String.format("Member status: %s", status));
+        if (!currentMember.getStatus().equals(status))
+            throw new CustomException(String.format("Member status: %s", status));
 
         boolean checkPermission;
-        if(currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
             checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
-        else if(currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
             checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
         else throw new CustomException("Invalid Input!");
 
-        if(!checkPermission) throw new  CustomException("Member does not have this permission");
+        if (!checkPermission) throw new CustomException("Member does not have this permission");
         return currentMember;
     }
 
@@ -285,7 +339,7 @@ public class MemberService implements IMemberService {
                 .value(userId.toString())
                 .build();
 
-        if(projectId != null) {
+        if (projectId != null) {
             FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
                     .key("project.id")
                     .operation(FilterOperator.EQUAL)
@@ -293,7 +347,7 @@ public class MemberService implements IMemberService {
                     .build();
             filterRequestList.add(filterForProjectRequest);
         }
-        if(workspaceId != null) {
+        if (workspaceId != null) {
             FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
                     .key("workSpace.id")
                     .operation(FilterOperator.EQUAL)
@@ -306,7 +360,8 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findOne(specification)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
 
-        if(!currentMember.getStatus().equals(status)) throw new  CustomException(String.format("Member status: %s", status));
+        if (!currentMember.getStatus().equals(status))
+            throw new CustomException(String.format("Member status: %s", status));
         return currentMember;
     }
 }

@@ -1,19 +1,18 @@
 package com.taskmanagement.kotazk.service.impl;
 
-import com.taskmanagement.kotazk.entity.Member;
-import com.taskmanagement.kotazk.entity.Project;
-import com.taskmanagement.kotazk.entity.User;
-import com.taskmanagement.kotazk.entity.WorkSpace;
+import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
+import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IProjectService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
@@ -33,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -44,16 +45,62 @@ public class ProjectService implements IProjectService {
     @Autowired
     private IMemberService memberService = new MemberService();
     @Autowired
+    private IMemberRoleService memberRoleService = new MemberRoleService();
+    @Autowired
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<Project> specificationUtil = new BasicSpecificationUtil<>();
+
+    @Override
+    public ProjectResponseDto initialProject(ProjectRequestDto project) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
+        Member currentMember = memberService.checkMemberStatusAndPermission(
+                currentUser.getId(),
+                workSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.CREATE_PROJECT)
+        );
+
+        Project newProject = ModelMapperUtil.mapOne(project, Project.class);
+        newProject.setId(null);
+        newProject.setMember(currentMember);
+
+        Project savedProject = projectRepository.save(newProject);
+
+        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(null, savedProject.getId());
+        Optional<MemberRole> memberRole = memberRoles.stream()
+                .filter(item -> Objects.equals(item.getName(), "Admin"))
+                .findFirst();
+        MemberRequestDto memberRequest = MemberRequestDto.builder()
+                .workSpaceId(savedProject.getWorkSpace().getId())
+                .projectId(savedProject.getId())
+                .systemInitial(true)
+                .systemRequired(true)
+                .memberRoleId(memberRole.get().getId())
+                .memberFor(EntityBelongsTo.PROJECT)
+                .userId(currentUser.getId())
+                .status(MemberStatus.ACTIVE)
+                .build();
+        memberService.initialMember(memberRequest);
+        return null;
+    }
 
     @Override
     public ProjectResponseDto create(ProjectRequestDto project) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(), workSpace.getId(), null, MemberStatus.ACTIVE, String.valueOf(WorkSpacePermission.CREATE_PROJECT));
+        Member currentMember = memberService.checkMemberStatusAndPermission(
+                currentUser.getId(),
+                workSpace.getId(),
+                null,
+                MemberStatus.ACTIVE,
+                String.valueOf(WorkSpacePermission.CREATE_PROJECT)
+        );
+
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
         newProject.setId(null);
         newProject.setMember(currentMember);
@@ -117,7 +164,7 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
-    public Boolean archive(Long id)  {
+    public Boolean archive(Long id) {
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
@@ -231,7 +278,7 @@ public class ProjectService implements IProjectService {
             else if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT)
                     && currentProject.getVisibility().equals(Visibility.PRIVATE))
 
-                    checkPermission = true;
+                checkPermission = true;
         } else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
 //            if (currentProject.getMember().getId().equals(currentMember.getId()))
             if (currentMember.getRole().getProjectPermissions().contains(ProjectPermission.BROWSE_PROJECT))

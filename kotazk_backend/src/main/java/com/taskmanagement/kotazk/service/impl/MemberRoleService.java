@@ -241,12 +241,15 @@ public class MemberRoleService implements IMemberRoleService {
         Optional<WorkSpace> workSpace = workSpaceId != null ? workSpaceRepository.findById(workSpaceId) : Optional.empty();
         Optional<Project> project = projectId != null ? projectRepository.findById(projectId) : Optional.empty();
 
+        // Quyền WorkSpace và Project tùy thuộc vào điều kiện null
+        EnumSet<WorkSpacePermission> workSpacePermissions = workSpace.isPresent() ? EnumSet.allOf(WorkSpacePermission.class) : EnumSet.noneOf(WorkSpacePermission.class);
+        EnumSet<ProjectPermission> projectPermissions = project.isPresent() ? EnumSet.allOf(ProjectPermission.class) : EnumSet.noneOf(ProjectPermission.class);
 
         MemberRole adminRole = MemberRole.builder()
                 .name("Admin") // Tên vai trò
                 .description("This role has all permissions") // Mô tả
-                .workSpacePermissions(EnumSet.allOf(WorkSpacePermission.class)) // Tất cả quyền WorkSpace
-                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpacePermissions(workSpacePermissions) // Quyền WorkSpace nếu có
+                .projectPermissions(projectPermissions) // Quyền Project nếu có
                 .workSpace(workSpace.orElse(null))
                 .project(project.orElse(null))
                 .systemInitial(true)
@@ -255,11 +258,15 @@ public class MemberRoleService implements IMemberRoleService {
                 .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
                 .build();
 
+        // Tạo quyền Editor với các quyền workspace và project tương ứng
+        Set<WorkSpacePermission> editorWorkSpacePermissions = workSpace.isPresent() ? DEFAULT_EDITOR_ROLE_PERMISSION : EnumSet.noneOf(WorkSpacePermission.class);
+        Set<ProjectPermission> editorProjectPermissions = project.isPresent() ? DEFAULT_PROJECT_EDITOR_PERMISSIONS : EnumSet.noneOf(ProjectPermission.class);
+
         MemberRole editorRole = MemberRole.builder()
                 .name("Editor") // Tên vai trò
                 .description("This role can edit something in workspace") // Mô tả
-                .workSpacePermissions(DEFAULT_EDITOR_ROLE_PERMISSION) // Tất cả quyền WorkSpace
-                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpacePermissions(editorWorkSpacePermissions) // Quyền WorkSpace nếu có
+                .projectPermissions(editorProjectPermissions) // Quyền Project nếu có
                 .workSpace(workSpace.orElse(null))
                 .project(project.orElse(null))
                 .systemInitial(true)
@@ -268,11 +275,15 @@ public class MemberRoleService implements IMemberRoleService {
                 .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
                 .build();
 
+        // Tạo quyền Guest với các quyền workspace và project tương ứng
+        Set<WorkSpacePermission> guestWorkSpacePermissions = workSpace.isPresent() ? DEFAULT_GUEST_ROLE_PERMISSION : EnumSet.noneOf(WorkSpacePermission.class);
+        Set<ProjectPermission> guestProjectPermissions = project.isPresent() ? DEFAULT_PROJECT_GUEST_PERMISSIONS : EnumSet.noneOf(ProjectPermission.class);
+
         MemberRole guestRole = MemberRole.builder()
                 .name("Guest") // Tên vai trò
                 .description("This role can view something in workspace") // Mô tả
-                .workSpacePermissions(DEFAULT_GUEST_ROLE_PERMISSION) // Tất cả quyền WorkSpace
-                .projectPermissions(EnumSet.allOf(ProjectPermission.class)) // Tất cả quyền Project
+                .workSpacePermissions(guestWorkSpacePermissions) // Quyền WorkSpace nếu có
+                .projectPermissions(guestProjectPermissions) // Quyền Project nếu có
                 .workSpace(workSpace.orElse(null))
                 .project(project.orElse(null))
                 .systemInitial(true)

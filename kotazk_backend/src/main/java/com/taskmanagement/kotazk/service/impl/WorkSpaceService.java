@@ -69,7 +69,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .userId(currentUser.getId())
                 .status(MemberStatus.ACTIVE)
                 .build();
-        memberService.create(memberRequest, true);
+        memberService.initialMember(memberRequest);
         return ModelMapperUtil.mapOne(newWorkSpace, WorkSpaceDetailResponseDto.class);
     }
 
