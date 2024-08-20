@@ -315,23 +315,14 @@ public class WorkSpaceService implements IWorkSpaceService {
 
     public static Specification<WorkSpace> hasUserPermissions(Long userId, List<WorkSpacePermission> permissions) {
         return (Root<WorkSpace> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
-            // Join với bảng Members
             Join<WorkSpace, Member> memberJoin = root.join("members");
-
-            // Điều kiện để lọc theo userId
             Predicate userPredicate = criteriaBuilder.equal(memberJoin.get("user").get("id"), userId);
-
-            // Join với bảng MemberRole để lấy workSpacePermissions
             Join<Member, MemberRole> roleJoin = memberJoin.join("role");
-
-            // Tạo điều kiện kiểm tra ít nhất một phần tử trong workSpacePermissions có nằm trong permissions
             Predicate permissionsPredicate = criteriaBuilder.disjunction();
             for (WorkSpacePermission permission : permissions) {
                 Predicate singlePermissionPredicate = criteriaBuilder.isMember(permission, roleJoin.get("workSpacePermissions"));
                 permissionsPredicate = criteriaBuilder.or(permissionsPredicate, singlePermissionPredicate);
             }
-
-            // Kết hợp điều kiện lọc userId và permissionsPredicate
             return criteriaBuilder.and(userPredicate, permissionsPredicate);
         };
     }

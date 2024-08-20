@@ -16,6 +16,7 @@ import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IProjectService;
 import com.taskmanagement.kotazk.util.*;
+import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,14 +53,13 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
 
-        Member currentMember = memberService.checkMemberStatusesAndPermissions(
+        Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                null,
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(WorkSpacePermission.CREATE_PROJECT),
-                new ArrayList<>()
-        ).get("workspaceMember");
+                true
+        );
 
 
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
@@ -112,12 +112,12 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.CREATE_PROJECT)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.CREATE_PROJECT),
+                true
         );
 
         Project newProject = ModelMapperUtil.mapOne(project, Project.class);
@@ -134,20 +134,26 @@ public class ProjectService implements IProjectService {
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
+        WorkSpace workSpace =currentProject.getWorkSpace();
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
-                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                false
+        );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         if (project.getName() != null) currentProject.setName(project.getName());
         if (project.getDescription() != null) currentProject.setDescription(project.getDescription());
@@ -160,7 +166,6 @@ public class ProjectService implements IProjectService {
     }
 
 
-
     @Override
     public Boolean delete(Long id) {
         Project currentProject = projectRepository.findById(id)
@@ -168,17 +173,24 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
-                Collections.singletonList(ProjectPermission.DELETE_PROJECT)
+                Collections.singletonList(ProjectPermission.DELETE_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
+                false
+        );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         projectRepository.deleteById(currentProject.getId());
         return true;
@@ -192,17 +204,24 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = currentProject.getWorkSpace();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
-                Collections.singletonList(ProjectPermission.DELETE_PROJECT)
+                Collections.singletonList(ProjectPermission.DELETE_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.DELETE_ALL_PROJECT),
+                false
+        );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
 
         currentProject.setDeletedAt(currentTime);
@@ -218,17 +237,24 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = currentProject.getWorkSpace();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
-                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                false
+        );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         currentProject.setArchiveAt(currentTime);
         projectRepository.deleteById(currentProject.getId());
@@ -242,17 +268,24 @@ public class ProjectService implements IProjectService {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = currentProject.getWorkSpace();
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
-                Collections.singletonList(ProjectPermission.MODIFY_PROJECT)
+                Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
+                false
+        );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         currentProject.setArchiveAt(null);
         projectRepository.deleteById(currentProject.getId());
@@ -267,27 +300,81 @@ public class ProjectService implements IProjectService {
         WorkSpace workSpace = currentProject.getWorkSpace();
 
 
-        Map<String, Member> currentMemberMap = memberService.checkMemberStatusesAndPermissions(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 workSpace.getId(),
-                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_PUBLIC_PROJECT),
-                Collections.singletonList(ProjectPermission.BROWSE_PROJECT)
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                false
         );
 
-        Member currentProjectMember = currentMemberMap.get("projectMember");
-        Member currentWorkSpaceMember = currentMemberMap.get("workSpaceMember");
+        Member currentWorkSpaceMember = null;
+
+        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                    false
+            );
+        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                    false
+            );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
 
         return ModelMapperUtil.mapOne(currentProject, ProjectResponseDto.class);
     }
 
     @Override
-    public PageResponse<ProjectResponseDto> getList(SearchParamRequestDto searchParam) {
+    public PageResponse<ProjectResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", workSpaceId));
+
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST),
+                false
+        );
+
+        Specification<Project> permissionSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Predicate publicProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PUBLIC);
+            Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
+
+            if (currentWorkSpaceMember != null &&
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST)) {
+                privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+            } else {
+                Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);
+                Predicate privateMemberPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+                Predicate userMemberPredicate = criteriaBuilder.equal(projectMemberJoin.get("user").get("id"), userId);
+                Predicate statusPredicate = criteriaBuilder.equal(projectMemberJoin.get("status"), MemberStatus.ACTIVE);
+                privateProjectsPredicate = criteriaBuilder.and(privateMemberPredicate, userMemberPredicate, statusPredicate);
+            }
+
+            return criteriaBuilder.or(publicProjectsPredicate, privateProjectsPredicate);
+        };
+
+        Specification<Project> workSpaceSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Project, WorkSpace> workSpaceJoin = root.join("workSpace");
+            return criteriaBuilder.equal(workSpaceJoin.get("id"), workSpace.getId());
+        };
+
+        Specification<Project> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -295,10 +382,13 @@ public class ProjectService implements IProjectService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
 
-        Specification<Project> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<Project> specification = Specification.where(workSpaceSpecification)
+                .and(permissionSpecification)
+                .and(filterSpecification);
 
         Page<Project> page = projectRepository.findAll(specification, pageable);
         List<ProjectResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), ProjectResponseDto.class);
+
         return new PageResponse<>(
                 dtoList,
                 page.getNumber(),
@@ -308,48 +398,5 @@ public class ProjectService implements IProjectService {
                 page.hasNext(),
                 page.hasPrevious()
         );
-    }
-
-
-    private static int checkModifyPermission(Member currentWorkSpaceMember, Member currentProjectMember) {
-        int checkPermission = 0;
-        if (currentWorkSpaceMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            if (currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT))
-                checkPermission = 1;
-        if (currentProjectMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            if (currentProjectMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
-                checkPermission = 2;
-        return checkPermission;
-    }
-
-    private static boolean isCheckDeletePermission(Member currentMember, Project currentProject) {
-        boolean checkPermission = false;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
-            if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.DELETE_ALL_PROJECT))
-                checkPermission = true;
-            else if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.DELETE_OWN_PROJECT))
-                if (currentProject.getMember().getId().equals(currentMember.getId()))
-                    checkPermission = true;
-        } else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            if (currentMember.getRole().getProjectPermissions().contains(ProjectPermission.DELETE_PROJECT))
-                checkPermission = true;
-        return checkPermission;
-    }
-
-    private static boolean isCheckAccessPermission(Member currentMember, Project currentProject) {
-        boolean checkPermission = false;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
-            if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PUBLIC_PROJECT)
-                    && currentProject.getVisibility().equals(Visibility.PUBLIC))
-                checkPermission = true;
-            else if (currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT)
-                    && currentProject.getVisibility().equals(Visibility.PRIVATE))
-
-                checkPermission = true;
-        } else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-//            if (currentProject.getMember().getId().equals(currentMember.getId()))
-            if (currentMember.getRole().getProjectPermissions().contains(ProjectPermission.BROWSE_PROJECT))
-                checkPermission = true;
-        return checkPermission;
     }
 }

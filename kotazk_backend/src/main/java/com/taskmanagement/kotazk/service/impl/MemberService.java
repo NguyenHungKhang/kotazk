@@ -111,7 +111,13 @@ public class MemberService implements IMemberService {
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
                         Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
                     throw new CustomException("This member's role is not suitable with this workspace!");
-
+                checkWorkSpaceMember(
+                        currentUser.getId(),
+                        workSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.INVITE_MEMBER),
+                        true
+                );
             }
         } else if (member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
             if (member.getProjectId() != null) {
@@ -120,18 +126,17 @@ public class MemberService implements IMemberService {
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
                         Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
                     throw new CustomException("This member's role is not suitable with this project!");
+                checkProjectMember(
+                        currentUser.getId(),
+                        project.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(ProjectPermission.INVITE_MEMBER),
+                        true
+                );
             }
         } else
             throw new CustomException("Invalid Input!");
 
-        checkMemberStatusesAndPermissions(
-                currentUser.getId(),
-                workSpace != null ? workSpace.getId() : null,
-                project != null ? project.getId() : null,
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.INVITE_MEMBER),
-                Collections.singletonList(ProjectPermission.INVITE_MEMBER)
-        );
 
         memberRepository.findByUserAndProjectOrWorkSpace(
                 user.getId(),
@@ -367,63 +372,87 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public Map<String, Member> checkMemberStatusesAndPermissions(Long userId, Long workspaceId, Long projectId, List<MemberStatus> statuses, List<WorkSpacePermission> workSpacePermissions, List<ProjectPermission> projectPermissions) {
-        Map<String, Member> members = new HashMap<>();
+    public Member checkWorkSpaceMember(
+            Long userId,
+            Long workspaceId,
+            List<MemberStatus> statuses,
+            List<WorkSpacePermission> workSpacePermissions,
+            boolean isThrowException
+    ) {
+        if (workspaceId == null) {
+            return null;
+        }
 
-        // Tìm member cho workspace (nếu workspaceId không null)
-        Member workspaceMember = null;
-        if (workspaceId != null) {
-            List<FilterCriteriaRequestDto> workspaceFilterList = new ArrayList<>();
-            workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
-            workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>()));
+        List<FilterCriteriaRequestDto> workspaceFilterList = new ArrayList<>();
+        workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>()));
 
-            workspaceMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(workspaceFilterList))
-                    .orElseThrow(() -> new ResourceNotFoundException("Member", "workspace id", workspaceId));
+        Member workspaceMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(workspaceFilterList))
+                .orElse(null);
 
-            // Kiểm tra status cho workspace
-            if (statuses != null && !statuses.isEmpty() && !statuses.contains(workspaceMember.getStatus())) {
-                throw new CustomException(String.format("Workspace member status is not in the allowed list: %s", statuses));
-            }
+        if (workspaceMember == null) {
+            return handleResult("No member found for workspace id " + workspaceId, isThrowException);
+        }
 
-            // Kiểm tra permissions cho workspace
-            if (workSpacePermissions != null && !workSpacePermissions.isEmpty()) {
-                boolean hasWorkSpacePermission = workspaceMember.getRole().getWorkSpacePermissions().stream()
-                        .anyMatch(p -> workSpacePermissions.contains(p));
-                if (!hasWorkSpacePermission) {
-                    throw new CustomException("Workspace member does not have the required permissions.");
-                }
+        if (statuses != null && !statuses.isEmpty() && !statuses.contains(workspaceMember.getStatus())) {
+            return handleResult(String.format("Workspace member status %s is not in the allowed list: %s", workspaceMember.getStatus(), statuses), isThrowException);
+        }
+
+        if (workSpacePermissions != null && !workSpacePermissions.isEmpty()) {
+            boolean hasWorkSpacePermission = workspaceMember.getRole().getWorkSpacePermissions().stream()
+                    .anyMatch(workSpacePermissions::contains);
+            if (!hasWorkSpacePermission) {
+                return handleResult("Workspace member does not have the required permissions.", isThrowException);
             }
         }
 
-        // Tìm member cho project (nếu projectId không null)
-        Member projectMember = null;
-        if (projectId != null) {
-            List<FilterCriteriaRequestDto> projectFilterList = new ArrayList<>();
-            projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
-            projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>()));
+        return workspaceMember;
+    }
 
-            projectMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(projectFilterList))
-                    .orElseThrow(() -> new ResourceNotFoundException("Member", "project id", projectId));
+    @Override
+    public Member checkProjectMember(
+            Long userId,
+            Long projectId,
+            List<MemberStatus> statuses,
+            List<ProjectPermission> projectPermissions,
+            boolean isThrowException
+    ) {
+        if (projectId == null) {
+            return null;
+        }
 
-            // Kiểm tra status cho project
-            if (statuses != null && !statuses.isEmpty() && !statuses.contains(projectMember.getStatus())) {
-                throw new CustomException(String.format("Project member status is not in the allowed list: %s", statuses));
-            }
+        List<FilterCriteriaRequestDto> projectFilterList = new ArrayList<>();
+        projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
+        projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>()));
 
-            // Kiểm tra permissions cho project
-            if (projectPermissions != null && !projectPermissions.isEmpty()) {
-                boolean hasProjectPermission = projectMember.getRole().getProjectPermissions().stream()
-                        .anyMatch(p -> projectPermissions.contains(p));
-                if (!hasProjectPermission) {
-                    throw new CustomException("Project member does not have the required permissions.");
-                }
+        Member projectMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(projectFilterList))
+                .orElse(null);
+
+        if (projectMember == null) {
+            return handleResult("No member found for project id " + projectId, isThrowException);
+        }
+
+        if (statuses != null && !statuses.isEmpty() && !statuses.contains(projectMember.getStatus())) {
+            return handleResult(String.format("Project member status %s is not in the allowed list: %s", projectMember.getStatus(), statuses), isThrowException);
+        }
+
+        if (projectPermissions != null && !projectPermissions.isEmpty()) {
+            boolean hasProjectPermission = projectMember.getRole().getProjectPermissions().stream()
+                    .anyMatch(projectPermissions::contains);
+            if (!hasProjectPermission) {
+                return handleResult("Project member does not have the required permissions.", isThrowException);
             }
         }
 
-        members.put("workspaceMember", workspaceMember);
-        members.put("projectMember", projectMember);
+        return projectMember;
+    }
 
-        return members;
+    private Member handleResult(String errorMessage, boolean isThrowException) {
+        if (isThrowException) {
+            throw new CustomException(errorMessage);
+        }
+        System.out.println(errorMessage);
+        return null;
     }
 
 

@@ -62,7 +62,7 @@ public class MemberRole {
     @Column(name = "role_for", nullable = false)
     private EntityBelongsTo roleFor;
 
-    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL,  fetch = FetchType.LAZY)
     private Set<Member> member;
 
     @CreationTimestamp

@@ -48,6 +48,11 @@ public class BasicSpecificationUtil<T> {
                     }
                     return inClause;
                 }
+                case IS_NULL:
+                    return criteriaBuilder.isNull(finalPath);
+
+                case IS_NOT_NULL:
+                    return criteriaBuilder.isNotNull(finalPath);
 
                 default:
                     throw new RuntimeException("Operation not supported yet");
@@ -69,7 +74,7 @@ public class BasicSpecificationUtil<T> {
     }
 
     // Hàm hỗ trợ để chuyển đổi giá trị thành kiểu dữ liệu tương ứng
-    private Object castToRequiredType(Class<?> type, String value) {
+    public static Object castToRequiredType(Class<?> type, String value) {
         if (type.equals(String.class)) {
             return value;
         } else if (type.equals(Integer.class)) {
@@ -80,10 +85,19 @@ public class BasicSpecificationUtil<T> {
             return Double.parseDouble(value);
         } else if (type.equals(Boolean.class)) {
             return Boolean.parseBoolean(value);
+        } else if (type.equals(Timestamp.class)) {
+            return new Timestamp(Long.parseLong(value));
+        } else if (type.isEnum()) {
+            try {
+                @SuppressWarnings("unchecked")
+                Class<Enum> enumType = (Class<Enum>) type;
+                return Enum.valueOf(enumType, value);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Invalid value for enum " + type.getSimpleName() + ": " + value, e);
+            }
         }
         throw new IllegalArgumentException("Unsupported type: " + type);
     }
-
     private Object castToRequiredType(Class fieldType, List<String> values) {
         List<Object> lists = new ArrayList<>();
         for (String value : values) {

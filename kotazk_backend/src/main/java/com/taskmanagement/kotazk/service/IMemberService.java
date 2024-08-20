@@ -24,5 +24,20 @@ public interface IMemberService {
     Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission);
     Member checkMemberStatusAndPermission(Long userId, Long workspaceId, Long projectId, MemberStatus status, String permission);
     Member checkMemberStatus(Long userId, Long workspaceId, Long projectId, MemberStatus status);
-    Map<String, Member> checkMemberStatusesAndPermissions(Long userId, Long workspaceId, Long projectId, List<MemberStatus> statuses, List<WorkSpacePermission> workSpacePermissions, List<ProjectPermission> projectPermissions);
+//    Map<String, Member> checkMemberStatusesAndPermissions(Long userId, Long workspaceId, Long projectId, List<MemberStatus> statuses, List<WorkSpacePermission> workSpacePermissions, List<ProjectPermission> projectPermissions);
+    Member checkProjectMember(
+            Long userId,
+            Long projectId,
+            List<MemberStatus> statuses,
+            List<ProjectPermission> projectPermissions,
+            boolean isThrowException
+    );
+
+    Member checkWorkSpaceMember(
+            Long userId,
+            Long workspaceId,
+            List<MemberStatus> statuses,
+            List<WorkSpacePermission> workSpacePermissions,
+            boolean isThrowException
+    );
 }

@@ -18,7 +18,8 @@ public class ConstantConfig {
             WorkSpacePermission.VIEW_ROLE, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_MEMBER, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_PROJECT_LIST, // ADMIN, EDITOR, GUEST
-            WorkSpacePermission.VIEW_PUBLIC_PROJECT, // ADMIN, EDITOR, GUEST
+            WorkSpacePermission.VIEW_PUBLIC_PROJECT_LIST, // ADMIN, EDITOR, GUEST
+            WorkSpacePermission.BROWSE_PUBLIC_PROJECT, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_GOAL, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.MANAGE_OWN_GOAL, // ADMIN, EDITOR
             WorkSpacePermission.CREATE_PROJECT, // ADMIN, EDITOR
@@ -30,7 +31,8 @@ public class ConstantConfig {
             WorkSpacePermission.VIEW_ROLE, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_MEMBER, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_PROJECT_LIST, // ADMIN, EDITOR, GUEST
-            WorkSpacePermission.VIEW_PUBLIC_PROJECT, // ADMIN, EDITOR, GUEST
+            WorkSpacePermission.VIEW_PUBLIC_PROJECT_LIST, // ADMIN, EDITOR, GUEST
+            WorkSpacePermission.BROWSE_PUBLIC_PROJECT, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_GOAL // ADMIN, EDITOR, GUEST
     );
 

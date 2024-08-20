@@ -8,5 +8,7 @@ public enum FilterOperator {
     LIKE,
     IN,
     NOT_IN,
-    BETWEEN
+    BETWEEN,
+    IS_NULL,
+    IS_NOT_NULL
 }

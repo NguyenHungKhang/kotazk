@@ -18,5 +18,5 @@ public interface IProjectService {
     Boolean archive(Long id);
     Boolean restore(Long id);
     ProjectResponseDto getOne(Long id);
-    PageResponse<ProjectResponseDto> getList(SearchParamRequestDto searchParam);
+    PageResponse<ProjectResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId);
 }
