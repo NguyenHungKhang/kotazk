@@ -15,6 +15,7 @@ import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IProjectService;
+import com.taskmanagement.kotazk.service.IStatusService;
 import com.taskmanagement.kotazk.util.*;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,8 @@ public class ProjectService implements IProjectService {
     private IMemberService memberService = new MemberService();
     @Autowired
     private IMemberRoleService memberRoleService = new MemberRoleService();
+    @Autowired
+    private IStatusService statusService = new StatusService();
     @Autowired
     private ICustomizationRepository customizationRepository;
     @Autowired
@@ -104,6 +107,7 @@ public class ProjectService implements IProjectService {
                 .status(MemberStatus.ACTIVE)
                 .build();
         memberService.initialMember(memberRequest);
+        statusService.initialStatus(savedProject.getId());
         return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
     }
 
@@ -138,7 +142,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
                 false
@@ -175,7 +179,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.DELETE_PROJECT),
                 false
@@ -206,7 +210,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.DELETE_PROJECT),
                 false
@@ -239,7 +243,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
                 false
@@ -270,7 +274,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.MODIFY_PROJECT),
                 false
@@ -302,7 +306,7 @@ public class ProjectService implements IProjectService {
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                workSpace.getId(),
+                currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
                 false

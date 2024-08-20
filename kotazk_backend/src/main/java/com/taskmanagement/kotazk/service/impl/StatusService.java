@@ -1,9 +1,8 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.enums.MemberStatus;
-import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
-import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
+import com.taskmanagement.kotazk.entity.enums.*;
+import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
@@ -14,12 +13,17 @@ import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDt
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IStatusRepository;
+import com.taskmanagement.kotazk.repository.ITaskRepository;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IStatusService;
 import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +34,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -40,6 +48,8 @@ public class StatusService implements IStatusService {
     private IStatusRepository statusRepository;
     @Autowired
     private IProjectRepository projectRepository;
+    @Autowired
+    private ITaskRepository taskRepository;
     @Autowired
     private IMemberService memberService = new MemberService();
 
@@ -51,21 +61,68 @@ public class StatusService implements IStatusService {
     private final BasicSpecificationUtil<Status> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
+    public List<Status> initialStatus(Long projectId) {
+
+        Project currentProject = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+
+        Status todoStatus = Status.builder()
+                .name("To do")
+                .description("")
+                .position(0L)
+                .systemInitial(true)
+                .systemRequired(false)
+                .isCompletedStatus(false)
+                .isFromStart(true)
+                .isFromAny(true)
+                .project(currentProject)
+                .build();
+
+        Status inProcessStatus = Status.builder()
+                .name("In process")
+                .description("")
+                .position(1L)
+                .systemInitial(true)
+                .systemRequired(false)
+                .isCompletedStatus(false)
+                .isFromStart(false)
+                .isFromAny(true)
+                .project(currentProject)
+                .build();
+
+        Status doneStatus = Status.builder()
+                .name("Done")
+                .description("")
+                .position(3L)
+                .systemInitial(true)
+                .systemRequired(true)
+                .isCompletedStatus(true)
+                .isFromStart(false)
+                .isFromAny(true)
+                .project(currentProject)
+                .build();
+
+        return statusRepository.saveAll(List.of(todoStatus, inProcessStatus, doneStatus));
+    }
+
+    @Override
     public StatusResponseDto create(StatusRequestDto status) {
         User currentUser = SecurityUtil.getCurrentUser();
-        Project project = projectRepository.findById(status.getProjectId())
+        Project currentProject = projectRepository.findById(status.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", status.getProjectId()));
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                project.getWorkSpace().getId(),
-                project.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                true
+        );
 
         Status newStatus = ModelMapperUtil.mapOne(status, Status.class);
         newStatus.setId(null);
-        newStatus.setProject(project);
+        if (status.getPosition() == null) status.setPosition((long) currentProject.getStatuses().size());
+        newStatus.setProject(currentProject);
 
         Status savedStatus = statusRepository.save(newStatus);
         return ModelMapperUtil.mapOne(savedStatus, StatusResponseDto.class);
@@ -81,12 +138,13 @@ public class StatusService implements IStatusService {
 
         Project currentProject = currentStatus.getProject();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                currentProject.getWorkSpace().getId(),
                 currentProject.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                true
+        );
 
         if (status.getName() != null) currentStatus.setName(status.getName());
         if (status.getDescription() != null) currentStatus.setDescription(status.getDescription());
@@ -103,12 +161,40 @@ public class StatusService implements IStatusService {
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
         Project currentProject = currentStatus.getProject();
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                currentProject.getWorkSpace().getId(),
                 currentProject.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                true
+        );
+
+        Status tranferStatus = null;
+
+        if (currentStatus.getIsCompletedStatus())
+            tranferStatus = currentProject.getStatuses().stream()
+                    .filter(status -> status.getIsCompletedStatus() && !status.equals(currentStatus))
+                    .min(Comparator.comparingLong(Status::getPosition))
+                    .orElse(null);
+        else
+            tranferStatus = currentProject.getStatuses().stream()
+                    .filter(status -> status.getIsFromStart() && !status.equals(currentStatus))
+                    .min(Comparator.comparingLong(Status::getPosition))
+                    .orElse(null);
+
+        if (tranferStatus == null) throw new CustomException("Cannot delete this status");
+
+        List<Task> tasksToTransfer = currentStatus.getTasks();
+        tasksToTransfer.sort(Comparator.comparingLong(Task::getPosition));
+
+        int position = 1;
+        for (Task task : tasksToTransfer) {
+            task.setStatus(tranferStatus);
+            task.setPosition((long) position);
+            position++;
+        }
+        taskRepository.saveAll(tasksToTransfer);
 
         statusRepository.deleteById(currentStatus.getId());
         return true;
@@ -120,13 +206,41 @@ public class StatusService implements IStatusService {
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
         Project currentProject = currentStatus.getProject();
-        Member currentMember = memberService.checkMemberStatusAndPermission(
-                currentUser.getId(),
-                currentProject.getWorkSpace().getId(),
-                currentProject.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.MANAGE_WORKFLOW));
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+        Member currentProjectMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                true
+        );
+
+        Status tranferStatus = null;
+
+        if (currentStatus.getIsCompletedStatus())
+            tranferStatus = currentProject.getStatuses().stream()
+                    .filter(status -> status.getIsCompletedStatus() && !status.equals(currentStatus))
+                    .min(Comparator.comparingLong(Status::getPosition))
+                    .orElse(null);
+        else
+            tranferStatus = currentProject.getStatuses().stream()
+                    .filter(status -> status.getIsFromStart() && !status.equals(currentStatus))
+                    .min(Comparator.comparingLong(Status::getPosition))
+                    .orElse(null);
+
+        if (tranferStatus == null) throw new CustomException("Cannot delete this status");
+
+        List<Task> tasksToTransfer = currentStatus.getTasks();
+        tasksToTransfer.sort(Comparator.comparingLong(Task::getPosition));
+
+        int position = 1;
+        for (Task task : tasksToTransfer) {
+            task.setStatus(tranferStatus);
+            task.setPosition((long) position);
+            position++;
+        }
+        taskRepository.saveAll(tasksToTransfer);
+
 
         currentStatus.setDeletedAt(currentTime);
         statusRepository.save(currentStatus);
@@ -139,14 +253,37 @@ public class StatusService implements IStatusService {
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
         if (currentStatus.getDeletedAt() != null) throw new ResourceNotFoundException("Status", "id", id);
+        Project currentProject = currentStatus.getProject();
+        WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentWorkSpaceMember = null;
+
+        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentWorkSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                    false
+            );
+        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentWorkSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                    false
+            );
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                currentStatus.getProject().getWorkSpace().getId(),
-                currentStatus.getProject().getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.BROWSE_PROJECT)
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                false
         );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         return ModelMapperUtil.mapOne(currentStatus, StatusResponseDto.class);
     }
@@ -157,14 +294,37 @@ public class StatusService implements IStatusService {
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
         if (currentStatus.getDeletedAt() != null) throw new ResourceNotFoundException("Status", "id", id);
+        Project currentProject = currentStatus.getProject();
+        WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentWorkSpaceMember = null;
+
+        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentWorkSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                    false
+            );
+        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentWorkSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                    false
+            );
+        Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                currentStatus.getProject().getWorkSpace().getId(),
-                currentStatus.getProject().getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.BROWSE_PROJECT)
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                false
         );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
 
         return ModelMapperUtil.mapOne(currentStatus, StatusSummaryResponseDto.class);
     }
@@ -172,16 +332,37 @@ public class StatusService implements IStatusService {
     @Override
     public PageResponse<StatusResponseDto> getPageOfProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
-        Project project = projectRepository.findById(projectId)
+        Project currentProject = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
-                currentUser.getId(),
-                project.getWorkSpace().getId(),
-                project.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.BROWSE_PROJECT));
+        if (currentUser.getRole().equals(Role.USER)) {
+            Member currentWorkSpaceMember = null;
 
+            if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+                currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                        currentUser.getId(),
+                        currentWorkSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                        false
+                );
+            else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+                currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                        currentUser.getId(),
+                        currentWorkSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                        false
+                );
+            Member currentProjectMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentProject.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    false
+            );
+        }
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -189,7 +370,15 @@ public class StatusService implements IStatusService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
 
-        Specification<Status> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<Status> projectSpecification = (Root<Status> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Status, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), currentProject.getId());
+        };
+
+        Specification<Status> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Status> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
 
         Page<Status> page = statusRepository.findAll(specification, pageable);
         List<StatusResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), StatusResponseDto.class);
@@ -207,16 +396,37 @@ public class StatusService implements IStatusService {
     @Override
     public PageResponse<StatusSummaryResponseDto> getSummaryPageOfProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
-        Project project = projectRepository.findById(projectId)
+        Project currentProject = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(
-                currentUser.getId(),
-                project.getWorkSpace().getId(),
-                project.getId(),
-                MemberStatus.ACTIVE,
-                String.valueOf(ProjectPermission.BROWSE_PROJECT));
+        if (currentUser.getRole().equals(Role.USER)) {
+            Member currentWorkSpaceMember = null;
 
+            if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+                currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                        currentUser.getId(),
+                        currentWorkSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                        false
+                );
+            else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+                currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                        currentUser.getId(),
+                        currentWorkSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                        false
+                );
+            Member currentProjectMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentProject.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    false
+            );
+        }
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -224,7 +434,15 @@ public class StatusService implements IStatusService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
 
-        Specification<Status> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<Status> projectSpecification = (Root<Status> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Status, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), currentProject.getId());
+        };
+
+        Specification<Status> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Status> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
 
         Page<Status> page = statusRepository.findAll(specification, pageable);
         List<StatusSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), StatusSummaryResponseDto.class);

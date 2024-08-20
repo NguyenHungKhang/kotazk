@@ -13,6 +13,7 @@ public class StatusRequestDto {
     Long projectId;
     Boolean isFromAny;
     Boolean isFromStart;
+    Boolean isCompletedStatus;
     Long position;
     String name;
     String description;

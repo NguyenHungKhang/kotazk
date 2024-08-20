@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -58,25 +59,32 @@ public class Project {
     private String key;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MemberRole> memberRoles;
+    @OrderBy("position")
+    private List<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Member> members;
+    @OrderBy("role.position, name")
+    private List<Member> members;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Task> tasks;
+    @OrderBy("position")
+    private List<Task> tasks;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Status> statuses;
+    @OrderBy("position")
+    private List<Status> statuses;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Section> sections;
+    @OrderBy("position")
+    private List<Section> sections;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TaskType> taskTypes;
+    @OrderBy("position")
+    private List<TaskType> taskTypes;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ActivityLog> activityLogs;
+    @OrderBy("position")
+    private List<ActivityLog> activityLogs;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Setting> settings;

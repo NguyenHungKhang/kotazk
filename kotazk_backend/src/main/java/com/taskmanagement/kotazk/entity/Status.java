@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -51,9 +52,16 @@ public class Status {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "is_completed_status", nullable = false)
+    private Boolean isCompletedStatus;
+
 //    @Enumerated(EnumType.STRING)
 //    @Column(name = "type", nullable = false)
 //    private StatusType type;
+
+    @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OrderBy("position")
+    private List<Task> tasks;
 
     @OneToMany(mappedBy = "fromStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Transition> transitionFromStatuses;

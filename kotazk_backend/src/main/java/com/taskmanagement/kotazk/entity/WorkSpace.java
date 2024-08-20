@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -48,22 +49,25 @@ public class WorkSpace {
     private WorkSpaceStatus status;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<MemberRole> memberRoles;
+    @OrderBy("position")
+    private List<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<Member> members;
+    @OrderBy("role.position, name")
+    private List<Member> members;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Task> tasks;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<Project> projects;
+    @OrderBy("position")
+    private List<Project> projects;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<Section> sections;
+    private List<Section> sections;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<ActivityLog> activityLogs;
+    private List<ActivityLog> activityLogs;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private Set<Setting> settings;
