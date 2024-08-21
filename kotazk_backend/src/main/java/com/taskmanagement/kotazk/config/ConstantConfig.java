@@ -3,17 +3,14 @@ package com.taskmanagement.kotazk.config;
 import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
 import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ConstantConfig {
     public static final int DEFAULT_PAGE_NUM = 0;
     public static final int DEFAULT_PAGE_SIZE = 10;
     public static final String DEFAULT_SORT_BY = "createdAt";
     public static final boolean DEFAULT_SORT_DIRECTION_ASC = false;
-    public static final Set<WorkSpacePermission> DEFAULT_EDITOR_ROLE_PERMISSION = Set.of(
+    public static final EnumSet<WorkSpacePermission> DEFAULT_EDITOR_ROLE_PERMISSION = EnumSet.of(
             WorkSpacePermission.VIEW_WORKSPACE_INFO, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_ROLE, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_MEMBER, // ADMIN, EDITOR, GUEST
@@ -26,7 +23,7 @@ public class ConstantConfig {
             WorkSpacePermission.MODIFY_OWN_PROJECT, // ADMIN, EDITOR
             WorkSpacePermission.DELETE_OWN_PROJECT // ADMIN, EDITOR
     );
-    public static final Set<WorkSpacePermission> DEFAULT_GUEST_ROLE_PERMISSION = Set.of(
+    public static final EnumSet<WorkSpacePermission> DEFAULT_GUEST_ROLE_PERMISSION = EnumSet.of(
             WorkSpacePermission.VIEW_WORKSPACE_INFO, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_ROLE, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_MEMBER, // ADMIN, EDITOR, GUEST
@@ -37,7 +34,7 @@ public class ConstantConfig {
     );
 
 
-    public static final Set<ProjectPermission> DEFAULT_PROJECT_ADMIN_PERMISSIONS = Set.of(
+    public static final EnumSet<ProjectPermission> DEFAULT_PROJECT_ADMIN_PERMISSIONS = EnumSet.of(
             ProjectPermission.BROWSE_PROJECT,
             ProjectPermission.MODIFY_PROJECT,
             ProjectPermission.DELETE_PROJECT,
@@ -75,7 +72,7 @@ public class ConstantConfig {
             ProjectPermission.BROWSE_ARCHIVE
     );
 
-    public static final Set<ProjectPermission> DEFAULT_PROJECT_EDITOR_PERMISSIONS = Set.of(
+    public static final EnumSet<ProjectPermission> DEFAULT_PROJECT_EDITOR_PERMISSIONS = EnumSet.of(
             ProjectPermission.BROWSE_PROJECT,
             ProjectPermission.ASSIGNABLE_USER,
             ProjectPermission.CLOSE_TASKS,
@@ -92,7 +89,7 @@ public class ConstantConfig {
             ProjectPermission.DELETE_OWN_ATTACHMENTS
     );
 
-    public static final Set<ProjectPermission> DEFAULT_PROJECT_GUEST_PERMISSIONS = Set.of(
+    public static final EnumSet<ProjectPermission> DEFAULT_PROJECT_GUEST_PERMISSIONS = EnumSet.of(
             ProjectPermission.BROWSE_PROJECT
     );
 

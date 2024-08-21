@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface IStatusService {
-    List<Status> initialStatus(Long projectId);
+    List<Status> initialStatus();
     StatusResponseDto create(StatusRequestDto status);
     StatusResponseDto update(Long id, StatusRequestDto status);
     Boolean delete(Long id);

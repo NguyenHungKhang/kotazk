@@ -386,6 +386,7 @@ public class MemberService implements IMemberService {
         List<FilterCriteriaRequestDto> workspaceFilterList = new ArrayList<>();
         workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
         workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>()));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.WORK_SPACE), new ArrayList<>()));
 
         Member workspaceMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(workspaceFilterList))
                 .orElse(null);
@@ -424,6 +425,7 @@ public class MemberService implements IMemberService {
         List<FilterCriteriaRequestDto> projectFilterList = new ArrayList<>();
         projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
         projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>()));
+        projectFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.PROJECT), new ArrayList<>()));
 
         Member projectMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(projectFilterList))
                 .orElse(null);

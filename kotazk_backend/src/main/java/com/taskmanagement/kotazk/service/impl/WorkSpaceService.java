@@ -56,7 +56,7 @@ public class WorkSpaceService implements IWorkSpaceService {
     public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpace) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace newWorkSpace = create(workSpace);
-        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(newWorkSpace.getId(), null);
+        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(true);
         Optional<MemberRole> memberRole = memberRoles.stream()
                 .filter(item -> Objects.equals(item.getName(), "Admin"))
                 .findFirst();

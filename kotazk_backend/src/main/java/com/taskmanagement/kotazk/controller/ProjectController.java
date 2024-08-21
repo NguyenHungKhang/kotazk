@@ -26,7 +26,13 @@ public class ProjectController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public ProjectResponseDto create(@Valid @RequestBody ProjectRequestDto projectRequest) {
-        return projectService.initialProject(projectRequest);
+        try {
+            return projectService.initialProject(projectRequest);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @PutMapping("/{id}")

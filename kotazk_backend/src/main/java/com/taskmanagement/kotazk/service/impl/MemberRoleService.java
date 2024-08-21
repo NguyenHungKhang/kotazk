@@ -237,61 +237,58 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
-    public List<MemberRole> initialMemberRole(Long workSpaceId, Long projectId) {
-        Optional<WorkSpace> workSpace = workSpaceId != null ? workSpaceRepository.findById(workSpaceId) : Optional.empty();
-        Optional<Project> project = projectId != null ? projectRepository.findById(projectId) : Optional.empty();
+    public List<MemberRole> initialMemberRole(Boolean forWorkSpace) {
 
-        // Quyền WorkSpace và Project tùy thuộc vào điều kiện null
-        EnumSet<WorkSpacePermission> workSpacePermissions = workSpace.isPresent() ? EnumSet.allOf(WorkSpacePermission.class) : EnumSet.noneOf(WorkSpacePermission.class);
-        EnumSet<ProjectPermission> projectPermissions = project.isPresent() ? EnumSet.allOf(ProjectPermission.class) : EnumSet.noneOf(ProjectPermission.class);
+        // Tạo các MemberRole với thông tin mặc định
+        List<MemberRole> roles = List.of(
+                createDefaultInitialRole("Admin", forWorkSpace),
+                createDefaultInitialRole("Editor", forWorkSpace),
+                createDefaultInitialRole("Guest", forWorkSpace)
+        );
 
-        MemberRole adminRole = MemberRole.builder()
-                .name("Admin") // Tên vai trò
-                .description("This role has all permissions") // Mô tả
-                .workSpacePermissions(workSpacePermissions) // Quyền WorkSpace nếu có
-                .projectPermissions(projectPermissions) // Quyền Project nếu có
-                .workSpace(workSpace.orElse(null))
-                .project(project.orElse(null))
-                .systemInitial(true)
-                .systemRequired(true)
-                .position(1L)
-                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
-                .build();
-
-        // Tạo quyền Editor với các quyền workspace và project tương ứng
-        Set<WorkSpacePermission> editorWorkSpacePermissions = workSpace.isPresent() ? DEFAULT_EDITOR_ROLE_PERMISSION : EnumSet.noneOf(WorkSpacePermission.class);
-        Set<ProjectPermission> editorProjectPermissions = project.isPresent() ? DEFAULT_PROJECT_EDITOR_PERMISSIONS : EnumSet.noneOf(ProjectPermission.class);
-
-        MemberRole editorRole = MemberRole.builder()
-                .name("Editor") // Tên vai trò
-                .description("This role can edit something in workspace") // Mô tả
-                .workSpacePermissions(editorWorkSpacePermissions) // Quyền WorkSpace nếu có
-                .projectPermissions(editorProjectPermissions) // Quyền Project nếu có
-                .workSpace(workSpace.orElse(null))
-                .project(project.orElse(null))
-                .systemInitial(true)
-                .systemRequired(true)
-                .position(2L)
-                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
-                .build();
-
-        // Tạo quyền Guest với các quyền workspace và project tương ứng
-        Set<WorkSpacePermission> guestWorkSpacePermissions = workSpace.isPresent() ? DEFAULT_GUEST_ROLE_PERMISSION : EnumSet.noneOf(WorkSpacePermission.class);
-        Set<ProjectPermission> guestProjectPermissions = project.isPresent() ? DEFAULT_PROJECT_GUEST_PERMISSIONS : EnumSet.noneOf(ProjectPermission.class);
-
-        MemberRole guestRole = MemberRole.builder()
-                .name("Guest") // Tên vai trò
-                .description("This role can view something in workspace") // Mô tả
-                .workSpacePermissions(guestWorkSpacePermissions) // Quyền WorkSpace nếu có
-                .projectPermissions(guestProjectPermissions) // Quyền Project nếu có
-                .workSpace(workSpace.orElse(null))
-                .project(project.orElse(null))
-                .systemInitial(true)
-                .systemRequired(true)
-                .position(3L)
-                .roleFor(project.isEmpty() ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT) // Hoặc PROJECT tùy thuộc vào mục đích
-                .build();
-
-        return memberRoleRepository.saveAll(List.of(adminRole, editorRole, guestRole));
+        return roles;
     }
+
+    // Hàm phụ trợ để tạo MemberRole với thông tin mặc định
+    private MemberRole createDefaultInitialRole(String roleName,Boolean forWorkSpace) {
+        return MemberRole.builder()
+                .name(roleName)
+                .description(roleName + " role description")
+                .workSpacePermissions(forWorkSpace ? (Set<WorkSpacePermission>) getDefaultInitialPermissions(roleName, "workspace") : EnumSet.noneOf(WorkSpacePermission.class))
+                .projectPermissions(!forWorkSpace ? (Set<ProjectPermission>) getDefaultInitialPermissions(roleName, "project") : EnumSet.noneOf(ProjectPermission.class))
+                .systemInitial(true)
+                .systemRequired(true)
+                .position(getDefaultInitialPosition(roleName))
+                .roleFor(forWorkSpace ? EntityBelongsTo.WORK_SPACE : EntityBelongsTo.PROJECT)
+                .build();
+    }
+
+    // Hàm phụ trợ để lấy quyền mặc định của vai trò
+    private Set<?> getDefaultInitialPermissions(String roleName, String entityType) {
+        switch (roleName) {
+            case "Admin":
+                return entityType.equals("workspace") ? EnumSet.allOf(WorkSpacePermission.class) : EnumSet.allOf(ProjectPermission.class);
+            case "Editor":
+                return entityType.equals("workspace") ? DEFAULT_EDITOR_ROLE_PERMISSION : DEFAULT_PROJECT_EDITOR_PERMISSIONS;
+            case "Guest":
+                return entityType.equals("workspace") ? DEFAULT_GUEST_ROLE_PERMISSION : DEFAULT_PROJECT_GUEST_PERMISSIONS;
+            default:
+                return null;
+        }
+    }
+
+    // Hàm phụ trợ để lấy vị trí mặc định của vai trò
+    private Long getDefaultInitialPosition(String roleName) {
+        switch (roleName) {
+            case "Admin":
+                return 1L;
+            case "Editor":
+                return 2L;
+            case "Guest":
+                return 3L;
+            default:
+                return 0L;
+        }
+    }
+
 }

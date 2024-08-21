@@ -31,7 +31,7 @@ public class Project {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
@@ -60,10 +60,10 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
-    private List<MemberRole> memberRoles;
+    private Set<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("role.position, name")
+//    @OrderBy("role.position, name")
     private List<Member> members;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)

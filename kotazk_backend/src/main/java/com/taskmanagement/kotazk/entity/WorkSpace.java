@@ -50,10 +50,10 @@ public class WorkSpace {
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     @OrderBy("position")
-    private List<MemberRole> memberRoles;
+    private Set<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    @OrderBy("role.position, name")
+//    @OrderBy("role.position, name")
     private List<Member> members;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)

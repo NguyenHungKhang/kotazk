@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -51,10 +52,10 @@ public class ProjectService implements IProjectService {
     private final BasicSpecificationUtil<Project> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public ProjectResponseDto initialProject(ProjectRequestDto project) {
+    public ProjectResponseDto initialProject(ProjectRequestDto projectDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
+        WorkSpace workSpace = workSpaceRepository.findById(projectDto.getWorkSpaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", projectDto.getWorkSpaceId()));
 
         Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
@@ -65,49 +66,56 @@ public class ProjectService implements IProjectService {
         );
 
 
-        Project newProject = ModelMapperUtil.mapOne(project, Project.class);
-
+        Customization customization = null;
         if (workSpace.getCustomization() != null) {
-            Customization customization = Customization.builder()
+            customization = Customization.builder()
                     .avatar(workSpace.getCustomization().getAvatar())
                     .backgroundColor(workSpace.getCustomization().getBackgroundColor())
                     .fontColor(workSpace.getCustomization().getFontColor())
                     .icon(workSpace.getCustomization().getIcon())
                     .build();
+        }
 
-            Customization savedCustomization = customizationRepository.save(customization);
-            newProject.setCustomization(savedCustomization);
-        } else newProject.setCustomization(null);
-
-        String key = null;
-        do {
-            key = RandomStringGeneratorUtil.generateKey();
-        } while (projectRepository.findByKey(key).isPresent());
-        newProject.setKey(key);
-        newProject.setPosition((long) workSpace.getProjects().size());
-        newProject.setId(null);
-        newProject.setMember(currentMember);
-        newProject.setWorkSpace(workSpace);
-
-        Project savedProject = projectRepository.save(newProject);
-
-        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(null, savedProject.getId());
+        List<MemberRole> memberRoles = memberRoleService.initialMemberRole(false);
         Optional<MemberRole> memberRole = memberRoles.stream()
                 .filter(item -> Objects.equals(item.getName(), "Admin"))
                 .findFirst();
 
-        MemberRequestDto memberRequest = MemberRequestDto.builder()
-                .workSpaceId(savedProject.getWorkSpace().getId())
-                .projectId(savedProject.getId())
+        Member member = Member.builder()
+                .workSpace(workSpace)
                 .systemInitial(true)
                 .systemRequired(true)
-                .memberRoleId(memberRole.get().getId())
+                .role(memberRole.get())
                 .memberFor(EntityBelongsTo.PROJECT)
-                .userId(currentUser.getId())
+                .user(currentUser)
                 .status(MemberStatus.ACTIVE)
                 .build();
-        memberService.initialMember(memberRequest);
-        statusService.initialStatus(savedProject.getId());
+
+        List<Status> statuses = statusService.initialStatus();
+
+        Project newProject = Project.builder()
+                .name(projectDto.getName())
+                .description(projectDto.getDescription())
+                .status(projectDto.getStatus())
+                .visibility(projectDto.getVisibility())
+                .isPinned(projectDto.getIsPinned())
+                .key(generateUniqueKey())
+                .position((long) workSpace.getProjects().size())
+                .member(currentMember)
+                .workSpace(workSpace)
+                .customization(customization)
+                .memberRoles(new HashSet<>(memberRoles))
+                .members(Collections.singletonList(member))
+                .statuses(statuses)
+                .build();
+
+        memberRoles.forEach(role -> role.setProject(newProject));
+        member.setProject(newProject);
+        statuses.forEach(status -> status.setProject(newProject));
+
+        Project savedProject = projectRepository.save(newProject);
+
+
         return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
     }
 
@@ -138,7 +146,7 @@ public class ProjectService implements IProjectService {
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace =currentProject.getWorkSpace();
+        WorkSpace workSpace = currentProject.getWorkSpace();
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
@@ -402,5 +410,15 @@ public class ProjectService implements IProjectService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+
+    // Utilities function
+    private String generateUniqueKey() {
+        String key;
+        do {
+            key = RandomStringGeneratorUtil.generateKey();
+        } while (projectRepository.findByKey(key).isPresent());
+        return key;
     }
 }

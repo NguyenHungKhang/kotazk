@@ -61,48 +61,12 @@ public class StatusService implements IStatusService {
     private final BasicSpecificationUtil<Status> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public List<Status> initialStatus(Long projectId) {
-
-        Project currentProject = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
-
-        Status todoStatus = Status.builder()
-                .name("To do")
-                .description("")
-                .position(0L)
-                .systemInitial(true)
-                .systemRequired(false)
-                .isCompletedStatus(false)
-                .isFromStart(true)
-                .isFromAny(true)
-                .project(currentProject)
-                .build();
-
-        Status inProcessStatus = Status.builder()
-                .name("In process")
-                .description("")
-                .position(1L)
-                .systemInitial(true)
-                .systemRequired(false)
-                .isCompletedStatus(false)
-                .isFromStart(false)
-                .isFromAny(true)
-                .project(currentProject)
-                .build();
-
-        Status doneStatus = Status.builder()
-                .name("Done")
-                .description("")
-                .position(3L)
-                .systemInitial(true)
-                .systemRequired(true)
-                .isCompletedStatus(true)
-                .isFromStart(false)
-                .isFromAny(true)
-                .project(currentProject)
-                .build();
-
-        return statusRepository.saveAll(List.of(todoStatus, inProcessStatus, doneStatus));
+    public List<Status> initialStatus() {
+        return List.of(
+                createStatus("To do", 0L, false, true, true),
+                createStatus("In process", 1L, false, false, true),
+                createStatus("Done", 3L, true, false, true)
+        );
     }
 
     @Override
@@ -455,5 +419,20 @@ public class StatusService implements IStatusService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    // Utilities Function
+
+    private Status createStatus(String name, Long position, boolean isCompletedStatus, boolean isFromStart, boolean isFromAny) {
+        return Status.builder()
+                .name(name)
+                .description("")
+                .position(position)
+                .systemInitial(true)
+                .systemRequired(false)
+                .isCompletedStatus(isCompletedStatus)
+                .isFromStart(isFromStart)
+                .isFromAny(isFromAny)
+                .build();
     }
 }
