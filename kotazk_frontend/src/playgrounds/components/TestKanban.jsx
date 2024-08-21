@@ -192,7 +192,8 @@ const TestKanban = () => {
             </Box>
             <Stack
                 direction='row'
-                my={2}
+                mt={4}
+                mb={2}
                 spacing={2}
             >
                 <Box flexGrow={1}>
@@ -220,6 +221,9 @@ const TestKanban = () => {
                         variant='contained'
                         size="small"
                         startIcon={<AddIcon />}
+                        sx={{
+                            textTransform: 'none'
+                        }}
                     >
                         Add task
                     </Button>
@@ -228,18 +232,27 @@ const TestKanban = () => {
                 <Button
                     size="small"
                     startIcon={<FilterListIcon />}
+                    sx={{
+                        textTransform: 'none'
+                    }}
                 >
                     Filter
                 </Button>
                 <Button
                     size="small"
                     startIcon={<SwapVertIcon />}
+                    sx={{
+                        textTransform: 'none'
+                    }}
                 >
                     Sort
                 </Button>
                 <Button
                     size="small"
                     startIcon={<ListAltIcon />}
+                    sx={{
+                        textTransform: 'none'
+                    }}
                 >
                     Group By
                 </Button>

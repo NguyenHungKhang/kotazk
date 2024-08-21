@@ -8,6 +8,7 @@ import ViewKanbanIcon from '@mui/icons-material/ViewKanban';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ViewTimelineIcon from '@mui/icons-material/ViewTimeline';
+import AddIcon from '@mui/icons-material/Add';
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
     [`& .${toggleButtonGroupClasses.grouped}`]: {
@@ -16,7 +17,7 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
         marginLeft: theme.spacing(1.5),
         marginRight: theme.spacing(1.5),
         border: 0,
-        borderRadius: 20,
+        borderRadius: 2,
         [`&.${toggleButtonGroupClasses.disabled}`]: {
             border: 0,
         },
@@ -80,10 +81,8 @@ export default function TestGroupButtonMenu() {
                 elevation={0}
                 sx={{
                     display: 'flex',
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
                     flexWrap: 'wrap',
                     width: 'fit-content',
-                    borderRadius: 5,
                 }}
             >
                 <StyledToggleButtonGroup
@@ -126,9 +125,8 @@ export default function TestGroupButtonMenu() {
             <Button
                 sx={{
                     textTransform: 'none',
-                    borderRadius: 8,
                 }}
-                startIcon={<ViewKanbanIcon />}
+                startIcon={<AddIcon />}
                 variant='contained'
                 size='small'
             >
