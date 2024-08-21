@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -43,7 +44,8 @@ public class TaskType {
     private Set<Task> tasks;
 
     @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Field> fields;
+    @OrderBy("position")
+    private List<Field> fields;
 
     @CreationTimestamp
     @Column(name = "created_at")

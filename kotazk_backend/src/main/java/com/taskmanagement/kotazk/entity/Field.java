@@ -58,6 +58,7 @@ public class Field {
     private FieldType type;
 
     @OneToMany(mappedBy = "field", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position")
     private Set<FieldOption> fieldOptions;
 
     @CreationTimestamp

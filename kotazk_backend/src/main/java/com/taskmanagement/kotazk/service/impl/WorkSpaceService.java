@@ -53,24 +53,51 @@ public class WorkSpaceService implements IWorkSpaceService {
     private final BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpace) {
+    public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpaceDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace newWorkSpace = create(workSpace);
+
+        Customization customization = null;
+        if (workSpaceDto.getCustomization() != null) {
+            customization = Customization.builder()
+                    .avatar(workSpaceDto.getCustomization().getAvatar())
+                    .backgroundColor(workSpaceDto.getCustomization().getBackgroundColor())
+                    .fontColor(workSpaceDto.getCustomization().getFontColor())
+                    .icon(workSpaceDto.getCustomization().getIcon())
+                    .build();
+        }
+
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(true);
         Optional<MemberRole> memberRole = memberRoles.stream()
                 .filter(item -> Objects.equals(item.getName(), "Admin"))
                 .findFirst();
-        MemberRequestDto memberRequest = MemberRequestDto.builder()
-                .workSpaceId(newWorkSpace.getId())
+
+        Member member = Member.builder()
                 .systemInitial(true)
                 .systemRequired(true)
-                .memberRoleId(memberRole.get().getId())
-                .memberFor(EntityBelongsTo.WORK_SPACE)
-                .userId(currentUser.getId())
+                .role(memberRole.get())
+                .memberFor(EntityBelongsTo.PROJECT)
+                .user(currentUser)
                 .status(MemberStatus.ACTIVE)
                 .build();
-        memberService.initialMember(memberRequest);
-        return ModelMapperUtil.mapOne(newWorkSpace, WorkSpaceDetailResponseDto.class);
+
+        WorkSpace newWorkSpace = WorkSpace.builder()
+                .name(workSpaceDto.getName())
+                .user(currentUser)
+                .description(workSpaceDto.getDescription())
+                .status(workSpaceDto.getStatus())
+                .visibility(workSpaceDto.getVisibility())
+                .key(generateUniqueKey())
+                .customization(customization)
+                .memberRoles(new HashSet<>(memberRoles))
+                .members(Collections.singletonList(member))
+                .build();
+
+        memberRoles.forEach(role -> role.setWorkSpace(newWorkSpace));
+        member.setWorkSpace(newWorkSpace);
+
+        WorkSpace saveWorkSpace = workSpaceRepository.save(newWorkSpace);
+
+        return ModelMapperUtil.mapOne(saveWorkSpace, WorkSpaceDetailResponseDto.class);
     }
 
     @Override
@@ -311,6 +338,16 @@ public class WorkSpaceService implements IWorkSpaceService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    // Utilities Function
+
+    private String generateUniqueKey() {
+        String key;
+        do {
+            key = RandomStringGeneratorUtil.generateKey();
+        } while (workSpaceRepository.findByKey(key).isPresent());
+        return key;
     }
 
     public static Specification<WorkSpace> hasUserPermissions(Long userId, List<WorkSpacePermission> permissions) {

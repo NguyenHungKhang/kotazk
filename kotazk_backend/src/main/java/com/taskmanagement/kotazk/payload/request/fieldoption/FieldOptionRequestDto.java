@@ -1,4 +1,4 @@
-package com.taskmanagement.kotazk.payload.response.tasktype;
+package com.taskmanagement.kotazk.payload.request.fieldoption;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class TaskTypeResponseDto {
-    Long id;
-    Long projectId;
-    Long position;
-    String name;
+public class FieldOptionRequestDto {
+    Long fieldId;
+    String value;
     String description;
+    String isDefaultValue;
 }

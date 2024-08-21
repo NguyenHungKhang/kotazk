@@ -12,10 +12,7 @@ import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
-import com.taskmanagement.kotazk.service.IMemberRoleService;
-import com.taskmanagement.kotazk.service.IMemberService;
-import com.taskmanagement.kotazk.service.IProjectService;
-import com.taskmanagement.kotazk.service.IStatusService;
+import com.taskmanagement.kotazk.service.*;
 import com.taskmanagement.kotazk.util.*;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +41,8 @@ public class ProjectService implements IProjectService {
     private IMemberRoleService memberRoleService = new MemberRoleService();
     @Autowired
     private IStatusService statusService = new StatusService();
+    @Autowired
+    private ITaskTypeService taskService = new TaskTypeService();
     @Autowired
     private ICustomizationRepository customizationRepository;
     @Autowired
@@ -93,6 +92,8 @@ public class ProjectService implements IProjectService {
 
         List<Status> statuses = statusService.initialStatus();
 
+        List<TaskType> taskTypes = taskService.initialTaskType();
+
         Project newProject = Project.builder()
                 .name(projectDto.getName())
                 .description(projectDto.getDescription())
@@ -107,11 +108,13 @@ public class ProjectService implements IProjectService {
                 .memberRoles(new HashSet<>(memberRoles))
                 .members(Collections.singletonList(member))
                 .statuses(statuses)
+                .taskTypes(taskTypes)
                 .build();
 
         memberRoles.forEach(role -> role.setProject(newProject));
         member.setProject(newProject);
         statuses.forEach(status -> status.setProject(newProject));
+        taskTypes.forEach(taskType -> taskType.setProject(newProject));
 
         Project savedProject = projectRepository.save(newProject);
 

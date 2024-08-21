@@ -63,9 +63,9 @@ public class StatusService implements IStatusService {
     @Override
     public List<Status> initialStatus() {
         return List.of(
-                createStatus("To do", 0L, false, true, true),
-                createStatus("In process", 1L, false, false, true),
-                createStatus("Done", 3L, true, false, true)
+                createDefaultInitialStatus("To do", 0L, false, true, true),
+                createDefaultInitialStatus("In process", 1L, false, false, true),
+                createDefaultInitialStatus("Done", 2L, true, false, true)
         );
     }
 
@@ -423,7 +423,7 @@ public class StatusService implements IStatusService {
 
     // Utilities Function
 
-    private Status createStatus(String name, Long position, boolean isCompletedStatus, boolean isFromStart, boolean isFromAny) {
+    private Status createDefaultInitialStatus(String name, Long position, boolean isCompletedStatus, boolean isFromStart, boolean isFromAny) {
         return Status.builder()
                 .name(name)
                 .description("")

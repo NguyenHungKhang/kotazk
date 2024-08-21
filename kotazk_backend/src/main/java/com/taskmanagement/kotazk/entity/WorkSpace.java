@@ -27,7 +27,7 @@ public class WorkSpace {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
