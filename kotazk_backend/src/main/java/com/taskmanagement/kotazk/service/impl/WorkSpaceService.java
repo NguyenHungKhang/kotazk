@@ -124,9 +124,7 @@ public class WorkSpaceService implements IWorkSpaceService {
         } while (workSpaceRepository.findByKey(key).isPresent());
         newWorkSpace.setKey(key);
 
-        WorkSpace savedWorkspace = workSpaceRepository.save(newWorkSpace);
-
-        return savedWorkspace;
+        return workSpaceRepository.save(newWorkSpace);
     }
 
     @Override

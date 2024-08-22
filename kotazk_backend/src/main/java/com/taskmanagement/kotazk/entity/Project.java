@@ -89,6 +89,13 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Setting> settings;
 
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Priority> priorities;
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Label> labels;
+
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;

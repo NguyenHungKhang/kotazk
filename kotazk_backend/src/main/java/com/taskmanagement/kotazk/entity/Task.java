@@ -29,15 +29,15 @@ public class Task {
     private Project project;
 
     @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "creator_id", nullable = false)
     private Member creator;
 
     @ManyToOne
-    @JoinColumn(name = "assignee_id", nullable = false)
+    @JoinColumn(name = "assignee_id")
     private Member assignee;
 
     @ManyToOne
-    @JoinColumn(name = "reporter_id", nullable = false)
+    @JoinColumn(name = "reporter_id")
     private Member reporter;
 
     @ManyToMany
@@ -90,16 +90,16 @@ public class Task {
     private Timestamp endAt;
 
     @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted;
+    private Boolean isCompleted = false;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TaskRecord> taskFields;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Attachment> Attachments;
+    private Set<Attachment> attachments;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Folder> Folders;
+    private Set<Folder> folders;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;
