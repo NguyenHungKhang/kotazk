@@ -1,7 +1,9 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
+import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
 import com.taskmanagement.kotazk.service.ITaskService;
@@ -20,12 +22,18 @@ public class TaskController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponseDto create(@Valid @RequestBody TaskRequestDto taskRequestDto) {
-        try {
-            return taskService.create(taskRequestDto);
-        } catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return null;
+        return taskService.create(taskRequestDto);
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public TaskResponseDto getOne(@PathVariable Long id) {
+        return taskService.getOne(id);
+    }
+
+    @PostMapping("/page/by-project/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<TaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long id) {
+        return taskService.getPageByProject(searchParam, id);
     }
 }

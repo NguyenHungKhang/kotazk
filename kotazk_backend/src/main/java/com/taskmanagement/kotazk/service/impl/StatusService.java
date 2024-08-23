@@ -294,7 +294,7 @@ public class StatusService implements IStatusService {
     }
 
     @Override
-    public PageResponse<StatusResponseDto> getPageOfProject(SearchParamRequestDto searchParam, Long projectId) {
+    public PageResponse<StatusResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Project currentProject = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));

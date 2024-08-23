@@ -18,6 +18,6 @@ public interface IStatusService {
     Boolean softDelete(Long id);
     StatusResponseDto getOne(Long id);
     StatusSummaryResponseDto getSummaryOne(Long id);
-    PageResponse<StatusResponseDto> getPageOfProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<StatusResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
     PageResponse<StatusSummaryResponseDto> getSummaryPageOfProject(SearchParamRequestDto searchParam, Long projectId);
 }

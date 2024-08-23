@@ -19,7 +19,10 @@ const App = () => {
     <div className="flex">
       <div
         className={` ${open ? "w-72" : "w-20 "
-          } bg-dark-purple h-screen p-5  pt-8 relative duration-300`}
+          } h-screen p-5  pt-8 relative duration-300`}
+        style={{
+          backgroundColor: '#1A1927'
+        }}
       >
         <img
 

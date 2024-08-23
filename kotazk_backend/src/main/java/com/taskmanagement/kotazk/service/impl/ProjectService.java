@@ -44,6 +44,8 @@ public class ProjectService implements IProjectService {
     @Autowired
     private ITaskTypeService taskService = new TaskTypeService();
     @Autowired
+    private IPriorityService priorityService = new PriorityService();
+    @Autowired
     private ICustomizationRepository customizationRepository;
     @Autowired
     private TimeUtil timeUtil;
@@ -94,6 +96,8 @@ public class ProjectService implements IProjectService {
 
         List<TaskType> taskTypes = taskService.initialTaskType();
 
+        List<Priority> priorities = priorityService.initialPriority();
+
         Project newProject = Project.builder()
                 .name(projectDto.getName())
                 .description(projectDto.getDescription())
@@ -109,12 +113,14 @@ public class ProjectService implements IProjectService {
                 .members(Collections.singletonList(member))
                 .statuses(statuses)
                 .taskTypes(taskTypes)
+                .priorities(priorities)
                 .build();
 
         memberRoles.forEach(role -> role.setProject(newProject));
         member.setProject(newProject);
         statuses.forEach(status -> status.setProject(newProject));
         taskTypes.forEach(taskType -> taskType.setProject(newProject));
+        priorities.forEach(priority -> priority.setProject(newProject));
 
         Project savedProject = projectRepository.save(newProject);
 

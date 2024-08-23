@@ -1,0 +1,23 @@
+import Home from "../pages/Home";
+import Login from "../pages/Login";
+import TestSideBar from "../playgrounds/components/TestSideBar";
+
+const pagesData = [
+  {
+    path: "",
+    element: <Home />,
+    title: "home"
+  },
+  {
+    path: "/login",
+    element: <Login />,
+    title: "playground"
+  },
+  {
+    path: "/playground",
+    element: <TestSideBar />,
+    title: "playground"
+  },
+];
+
+export default pagesData;

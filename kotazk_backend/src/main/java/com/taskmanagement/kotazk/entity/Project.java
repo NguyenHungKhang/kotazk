@@ -90,7 +90,8 @@ public class Project {
     private Set<Setting> settings;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Priority> priorities;
+    @OrderBy("position")
+    private List<Priority> priorities;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Label> labels;

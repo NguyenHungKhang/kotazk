@@ -27,6 +27,12 @@ public class Label {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial;
+
+    @Column(name = "system_required", nullable = false)
+    private Boolean systemRequired;
+
     @OneToOne
     @JoinColumn(name = "customization_id")
     private Customization customization;

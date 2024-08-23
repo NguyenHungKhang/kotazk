@@ -21,10 +21,12 @@ import '../node_modules/@syncfusion/ej2-splitbuttons/styles/material.css';
 import '../node_modules/@syncfusion/ej2-grids/styles/material.css';
 import '../node_modules/@syncfusion/ej2-treegrid/styles/material.css';
 import '../node_modules/@syncfusion/ej2-react-gantt/styles/material.css';
+import Router from './routes/router';
+import { BrowserRouter } from 'react-router-dom';
 
 
 const App = () => {
-  const [primaryColor, setPrimaryColor] = useState('#7F77F1'); // Màu chủ đạo mặc định
+  const [primaryColor, setPrimaryColor] = useState('#2863E5'); // Màu chủ đạo mặc định
   const [darkMode, setDarkMode] = useState(false); // Chế độ mặc định là Light Mode
   const lightBackgroundColor = useState(alpha(primaryColor, 0.2));
 
@@ -134,7 +136,7 @@ const App = () => {
     },
     palette: {
       // mode: darkMode ? 'dark' : 'light', // Chế độ dark mode
-      mode: 'light',
+      mode: 'dark',
       primary: {
         main: primaryColor,
       },
@@ -180,15 +182,18 @@ const App = () => {
   // };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      {/* <CustomDarkModeSwitch darkMode={darkMode} onDarkModeChange={handleDarkModeChange} /> */}
-      {/* <CustomPrimaryColorThemePicker onColorChange={handleColorChange} /> */}
-      {/* <TestDND /> */}
-      {/* <Playground /> */}
-      {/* <TestGantt/> */}
-      <TestSideBar />
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        {/* <CustomDarkModeSwitch darkMode={darkMode} onDarkModeChange={handleDarkModeChange} /> */}
+        {/* <CustomPrimaryColorThemePicker onColorChange={handleColorChange} /> */}
+        {/* <TestDND /> */}
+        {/* <Playground /> */}
+        {/* <TestGantt/> */}
+        <Router />
+        {/* <TestSideBar /> */}
+      </ThemeProvider>
+    </BrowserRouter>
   );
 };
 
