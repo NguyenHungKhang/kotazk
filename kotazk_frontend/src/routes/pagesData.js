@@ -1,5 +1,6 @@
 import Home from "../pages/Home";
 import Login from "../pages/Login";
+import WorkSpace from "../pages/WorkSpace";
 import TestSideBar from "../playgrounds/components/TestSideBar";
 
 const pagesData = [
@@ -11,6 +12,11 @@ const pagesData = [
   {
     path: "/login",
     element: <Login />,
+    title: "playground"
+  },
+  {
+    path: "/work-space",
+    element: <WorkSpace />,
     title: "playground"
   },
   {

@@ -4,10 +4,12 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
@@ -311,6 +313,45 @@ public class ProjectService implements IProjectService {
         currentProject.setArchiveAt(null);
         projectRepository.deleteById(currentProject.getId());
         return true;
+    }
+
+    @Override
+    public RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long workspaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", workspaceId));
+
+        Member currentMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.RE_POSITION_PROJECT),
+                true
+        );
+
+        Project nextProject = workSpace.getProjects().stream()
+                .filter(project -> project.getId().equals(rePositionRequestDto.getNextItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getNextItemId()));
+
+        Project previousProject = workSpace.getProjects().stream()
+                .filter(project -> project.getId().equals(rePositionRequestDto.getPreviousItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getPreviousItemId()));
+
+        Project currentProject = workSpace.getProjects().stream()
+                .filter(project -> project.getId().equals(rePositionRequestDto.getCurrentItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getCurrentItemId()));
+
+        currentProject.setPosition(RepositionUtil.calculateNewPosition(previousProject.getPosition(), nextProject.getPosition()));
+
+        Project savedProject = projectRepository.save(currentProject);
+
+        return RePositionResponseDto.builder()
+                .id(savedProject.getId())
+                .newPosition(savedProject.getPosition())
+                .build();
     }
 
     @Override

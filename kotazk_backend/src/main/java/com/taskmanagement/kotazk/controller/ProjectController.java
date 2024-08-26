@@ -1,9 +1,11 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.service.IProjectService;
@@ -62,6 +64,12 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.OK)
     public Boolean restore(@PathVariable Long id) {
         return projectService.restore(id);
+    }
+
+    @PatchMapping("/re-position/by-workspace/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public RePositionResponseDto rePosition(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long workspaceId) {
+        return projectService.rePosition(rePositionRequestDto, workspaceId);
     }
 
     @GetMapping("/{id}")

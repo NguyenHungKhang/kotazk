@@ -32,7 +32,7 @@ const Login = () => {
                     width: '100%',
                     height: '100%',
                     backgroundImage:
-                        'linear-gradient(135deg, rgba(184,33,214,1) 0%, rgba(18,27,44,1) 40%, rgba(18,27,44,1) 60%, rgba(68,172,235,1) 100%)',
+                        'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(13,13,94,1) 100%)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center',
                     backgroundSize: 'cover',

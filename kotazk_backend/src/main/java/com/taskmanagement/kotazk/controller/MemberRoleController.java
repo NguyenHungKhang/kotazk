@@ -65,7 +65,7 @@ public class MemberRoleController {
 
     @PostMapping("/re-position")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean search(@Valid @RequestBody RepositionMemberRoleRequestDto repositionMemberRole) {
+    public Boolean rePosition(@Valid @RequestBody RepositionMemberRoleRequestDto repositionMemberRole) {
         return memberRoleService.rePosition(repositionMemberRole);
     }
 }

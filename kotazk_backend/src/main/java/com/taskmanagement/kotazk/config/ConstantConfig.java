@@ -10,6 +10,7 @@ public class ConstantConfig {
     public static final int DEFAULT_PAGE_SIZE = 10;
     public static final String DEFAULT_SORT_BY = "createdAt";
     public static final boolean DEFAULT_SORT_DIRECTION_ASC = false;
+    public static final long DEFAULT_POSITION_STEP = 1_000_000_000L;
     public static final EnumSet<WorkSpacePermission> DEFAULT_EDITOR_ROLE_PERMISSION = EnumSet.of(
             WorkSpacePermission.VIEW_WORKSPACE_INFO, // ADMIN, EDITOR, GUEST
             WorkSpacePermission.VIEW_ROLE, // ADMIN, EDITOR, GUEST
