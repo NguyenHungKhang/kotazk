@@ -1,10 +1,12 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
@@ -28,7 +30,7 @@ public class MemberRoleController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public MemberRoleResponseDto create(@Valid @RequestBody MemberRoleRequestDto memberRoleRequest) {
-        return memberRoleService.create(memberRoleRequest, false);
+        return memberRoleService.create(memberRoleRequest);
     }
 
     @PutMapping("/{id}")
@@ -63,9 +65,15 @@ public class MemberRoleController {
         return memberRoleService.getListPage(searchParam, workspaceId, projectId);
     }
 
-    @PostMapping("/re-position")
+    @PostMapping("/re-position/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean rePosition(@Valid @RequestBody RepositionMemberRoleRequestDto repositionMemberRole) {
-        return memberRoleService.rePosition(repositionMemberRole);
+    public RePositionResponseDto rePositionByProject(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long projectId) {
+        return memberRoleService.rePositionByProject(rePositionRequestDto, projectId);
+    }
+
+    @PostMapping("/re-position/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public RePositionResponseDto rePositionByWorkspace(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long workspaceId) {
+        return memberRoleService.rePositionByWorkspace(rePositionRequestDto, workspaceId);
     }
 }

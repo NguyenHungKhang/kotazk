@@ -24,4 +24,8 @@ public class RepositionUtil {
             return (previousPosition + nextPosition) / 2;
         }
     }
+
+    public static Long calculateNewLastPosition(Integer numberOfItems) {
+        return numberOfItems * DEFAULT_POSITION_STEP;
+    }
 }

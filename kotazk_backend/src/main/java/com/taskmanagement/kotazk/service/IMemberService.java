@@ -21,10 +21,6 @@ public interface IMemberService {
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
     PageResponse<MemberResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
-    Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission);
-    Member checkMemberStatusAndPermission(Long userId, Long workspaceId, Long projectId, MemberStatus status, String permission);
-    Member checkMemberStatus(Long userId, Long workspaceId, Long projectId, MemberStatus status);
-//    Map<String, Member> checkMemberStatusesAndPermissions(Long userId, Long workspaceId, Long projectId, List<MemberStatus> statuses, List<WorkSpacePermission> workSpacePermissions, List<ProjectPermission> projectPermissions);
     Member checkProjectMember(
             Long userId,
             Long projectId,

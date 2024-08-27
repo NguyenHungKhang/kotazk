@@ -1,27 +1,23 @@
 package com.taskmanagement.kotazk.service.impl;
 
-import com.taskmanagement.kotazk.entity.MemberRole;
-import com.taskmanagement.kotazk.entity.Project;
-import com.taskmanagement.kotazk.entity.User;
-import com.taskmanagement.kotazk.entity.WorkSpace;
+import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
 import com.taskmanagement.kotazk.repository.IMemberRoleRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
-import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.*;
+import static com.taskmanagement.kotazk.util.RepositionUtil.calculateNewLastPosition;
 
 @Service
 @Transactional
@@ -49,7 +46,7 @@ public class MemberRoleService implements IMemberRoleService {
     @Autowired
     private IProjectRepository projectRepository;
     @Autowired
-    private IMemberService memberService =  new MemberService();
+    private IMemberService memberService = new MemberService();
     @Autowired
     private TimeUtil timeUtil;
 
@@ -57,37 +54,53 @@ public class MemberRoleService implements IMemberRoleService {
     BasicSpecificationUtil<MemberRole> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public MemberRoleResponseDto create(MemberRoleRequestDto memberRole, Boolean systemExec) {
+    public MemberRoleResponseDto create(MemberRoleRequestDto memberRole) {
         User currentUser = SecurityUtil.getCurrentUser();
         WorkSpace workSpace = null;
         Project project = null;
+        Member currentMember = null;
+        Long postion = null;
 
-        if(memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE)) {
+        if (memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE)) {
             if (memberRole.getWorkSpaceId() != null) {
                 workSpace = workSpaceRepository.findById(memberRole.getWorkSpaceId())
                         .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", memberRole.getWorkSpaceId()));
+                currentMember = memberService.checkWorkSpaceMember(
+                        currentUser.getId(),
+                        workSpace.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
+                        true
+                );
+                postion = calculateNewLastPosition(workSpace.getMemberRoles().size());
             }
-        } else if(memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT)) {
+        } else if (memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT)) {
             if (memberRole.getProjectId() != null) {
                 project = projectRepository.findById(memberRole.getProjectId())
                         .orElseThrow(() -> new ResourceNotFoundException("Project", "id", memberRole.getProjectId()));
+                currentMember = memberService.checkProjectMember(
+                        currentUser.getId(),
+                        project.getId(),
+                        Collections.singletonList(MemberStatus.ACTIVE),
+                        Collections.singletonList(ProjectPermission.MANAGE_ROLE),
+                        true
+                );
+                workSpace = project.getWorkSpace();
+                postion = calculateNewLastPosition(project.getMemberRoles().size());
             }
         } else
             throw new CustomException("Invalid Input!");
 
-        if(!systemExec)
-            memberService.checkMemberStatusAndPermission(
-                    currentUser.getId(),
-                    workSpace != null ? workSpace.getId() : null,
-                    project != null ? project.getId() : null,
-                    MemberStatus.ACTIVE,
-                    "MANAGE_ROLE_SETTING"
-            );
-            // Add check user permission
-
-        MemberRole newMemberRole = ModelMapperUtil.mapOne(memberRole, MemberRole.class);
-        newMemberRole.setProject(project);
-        newMemberRole.setWorkSpace(workSpace);
+        MemberRole newMemberRole = MemberRole.builder()
+                .workSpace(workSpace)
+                .project(project)
+                .roleFor(memberRole.getRoleFor())
+                .name(memberRole.getName())
+                .description(memberRole.getDescription())
+                .projectPermissions(memberRole.getProjectPermissions())
+                .workSpacePermissions(memberRole.getWorkSpacePermissions())
+                .position(postion)
+                .build();
 
         MemberRole savedMemberRole = memberRoleRepository.save(newMemberRole);
 
@@ -101,12 +114,32 @@ public class MemberRoleService implements IMemberRoleService {
         MemberRole currentMemberRole = memberRoleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", id));
 
-        // Add check user permission
+        Member currentMember = null;
+        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
+            currentMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.MANAGE_ROLE),
+                    true
+            );
+        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
+                    true
+            );
 
-        if(memberRole.getName() != null) currentMemberRole.setName(memberRole.getName());
-        if(memberRole.getDescription() != null) currentMemberRole.setDescription(memberRole.getDescription());
-        if(!memberRole.getProjectPermissions().isEmpty()) currentMemberRole.setProjectPermissions(memberRole.getProjectPermissions());
-        if(!memberRole.getWorkSpacePermissions().isEmpty()) currentMemberRole.setWorkSpacePermissions(memberRole.getWorkSpacePermissions());
+        Optional.ofNullable(memberRole.getName()).ifPresent(currentMemberRole::setName);
+        Optional.ofNullable(memberRole.getDescription()).ifPresent(currentMemberRole::setDescription);
+        Optional.ofNullable(memberRole.getProjectPermissions())
+                .filter(permissions -> !permissions.isEmpty())
+                .ifPresent(currentMemberRole::setProjectPermissions);
+        Optional.ofNullable(memberRole.getWorkSpacePermissions())
+                .filter(permissions -> !permissions.isEmpty())
+                .ifPresent(currentMemberRole::setWorkSpacePermissions);
 
         MemberRole savedMemberRole = memberRoleRepository.save(currentMemberRole);
 
@@ -120,11 +153,26 @@ public class MemberRoleService implements IMemberRoleService {
         MemberRole currentMemberRole = memberRoleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", id));
 
-        // Add check user permission
+        Member currentMember = null;
+        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
+            currentMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.MANAGE_ROLE),
+                    true
+            );
+        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
+                    true
+            );
 
-        if(currentMemberRole.getSystemRequired().equals(true))
+        if (currentMemberRole.getSystemRequired().equals(true))
             throw new CustomException("This role cannot be deleted");
-
 
         memberRoleRepository.deleteById(currentMemberRole.getId());
         return true;
@@ -138,9 +186,25 @@ public class MemberRoleService implements IMemberRoleService {
         MemberRole currentMemberRole = memberRoleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", id));
 
-        // Add check user permission
+        Member currentMember = null;
+        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
+            currentMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.MANAGE_ROLE),
+                    true
+            );
+        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
+                    true
+            );
 
-        if(currentMemberRole.getSystemRequired().equals(true))
+        if (currentMemberRole.getSystemRequired().equals(true))
             throw new CustomException("This role cannot be deleted");
 
         currentMemberRole.setDeletedAt(currentTime);
@@ -156,55 +220,107 @@ public class MemberRoleService implements IMemberRoleService {
         MemberRole currentMemberRole = memberRoleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", id));
 
-        // Add check user permission
+        Member currentMember = null;
+        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
+            currentMember = memberService.checkProjectMember(
+                    currentUser.getId(),
+                    currentMemberRole.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    true
+            );
+        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMemberRole.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+
         return ModelMapperUtil.mapOne(currentMemberRole, MemberRoleResponseDto.class);
     }
 
     @Override
-    public Boolean rePosition(RepositionMemberRoleRequestDto repositionMemberRole) {
+    public RePositionResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
-        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
 
-        MemberRole currentMemberRole = memberRoleRepository.findById(repositionMemberRole.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", repositionMemberRole.getRoleId()));
+        Member currentMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_ROLE),
+                true
+        );
 
-        Specification<MemberRole> specification = null;
-        FilterCriteriaRequestDto filterRequest = null;
+        Long nextProjectPosition = project.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getNextItemId()))
+                .findFirst()
+                .map(MemberRole::getPosition)
+                .orElse(null);
 
-        // Add check user permission
-        if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE))
-            filterRequest = FilterCriteriaRequestDto.builder()
-                    .key("workspace.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(currentMemberRole.getWorkSpace().getId().toString())
-                    .build();
-        else if (currentMemberRole.getRoleFor().equals(EntityBelongsTo.PROJECT))
-            filterRequest = FilterCriteriaRequestDto.builder()
-                    .key("project.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(currentMemberRole.getWorkSpace().getId().toString())
-                    .build();
-        else throw new CustomException("Something wrong!");
+        Long previousProjectPosition = project.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getPreviousItemId()))
+                .findFirst()
+                .map(MemberRole::getPosition)
+                .orElse(null);
 
-        specification = specificationUtil.getSpecificationFromFilters(Collections.singletonList(filterRequest));
-        List<MemberRole> memberRoles = memberRoleRepository.findAll(specification);
+        MemberRole currentMemberRole = project.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getCurrentItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", rePositionRequestDto.getCurrentItemId()));
 
-        Long oldPosition = currentMemberRole.getPosition();
-        memberRoles.stream().peek(memberRole -> {
-            Long changePositionValue = 0L;
-            if(oldPosition < repositionMemberRole.getNewPosition()) {
-                if (memberRole.getPosition() > oldPosition && memberRole.getPosition() <= repositionMemberRole.getNewPosition())
-                    changePositionValue = 1L;
-            } else if (oldPosition > repositionMemberRole.getNewPosition()) {
-                if (memberRole.getPosition() < oldPosition && memberRole.getPosition() >= repositionMemberRole.getNewPosition())
-                    changePositionValue = -1L;
-            }
-            memberRole.setPosition(memberRole.getPosition() + changePositionValue);
-        }).collect(Collectors.toSet());
+        currentMemberRole.setPosition(RepositionUtil.calculateNewPosition(previousProjectPosition, nextProjectPosition));
 
-        // Return list position
+        MemberRole savedMemberRole = memberRoleRepository.save(currentMemberRole);
 
-        return null;
+        return RePositionResponseDto.builder()
+                .id(savedMemberRole.getId())
+                .newPosition(savedMemberRole.getPosition())
+                .build();
+    }
+
+    @Override
+    public RePositionResponseDto rePositionByWorkspace(RePositionRequestDto rePositionRequestDto, Long workspaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", workspaceId));
+
+        Member currentMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
+                true
+        );
+
+        Long nextProjectPosition = workSpace.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getNextItemId()))
+                .findFirst()
+                .map(MemberRole::getPosition)
+                .orElse(null);
+
+        Long previousProjectPosition = workSpace.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getPreviousItemId()))
+                .findFirst()
+                .map(MemberRole::getPosition)
+                .orElse(null);
+
+        MemberRole currentMemberRole = workSpace.getMemberRoles().stream()
+                .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getCurrentItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", rePositionRequestDto.getCurrentItemId()));
+
+        currentMemberRole.setPosition(RepositionUtil.calculateNewPosition(previousProjectPosition, nextProjectPosition));
+
+        MemberRole savedMemberRole = memberRoleRepository.save(currentMemberRole);
+
+        return RePositionResponseDto.builder()
+                .id(savedMemberRole.getId())
+                .newPosition(savedMemberRole.getPosition())
+                .build();
     }
 
     @Override
@@ -213,7 +329,24 @@ public class MemberRoleService implements IMemberRoleService {
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        // Add check user permission
+        Member currentMember = null;
+        if (workSpaceId != null)
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpaceId,
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        else if (projectId != null)
+            currentMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    projectId,
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        else throw new CustomException("Invalid input!");
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -249,8 +382,10 @@ public class MemberRoleService implements IMemberRoleService {
         return roles;
     }
 
+    // Utility methods
+
     // Hàm phụ trợ để tạo MemberRole với thông tin mặc định
-    private MemberRole createDefaultInitialRole(String roleName,Boolean forWorkSpace) {
+    private MemberRole createDefaultInitialRole(String roleName, Boolean forWorkSpace) {
         return MemberRole.builder()
                 .name(roleName)
                 .description(roleName + " role description")

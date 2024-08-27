@@ -339,127 +339,6 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public Member checkMemberPermission(Long userId, Long workspaceId, Long projectId, String permission) {
-        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
-        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
-                .key("user.id")
-                .operation(FilterOperator.EQUAL)
-                .value(userId.toString())
-                .build();
-
-        if (projectId != null) {
-            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
-                    .key("project.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(projectId.toString())
-                    .build();
-            filterRequestList.add(filterForProjectRequest);
-        }
-        if (workspaceId != null) {
-            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workSpace.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(workspaceId.toString())
-                    .build();
-            filterRequestList.add(filterForWorkspaceRequest);
-        }
-
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
-        Member currentMember = memberRepository.findOne(specification)
-                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
-
-        boolean checkPermission = false;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
-        else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
-        else throw new CustomException("Invalid Input!");
-
-        if (!checkPermission) throw new CustomException("Member does not have this permission");
-        return currentMember;
-    }
-
-    @Override
-    public Member checkMemberStatusAndPermission(Long userId, Long workspaceId, Long projectId, MemberStatus status, String permission) {
-        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
-        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
-                .key("user.id")
-                .operation(FilterOperator.EQUAL)
-                .value(userId.toString())
-                .build();
-
-        if (projectId != null) {
-            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
-                    .key("project.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(projectId.toString())
-                    .build();
-            filterRequestList.add(filterForProjectRequest);
-        }
-        if (workspaceId != null) {
-            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workSpace.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(workspaceId.toString())
-                    .build();
-            filterRequestList.add(filterForWorkspaceRequest);
-        }
-
-        filterRequestList.add(filterRequest);
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
-        Member currentMember = memberRepository.findOne(specification)
-                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
-
-        if (!currentMember.getStatus().equals(status))
-            throw new CustomException(String.format("Member status: %s", status));
-
-        boolean checkPermission;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            checkPermission = currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.valueOf(permission));
-        else if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            checkPermission = currentMember.getRole().getProjectPermissions().contains(ProjectPermission.valueOf(permission));
-        else throw new CustomException("Invalid Input!");
-
-        if (!checkPermission) throw new CustomException("Member does not have this permission");
-        return currentMember;
-    }
-
-    @Override
-    public Member checkMemberStatus(Long userId, Long workspaceId, Long projectId, MemberStatus status) {
-        List<FilterCriteriaRequestDto> filterRequestList = new ArrayList<>();
-        FilterCriteriaRequestDto filterRequest = FilterCriteriaRequestDto.builder()
-                .key("user.id")
-                .operation(FilterOperator.EQUAL)
-                .value(userId.toString())
-                .build();
-
-        if (projectId != null) {
-            FilterCriteriaRequestDto filterForProjectRequest = FilterCriteriaRequestDto.builder()
-                    .key("project.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(projectId.toString())
-                    .build();
-            filterRequestList.add(filterForProjectRequest);
-        }
-        if (workspaceId != null) {
-            FilterCriteriaRequestDto filterForWorkspaceRequest = FilterCriteriaRequestDto.builder()
-                    .key("workSpace.id")
-                    .operation(FilterOperator.EQUAL)
-                    .value(workspaceId.toString())
-                    .build();
-            filterRequestList.add(filterForWorkspaceRequest);
-        }
-
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterRequestList);
-        Member currentMember = memberRepository.findOne(specification)
-                .orElseThrow(() -> new ResourceNotFoundException("Member", "user id", userId));
-
-        if (!currentMember.getStatus().equals(status))
-            throw new CustomException(String.format("Member status: %s", status));
-        return currentMember;
-    }
-
-    @Override
     public Member checkWorkSpaceMember(
             Long userId,
             Long workspaceId,
@@ -536,6 +415,8 @@ public class MemberService implements IMemberService {
 
         return projectMember;
     }
+
+    // Utility methods
 
     private Member handleResult(String errorMessage, boolean isThrowException) {
         if (isThrowException) {

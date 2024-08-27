@@ -152,16 +152,13 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+        Member currentMember = memberService.checkWorkSpaceMember(currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
+                true
         );
 
-
-        if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
-            throw new CustomException("User can not delete this work space!");
 
         workSpaceRepository.deleteById(currentWorkSpace.getId());
         return true;
@@ -172,16 +169,13 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+        Member currentMember = memberService.checkWorkSpaceMember(currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
+                true
         );
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
-
-        if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
-            throw new CustomException("User can not delete this work space!");
 
         currentWorkSpace.setDeletedAt(currentTime);
         workSpaceRepository.save(currentWorkSpace);
@@ -195,11 +189,11 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+        Member currentMember = memberService.checkWorkSpaceMember(currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
+                true
         );
 
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
@@ -217,14 +211,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
+        Member currentMember = memberService.checkWorkSpaceMember(currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
+                true
         );
-        if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
-            throw new CustomException("User can not archive this work space!");
 
         currentWorkSpace.setArchivedAt(null);
 

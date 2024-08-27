@@ -329,22 +329,24 @@ public class ProjectService implements IProjectService {
                 true
         );
 
-        Project nextProject = workSpace.getProjects().stream()
+        Long nextProjectPosition = workSpace.getProjects().stream()
                 .filter(project -> project.getId().equals(rePositionRequestDto.getNextItemId()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getNextItemId()));
+                .map(Project::getPosition)
+                .orElse(null);
 
-        Project previousProject = workSpace.getProjects().stream()
+        Long previousProjectPosition = workSpace.getProjects().stream()
                 .filter(project -> project.getId().equals(rePositionRequestDto.getPreviousItemId()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getPreviousItemId()));
+                .map(Project::getPosition)
+                .orElse(null);
 
         Project currentProject = workSpace.getProjects().stream()
                 .filter(project -> project.getId().equals(rePositionRequestDto.getCurrentItemId()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", rePositionRequestDto.getCurrentItemId()));
 
-        currentProject.setPosition(RepositionUtil.calculateNewPosition(previousProject.getPosition(), nextProject.getPosition()));
+        currentProject.setPosition(RepositionUtil.calculateNewPosition(previousProjectPosition, nextProjectPosition));
 
         Project savedProject = projectRepository.save(currentProject);
 
