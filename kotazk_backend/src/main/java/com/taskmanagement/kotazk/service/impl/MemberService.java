@@ -16,6 +16,7 @@ import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
+import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -95,19 +96,19 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public MemberResponseDto create(MemberRequestDto member) {
+    public MemberResponseDto create(MemberRequestDto memberRequestDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        User user = userRepository.findById(member.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", member.getWorkSpaceId()));
-        MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("member role", "id", member.getMemberRoleId()));
+        User user = userRepository.findById(memberRequestDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", memberRequestDto.getWorkSpaceId()));
+        MemberRole memberRole = memberRoleRepository.findById(memberRequestDto.getMemberRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("member role", "id", memberRequestDto.getMemberRoleId()));
         WorkSpace workSpace = null;
         Project project = null;
 
-        if (member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
-            if (member.getWorkSpaceId() != null) {
-                workSpace = workSpaceRepository.findById(member.getWorkSpaceId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", member.getWorkSpaceId()));
+        if (memberRequestDto.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
+            if (memberRequestDto.getWorkSpaceId() != null) {
+                workSpace = workSpaceRepository.findById(memberRequestDto.getWorkSpaceId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", memberRequestDto.getWorkSpaceId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
                         Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
                     throw new CustomException("This member's role is not suitable with this workspace!");
@@ -119,10 +120,10 @@ public class MemberService implements IMemberService {
                         true
                 );
             }
-        } else if (member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
-            if (member.getProjectId() != null) {
-                project = projectRepository.findById(member.getProjectId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getProjectId()));
+        } else if (memberRequestDto.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
+            if (memberRequestDto.getProjectId() != null) {
+                project = projectRepository.findById(memberRequestDto.getProjectId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Project", "id", memberRequestDto.getProjectId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
                         Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
                     throw new CustomException("This member's role is not suitable with this project!");
@@ -147,11 +148,14 @@ public class MemberService implements IMemberService {
         });
 
 
-        Member newMember = ModelMapperUtil.mapOne(member, Member.class);
-        newMember.setProject(project);
-        newMember.setWorkSpace(workSpace);
-        newMember.setRole(memberRole);
-        newMember.setStatus(MemberStatus.ACTIVE);
+        Member newMember = Member.builder()
+                .user(user)
+                .memberFor(memberRequestDto.getMemberFor())
+                .status(MemberStatus.ACTIVE)
+                .role(memberRole)
+                .workSpace(workSpace)
+                .project(project)
+                .build();
 
         Member savedMember = memberRepository.save(newMember);
 
@@ -159,15 +163,31 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public MemberResponseDto update(Long id, MemberRequestDto member) {
+    public MemberResponseDto revoke(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
 
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
 
-        // Add check user permission
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.REVOKE_MEMBER),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.REVOKE_MEMBER),
+                    true
+            );
 
-        if (member.getStatus() != null) currentMember.setStatus(member.getStatus());
+        currentMember.setStatus(MemberStatus.BANNED);
 
         Member savedMember = memberRepository.save(currentMember);
 
@@ -181,11 +201,26 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
 
-        // Add check user permission
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.DELETE_MEMBER),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.DELETE_MEMBER),
+                    true
+            );
 
         if (currentMember.getSystemRequired().equals(true))
             throw new CustomException("This member cannot be deleted");
-
 
         memberRepository.deleteById(currentMember.getId());
         return true;
@@ -199,7 +234,23 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
 
-        // Add check user permission
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.DELETE_MEMBER),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.DELETE_MEMBER),
+                    true
+            );
 
         if (currentMember.getSystemRequired().equals(true))
             throw new CustomException("This member cannot be deleted");
@@ -217,7 +268,27 @@ public class MemberService implements IMemberService {
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
 
-        // Add check user permission
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+
+        if (currentMember.getSystemRequired().equals(true))
+            throw new CustomException("This member cannot be deleted");
+
         return ModelMapperUtil.mapOne(currentMember, MemberResponseDto.class);
     }
 
@@ -227,7 +298,24 @@ public class MemberService implements IMemberService {
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        // Add check user permission
+        Member currentMember = null;
+        if (workSpaceId != null)
+            currentMember = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpaceId,
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        else if (projectId != null)
+            currentMember = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    projectId,
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        else throw new CustomException("Invalid input!");
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),

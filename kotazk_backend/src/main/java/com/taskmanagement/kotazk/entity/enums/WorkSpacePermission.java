@@ -2,6 +2,7 @@ package com.taskmanagement.kotazk.entity.enums;
 
 
 public enum WorkSpacePermission {
+    BROWSE_WORKSPACE,
     VIEW_WORKSPACE_INFO, // ADMIN, EDITOR, GUEST
     WORKSPACE_SETTING, // ADMIN
     VIEW_ROLE, // ADMIN, EDITOR, GUEST
@@ -9,6 +10,7 @@ public enum WorkSpacePermission {
     VIEW_MEMBER, // ADMIN, EDITOR, GUEST
     INVITE_MEMBER, // ADMIN
     REVOKE_MEMBER, // ADMIN
+    DELETE_MEMBER, // ADMIN
     CHANGE_MEMBER_ROLE, // ADMIN
     CHANGE_MEMBER_STATUS, // ADMIN
     RE_POSITION_PROJECT, // ADMIN

@@ -16,6 +16,7 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResp
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IMemberRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
+import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
@@ -46,6 +47,8 @@ public class WorkSpaceService implements IWorkSpaceService {
     @Autowired
     private IMemberRoleService memberRoleService = new MemberRoleService();
     @Autowired
+    private ICustomizationService customizationService = new CustomizationService();
+    @Autowired
     private ICustomizationRepository customizationRepository;
     @Autowired
     private TimeUtil timeUtil;
@@ -57,14 +60,7 @@ public class WorkSpaceService implements IWorkSpaceService {
         User currentUser = SecurityUtil.getCurrentUser();
 
         Customization customization = null;
-        if (workSpaceDto.getCustomization() != null) {
-            customization = Customization.builder()
-                    .avatar(workSpaceDto.getCustomization().getAvatar())
-                    .backgroundColor(workSpaceDto.getCustomization().getBackgroundColor())
-                    .fontColor(workSpaceDto.getCustomization().getFontColor())
-                    .icon(workSpaceDto.getCustomization().getIcon())
-                    .build();
-        }
+        if (workSpaceDto.getCustomization() != null) customization = customizationService.createBuilder(workSpaceDto.getCustomization());
 
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(true);
         Optional<MemberRole> memberRole = memberRoles.stream()
@@ -100,32 +96,32 @@ public class WorkSpaceService implements IWorkSpaceService {
         return ModelMapperUtil.mapOne(saveWorkSpace, WorkSpaceDetailResponseDto.class);
     }
 
-    @Override
-    public WorkSpace create(WorkSpaceRequestDto workSpace) {
-        User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
-        newWorkSpace.setId(null);
-        newWorkSpace.setUser(currentUser);
-        if (workSpace.getCustomization() != null) {
-            Customization customization = Customization.builder()
-                    .avatar(workSpace.getCustomization().getAvatar())
-                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-                    .fontColor(workSpace.getCustomization().getFontColor())
-                    .icon(workSpace.getCustomization().getIcon())
-                    .build();
-
-            Customization savedCustomization = customizationRepository.save(customization);
-            newWorkSpace.setCustomization(savedCustomization);
-        } else newWorkSpace.setCustomization(null);
-
-        String key = null;
-        do {
-            key = RandomStringGeneratorUtil.generateKey();
-        } while (workSpaceRepository.findByKey(key).isPresent());
-        newWorkSpace.setKey(key);
-
-        return workSpaceRepository.save(newWorkSpace);
-    }
+//    @Override
+//    public WorkSpace create(WorkSpaceRequestDto workSpace) {
+//        User currentUser = SecurityUtil.getCurrentUser();
+//        WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
+//        newWorkSpace.setId(null);
+//        newWorkSpace.setUser(currentUser);
+//        if (workSpace.getCustomization() != null) {
+//            Customization customization = Customization.builder()
+//                    .avatar(workSpace.getCustomization().getAvatar())
+//                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
+//                    .fontColor(workSpace.getCustomization().getFontColor())
+//                    .icon(workSpace.getCustomization().getIcon())
+//                    .build();
+//
+//            Customization savedCustomization = customizationRepository.save(customization);
+//            newWorkSpace.setCustomization(savedCustomization);
+//        } else newWorkSpace.setCustomization(null);
+//
+//        String key = null;
+//        do {
+//            key = RandomStringGeneratorUtil.generateKey();
+//        } while (workSpaceRepository.findByKey(key).isPresent());
+//        newWorkSpace.setKey(key);
+//
+//        return workSpaceRepository.save(newWorkSpace);
+//    }
 
     @Override
     public WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace) {
@@ -133,32 +129,22 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
 
-        Member currentMember = memberService.checkMemberStatusAndPermission(currentUser.getId(),
-                currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.WORKSPACE_SETTING));
+        Member currentMember = checkWorkspaceSettingPermission(currentUser.getId(), currentWorkSpace.getId());
 
+        Optional.ofNullable(workSpace.getName()).ifPresent(currentWorkSpace::setName);
+        Optional.ofNullable(workSpace.getDescription()).ifPresent(currentWorkSpace::setDescription);
+        Optional.ofNullable(workSpace.getVisibility()).ifPresent(currentWorkSpace::setVisibility);
+        Optional.ofNullable(workSpace.getStatus()).ifPresent(currentWorkSpace::setStatus);
 
-        if (workSpace.getName() != null) currentWorkSpace.setName(workSpace.getName());
-        if (workSpace.getDescription() != null) currentWorkSpace.setDescription(workSpace.getDescription());
-        if (workSpace.getVisibility() != null) currentWorkSpace.setVisibility(workSpace.getVisibility());
-        if (workSpace.getStatus() != null) currentWorkSpace.setStatus(workSpace.getStatus());
+        Optional.ofNullable(workSpace.getCustomization()).ifPresent(customization -> {
+            Optional.ofNullable(customization.getAvatar()).ifPresent(currentWorkSpace.getCustomization()::setAvatar);
+            Optional.ofNullable(customization.getBackgroundColor()).ifPresent(currentWorkSpace.getCustomization()::setBackgroundColor);
+            Optional.ofNullable(customization.getFontColor()).ifPresent(currentWorkSpace.getCustomization()::setFontColor);
+            Optional.ofNullable(customization.getIcon()).ifPresent(currentWorkSpace.getCustomization()::setIcon);
+        });
 
-        if (workSpace.getCustomization() != null) {
-            if (workSpace.getCustomization().getAvatar() != null)
-                currentWorkSpace.getCustomization().setAvatar(workSpace.getCustomization().getAvatar());
-            if (workSpace.getCustomization().getBackgroundColor() != null)
-                currentWorkSpace.getCustomization().setBackgroundColor(workSpace.getCustomization().getBackgroundColor());
-            if (workSpace.getCustomization().getFontColor() != null)
-                currentWorkSpace.getCustomization().setFontColor(workSpace.getCustomization().getFontColor());
-            if (workSpace.getCustomization().getIcon() != null)
-                currentWorkSpace.getCustomization().setIcon(workSpace.getCustomization().getIcon());
-        }
-
-        workSpaceRepository.save(currentWorkSpace);
-
-        return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceDetailResponseDto.class);
+        WorkSpace savedWorkspace =  workSpaceRepository.save(currentWorkSpace);
+        return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
     }
 
     @Override
@@ -237,7 +223,6 @@ public class WorkSpaceService implements IWorkSpaceService {
                 MemberStatus.ACTIVE,
                 String.valueOf(WorkSpacePermission.WORKSPACE_SETTING)
         );
-
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not archive this work space!");
 
@@ -252,12 +237,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.VIEW_WORKSPACE_INFO)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                true
         );
         return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceDetailResponseDto.class);
     }
@@ -267,12 +252,12 @@ public class WorkSpaceService implements IWorkSpaceService {
         WorkSpace currentWorkSpace = workSpaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        Member currentMember = memberService.checkMemberStatusAndPermission(
+        Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 currentWorkSpace.getId(),
-                null,
-                MemberStatus.ACTIVE,
-                String.valueOf(WorkSpacePermission.VIEW_WORKSPACE_INFO)
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                true
         );
         return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceSummaryResponseDto.class);
     }
@@ -293,7 +278,6 @@ public class WorkSpaceService implements IWorkSpaceService {
         Specification<WorkSpace> specification = isAdmin ? filterSpecification :
                 hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO))
                         .and(filterSpecification);
-
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
         List<WorkSpaceSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), WorkSpaceSummaryResponseDto.class);
@@ -338,7 +322,17 @@ public class WorkSpaceService implements IWorkSpaceService {
         );
     }
 
-    // Utilities Function
+    // Utility method
+
+    private Member checkWorkspaceSettingPermission(Long userId, Long workspaceId) {
+        return memberService.checkWorkSpaceMember(
+                userId,
+                workspaceId,
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                true
+        );
+    }
 
     private String generateUniqueKey() {
         String key;

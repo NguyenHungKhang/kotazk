@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public interface IWorkSpaceService {
     WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpace);
-    WorkSpace create(WorkSpaceRequestDto workSpace);
+//    WorkSpace create(WorkSpaceRequestDto workSpace);
     WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace);
     Boolean delete(Long id);
     Boolean softDelete(Long id);

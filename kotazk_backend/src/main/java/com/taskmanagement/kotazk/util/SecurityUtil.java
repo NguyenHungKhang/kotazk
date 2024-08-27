@@ -1,6 +1,9 @@
 package com.taskmanagement.kotazk.util;
 
 import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.entity.enums.UserActiveStatus;
+import com.taskmanagement.kotazk.exception.CustomException;
+import com.taskmanagement.kotazk.exception.JwtException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,10 +54,14 @@ public class SecurityUtil {
     // Lấy User hiện tại
     public static User getCurrentUser() {
         Authentication authentication = getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User currentUser)) {
             throw new ResourceNotFoundException("User", "ID", "unknown");
         }
-        return (User) authentication.getPrincipal();
+
+        if(!currentUser.getAccountStatus().equals(UserActiveStatus.ACTIVE))
+            throw new JwtException("User have not activated yet!");
+
+        return currentUser;
     }
 
     // Kiểm tra người dùng có một quyền cụ thể hay không

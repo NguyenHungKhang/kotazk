@@ -25,23 +25,13 @@ public class WorkSpaceController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkSpaceDetailResponseDto create(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest) {
-        try {
-            return workSpaceService.initialWorkSpace(workSpaceRequest);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+        return workSpaceService.initialWorkSpace(workSpaceRequest);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public WorkSpaceDetailResponseDto update(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
-        try {
-            return workSpaceService.update(id, workSpaceRequest);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+        return workSpaceService.update(id, workSpaceRequest);
     }
 
     @DeleteMapping("/{id}")
@@ -52,13 +42,13 @@ public class WorkSpaceController {
 
     @PatchMapping("/soft/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean softDelete(@PathVariable Long id) throws IOException, InterruptedException {
+    public Boolean softDelete(@PathVariable Long id)  {
         return workSpaceService.softDelete(id);
     }
 
     @PatchMapping("/archive/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean archive(@PathVariable Long id) throws IOException, InterruptedException {
+    public Boolean archive(@PathVariable Long id) {
         return workSpaceService.archive(id);
     }
 

@@ -16,7 +16,7 @@ import java.util.Map;
 public interface IMemberService {
     Member initialMember(MemberRequestDto member);
     MemberResponseDto create(MemberRequestDto member);
-    MemberResponseDto update(Long id, MemberRequestDto member);
+    MemberResponseDto revoke(Long id);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
