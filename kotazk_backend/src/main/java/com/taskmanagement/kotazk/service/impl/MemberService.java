@@ -50,58 +50,13 @@ public class MemberService implements IMemberService {
     BasicSpecificationUtil<Member> specificationUtil = new BasicSpecificationUtil<>();
 
     @Override
-    public Member initialMember(MemberRequestDto member) {
-        User user = userRepository.findById(member.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", member.getWorkSpaceId()));
-        MemberRole memberRole = memberRoleRepository.findById(member.getMemberRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("member role", "id", member.getMemberRoleId()));
-        WorkSpace workSpace = null;
-        Project project = null;
-
-        if (member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)) {
-            if (member.getWorkSpaceId() != null) {
-                workSpace = workSpaceRepository.findById(member.getWorkSpaceId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", member.getWorkSpaceId()));
-                if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ||
-                        !Objects.equals(memberRole.getWorkSpace().getId(), workSpace.getId()))
-                    throw new CustomException("This member's role is not suitable with this workspace!");
-
-            }
-        } else if (member.getMemberFor().equals(EntityBelongsTo.PROJECT)) {
-            if (member.getProjectId() != null) {
-                project = projectRepository.findById(member.getProjectId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Project", "id", member.getProjectId()));
-                if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
-                        !Objects.equals(memberRole.getProject().getId(), project.getId()))
-                    throw new CustomException("This member's role is not suitable with this project!");
-            }
-        } else
-            throw new CustomException("Invalid Input!");
-
-        memberRepository.findByUserAndProjectOrWorkSpace(
-                user.getId(),
-                project != null ? project.getId() : null,
-                workSpace != null ? workSpace.getId() : null
-        ).ifPresent(existMember -> {
-            throw new CustomException("This user is already a member");
-        });
-
-        Member newMember = ModelMapperUtil.mapOne(member, Member.class);
-        newMember.setProject(project);
-        newMember.setWorkSpace(workSpace);
-        newMember.setRole(memberRole);
-        newMember.setStatus(MemberStatus.ACTIVE);
-
-        return memberRepository.save(newMember);
-    }
-
-    @Override
     public MemberResponseDto create(MemberRequestDto memberRequestDto) {
         User currentUser = SecurityUtil.getCurrentUser();
         User user = userRepository.findById(memberRequestDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", memberRequestDto.getWorkSpaceId()));
         MemberRole memberRole = memberRoleRepository.findById(memberRequestDto.getMemberRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("member role", "id", memberRequestDto.getMemberRoleId()));
+
         WorkSpace workSpace = null;
         Project project = null;
 
@@ -278,16 +233,7 @@ public class MemberService implements IMemberService {
                     true
             );
         else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            member = checkWorkSpaceMember(
-                    currentUser.getId(),
-                    currentMember.getWorkSpace().getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
-                    true
-            );
-
-        if (currentMember.getSystemRequired().equals(true))
-            throw new CustomException("This member cannot be deleted");
+            member = checkProjectBrowserPermission(currentUser, currentMember.getProject());
 
         return ModelMapperUtil.mapOne(currentMember, MemberResponseDto.class);
     }
@@ -298,8 +244,11 @@ public class MemberService implements IMemberService {
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
+        Project project = projectRepository.findById(projectId).orElse(null);
+        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId).orElse(null);
+
         Member currentMember = null;
-        if (workSpaceId != null)
+        if (workSpace != null)
             currentMember = checkWorkSpaceMember(
                     currentUser.getId(),
                     workSpaceId,
@@ -307,14 +256,8 @@ public class MemberService implements IMemberService {
                     Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
                     true
             );
-        else if (projectId != null)
-            currentMember = checkWorkSpaceMember(
-                    currentUser.getId(),
-                    projectId,
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
-                    true
-            );
+        else if (project != null)
+            currentMember = checkProjectBrowserPermission(currentUser, project);
         else throw new CustomException("Invalid input!");
 
         Pageable pageable = PageRequest.of(
@@ -426,5 +369,29 @@ public class MemberService implements IMemberService {
         return null;
     }
 
+    private Member checkProjectBrowserPermission(User user, Project project) {
+        Member currentWorkSpaceMember = checkWorkSpaceMember(
+                user.getId(),
+                project.getWorkSpace().getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(
+                        project.getVisibility().equals(Visibility.PRIVATE)
+                                ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
+                                : WorkSpacePermission.BROWSE_PUBLIC_PROJECT
+                ),
+                false
+        );
+
+        Member currentProjectMember = checkProjectMember(
+                user.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                false
+        );
+        return Optional.ofNullable(currentProjectMember)
+                .orElse(Optional.ofNullable(currentWorkSpaceMember)
+                        .orElseThrow(() -> new CustomException("Invalid input!")));
+    }
 
 }

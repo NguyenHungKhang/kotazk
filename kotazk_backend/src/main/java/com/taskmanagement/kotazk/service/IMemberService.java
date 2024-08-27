@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface IMemberService {
-    Member initialMember(MemberRequestDto member);
     MemberResponseDto create(MemberRequestDto member);
     MemberResponseDto revoke(Long id);
     Boolean delete(Long id);

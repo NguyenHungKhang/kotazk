@@ -55,10 +55,6 @@ public class Status {
     @Column(name = "is_completed_status", nullable = false)
     private Boolean isCompletedStatus;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(name = "type", nullable = false)
-//    private StatusType type;
-
     @OneToMany(mappedBy = "status", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("position")
     private List<Task> tasks;

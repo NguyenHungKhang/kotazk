@@ -14,12 +14,10 @@ import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IStatusRepository;
 import com.taskmanagement.kotazk.repository.ITaskRepository;
+import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IStatusService;
-import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
@@ -34,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -52,7 +47,8 @@ public class StatusService implements IStatusService {
     private ITaskRepository taskRepository;
     @Autowired
     private IMemberService memberService = new MemberService();
-
+    @Autowired
+    private ICustomizationService customizationService = new CustomizationService();
     @Autowired
     private ICustomizationRepository customizationRepository;
     @Autowired
@@ -70,23 +66,40 @@ public class StatusService implements IStatusService {
     }
 
     @Override
-    public StatusResponseDto create(StatusRequestDto status) {
+    public StatusResponseDto create(StatusRequestDto statusRequestDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        Project currentProject = projectRepository.findById(status.getProjectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", status.getProjectId()));
+        Project project = projectRepository.findById(statusRequestDto.getProjectId())
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", statusRequestDto.getProjectId()));
 
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
-                currentProject.getId(),
+                project.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
                 true
         );
 
-        Status newStatus = ModelMapperUtil.mapOne(status, Status.class);
-        newStatus.setId(null);
-        if (status.getPosition() == null) status.setPosition((long) currentProject.getStatuses().size());
-        newStatus.setProject(currentProject);
+        Customization customization = Optional.ofNullable(statusRequestDto.getCustomization())
+                .map(customizationService::createBuilder)
+                .orElse(null);
+
+        project.getStatuses().stream()
+                .filter(s -> s.getName().equals(statusRequestDto.getName()))
+                .findFirst()
+                .ifPresent(s -> {
+                    throw new CustomException("This status name already exists!");
+                });
+
+        Status newStatus = Status.builder()
+                .project(project)
+                .customization(customization)
+                .isFromAny(statusRequestDto.getIsFromAny())
+                .isFromStart(statusRequestDto.getIsFromStart())
+                .isCompletedStatus(statusRequestDto.getIsCompletedStatus())
+                .name(statusRequestDto.getName())
+                .description(statusRequestDto.getDescription())
+                .position(RepositionUtil.calculateNewLastPosition(project.getStatuses().size()))
+                .build();
 
         Status savedStatus = statusRepository.save(newStatus);
         return ModelMapperUtil.mapOne(savedStatus, StatusResponseDto.class);
@@ -110,10 +123,11 @@ public class StatusService implements IStatusService {
                 true
         );
 
-        if (status.getName() != null) currentStatus.setName(status.getName());
-        if (status.getDescription() != null) currentStatus.setDescription(status.getDescription());
-        if (status.getIsFromAny() != null) currentStatus.setIsFromAny(status.getIsFromAny());
-        if (status.getIsFromStart() != null) currentStatus.setIsFromStart(status.getIsFromStart());
+        Optional.ofNullable(status.getName()).ifPresent(currentStatus::setName);
+        Optional.ofNullable(status.getDescription()).ifPresent(currentStatus::setDescription);
+        Optional.ofNullable(status.getIsFromAny()).ifPresent(currentStatus::setIsFromAny);
+        Optional.ofNullable(status.getIsFromStart()).ifPresent(currentStatus::setIsFromStart);
+        Optional.ofNullable(status.getIsCompletedStatus()).ifPresent(currentStatus::setIsCompletedStatus);
 
         Status savedStatus = statusRepository.save(currentStatus);
         return ModelMapperUtil.mapOne(savedStatus, StatusResponseDto.class);
@@ -220,24 +234,21 @@ public class StatusService implements IStatusService {
         Project currentProject = currentStatus.getProject();
         WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentWorkSpaceMember = null;
+        Member currentWorkSpaceMember = Optional.ofNullable(currentProject.getVisibility())
+                .map(visibility -> {
+                    WorkSpacePermission permission = visibility.equals(Visibility.PRIVATE)
+                            ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
+                            : WorkSpacePermission.BROWSE_PUBLIC_PROJECT;
+                    return memberService.checkWorkSpaceMember(
+                            currentUser.getId(),
+                            currentWorkSpace.getId(),
+                            Collections.singletonList(MemberStatus.ACTIVE),
+                            Collections.singletonList(permission),
+                            false
+                    );
+                })
+                .orElse(null);
 
-        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    currentWorkSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
-                    false
-            );
-        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    currentWorkSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
-                    false
-            );
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 currentProject.getId(),
@@ -261,24 +272,23 @@ public class StatusService implements IStatusService {
         Project currentProject = currentStatus.getProject();
         WorkSpace currentWorkSpace = currentProject.getWorkSpace();
 
-        Member currentWorkSpaceMember = null;
 
-        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    currentWorkSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
-                    false
-            );
-        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    currentWorkSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
-                    false
-            );
+        Member currentWorkSpaceMember = Optional.ofNullable(currentProject.getVisibility())
+                .map(visibility -> {
+                    WorkSpacePermission permission = visibility.equals(Visibility.PRIVATE)
+                            ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
+                            : WorkSpacePermission.BROWSE_PUBLIC_PROJECT;
+                    return memberService.checkWorkSpaceMember(
+                            currentUser.getId(),
+                            currentWorkSpace.getId(),
+                            Collections.singletonList(MemberStatus.ACTIVE),
+                            Collections.singletonList(permission),
+                            false
+                    );
+                })
+                .orElse(null);
+
+
         Member currentProjectMember = memberService.checkProjectMember(
                 currentUser.getId(),
                 currentProject.getId(),

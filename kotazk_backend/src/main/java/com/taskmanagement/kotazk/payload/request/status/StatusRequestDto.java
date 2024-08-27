@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.request.status;
 
+import com.taskmanagement.kotazk.payload.request.customization.CustomizationRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class StatusRequestDto {
     Long projectId;
     Boolean isFromAny;
+    CustomizationRequestDto customization;
     Boolean isFromStart;
     Boolean isCompletedStatus;
     Long position;
