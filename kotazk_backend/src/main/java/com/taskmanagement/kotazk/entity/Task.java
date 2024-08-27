@@ -93,7 +93,7 @@ public class Task {
     private Boolean isCompleted = false;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TaskRecord> taskFields;
+    private Set<TaskRecord> taskRecords;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Attachment> attachments;

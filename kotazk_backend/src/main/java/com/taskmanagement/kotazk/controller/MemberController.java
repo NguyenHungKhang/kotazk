@@ -32,11 +32,11 @@ public class MemberController {
         return memberService.create(memberRequest);
     }
 
-    @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public MemberResponseDto update(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
-        return memberService.update(id, memberRequest);
-    }
+//    @PutMapping("/{id}")
+//    @ResponseStatus(HttpStatus.OK)
+//    public MemberResponseDto update(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+//        return memberService.update(id, memberRequest);
+//    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
