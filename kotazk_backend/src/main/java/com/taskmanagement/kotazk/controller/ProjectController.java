@@ -66,7 +66,7 @@ public class ProjectController {
         return projectService.restore(id);
     }
 
-    @PatchMapping("/re-position/by-workspace/{id}")
+    @PatchMapping("/re-position/by-workspace/{workspaceId}")
     @ResponseStatus(HttpStatus.OK)
     public RePositionResponseDto rePosition(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long workspaceId) {
         return projectService.rePosition(rePositionRequestDto, workspaceId);

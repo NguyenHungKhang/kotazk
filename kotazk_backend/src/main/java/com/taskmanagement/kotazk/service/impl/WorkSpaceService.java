@@ -71,7 +71,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .systemInitial(true)
                 .systemRequired(true)
                 .role(memberRole.get())
-                .memberFor(EntityBelongsTo.PROJECT)
+                .memberFor(EntityBelongsTo.WORK_SPACE)
                 .user(currentUser)
                 .status(MemberStatus.ACTIVE)
                 .build();

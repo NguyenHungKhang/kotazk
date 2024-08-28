@@ -83,6 +83,7 @@ public class TaskService implements ITaskService {
 
         Task newTask = Task.builder()
                 .name(taskRequestDto.getName())
+                .description(taskRequestDto.getDescription())
                 .workSpace(currentWorkSpace)
                 .project(project)
                 .creator(currentMember)
@@ -125,7 +126,7 @@ public class TaskService implements ITaskService {
 
         Member currentWorkspaceMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
-                project.getId(),
+                workSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
                 Collections.singletonList(WorkSpacePermission.MODIFY_ALL_PROJECT),
                 false
@@ -137,6 +138,12 @@ public class TaskService implements ITaskService {
             currentMember = null;
             throw new CustomException("This user can not do this action");
         }
+
+        Optional.ofNullable(taskRequestDto.getName())
+                .ifPresent(currentTask::setName);
+
+        Optional.ofNullable(taskRequestDto.getDescription())
+                .ifPresent(currentTask::setDescription);
 
         Optional.ofNullable(taskRequestDto.getAssigneeId())
                 .ifPresent(assigneeId -> currentTask.setAssignee(checkAssignee(currentMember, project, assigneeId)));

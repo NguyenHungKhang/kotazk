@@ -1,6 +1,8 @@
 package com.taskmanagement.kotazk.controller;
 
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
+import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
@@ -18,6 +20,29 @@ import org.springframework.web.bind.annotation.*;
 public class StatusController {
     @Autowired
     IStatusService statusService = new StatusService();
+    @PostMapping("/")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StatusResponseDto create(@Valid @RequestBody StatusRequestDto statusRequestDto) {
+        return statusService.create(statusRequestDto);
+    }
+
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StatusResponseDto update(@Valid @RequestBody StatusRequestDto statusRequestDto, @PathVariable Long id) {
+        return statusService.update(id, statusRequestDto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean delete(@PathVariable Long id) {
+        return statusService.delete(id);
+    }
+
+    @PatchMapping("/soft/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean softDelete(@PathVariable Long id) {
+        return statusService.softDelete(id);
+    }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

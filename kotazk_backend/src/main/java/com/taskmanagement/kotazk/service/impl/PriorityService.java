@@ -79,6 +79,8 @@ public class PriorityService implements IPriorityService {
         Priority newPriority = Priority.builder()
                 .name(priorityRequestDto.getName())
                 .project(project)
+                .systemRequired(false)
+                .systemInitial(false)
                 .customization(customization)
                 .position(RepositionUtil.calculateNewLastPosition(project.getPriorities().size()))
                 .build();

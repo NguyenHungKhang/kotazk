@@ -99,6 +99,8 @@ public class StatusService implements IStatusService {
                 .name(statusRequestDto.getName())
                 .description(statusRequestDto.getDescription())
                 .position(RepositionUtil.calculateNewLastPosition(project.getStatuses().size()))
+                .systemRequired(false)
+                .systemInitial(false)
                 .build();
 
         Status savedStatus = statusRepository.save(newStatus);
@@ -148,33 +150,21 @@ public class StatusService implements IStatusService {
                 true
         );
 
-        Status tranferStatus = null;
-
-        if (currentStatus.getIsCompletedStatus())
-            tranferStatus = currentProject.getStatuses().stream()
-                    .filter(status -> status.getIsCompletedStatus() && !status.equals(currentStatus))
-                    .min(Comparator.comparingLong(Status::getPosition))
-                    .orElse(null);
-        else
-            tranferStatus = currentProject.getStatuses().stream()
-                    .filter(status -> status.getIsFromStart() && !status.equals(currentStatus))
-                    .min(Comparator.comparingLong(Status::getPosition))
-                    .orElse(null);
-
-        if (tranferStatus == null) throw new CustomException("Cannot delete this status");
+        Status tranferStatus = currentProject.getStatuses().stream()
+                .filter(status -> (currentStatus.getIsCompletedStatus() && status.getIsCompletedStatus())
+                        || (!currentStatus.getIsCompletedStatus() && status.getIsFromStart()))
+                .filter(status -> !status.equals(currentStatus))
+                .min(Comparator.comparingLong(Status::getPosition))
+                .orElseThrow(() -> new CustomException("Cannot delete this status"));
 
         List<Task> tasksToTransfer = currentStatus.getTasks();
-        tasksToTransfer.sort(Comparator.comparingLong(Task::getPosition));
 
-        int position = 1;
-        for (Task task : tasksToTransfer) {
-            task.setStatus(tranferStatus);
-            task.setPosition((long) position);
-            position++;
+        if(tasksToTransfer != null && !tasksToTransfer.isEmpty() ) {
+            tasksToTransfer.forEach(task -> task.setStatus(tranferStatus));
+            taskRepository.saveAllAndFlush(tasksToTransfer);
         }
-        taskRepository.saveAll(tasksToTransfer);
 
-        statusRepository.deleteById(currentStatus.getId());
+        statusRepository.deleteAllInBatch(Collections.singleton(currentStatus));
         return true;
     }
 

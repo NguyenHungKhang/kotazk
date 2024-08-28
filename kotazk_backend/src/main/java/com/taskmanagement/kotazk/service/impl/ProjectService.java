@@ -107,7 +107,7 @@ public class ProjectService implements IProjectService {
                 .visibility(projectDto.getVisibility())
                 .isPinned(projectDto.getIsPinned())
                 .key(generateUniqueKey())
-                .position((long) workSpace.getProjects().size())
+                .position(RepositionUtil.calculateNewLastPosition(workSpace.getProjects().size()))
                 .member(currentMember)
                 .workSpace(workSpace)
                 .customization(customization)

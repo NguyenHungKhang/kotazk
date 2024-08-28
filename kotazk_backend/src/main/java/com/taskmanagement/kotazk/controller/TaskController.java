@@ -25,6 +25,24 @@ public class TaskController {
         return taskService.create(taskRequestDto);
     }
 
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TaskResponseDto update(@Valid @RequestBody TaskRequestDto taskRequestDto, @PathVariable Long id) {
+        return taskService.update(id, taskRequestDto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean delete(@PathVariable Long id) {
+        return taskService.delete(id);
+    }
+
+    @PatchMapping("/soft/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean softDelete(@PathVariable Long id) {
+        return taskService.softDelete(id);
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public TaskResponseDto getOne(@PathVariable Long id) {
