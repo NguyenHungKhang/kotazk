@@ -89,6 +89,7 @@ public class MemberService implements IMemberService {
                         Collections.singletonList(ProjectPermission.INVITE_MEMBER),
                         true
                 );
+                workSpace = project.getWorkSpace();
             }
         } else
             throw new CustomException("Invalid Input!");
@@ -222,18 +223,9 @@ public class MemberService implements IMemberService {
 
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
-
-        Member member = null;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            member = checkProjectMember(
-                    currentUser.getId(),
-                    currentMember.getProject().getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                    true
-            );
-        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            member = checkProjectBrowserPermission(currentUser, currentMember.getProject());
+        Project project = currentMember.getProject();
+        WorkSpace workSpace = currentMember.getWorkSpace();
+        Member member = checkProjectBrowserPermission(currentUser, project, workSpace);
 
         return ModelMapperUtil.mapOne(currentMember, MemberResponseDto.class);
     }
@@ -245,20 +237,11 @@ public class MemberService implements IMemberService {
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
         Project project = projectRepository.findById(projectId).orElse(null);
-        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId).orElse(null);
-
-        Member currentMember = null;
-        if (workSpace != null)
-            currentMember = checkWorkSpaceMember(
-                    currentUser.getId(),
-                    workSpaceId,
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
-                    true
-            );
-        else if (project != null)
-            currentMember = checkProjectBrowserPermission(currentUser, project);
-        else throw new CustomException("Invalid input!");
+        WorkSpace workSpace = Optional.ofNullable(workSpaceRepository.findById(workSpaceId).orElse(null))
+                .orElseGet(() -> Optional.ofNullable(project)
+                        .map(Project::getWorkSpace)
+                        .orElse(null));
+        Member currentMember = checkProjectBrowserPermission(currentUser, project, workSpace);
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -359,6 +342,43 @@ public class MemberService implements IMemberService {
         return projectMember;
     }
 
+    @Override
+    public Member checkProjectBrowserPermission(User user, Project project, WorkSpace workspace) {
+
+        if (project != null) {
+            Member currentWorkSpaceMember = checkWorkSpaceMember(
+                    user.getId(),
+                    project.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(
+                            project.getVisibility().equals(Visibility.PRIVATE)
+                                    ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
+                                    : WorkSpacePermission.BROWSE_PUBLIC_PROJECT
+                    ),
+                    false
+            );
+
+            Member currentProjectMember = checkProjectMember(
+                    user.getId(),
+                    project.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    false
+            );
+            return Optional.ofNullable(currentProjectMember)
+                    .orElse(Optional.ofNullable(currentWorkSpaceMember)
+                            .orElseThrow(() -> new CustomException("Invalid input!")));
+        } else if (workspace != null) {
+            return checkWorkSpaceMember(
+                    user.getId(),
+                    workspace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        } else throw new CustomException("Invalid input");
+    }
+
     // Utility methods
 
     private Member handleResult(String errorMessage, boolean isThrowException) {
@@ -369,29 +389,5 @@ public class MemberService implements IMemberService {
         return null;
     }
 
-    private Member checkProjectBrowserPermission(User user, Project project) {
-        Member currentWorkSpaceMember = checkWorkSpaceMember(
-                user.getId(),
-                project.getWorkSpace().getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(
-                        project.getVisibility().equals(Visibility.PRIVATE)
-                                ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
-                                : WorkSpacePermission.BROWSE_PUBLIC_PROJECT
-                ),
-                false
-        );
-
-        Member currentProjectMember = checkProjectMember(
-                user.getId(),
-                project.getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                false
-        );
-        return Optional.ofNullable(currentProjectMember)
-                .orElse(Optional.ofNullable(currentWorkSpaceMember)
-                        .orElseThrow(() -> new CustomException("Invalid input!")));
-    }
 
 }

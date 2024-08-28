@@ -12,8 +12,6 @@ public interface ITaskService {
     TaskResponseDto update(Long id, TaskRequestDto taskRequestDto);
     Boolean delete(Long id);
     Boolean softDelete(Long id);
-    Boolean archive(Long id);
-    Boolean restore(Long id);
     TaskResponseDto getOne(Long id);
     PageResponse<TaskResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
 }

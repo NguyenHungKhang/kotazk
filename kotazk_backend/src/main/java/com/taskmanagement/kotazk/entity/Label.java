@@ -20,10 +20,6 @@ public class Label {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id", nullable = false)
-    private WorkSpace workSpace;
-
-    @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
@@ -33,7 +29,7 @@ public class Label {
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 

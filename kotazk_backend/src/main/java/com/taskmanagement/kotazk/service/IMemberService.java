@@ -1,6 +1,9 @@
 package com.taskmanagement.kotazk.service;
 
 import com.taskmanagement.kotazk.entity.Member;
+import com.taskmanagement.kotazk.entity.Project;
+import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.entity.WorkSpace;
 import com.taskmanagement.kotazk.entity.enums.MemberStatus;
 import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
 import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
@@ -35,4 +38,5 @@ public interface IMemberService {
             List<WorkSpacePermission> workSpacePermissions,
             boolean isThrowException
     );
+    Member checkProjectBrowserPermission(User user, Project project, WorkSpace workSpace);
 }

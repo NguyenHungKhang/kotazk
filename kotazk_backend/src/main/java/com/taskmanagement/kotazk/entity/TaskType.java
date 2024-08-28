@@ -25,6 +25,10 @@ public class TaskType {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "customization_id")
+    private Customization customization;
+
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
 
