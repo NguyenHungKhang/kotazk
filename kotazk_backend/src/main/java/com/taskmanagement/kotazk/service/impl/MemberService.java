@@ -225,7 +225,7 @@ public class MemberService implements IMemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
         Project project = currentMember.getProject();
         WorkSpace workSpace = currentMember.getWorkSpace();
-        Member member = checkProjectBrowserPermission(currentUser, project, workSpace);
+        Member member = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
         return ModelMapperUtil.mapOne(currentMember, MemberResponseDto.class);
     }
@@ -241,7 +241,7 @@ public class MemberService implements IMemberService {
                 .orElseGet(() -> Optional.ofNullable(project)
                         .map(Project::getWorkSpace)
                         .orElse(null));
-        Member currentMember = checkProjectBrowserPermission(currentUser, project, workSpace);
+        Member currentMember = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -343,7 +343,7 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public Member checkProjectBrowserPermission(User user, Project project, WorkSpace workspace) {
+    public Member checkProjectAndWorkspaceBrowserPermission(User user, Project project, WorkSpace workspace) {
 
         if (project != null) {
             Member currentWorkSpaceMember = checkWorkSpaceMember(

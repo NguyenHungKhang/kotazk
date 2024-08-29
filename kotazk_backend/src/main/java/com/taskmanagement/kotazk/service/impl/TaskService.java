@@ -264,7 +264,7 @@ public class TaskService implements ITaskService {
 
         WorkSpace workSpace = currentTask.getWorkSpace();
 
-        Member currentMember = memberService.checkProjectBrowserPermission(currentUser, project, null);
+        Member currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
         return ModelMapperUtil.mapOne(currentTask, TaskResponseDto.class);
     }
@@ -274,19 +274,17 @@ public class TaskService implements ITaskService {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
-
         Project project = projectRepository.findById(projectId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
-        Member currentMember = null;
+        WorkSpace workSpace = Optional.of(project.getWorkSpace())
+                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
+        Member currentMember = null;
         if (!isAdmin)
-            currentMember = memberService.checkProjectMember(
-                    currentUser.getId(),
-                    project.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                    true
-            );
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
 
         Specification<Task> projectSpecification = (Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
             Join<Task, Project> projectJoin = root.join("project");

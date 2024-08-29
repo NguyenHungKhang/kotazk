@@ -29,9 +29,11 @@ public class TaskType {
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
+    @Builder.Default
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
 
+    @Builder.Default
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
@@ -45,11 +47,8 @@ public class TaskType {
     private Long position;
 
     @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Task> tasks;
-
-    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
-    private List<Field> fields;
+    private List<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

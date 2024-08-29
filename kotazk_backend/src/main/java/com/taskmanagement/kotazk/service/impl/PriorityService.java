@@ -133,7 +133,10 @@ public class PriorityService implements IPriorityService {
                 .filter(ws -> isAdmin || ws.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
-        Member currentMember = checkManagePriority(currentUser, project, workSpace);
+        Member currentMember = null;
+        if (!isAdmin) currentMember = checkManagePriority(currentUser, project, workSpace);
+
+        if(currentPriority.getSystemRequired()) throw new CustomException("Can not delete this priority");
 
         priorityRepository.delete(currentPriority);
 
@@ -154,7 +157,10 @@ public class PriorityService implements IPriorityService {
                 .filter(ws -> isAdmin || ws.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
-        Member currentMember = checkManagePriority(currentUser, project, workSpace);
+        Member currentMember = null;
+        if (!isAdmin) currentMember = checkManagePriority(currentUser, project, workSpace);
+
+        if(currentPriority.getSystemRequired()) throw new CustomException("Can not delete this priority");
 
         Timestamp currentDatetime = timeUtil.getCurrentUTCTimestamp();
         currentPriority.setDeletedAt(currentDatetime);
@@ -177,7 +183,7 @@ public class PriorityService implements IPriorityService {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
         Member currentMember = null;
-        if (!isAdmin) memberService.checkProjectBrowserPermission(currentUser, project, null);
+        if (!isAdmin) memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
         return ModelMapperUtil.mapOne(currentPriority, PriorityResponseDto.class);
     }
@@ -194,7 +200,7 @@ public class PriorityService implements IPriorityService {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
         Member currentMember = null;
-        if (!isAdmin) currentMember = memberService.checkProjectBrowserPermission(currentUser, project, null);
+        if (!isAdmin) currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
 
         Pageable pageable = PageRequest.of(

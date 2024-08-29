@@ -20,7 +20,7 @@ public class FieldService implements IFieldService {
 
     @Override
     public Field createBuilderForNewTaskType(FieldRequestDto fieldRequestDto) {
-        Boolean isMultipleChoice = false;
+        boolean isMultipleChoice = false;
         switch (fieldRequestDto.getType()) {
             case TEXT, TEXT_AREA:
                 fieldRequestDto.setFieldOptions(null);

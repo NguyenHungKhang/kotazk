@@ -174,7 +174,7 @@ public class MemberRoleService implements IMemberRoleService {
 
         Project project = currentMemberRole.getProject();
         WorkSpace workSpace = currentMemberRole.getWorkSpace();
-        Member currentMember = memberService.checkProjectBrowserPermission(currentUser, project, workSpace);
+        Member currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
         return ModelMapperUtil.mapOne(currentMemberRole, MemberRoleResponseDto.class);
     }
@@ -272,7 +272,7 @@ public class MemberRoleService implements IMemberRoleService {
                 .orElseGet(() -> Optional.ofNullable(project)
                         .map(Project::getWorkSpace)
                         .orElse(null));
-        Member currentMember = memberService.checkProjectBrowserPermission(currentUser, project, workSpace);
+        Member currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
 
         Pageable pageable = PageRequest.of(

@@ -38,5 +38,5 @@ public interface IMemberService {
             List<WorkSpacePermission> workSpacePermissions,
             boolean isThrowException
     );
-    Member checkProjectBrowserPermission(User user, Project project, WorkSpace workSpace);
+    Member checkProjectAndWorkspaceBrowserPermission(User user, Project project, WorkSpace workSpace);
 }

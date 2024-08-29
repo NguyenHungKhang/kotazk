@@ -168,7 +168,7 @@ public class LabelService implements ILabelService {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
         Member currentMember = null;
-        if (!isAdmin) memberService.checkProjectBrowserPermission(currentUser, project, null);
+        if (!isAdmin) memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
         return ModelMapperUtil.mapOne(currentLabel, LabelResponseDto.class);
     }
@@ -185,7 +185,7 @@ public class LabelService implements ILabelService {
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
         Member currentMember = null;
-        if (!isAdmin) currentMember = memberService.checkProjectBrowserPermission(currentUser, project, null);
+        if (!isAdmin) currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
 
         Pageable pageable = PageRequest.of(
