@@ -48,6 +48,14 @@ public class FieldService implements IFieldService {
                             }
                         });
                 break;
+
+            case SELECT:
+                isMultipleChoice = true;
+
+                break;
+            case CHECKBOX:
+                isMultipleChoice = true;
+                break;
             default:
                 throw new CustomException("Invalid input!");
 
