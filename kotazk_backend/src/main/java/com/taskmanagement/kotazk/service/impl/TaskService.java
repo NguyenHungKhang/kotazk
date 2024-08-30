@@ -4,9 +4,11 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
 import com.taskmanagement.kotazk.repository.*;
@@ -251,6 +253,49 @@ public class TaskService implements ITaskService {
         currentTask.setDeletedAt(currentTime);
         taskRepository.delete(currentTask);
         return true;
+    }
+
+    @Override
+    public RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(projectId)
+                .filter(task -> isAdmin || task.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+
+        Member currentProjectMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MOVE_TASKS),
+                false
+        );
+
+        Long nextTaskPosition = project.getTasks().stream()
+                .filter(t -> t.getId().equals(rePositionRequestDto.getNextItemId()))
+                .findFirst()
+                .map(Task::getPosition)
+                .orElse(null);
+
+        Long previousTaskPosition = project.getTasks().stream()
+                .filter(t -> t.getId().equals(rePositionRequestDto.getPreviousItemId()))
+                .findFirst()
+                .map(Task::getPosition)
+                .orElse(null);
+
+        Task currentTask = project.getTasks().stream()
+                .filter(t -> t.getId().equals(rePositionRequestDto.getCurrentItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Task", "id", rePositionRequestDto.getCurrentItemId()));
+
+        currentTask.setPosition(RepositionUtil.calculateNewPosition(previousTaskPosition, nextTaskPosition));
+
+        Task savedTask = taskRepository.save(currentTask);
+
+        return RePositionResponseDto.builder()
+                .id(savedTask.getId())
+                .newPosition(savedTask.getPosition())
+                .build();
     }
 
     @Override

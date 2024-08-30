@@ -29,13 +29,14 @@ public class TaskType {
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
-    @Builder.Default
-    @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
 
-    @Builder.Default
+    @Column(name = "system_initial", nullable = false)
+    private Boolean systemInitial = false;
+
+
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    @Builder.Default
+    private Boolean systemRequired = false;
 
     @Column(name = "name", nullable = false)
     private String name;

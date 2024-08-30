@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,8 +24,8 @@ public class Field {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "task_type_id", nullable = false)
-    private TaskType taskType;
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
 
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
@@ -37,9 +38,6 @@ public class Field {
 
     @Column(name = "description")
     private String description;
-
-    @Column(name = "position", nullable = false)
-    private Long position;
 
     @Column(name = "default_value")
     private String defaultValue;
@@ -57,9 +55,12 @@ public class Field {
     @Column(name = "type", nullable = false)
     private FieldType type;
 
+    @Column(name = "position", nullable = false)
+    private Long position;
+
     @OneToMany(mappedBy = "field", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
-    private Set<FieldOption> fieldOptions;
+    private List<FieldOption> fieldOptions;
 
     @CreationTimestamp
     @Column(name = "created_at")

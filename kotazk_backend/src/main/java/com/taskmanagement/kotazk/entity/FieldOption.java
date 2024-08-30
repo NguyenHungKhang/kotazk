@@ -24,10 +24,10 @@ public class FieldOption {
     private Field field;
 
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    private Boolean systemRequired = false;
 
     @Column(name = "value", nullable = false)
     private String value;
