@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LabelResponseDto {
     Long id;
-    Long workSpaceId;
     Long projectId;
     CustomizationResponseDto customization;
     String name;

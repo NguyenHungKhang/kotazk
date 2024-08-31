@@ -75,6 +75,8 @@ public class LabelService implements ILabelService {
                 .name(labelRequestDto.getName())
                 .project(project)
                 .customization(customization)
+                .systemInitial(false)
+                .systemRequired(false)
                 .build();
 
         Label savedLabel = labelRepository.save(newLabel);
