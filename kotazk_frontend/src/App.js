@@ -24,6 +24,9 @@ import '../node_modules/@syncfusion/ej2-react-gantt/styles/material.css';
 import Router from './routes/router';
 import { BrowserRouter } from 'react-router-dom';
 import Switch from '@mui/material/Switch';
+import IconButton from '@mui/material/IconButton';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 
 const App = () => {
@@ -174,11 +177,19 @@ const App = () => {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <div style={{ padding: 16 }}>
-          <Switch checked={darkMode} onChange={handleDarkModeChange} />
-          <span>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
-        </div>
         <Router />
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            zIndex: 1000, // Ensures the button stays on top
+          }}
+        >
+          <IconButton onClick={handleDarkModeChange}>
+            {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
+        </div>
       </ThemeProvider>
     </BrowserRouter>
   );
