@@ -23,6 +23,7 @@ import '../node_modules/@syncfusion/ej2-treegrid/styles/material.css';
 import '../node_modules/@syncfusion/ej2-react-gantt/styles/material.css';
 import Router from './routes/router';
 import { BrowserRouter } from 'react-router-dom';
+import Switch from '@mui/material/Switch';
 
 
 const App = () => {
@@ -135,12 +136,17 @@ const App = () => {
       },
     },
     palette: {
-      // mode: darkMode ? 'dark' : 'light', // Chế độ dark mode
-      mode: 'dark',
+      mode: darkMode ? 'dark' : 'light',
       primary: {
         main: primaryColor,
       },
-      // Các palette khác nếu cần
+      background: {
+        default: darkMode ? '#121212' : '#f4f6f8',
+        paper: darkMode ? '#1E1E1E' : '#fff',
+      },
+      text: {
+        primary: darkMode ? '#ffffff' : '#000000',
+      },
     },
     components: {
       MuiButton: {
@@ -150,26 +156,9 @@ const App = () => {
             '&:hover': {
               boxShadow: 'none',
             },
-            '&:active': {
-              boxShadow: 'none',
-            },
-            '&:focus': {
-              boxShadow: 'none',
-            },
           },
         },
-        variants: [
-          {
-            props: { variant: 'outlined' },
-            // style: {
-            //   backgroundColor: lightBackgroundColor,
-            // },
-          },
-        ],
       },
-    },
-    customProperties: {
-      '--primary-color': primaryColor,
     },
   });
 
@@ -177,21 +166,19 @@ const App = () => {
   //   setPrimaryColor(color);
   // };
 
-  // const handleDarkModeChange = (mode) => {
-  //   setDarkMode(mode);
-  // };
+  const handleDarkModeChange = () => {
+    setDarkMode(prevMode => !prevMode); // Toggle dark mode
+  };
 
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {/* <CustomDarkModeSwitch darkMode={darkMode} onDarkModeChange={handleDarkModeChange} /> */}
-        {/* <CustomPrimaryColorThemePicker onColorChange={handleColorChange} /> */}
-        {/* <TestDND /> */}
-        {/* <Playground /> */}
-        {/* <TestGantt/> */}
+        <div style={{ padding: 16 }}>
+          <Switch checked={darkMode} onChange={handleDarkModeChange} />
+          <span>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>
+        </div>
         <Router />
-        {/* <TestSideBar /> */}
       </ThemeProvider>
     </BrowserRouter>
   );
