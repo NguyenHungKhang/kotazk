@@ -36,6 +36,14 @@ public class BasicSpecificationUtil<T> {
                     return criteriaBuilder.lt((Path<Number>) finalPath,
                             (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
 
+                case GREATER_THAN_OR_EQUAL:
+                    return criteriaBuilder.ge((Path<Number>) finalPath,
+                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+
+                case LESS_THAN_OR_EQUAL:
+                    return criteriaBuilder.le((Path<Number>) finalPath,
+                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+
                 case LIKE:
                     return criteriaBuilder.like((Path<String>) finalPath,
                             "%" + input.getValue() + "%");
@@ -98,6 +106,7 @@ public class BasicSpecificationUtil<T> {
         }
         throw new IllegalArgumentException("Unsupported type: " + type);
     }
+
     private Object castToRequiredType(Class fieldType, List<String> values) {
         List<Object> lists = new ArrayList<>();
         for (String value : values) {
@@ -106,7 +115,7 @@ public class BasicSpecificationUtil<T> {
         return lists;
     }
 
-    public Specification<T> getSpecificationFromFilters(List<FilterCriteriaRequestDto> filters){
+    public Specification<T> getSpecificationFromFilters(List<FilterCriteriaRequestDto> filters) {
         Specification<T> specification = where(null);
         for (FilterCriteriaRequestDto filter : filters) {
             specification = specification.and(createSpecification(filter));

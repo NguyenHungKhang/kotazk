@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/v1/secure/work-space")
+@RequestMapping("/api/v1/secure/workspace")
 public class WorkSpaceController {
 
     @Autowired
@@ -30,7 +30,7 @@ public class WorkSpaceController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public WorkSpaceDetailResponseDto update(@Valid @RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
+    public WorkSpaceDetailResponseDto update(@RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
         return workSpaceService.update(id, workSpaceRequest);
     }
 
@@ -73,13 +73,7 @@ public class WorkSpaceController {
     @PostMapping("/page/summary")
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<WorkSpaceSummaryResponseDto> getSummaryPage(@Valid @RequestBody SearchParamRequestDto searchParam) {
-        try {
             return workSpaceService.getSummaryList(searchParam);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-
     }
 
     @PostMapping("/page/detail")

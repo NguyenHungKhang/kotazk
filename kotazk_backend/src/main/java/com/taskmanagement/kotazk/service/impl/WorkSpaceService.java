@@ -80,7 +80,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .name(workSpaceDto.getName())
                 .user(currentUser)
                 .description(workSpaceDto.getDescription())
-                .status(workSpaceDto.getStatus())
+                .status(WorkSpaceStatus.ACTIVE)
                 .visibility(workSpaceDto.getVisibility())
                 .key(generateUniqueKey())
                 .customization(customization)
