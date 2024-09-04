@@ -8,12 +8,14 @@ import { IconSettingsFilled } from "@tabler/icons-react";
 import { IconLetterK } from "@tabler/icons-react";
 import { IconVectorBezier2 } from "@tabler/icons-react";
 import { IconTablePlus } from "@tabler/icons-react";
+import { IconUsers } from "@tabler/icons-react";
 
 const SideBar = () => {
     const theme = useTheme();
     const [open, setOpen] = useState(true);
     const Menus = [
         { title: "Dashboard", src: <IconLayoutDashboardFilled /> },
+        { title: "Members", src: <IconUsers /> },
         { title: "Setting", src: <IconSettingsFilled /> },
         { title: "Project Name", src: <IconVectorBezier2 />, gap: true },
         // { title: "Schedule ", src: "Calendar" },

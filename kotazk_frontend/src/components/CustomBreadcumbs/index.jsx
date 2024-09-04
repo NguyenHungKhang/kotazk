@@ -6,6 +6,11 @@ import HomeIcon from '@mui/icons-material/Home';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box } from '@mui/material';
 
+const dummyData = [
+    { label: 'Home', href: '#' },
+    { label: 'Catalog', href: '#' },
+    { label: 'Accessories' },
+];
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
     const backgroundColor =
         theme.palette.mode === 'light'
@@ -58,18 +63,15 @@ export default function CustomBreadcrumb() {
         >
             <div role="presentation" onClick={handleClick}>
                 <Breadcrumbs aria-label="breadcrumb">
-                    <StyledBreadcrumb
-                        component="a"
-                        href="#"
-                        label="Home"
-                        icon={<HomeIcon fontSize="small" />}
-                    />
-                    <StyledBreadcrumb component="a" href="#" label="Catalog" />
-                    <StyledBreadcrumb
-                        label="Accessories"
-                        deleteIcon={<ExpandMoreIcon />}
-                        onDelete={handleClick}
-                    />
+                    {dummyData.map((item, index) => (
+                        <StyledBreadcrumb
+                            key={index}
+                            component="a"
+                            href={item.href || '#'}
+                            label={item.label}
+                            onClick={item.href ? handleClick : undefined}
+                        />
+                    ))}
                 </Breadcrumbs>
             </div>
         </Box>

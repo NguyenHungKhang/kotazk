@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/work-space")
+@RequestMapping("/api/v1/secure/work-space")
 public class WorkSpaceController {
 
     @Autowired

@@ -57,7 +57,7 @@ const projectNewData = [
 ];
 
 
-const DragAndDrop = () => {
+const TestGantt = () => {
     const taskFields = {
         id: 'TaskID',
         name: 'TaskName',
@@ -103,4 +103,4 @@ const DragAndDrop = () => {
       </div>
     </div>);
 };
-export default DragAndDrop;
+export default TestGantt;

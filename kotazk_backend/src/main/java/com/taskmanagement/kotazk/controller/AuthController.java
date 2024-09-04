@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/test/auth")
+@RequestMapping("/api/v1/public/auth")
 public class AuthController {
     @Autowired
     IUserService userService = new UserService();

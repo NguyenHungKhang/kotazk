@@ -43,28 +43,28 @@ const App = () => {
       h1: {
         fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
         fontWeight: 300,
-        fontSize: '4.2rem', // Tăng 2px so với mặc định
+        fontSize: '2.5rem', // Tăng 2px so với mặc định
         lineHeight: 1.167,
         letterSpacing: '-0.01562em',
       },
       h2: {
         fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
         fontWeight: 300,
-        fontSize: '3.2rem', // Tăng 2px so với mặc định
+        fontSize: '2.0rem', // Tăng 2px so với mặc định
         lineHeight: 1.2,
         letterSpacing: '-0.00833em',
       },
       h3: {
         fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
         fontWeight: 400,
-        fontSize: '2.7rem', // Tăng 2px so với mặc định
+        fontSize: '1.75rem', // Tăng 2px so với mặc định
         lineHeight: 1.167,
         letterSpacing: '0em',
       },
       h4: {
         fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
         fontWeight: 400,
-        fontSize: '2.2rem', // Tăng 2px so với mặc định
+        fontSize: '1.5rem', // Tăng 2px so với mặc định
         lineHeight: 1.235,
         letterSpacing: '0.00735em',
       },
@@ -135,12 +135,68 @@ const App = () => {
       },
     },
     palette: {
-      // mode: darkMode ? 'dark' : 'light', // Chế độ dark mode
-      mode: 'dark',
+      mode: darkMode ? 'dark' : 'light', // Chế độ dark mode
+      // mode: 'dark',
       primary: {
-        main: primaryColor,
+        main: '#3D42E9',  // Vivid Blue
+        light: '#7578FF', // Light Vivid Blue
+        dark: '#0023B5',  // Dark Vivid Blue
+        contrastText: '#FFFFFF', // White text
       },
-      // Các palette khác nếu cần
+      secondary: {
+        main: '#FF6347',  // Tomato Red
+        light: '#FF8C70', // Light Tomato Red
+        dark: '#C23B22',  // Dark Tomato Red
+        contrastText: '#FFFFFF', // White text
+      },
+      error: {
+        main: '#FF5B36',  // Vivid Red-Orange
+        light: '#FF8A64', // Light Vivid Red-Orange
+        dark: '#C22B0E',  // Dark Vivid Red-Orange
+        contrastText: '#FFFFFF', // White text
+      },
+      warning: {
+        main: '#FFA000',  // Amber
+        light: '#FFC046', // Light Amber
+        dark: '#C67100',  // Dark Amber
+        contrastText: '#000000', // Black text
+      },
+      info: {
+        main: '#0288D1',  // Light Blue
+        light: '#5EB8FF', // Lighter Blue
+        dark: '#005B9F',  // Darker Blue
+        contrastText: '#FFFFFF', // White text
+      },
+      success: {
+        main: '#388E3C',  // Green
+        light: '#66BB6A', // Light Green
+        dark: '#00600F',  // Dark Green
+        contrastText: '#FFFFFF', // White text
+      },
+      customBlack: {
+        main: '#121212',  // Almost Black
+        light: '#424242', // Dark Gray
+        dark: '#000000',  // Pure Black
+        contrastText: '#FFFFFF', // White text
+      },
+      customWhite: {
+        main: '#F5F5F5',  // Off White
+        light: '#FFFFFF', // Pure White
+        dark: '#CCCCCC',  // Light Gray
+        contrastText: '#000000', // Black text
+      },
+      customGreen: {
+        main: '#33F008',  // Bright Green
+        light: '#66F33B', // Light Bright Green
+        dark: '#009A00',  // Darker Bright Green
+        contrastText: '#000000', // Black text
+      },
+      customPink: {
+        main: '#FF6F61',  // Pinkish Orange
+        light: '#FF8A73', // Light Pinkish Orange
+        dark: '#C73C4C',  // Darker Pinkish Orange
+        contrastText: '#FFFFFF', // White text
+      },
     },
     components: {
       MuiButton: {
