@@ -1,3 +1,4 @@
+import CustomAddWorkspaceDialog from "../components/CustomAddWorkspaceDialog";
 import Home from "../pages/Home";
 import Kanban from "../pages/Kanban";
 import Login from "../pages/Login";
@@ -33,7 +34,7 @@ const pagesData = [
   },
   {
     path: "/playground",
-    element: <TestGantt />,
+    element: <CustomAddWorkspaceDialog />,
     title: "playground"
   },
 ];

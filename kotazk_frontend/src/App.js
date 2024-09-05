@@ -27,7 +27,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 const App = () => {
   const [primaryColor, setPrimaryColor] = useState('#2863E5'); // Màu chủ đạo mặc định
-  const [darkMode, setDarkMode] = useState(false); // Chế độ mặc định là Light Mode
+  const [darkMode, setDarkMode] = useState(true); // Chế độ mặc định là Light Mode
   const lightBackgroundColor = useState(alpha(primaryColor, 0.2));
 
   const theme = createTheme({
@@ -202,6 +202,7 @@ const App = () => {
       MuiButton: {
         styleOverrides: {
           root: {
+            textTransform: 'none',
             boxShadow: 'none',
             '&:hover': {
               boxShadow: 'none',

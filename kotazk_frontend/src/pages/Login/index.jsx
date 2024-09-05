@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Container, useTheme, Card, CardContent, CardMedia, Stack } from '@mui/material';
+import * as apiService from '../../api/index.js'
 
 const Login = () => {
     const theme = useTheme();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        // Xử lý logic đăng nhập ở đây
-        console.log('Email:', email);
-        console.log('Password:', password);
+    const handleSubmit = async (event) => {
+        const data = {
+            'email': email,
+            'password': password
+        }
+        await apiService.authAPI.login(data)
+            .then(response => console.log("success")).catch(error => console.warn("error"));
+
     };
 
     return (
@@ -60,7 +64,7 @@ const Login = () => {
                             <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
                                 Welcome to Kotazk (Demo)
                             </Typography>
-                            <Box component="form" onSubmit={handleSubmit}>
+                            <Box>
                                 <TextField
                                     margin="normal"
                                     required
@@ -89,6 +93,7 @@ const Login = () => {
                                     type="submit"
                                     fullWidth
                                     variant="contained"
+                                    onClick={handleSubmit}
                                     sx={{ mt: 3, mb: 2 }}
                                 >
                                     Sign In
