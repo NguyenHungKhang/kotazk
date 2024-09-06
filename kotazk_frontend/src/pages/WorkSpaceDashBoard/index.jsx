@@ -2,11 +2,12 @@ import { Box, Container, Divider, Paper, Stack, Typography, alpha, darken, light
 import SideBar from "../../components/SideBar";
 import CustomHeader from "../../components/CustomHeader";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
+import MemberList from "./MemberList";
 import { blueGrey, deepPurple, indigo } from "@mui/material/colors";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
-import ListProject from "./ListWorkspace";
+import ProjectMemberHeader from "./ProjectMemberHeader";
 
-const Workspace = () => {
+const WorkspaceDashBoard = () => {
     const theme = useTheme();
     return (
         <div className="flex h-screen">
@@ -20,21 +21,10 @@ const Workspace = () => {
                             my: 2
                         }}
                     />
-                    <Typography>
-                        Just demo
-                    </Typography>
-                    <Box
-                        p={4}
-                        borderRadius={2}
-                        bgcolor={getSecondBackgroundColor(theme)}
-                    >
-                        <ListProject />
-                    </Box>
-
                 </Stack>
             </div>
         </div>
     );
 }
 
-export default Workspace;
+export default ProjectMember;

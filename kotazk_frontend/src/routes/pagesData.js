@@ -1,9 +1,10 @@
 import CustomAddWorkspaceDialog from "../components/CustomAddWorkspaceDialog";
+import CustomDarkModeSwitch from "../components/CustomDarkModeSwitch";
 import Home from "../pages/Home";
 import Kanban from "../pages/Kanban";
 import Login from "../pages/Login";
 import ProjectMember from "../pages/ProjectMember";
-import WorkSpace from "../pages/WorkSpace";
+import Workspace from "../pages/WorkSpace";
 import TestGantt from "../playgrounds/components/TestGantt";
 
 const pagesData = [
@@ -18,8 +19,8 @@ const pagesData = [
     title: "playground"
   },
   {
-    path: "/work-space",
-    element: <WorkSpace />,
+    path: "/workspace",
+    element: <Workspace />,
     title: "playground"
   },
   {
@@ -35,6 +36,11 @@ const pagesData = [
   {
     path: "/playground",
     element: <CustomAddWorkspaceDialog />,
+    title: "playground"
+  },
+  {
+    path: "/test/darkmode",
+    element: <CustomDarkModeSwitch />,
     title: "playground"
   },
 ];

@@ -6,6 +6,7 @@ import MicIcon from '@mui/icons-material/Mic';
 import ChatIcon from '@mui/icons-material/Chat';
 import { useTheme } from "@mui/material";
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -156,8 +157,7 @@ const CustomHeader = () => {
                 </Stack>
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">
-
-
+                    <CustomDarkModeSwitch />
                     <IconButton
                         size="small"
                         sx={{
