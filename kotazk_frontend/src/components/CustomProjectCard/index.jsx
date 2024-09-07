@@ -36,9 +36,9 @@ const StyledCard = styled(Card)({
 const ProjectCard = ({ project, theme }) => {
     return (
         <StyledCard
-            sx={{
-                backgroundImage: `url(${project.imageUrl})`,
-            }}
+            // sx={{
+            //     backgroundImage: `url(${project.imageUrl})`,
+            // }}
         >
             {/* Star icon at the top right */}
             <IconButton
@@ -85,10 +85,10 @@ const ProjectCard = ({ project, theme }) => {
                             color: theme.palette.primary.main,
                         }}
                     >
-                        {project.owner.charAt(0)}
+                        {project.member.user.name.charAt(0)}
                     </Avatar>
                     <Typography variant="body2" noWrap>
-                        {project.owner}
+                        {project.member.user.lastName + ' ' + project.member.user.firstName}
                     </Typography>
                 </Stack>
 

@@ -1,7 +1,10 @@
 // ListProject.js
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Grid, Typography, useTheme } from "@mui/material";
 import CustomProjectCard from '../../components/CustomProjectCard';
+import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import * as apiService from '../../api/index'
 
 export const dummyData = [
     {
@@ -48,7 +51,23 @@ export const dummyData = [
 
 const ListProject = () => {
     const theme = useTheme();
+    const { workspaceId } = useParams();
+    const [projectListResponse, setProjectListResponse] = useState();
 
+    useEffect(() => {
+        const initialFetch = async () => {
+            const data = {
+                "filters": []
+            }
+            console.log(workspaceId)
+            await apiService.projectAPI.pageByWorkspace(workspaceId, data)
+                .then(res => { console.log(res); setProjectListResponse(res.data); })
+                .catch(err => console.warn(err))
+        }
+
+        if (workspaceId != null)
+            initialFetch();
+    }, [, workspaceId]);
     return (
         <Box>
             <Typography
@@ -59,7 +78,7 @@ const ListProject = () => {
                 List of projects
             </Typography>
             <Grid container spacing={2}>
-                {dummyData.map((project) => (
+                {projectListResponse?.content?.map((project) => (
                     <Grid item xs={12} sm={6} md={4} lg={3} xl={2} key={project.id}>
                         <CustomProjectCard project={project} theme={theme} />
                     </Grid>

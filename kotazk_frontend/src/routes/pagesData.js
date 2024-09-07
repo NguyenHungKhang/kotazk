@@ -19,9 +19,9 @@ const pagesData = [
     title: "playground"
   },
   {
-    path: "/workspace",
+    path: "/workspace/:workspaceId",
     element: <Workspace />,
-    title: "playground"
+    title: "workspace"
   },
   {
     path: "/project/member",

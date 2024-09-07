@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/project")
+@RequestMapping("/api/v1/secure/project")
 public class ProjectController {
     @Autowired
     IProjectService projectService = new ProjectService();

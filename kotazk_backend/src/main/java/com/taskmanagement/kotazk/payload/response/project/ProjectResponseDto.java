@@ -3,6 +3,7 @@ package com.taskmanagement.kotazk.payload.response.project;
 import com.taskmanagement.kotazk.entity.enums.ProjectStatus;
 import com.taskmanagement.kotazk.entity.enums.Visibility;
 import com.taskmanagement.kotazk.payload.request.customization.CustomizationRequestDto;
+import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class ProjectResponseDto {
     Long id;
     Long workSpaceId;
+    MemberResponseDto member;
     String name;
     Boolean isPinned;
     Long position;

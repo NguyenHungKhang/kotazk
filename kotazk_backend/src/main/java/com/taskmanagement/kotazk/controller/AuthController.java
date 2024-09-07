@@ -58,9 +58,9 @@ public class AuthController {
 
         // Create cookies for accessToken and refreshToken
         ResponseCookie accessTokenCookie = ResponseCookie.from("AUTH-TOKEN", userLoginResponse.getAccess_token())
-                .httpOnly(true).maxAge(3600).path("/").secure(false).build();
+                .httpOnly(false).maxAge(3600).path("/").secure(false).build();
         ResponseCookie refreshTokenCookie = ResponseCookie.from("REFRESH-TOKEN", userLoginResponse.getRefresh_token())
-                .httpOnly(true).maxAge(14 * 24 * 3600).path("/").secure(false).build();
+                .httpOnly(false).maxAge(14 * 24 * 3600).path("/").secure(false).build();
 
         // Add cookies to the response headers
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());

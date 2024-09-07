@@ -4,7 +4,7 @@ import CustomHeader from "../../components/CustomHeader";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import { blueGrey, deepPurple, indigo } from "@mui/material/colors";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
-import ListProject from "./ListWorkspace";
+import ListProject from "./ListProject";
 
 const Workspace = () => {
     const theme = useTheme();
