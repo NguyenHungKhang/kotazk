@@ -1,0 +1,1 @@
+export const setCurrentWorkspace = (workspace) => ({type: 'SET_CURRENT_WORKSPACE', payload: workspace});

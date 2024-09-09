@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, Card, CardContent, Chip, Stack, Typography, lighten, useTheme } from "@mui/material";
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 
@@ -12,7 +12,9 @@ const CardKanban = () => {
     const CommentIcon = allIcons["IconMessageDots"];
 
     return (
-        <Card>
+        <Card
+            sx={{ bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B" }}
+        >
             <CardContent
                 sx={{
                     p: 4

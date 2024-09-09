@@ -40,6 +40,8 @@ public class ProjectService implements IProjectService {
     @Autowired
     private IMemberService memberService = new MemberService();
     @Autowired
+    private ISectionService sectionService = new SectionService();
+    @Autowired
     private IMemberRoleService memberRoleService = new MemberRoleService();
     @Autowired
     private IStatusService statusService = new StatusService();
@@ -57,8 +59,8 @@ public class ProjectService implements IProjectService {
     @Override
     public ProjectResponseDto initialProject(ProjectRequestDto projectDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(projectDto.getWorkSpaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", projectDto.getWorkSpaceId()));
+        WorkSpace workSpace = workSpaceRepository.findById(projectDto.getWorkspaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", projectDto.getWorkspaceId()));
 
         Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
@@ -67,17 +69,6 @@ public class ProjectService implements IProjectService {
                 Collections.singletonList(WorkSpacePermission.CREATE_PROJECT),
                 true
         );
-
-
-        Customization customization = null;
-        if (workSpace.getCustomization() != null) {
-            customization = Customization.builder()
-                    .avatar(workSpace.getCustomization().getAvatar())
-                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-                    .fontColor(workSpace.getCustomization().getFontColor())
-                    .icon(workSpace.getCustomization().getIcon())
-                    .build();
-        }
 
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(false);
         Optional<MemberRole> memberRole = memberRoles.stream()
@@ -100,22 +91,24 @@ public class ProjectService implements IProjectService {
 
         List<Priority> priorities = priorityService.initialPriority();
 
+        List<Section> sections = sectionService.initialSection();
+
         Project newProject = Project.builder()
                 .name(projectDto.getName())
                 .description(projectDto.getDescription())
-                .status(projectDto.getStatus())
+                .status(ProjectStatus.ACTIVE)
                 .visibility(projectDto.getVisibility())
-                .isPinned(projectDto.getIsPinned())
+                .isPinned(false)
                 .key(generateUniqueKey())
                 .position(RepositionUtil.calculateNewLastPosition(workSpace.getProjects().size()))
                 .member(currentMember)
                 .workSpace(workSpace)
-                .customization(customization)
                 .memberRoles(new HashSet<>(memberRoles))
                 .members(Collections.singletonList(member))
                 .statuses(statuses)
                 .taskTypes(taskTypes)
                 .priorities(priorities)
+                .sections(sections)
                 .build();
 
         memberRoles.forEach(role -> role.setProject(newProject));
@@ -123,6 +116,7 @@ public class ProjectService implements IProjectService {
         statuses.forEach(status -> status.setProject(newProject));
         taskTypes.forEach(taskType -> taskType.setProject(newProject));
         priorities.forEach(priority -> priority.setProject(newProject));
+        sections.forEach(section -> section.setProject(newProject));
 
         Project savedProject = projectRepository.save(newProject);
 
@@ -133,8 +127,8 @@ public class ProjectService implements IProjectService {
     @Override
     public ProjectResponseDto create(ProjectRequestDto project) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
+        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkspaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkspaceId()));
         Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 workSpace.getId(),
@@ -358,6 +352,7 @@ public class ProjectService implements IProjectService {
 
     @Override
     public ProjectResponseDto getOne(Long id) {
+        System.out.println(123);
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();

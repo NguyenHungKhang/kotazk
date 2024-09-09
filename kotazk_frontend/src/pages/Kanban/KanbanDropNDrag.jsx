@@ -153,47 +153,39 @@ function StoreList({ name, items, id, customization }) {
     <Droppable droppableId={id}>
       {(provided) => (
         <div  {...provided.droppableProps} ref={provided.innerRef}>
-          <Box
+          <Card
             sx={{
-              width: 300,
+              width: 320,
               boxShadow: "none",
               borderRadius: 2,
+              bgcolor: theme.palette.mode === "light" ? "#F1F2F4" : "#121212"
             }}
           >
-            <Card
-              sx={{
-                p: 2,
-                mb: 2
-              }}
-            >
-              <Stack
-                direction='row'
-                alignItems='center'
-                spacing={1}
-              >
-                <Box flexGrow={1}>
-                  <Typography variant='body1' fontWeight='bold'>
-                    {name}
-                  </Typography>
-                </Box>
-                <IconButton size="small">
-                  <UnfoldLessTwoToneIcon fontSize='inherit' />
-                </IconButton>
-                <IconButton size="small">
-                  <MoreHorizIcon fontSize='inherit' />
-                </IconButton>
-                <IconButton size="small">
-                  <AddIcon fontSize='inherit' />
-                </IconButton>
-              </Stack>
-            </Card>
+            <CardContent>
+              <Box mb={2}>
+                <Stack
+                  direction='row'
+                  alignItems='center'
+                  spacing={1}
+                >
+                  <Box flexGrow={1}>
+                    <Typography variant='body1' fontWeight='bold'>
+                      {name}
+                    </Typography>
+                  </Box>
+                  <IconButton size="small">
+                    <UnfoldLessTwoToneIcon fontSize='inherit' />
+                  </IconButton>
+                  <IconButton size="small">
+                    <MoreHorizIcon fontSize='inherit' />
+                  </IconButton>
+                  <IconButton size="small">
+                    <AddIcon fontSize='inherit' />
+                  </IconButton>
+                </Stack>
+              </Box>
 
 
-            <Box
-              p={2}
-              bgcolor={ theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800]}
-              borderRadius={2}
-            >
               <Stack spacing={2}>
                 {items.map((item, index) => (
                   <Draggable draggableId={item.id} index={index} key={item.id}>
@@ -219,8 +211,9 @@ function StoreList({ name, items, id, customization }) {
                   Add task
                 </Button>
               </Stack>
-            </Box>
-          </Box>
+
+            </CardContent>
+          </Card>
         </div>
       )}
     </Droppable>

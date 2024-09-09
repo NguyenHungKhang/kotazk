@@ -26,10 +26,6 @@ public class Section {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id")
-    private WorkSpace workSpace;
-
-    @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 

@@ -5,29 +5,9 @@ import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import { blueGrey, deepPurple, indigo } from "@mui/material/colors";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import ListProject from "./ListWorkspace";
-import { useParams } from "react-router-dom";
-import * as apiService from '../../api/index';
-import { useDispatch } from "react-redux";
-import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
-import { useState, useEffect } from "react";
 
-const Workspace = () => {
+const Project = () => {
     const theme = useTheme();
-    const dispatch = useDispatch();
-    const { workspaceId } = useParams();
-    // const [workspace, setWorkspace] = useState(null);
-
-    useEffect(() => {
-        if (workspaceId != null)
-            initalFetch();
-    }, [, workspaceId])
-
-    const initalFetch = async () => {
-        await apiService.workspaceAPI.getDetailById(workspaceId)
-            .then(res => { console.log(res); dispatch(setCurrentWorkspace(res.data)); })
-            .catch(err => console.log(err))
-    }
-
     return (
         <div className="flex h-screen">
             <SideBar />
@@ -40,11 +20,21 @@ const Workspace = () => {
                             my: 2
                         }}
                     />
-                    <ListProject />
+                    <Typography>
+                        Just demo
+                    </Typography>
+                    <Box
+                        p={4}
+                        borderRadius={2}
+                        bgcolor={getSecondBackgroundColor(theme)}
+                    >
+                        <ListProject />
+                    </Box>
+
                 </Stack>
             </div>
         </div>
     );
 }
 
-export default Workspace;
+export default Project;

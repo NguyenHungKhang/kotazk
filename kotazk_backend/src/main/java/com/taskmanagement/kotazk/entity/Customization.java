@@ -31,9 +31,6 @@ public class Customization {
     private WorkSpace workSpace;
 
     @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
-    private Project project;
-
-    @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)
     private Team team;
 
     @OneToOne(mappedBy = "customization", fetch = FetchType.LAZY)

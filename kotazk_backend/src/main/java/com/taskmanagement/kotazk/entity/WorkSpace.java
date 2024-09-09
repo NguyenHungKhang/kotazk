@@ -64,9 +64,6 @@ public class WorkSpace {
     private List<Project> projects;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private List<Section> sections;
-
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private List<ActivityLog> activityLogs;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)

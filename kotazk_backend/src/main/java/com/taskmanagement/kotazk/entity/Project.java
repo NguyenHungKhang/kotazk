@@ -31,13 +31,10 @@ public class Project {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "customization_id")
-    private Customization customization;
-
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Builder.Default
     @Column(name = "is_pinned", nullable = false)
     private Boolean isPinned = false;
 
@@ -49,7 +46,8 @@ public class Project {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private ProjectStatus status;
+    @Builder.Default
+    private ProjectStatus status = ProjectStatus.ACTIVE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false)

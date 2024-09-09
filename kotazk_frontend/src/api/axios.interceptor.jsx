@@ -24,7 +24,6 @@ const refreshToken = async () => {
 
 axiosInstance.interceptors.request.use((req) => {
     const accessToken = Cookies.get("AUTH-TOKEN");
-    console.log(Cookies.get("AUTH-TOKEN"));
     if (accessToken) {
         req.headers.authorization = `Bearer ${accessToken}`;
     }

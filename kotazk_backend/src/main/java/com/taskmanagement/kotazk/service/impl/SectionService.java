@@ -4,6 +4,7 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.MemberStatus;
 import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
 import com.taskmanagement.kotazk.entity.enums.Role;
+import com.taskmanagement.kotazk.entity.enums.SectionType;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.section.SectionRequestDto;
@@ -16,6 +17,7 @@ import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.ISectionService;
 import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
 import com.taskmanagement.kotazk.util.ModelMapperUtil;
+import com.taskmanagement.kotazk.util.RepositionUtil;
 import com.taskmanagement.kotazk.util.SecurityUtil;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -48,7 +50,9 @@ public class SectionService implements ISectionService {
 
     @Override
     public List<Section> initialSection() {
-        return null;
+        return List.of(
+                createDefaultInitialSection("To do", RepositionUtil.calculateNewLastPosition(0), SectionType.KANBAN)
+        );
     }
 
     @Override
@@ -68,7 +72,6 @@ public class SectionService implements ISectionService {
 
         Section newSection = Section.builder()
                 .name(sectionRequestDto.getName())
-                .workSpace(workSpace)
                 .project(project)
                 .position((long) project.getSections().size())
                 .type(sectionRequestDto.getType())
@@ -158,5 +161,16 @@ public class SectionService implements ISectionService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    private Section createDefaultInitialSection(String name, Long position, SectionType type) {
+        return Section.builder()
+                .name(name)
+                .description("")
+                .position(position)
+                .systemInitial(true)
+                .systemRequired(true)
+                .type(type)
+                .build();
     }
 }
