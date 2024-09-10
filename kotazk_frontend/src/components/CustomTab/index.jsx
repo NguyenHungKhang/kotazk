@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -7,8 +7,14 @@ import { Divider, IconButton, Stack, useTheme } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HomeIcon from '@mui/icons-material/Home';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'; // Icon ba chấm ngang
+import * as TablerIcons from '@tabler/icons-react'
+import { useSelector } from 'react-redux';
+import * as apiService from '../../api/index'
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 
 const dummyData = [
+    { label: 'Dashboard' },
     { label: 'Board' },
     { label: 'List' },
     { label: 'Table' },
@@ -65,61 +71,97 @@ const AntTab = styled((props) => <Tab disableRipple {...props} />)(({ theme }) =
 
 export default function CustomTab() {
     const theme = useTheme();
-    const [value, setValue] = React.useState(0);
+    const [sections, setSections] = useState();
+    const { sectionId } = useParams();
+    const project = useSelector((state) => state.project.currentProject);
 
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-    };
+    useEffect(() => {
+        if (project != null)
+            initialFetch();
+    }, [project]);
+
+    const initialFetch = async () => {
+        const data = {
+            "filters": []
+        }
+        await apiService.sectionAPI.getPageByProject(project.id, data)
+            .then(res => setSections(res.data))
+            .catch(err => console.warn(err));
+    }
 
     return (
         <Box sx={{ width: '100%' }}>
-            <Box>
-                <Stack direction='row' spacing={2} alignItems='center'>
-                    <AntTabs
-                        value={value}
-                        onChange={handleChange}
-                        aria-label="ant example"
-                        TabIndicatorProps={{
-                            style: { display: 'none' }
-                        }}
-                    >
-                        {dummyData.map((tab, index) => (
-                            <AntTab
-                                key={index}
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <HomeIcon sx={{ fontSize: 20 }} />
-                                        <span>{tab.label}</span>
-                                        {value === index && ( // Chỉ render icon khi tab được chọn
-                                            <IconButton
-                                                sx={{
-                                                    p: 0.5,
-                                                    m: 0,
-                                                    ml: 1,
-                                                    color: theme.palette.background.default,
-                                                    transition: 'opacity 0.3s ease',
-                                                }}
-                                                size='small'
-                                                className="more-icon"
-                                            >
-                                                <MoreHorizIcon fontSize='small' />
-                                            </IconButton>
-                                        )}
-                                    </Box>
-                                }
-                            />
-                        ))}
-                    </AntTabs>
-                    <Box py={2}>
-                        <Divider orientation="vertical" variant="middle" flexItem />
-                    </Box>
-                    <Box>
-                        <IconButton size="small">
-                            <AddIcon fontSize='small' />
-                        </IconButton>
-                    </Box>
-                </Stack>
-            </Box>
+
+            <Stack direction='row' spacing={2} alignItems='center'>
+                <AntTabs
+                    aria-label="ant example"
+                    TabIndicatorProps={{
+                        style: { display: 'none' }
+                    }}
+                    value={Number(sectionId) || 0}
+                >
+                    <AntTab
+                        value={0}
+                        label={
+                            <Box component={Link} to={`/project/${project?.id}/`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <HomeIcon sx={{ fontSize: 20 }} />
+                                <span>Dashboard</span>
+                                {sectionId == null && (
+                                    <IconButton
+                                        sx={{
+                                            p: 0.5,
+                                            m: 0,
+                                            ml: 1,
+                                            color: theme.palette.background.default,
+                                            transition: 'opacity 0.3s ease',
+                                        }}
+                                        size='small'
+                                        className="more-icon"
+                                    >
+                                        <MoreHorizIcon fontSize='small' />
+                                    </IconButton>
+                                )}
+                            </Box>
+                        }
+                    />
+                    {sections?.content?.map((section, index) => (
+                        <AntTab
+                            value={section.id}
+                            key={index + 1}
+                            label={
+                                <Box component={Link} to={`/project/${project?.id}/section/${section?.id}`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <HomeIcon sx={{ fontSize: 20 }} />
+                                    <span>{section.name}</span>
+                                    {Number(sectionId) === section?.id && ( // Chỉ render icon khi tab được chọn
+                                        <IconButton
+                                            sx={{
+                                                p: 0.5,
+                                                m: 0,
+                                                ml: 1,
+                                                color: theme.palette.background.default,
+                                                transition: 'opacity 0.3s ease',
+                                            }}
+                                            size='small'
+                                            className="more-icon"
+                                        >
+                                            <MoreHorizIcon fontSize='small' />
+                                        </IconButton>
+                                    )}
+                                </Box>
+                            }
+                        />
+                    ))}
+                </AntTabs>
+                <Box py={2}>
+                    <Divider orientation="vertical" variant="middle" flexItem />
+                </Box>
+                <Box>
+                    <IconButton size="small">
+                        <AddIcon fontSize='small' />
+                    </IconButton>
+                </Box>
+            </Stack>
+
         </Box>
     );
 }

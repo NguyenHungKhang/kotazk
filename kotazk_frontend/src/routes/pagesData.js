@@ -4,6 +4,8 @@ import CustomSaveProjectDialog from "../components/CustomSaveProjectDialog";
 import Home from "../pages/Home";
 import Kanban from "../pages/Kanban";
 import Login from "../pages/Login";
+import Project from "../pages/Project";
+import ProjectDashBoard from "../pages/ProjectDashBoard";
 import ProjectMember from "../pages/ProjectMember";
 import Workspace from "../pages/WorkSpace";
 import TestGantt from "../playgrounds/components/TestGantt";
@@ -26,17 +28,17 @@ const pagesData = [
   },
   {
     path: "/project/:projectId",
-    element: <Kanban />,
+    element: <Project><ProjectDashBoard /></Project>,
     title: "project"
   },
   {
-    path: "/project/member",
-    element: <ProjectMember />,
+    path: "/project/:projectId/member",
+    element: <Project><ProjectMember /></Project>,
     title: "Project Member"
   },
   {
-    path: "/kanban",
-    element: <Kanban />,
+    path: "/project/:projectId/section/:sectionId",
+    element: <Project><Kanban /></Project>,
     title: "playground"
   },
   {

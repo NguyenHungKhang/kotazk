@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
+
 @RestController
-@RequestMapping("/task")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/task")
 public class TaskController {
     @Autowired
     ITaskService taskService = new TaskService();
@@ -49,9 +51,9 @@ public class TaskController {
         return taskService.getOne(id);
     }
 
-    @PostMapping("/page/by-project/{id}")
+    @PostMapping("/page/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public PageResponse<TaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long id) {
-        return taskService.getPageByProject(searchParam, id);
+    public PageResponse<TaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long projectId) {
+        return taskService.getPageByProject(searchParam, projectId);
     }
 }

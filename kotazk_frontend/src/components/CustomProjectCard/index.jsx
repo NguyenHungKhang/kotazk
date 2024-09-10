@@ -1,15 +1,21 @@
 import React from 'react';
 import { Avatar, Box, Card, Typography, Stack, Chip } from '@mui/material';
 import { alpha } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const ProjectCard = ({ project, theme }) => {
     return (
         <Card
+            component={Link}
+            to={`/project/${project.id}`}
             sx={{
                 transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
                 '&:hover .overlay': {
                     backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
                 },
+                '&:hover .projectName': {
+                    textDecoration: 'underline'
+                }
             }}
         >
             <Box sx={{ position: 'relative', width: '100%' }}>
@@ -51,9 +57,15 @@ const ProjectCard = ({ project, theme }) => {
                             borderRadius: 2,
                         }}
                     >
-                        <Typography variant="h6" fontWeight={650} color="white">
+                        <Typography
+                            className='projectName'
+                            variant="h6"
+                            fontWeight={650}
+                            color="white"
+                        >
                             {project.name}
                         </Typography>
+
                     </Box>
 
                     {/* Stack ở dưới cùng của ảnh */}

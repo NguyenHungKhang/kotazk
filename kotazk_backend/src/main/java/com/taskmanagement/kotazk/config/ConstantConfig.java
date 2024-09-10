@@ -6,6 +6,9 @@ import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
 import java.util.*;
 
 public class ConstantConfig {
+    public static final String DEFAULT_ENDPOINT_BASIC_PART = "/api/v1";
+    public static final String DEFAULT_ENDPOINT_PUBLIC_PART = DEFAULT_ENDPOINT_BASIC_PART + "/public";
+    public static final String DEFAULT_ENDPOINT_SECURE_PART = DEFAULT_ENDPOINT_BASIC_PART + "/secure";
     public static final int DEFAULT_PAGE_NUM = 0;
     public static final int DEFAULT_PAGE_SIZE = 10;
     public static final String DEFAULT_SORT_BY = "createdAt";

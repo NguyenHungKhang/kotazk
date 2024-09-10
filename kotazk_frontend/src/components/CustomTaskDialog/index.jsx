@@ -22,8 +22,9 @@ import { useEffect } from 'react';
 import * as apiService from '../../api/index'
 import { useDispatch } from 'react-redux';
 import { setCurrentProjectList } from '../../redux/actions/project.action';
+import CustomBreadcrumb from '../CustomBreadcumbs';
 
-export default function CustomSaveProjectDialog() {
+const CustomTaskDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
@@ -103,15 +104,7 @@ export default function CustomSaveProjectDialog() {
                 <DialogTitle>
                     <Grid container justifyContent="space-between" alignItems="center">
                         <Grid item container alignItems="center" xs={10}>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <Box>
-                                    <ProjectIcon size={48} color={theme.palette.primary.main} />
-                                </Box>
-                                <Box>
-                                    <Typography variant='h6' fontWeight={650}>Create Project</Typography>
-                                    <Typography variant='body1' color={theme.palette.text.secondary}>Please fill in the details below to add a new project.</Typography>
-                                </Box>
-                            </Stack>
+                            <CustomBreadcrumb />
                         </Grid>
                         <Grid item xs={2} container justifyContent="flex-end">
                             <IconButton onClick={handleClose}>
@@ -191,13 +184,9 @@ export default function CustomSaveProjectDialog() {
                         />
                     </Box>
                 </DialogContent>
-                <Divider />
-                <DialogActions>
-                    <Button variant="contained" color="primary" type="submit">
-                        Save Project
-                    </Button>
-                </DialogActions>
             </Dialog>
         </React.Fragment>
     );
 }
+
+export default CustomTaskDialog;

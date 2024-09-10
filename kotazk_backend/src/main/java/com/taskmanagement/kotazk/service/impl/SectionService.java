@@ -51,7 +51,7 @@ public class SectionService implements ISectionService {
     @Override
     public List<Section> initialSection() {
         return List.of(
-                createDefaultInitialSection("To do", RepositionUtil.calculateNewLastPosition(0), SectionType.KANBAN)
+                createDefaultInitialSection("Board", RepositionUtil.calculateNewLastPosition(0), SectionType.KANBAN)
         );
     }
 
