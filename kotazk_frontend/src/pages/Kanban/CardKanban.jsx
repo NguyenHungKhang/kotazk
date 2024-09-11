@@ -2,7 +2,7 @@ import { Avatar, Box, Card, CardContent, Chip, Stack, Typography, lighten, useTh
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 
-const CardKanban = () => {
+const CardKanban = ({ task }) => {
     const theme = useTheme();
     const [displayLabels, setDisplayLabels] = useState(false);
 
@@ -41,7 +41,7 @@ const CardKanban = () => {
                     </Box>
                 </Stack>
                 <Typography variant='body2' fontWeight='bold' noWrap>
-                    Task name 1231415412412414124124124
+                    {task?.name}
                 </Typography>
                 {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
                     Test desciption a akjn al la a a las la va
