@@ -1,58 +1,110 @@
 import AddIcon from '@mui/icons-material/Add';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import UnfoldLessTwoToneIcon from '@mui/icons-material/UnfoldLessTwoTone';
-import { Avatar, Box, Button, Card, CardContent, Chip, IconButton, Stack, Typography, useTheme } from "@mui/material";
-import { useState } from "react";
+import { Box, Card, CardContent, IconButton, Stack, Typography, alpha, lighten, useTheme } from "@mui/material";
+import { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import "../../App.css";
-import { darken, lighten, alpha } from '@mui/material';
+import AddCardKanban from './AddCardKanban';
 import CardKanban from './CardKanban';
+import { useSelector } from 'react-redux';
+import * as apiService from "../../api/index"
+import { useDispatch } from 'react-redux';
+import { setCurrentKanbanTaskList } from '../../redux/actions/task.action';
 
-const DATA = [
-  {
-    id: "0e2f0db1-5457-46b0-949e-8032d2f9997a",
-    name: "Walmart",
-    customization: {
-      backgroundColor: "#E5826F"
-    },
-    items: [
-      { id: "26fd50b3-3841-496e-8b32-73636f6f4197", name: "3% Milk" },
-      { id: "b0ee9d50-d0a6-46f8-96e3-7f3f0f9a2525", name: "Butter" },
-    ],
-    tint: 1,
-  },
-  {
-    id: "487f68b4-1746-438c-920e-d67b7df46247",
-    name: "Indigo",
-    customization: {
-      backgroundColor: "#7F7CFF"
-    },
-    items: [
-      {
-        id: "95ee6a5d-f927-4579-8c15-2b4eb86210ae",
-        name: "Designing Data Intensive Applications",
-      },
-      { id: "5bee94eb-6bde-4411-b438-1c37fa6af364", name: "Atomic Habits" },
-    ],
-    tint: 2,
-  },
-  {
-    id: "25daffdc-aae0-4d73-bd31-43f73101e7c0",
-    name: "Lowes",
-    customization: {
-      backgroundColor: "#54D585"
-    },
-    items: [
-      { id: "960cbbcf-89a0-4d79-aa8e-56abbc15eacc", name: "Workbench" },
-      { id: "d3edf796-6449-4931-a777-ff66965a025b", name: "Hammer" },
-    ],
-    tint: 3,
-  },
-];
+
+// const DATA = [
+//   {
+//     id: "0e2f0db1-5457-46b0-949e-8032d2f9997a",
+//     name: "Walmart",
+//     customization: {
+//       backgroundColor: "#E5826F"
+//     },
+//     items: [
+//       { id: "26fd50b3-3841-496e-8b32-73636f6f4197", name: "3% Milk" },
+//       { id: "b0ee9d50-d0a6-46f8-96e3-7f3f0f9a2525", name: "Butter" },
+//     ],
+//   },
+//   {
+//     id: "487f68b4-1746-438c-920e-d67b7df46247",
+//     name: "Indigo",
+//     customization: {
+//       backgroundColor: "#7F7CFF"
+//     },
+//     items: [
+//       {
+//         id: "95ee6a5d-f927-4579-8c15-2b4eb86210ae",
+//         name: "Designing Data Intensive Applications",
+//       },
+//       { id: "5bee94eb-6bde-4411-b438-1c37fa6af364", name: "Atomic Habits" },
+//     ],
+//   },
+//   {
+//     id: "25daffdc-aae0-4d73-bd31-43f73101e7c0",
+//     name: "Lowes",
+//     customization: {
+//       backgroundColor: "#54D585"
+//     },
+//     items: [
+//       { id: "960cbbcf-89a0-4d79-aa8e-56abbc15eacc", name: "Workbench" },
+//       { id: "d3edf796-6449-4931-a777-ff66965a025b", name: "Hammer" },
+//     ],
+//   },
+// ];
 
 function KanbanDropNDrag() {
-  const [stores, setStores] = useState(DATA);
+  const stores = useSelector((state) => state.task.currentKanbanTaskList);
+  const dispatch = useDispatch();
+  const project = useSelector((state) => state.project.currentProject);
+
+  useEffect(() => {
+    if (project != null)
+      initialFetch();
+  }, [project])
+
+  const initialFetch = async () => {
+    const data = {
+      "sortBy": "position",
+      "sortDirectionAsc": true,
+      "filters": []
+    };
+
+    await apiService.statusAPI.getPageByProject(project.id, data)
+      .then(async (statusRes) => {
+        const tempList = statusRes.data.content;
+
+        const statusesWithTasks = await Promise.all(
+          tempList.map(async (item) => {
+            const taskData = {
+              "sortBy": "position",
+              "sortDirectionAsc": true,
+              "filters": [
+                {
+                  "key": "status.id",
+                  "operation": "EQUAL",
+                  "value": item.id,
+                  "values": []
+                }
+              ]
+            };
+
+            await apiService.taskAPI.getPageByProject(item.projectId, taskData)
+              .then(taskRes => {
+                item.items = taskRes.data.content;
+              })
+              .catch(taskErr => {
+                console.warn(`Error fetching tasks for status ${item.id}:`, taskErr);
+                item.items = []
+              });
+
+            return item;
+          })
+        );
+        console.log(statusesWithTasks);
+        dispatch(setCurrentKanbanTaskList(statusesWithTasks));
+      })
+      .catch(statusErr => console.warn("Error fetching statuses:", statusErr));
+  };
 
   const handleDragAndDrop = (results) => {
     const { source, destination, type } = results;
@@ -74,17 +126,21 @@ function KanbanDropNDrag() {
       const [removedStore] = reorderedStores.splice(storeSourceIndex, 1);
       reorderedStores.splice(storeDestinatonIndex, 0, removedStore);
 
-      return setStores(reorderedStores);
+      return dispatch(setCurrentKanbanTaskList(reorderedStores))
     }
     const itemSourceIndex = source.index;
     const itemDestinationIndex = destination.index;
 
+    console.log(source.droppableId);
+
     const storeSourceIndex = stores.findIndex(
-      (store) => store.id === source.droppableId
+      (store) => store.id.toString() === source.droppableId
     );
     const storeDestinationIndex = stores.findIndex(
-      (store) => store.id === destination.droppableId
+      (store) => store.id.toString() === destination.droppableId
     );
+
+
 
     const newSourceItems = [...stores[storeSourceIndex].items];
     const newDestinationItems =
@@ -106,7 +162,7 @@ function KanbanDropNDrag() {
       items: newDestinationItems,
     };
 
-    setStores(newStores);
+    dispatch(setCurrentKanbanTaskList(newStores))
   };
 
   return (
@@ -114,23 +170,20 @@ function KanbanDropNDrag() {
       <div className="card">
         <DragDropContext onDragEnd={handleDragAndDrop}>
           <Droppable droppableId="ROOT" type="group" direction="horizontal">
-
             {(provided) => (
-
               <Stack direction='row' spacing={2} {...provided.droppableProps} ref={provided.innerRef}>
-                {stores.map((store, index) => (
+                {stores?.map((status, index) => (
                   <Draggable
-                    draggableId={store.id}
+                    draggableId={status.id.toString()}
                     index={index}
-                    key={store.id}
-                  >
+                    key={status.id}>
                     {(provided) => (
                       <Box
                         {...provided.dragHandleProps}
                         {...provided.draggableProps}
                         ref={provided.innerRef}
                       >
-                        <StoreList {...store} />
+                        <StoreList {...status} />
                       </Box>
                     )}
                   </Draggable>
@@ -138,27 +191,26 @@ function KanbanDropNDrag() {
                 {provided.placeholder}
               </Stack>
             )}
-
           </Droppable>
-
         </DragDropContext>
       </div>
     </div>
   );
 }
 
-function StoreList({ name, items, id, customization }) {
+function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
   const theme = useTheme();
+
   return (
-    <Droppable droppableId={id}>
+    <Droppable droppableId={id.toString()}>
       {(provided) => (
-        <div  {...provided.droppableProps} ref={provided.innerRef}>
+        <div {...provided.droppableProps} ref={provided.innerRef}>
           <Card
             sx={{
               width: 320,
               boxShadow: "none",
               borderRadius: 2,
-              bgcolor: theme.palette.mode === "light" ? "#F1F2F4" : "#121212"
+              bgcolor: theme.palette.mode === "light" ? "#F1F2F4" : "#121212",
             }}
           >
             <CardContent>
@@ -173,6 +225,7 @@ function StoreList({ name, items, id, customization }) {
                       {name}
                     </Typography>
                   </Box>
+                  {/* Action buttons */}
                   <IconButton size="small">
                     <UnfoldLessTwoToneIcon fontSize='inherit' />
                   </IconButton>
@@ -184,34 +237,50 @@ function StoreList({ name, items, id, customization }) {
                   </IconButton>
                 </Stack>
               </Box>
+              <Box maxHeight='calc(100vh - 400px)'
+                sx={{
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  px: 2,
+                  '&::-webkit-scrollbar': {
+                    borderRadius: 5,
+                    width: '0.2em',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    boxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
+                    webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)'
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    borderRadius: 5,
+                    backgroundColor: 'slategrey',
+                    width: '0.4em !important',
+                    outline: '1px solid slategrey'
+                  }
+                }}
+              >
+                <Stack spacing={2}>
+                  {items?.map((task, index) => (
+                    <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          {...provided.dragHandleProps}
+                          {...provided.draggableProps}
+                          ref={provided.innerRef}
+                        >
+                          <CardKanban task={task} />
+                        </div>
+                      )}
 
+                    </Draggable>
 
-              <Stack spacing={2}>
-                {items.map((item, index) => (
-                  <Draggable draggableId={item.id} index={index} key={item.id}>
-                    {(provided, snapshot) => (
-                      <div
-                        {...provided.dragHandleProps}
-                        {...provided.draggableProps}
-                        ref={provided.innerRef}
-                      >
-                        <CardKanban />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-                <Button variant='text'
-                  sx={{
-                    textTransform: 'none',
-                    fontSize: '14px',
-                    justifyContent: 'flex-start',
-                    color: theme.palette.text.secondary
-                  }} startIcon={<AddIcon fontSize='small' />}>
-                  Add task
-                </Button>
-              </Stack>
+                  ))}
+                  {provided.placeholder}
 
+                </Stack>
+              </Box>
+              <Box mt={2} >
+                {(isFromStart || isFromAny) && <AddCardKanban currentGroupBy={"status"} groupId={id} />}
+              </Box>
             </CardContent>
           </Card>
         </div>

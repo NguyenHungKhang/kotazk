@@ -15,8 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
+
 @RestController
-@RequestMapping("/status")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/status")
 public class StatusController {
     @Autowired
     IStatusService statusService = new StatusService();

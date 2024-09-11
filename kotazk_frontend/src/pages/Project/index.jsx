@@ -18,7 +18,6 @@ const Project = ({ children }) => {
     const { projectId } = useParams();
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject);
-
     useEffect(() => {
         if (projectId != null)
             fetchInitial();
@@ -34,42 +33,43 @@ const Project = ({ children }) => {
         <div className="flex h-screen">
             <SideBar />
             <div className="flex-1 p-7">
-                <Box
-                    height='100%'
+                <Stack
+                    height='calc(100vh - 2*1.75rem);'
                     display="flex"
                     flexDirection="column"
                 >
-                    <CustomHeader />
-                    <CustomBreadcrumb />
-                    <Stack direction='row' mt={2}>
-                        <Box flexGrow={1}>
-                            <CustomTab />
-                        </Box>
-                        <Box>
-                            <CustomFilterBar />
-                        </Box>
-                    </Stack>
-                    <Divider
-                        sx={{
-                            my: 2
-                        }}
-                    />
-
+                    <Box flex=' 0 1 auto'>
+                        <CustomHeader />
+                        <CustomBreadcrumb />
+                        <Stack direction='row' mt={2}>
+                            <Box flexGrow={1}>
+                                <CustomTab />
+                            </Box>
+                            <Box>
+                                <CustomFilterBar />
+                            </Box>
+                        </Stack>
+                        <Divider
+                            sx={{
+                                my: 2
+                            }}
+                        />
+                    </Box>
                     <Box
+                        flex=' 1 1 auto'
                         sx={{
-                            width: '100%',
-                            height: '100vh', // Hoặc chiều cao phù hợp với layout của bạn
                             backgroundImage: 'url("https://i.natgeofe.com/n/2a832501-483e-422f-985c-0e93757b7d84/6_3x2.jpg")',
-                            backgroundSize: 'cover', // Đảm bảo hình ảnh bao phủ toàn bộ vùng
-                            backgroundRepeat: 'no-repeat', // Không lặp lại hình ảnh
-                            backgroundPosition: 'center', // Căn giữa hình ảnh
+                            backgroundSize: 'cover',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
                             p: 4,
-                            borderRadius: 2
+                            borderRadius: 2,
+                            overflow: 'hidden'
                         }}
                     >
                         {children}
                     </Box>
-                </Box>
+                </Stack>
             </div>
         </div>
     );

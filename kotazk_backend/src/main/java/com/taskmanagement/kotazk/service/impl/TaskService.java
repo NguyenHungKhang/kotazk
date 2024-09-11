@@ -72,6 +72,7 @@ public class TaskService implements ITaskService {
         Member reporter = null;
         Set<Collectors> collaborators = new HashSet<>();
         Status status = checkStatus(project, taskRequestDto.getStatusId());
+        System.out.println(status.getId());
         Priority priority = checkPriority(project, taskRequestDto.getPriorityId());
         Long timeEstimate = taskRequestDto.getTimeEstimate();
         Boolean isCompleted = taskRequestDto.getIsCompleted();
