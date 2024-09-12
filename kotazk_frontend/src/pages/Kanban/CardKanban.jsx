@@ -20,7 +20,7 @@ const CardKanban = ({ task }) => {
                     p: 4
                 }}
             >
-                <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap mb={2}>
+                {/* <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap mb={2}>
                     <Box
                         bgcolor='#E5826F'
                         borderRadius={1}
@@ -39,7 +39,7 @@ const CardKanban = ({ task }) => {
                             </Typography>
                         )}
                     </Box>
-                </Stack>
+                </Stack> */}
                 <Typography variant='body2' fontWeight='bold' noWrap>
                     {task?.name}
                 </Typography>
@@ -51,7 +51,7 @@ const CardKanban = ({ task }) => {
                         mt: 2
                     }}
                 >
-                    <Stack direction='row' alignItems='center' spacing={1}>
+                    {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <CalendarIcon color={theme.palette.text.secondary} size={16} />
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             3/9/2024
@@ -75,7 +75,7 @@ const CardKanban = ({ task }) => {
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             2
                         </Typography>
-                    </Stack>
+                    </Stack> */}
                     <Avatar
                         sx={{
                             marginLeft: 'auto',

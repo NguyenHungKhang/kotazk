@@ -1,9 +1,11 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
 import com.taskmanagement.kotazk.service.IProjectService;
@@ -50,6 +52,12 @@ public class StatusController {
     @ResponseStatus(HttpStatus.OK)
     public StatusResponseDto getOne(@PathVariable Long id) {
         return statusService.getOne(id);
+    }
+
+    @PatchMapping("/re-position/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public RePositionResponseDto rePosition(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long projectId) {
+        return null;
     }
 
     @PostMapping("/page/by-project/{id}")

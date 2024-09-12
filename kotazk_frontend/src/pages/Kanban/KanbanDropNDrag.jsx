@@ -100,7 +100,6 @@ function KanbanDropNDrag() {
             return item;
           })
         );
-        console.log(statusesWithTasks);
         dispatch(setCurrentKanbanTaskList(statusesWithTasks));
       })
       .catch(statusErr => console.warn("Error fetching statuses:", statusErr));
@@ -241,20 +240,18 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
                 sx={{
                   overflowY: 'auto',
                   overflowX: 'hidden',
-                  px: 2,
                   '&::-webkit-scrollbar': {
-                    borderRadius: 5,
-                    width: '0.2em',
+                    width: '0.6em',
                   },
                   '&::-webkit-scrollbar-track': {
                     boxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
-                    webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)'
+                    webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
                   },
                   '&::-webkit-scrollbar-thumb': {
-                    borderRadius: 5,
+                    backgroundClip: 'padding-box',
                     backgroundColor: 'slategrey',
-                    width: '0.4em !important',
-                    outline: '1px solid slategrey'
+                    borderLeft: 'solid 4px transparent'
+           
                   }
                 }}
               >

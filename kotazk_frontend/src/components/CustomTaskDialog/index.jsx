@@ -36,10 +36,10 @@ const CustomTaskDialog = () => {
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
 
-    useEffect(() => {
-        if (workspace != null)
-            console.log(workspace.id);
-    }, [dispatch, workspace])
+    // useEffect(() => {
+    //     if (workspace != null)
+    //         console.log(workspace.id);
+    // }, [dispatch, workspace])
 
     const handleVisibilityChange = (event) => {
         setVisibility(event.target.value);
@@ -86,7 +86,7 @@ const CustomTaskDialog = () => {
                 onClick={handleClickOpen}
                 startIcon={<AddIcon size={20} />}
             >
-                Create Project
+                Create task
             </Button>
             <Dialog
                 fullWidth
