@@ -23,6 +23,8 @@ import * as apiService from '../../api/index'
 import { useDispatch } from 'react-redux';
 import { setCurrentProjectList } from '../../redux/actions/project.action';
 import CustomBreadcrumb from '../CustomBreadcumbs';
+import CustomLongTextEditor from '../CustomLongTextEditor';
+import CustomFileUploader from '../CustomFileUploader';
 
 const CustomTaskDialog = () => {
     const theme = useTheme();
@@ -90,6 +92,7 @@ const CustomTaskDialog = () => {
             </Button>
             <Dialog
                 fullWidth
+                maxWidth='lg'
                 open={open}
                 onClose={handleClose}
                 PaperProps={{
@@ -102,7 +105,7 @@ const CustomTaskDialog = () => {
                 }}
             >
                 <DialogTitle>
-                    <Grid container justifyContent="space-between" alignItems="center">
+                    {/* <Grid container justifyContent="space-between" alignItems="center">
                         <Grid item container alignItems="center" xs={10}>
                             <CustomBreadcrumb />
                         </Grid>
@@ -111,78 +114,281 @@ const CustomTaskDialog = () => {
                                 <CloseIcon />
                             </IconButton>
                         </Grid>
-                    </Grid>
+                    </Grid> */}
                 </DialogTitle>
                 <DialogContent>
-                    <Box>
-                        <InputLabel
-                            htmlFor="name"
-                            sx={{
-                                mb: 1,
-                                fontWeight: 650,
-                                color: theme.palette.text.primary
-                            }}
-                        >
-                            Project Name
-                        </InputLabel>
-                        <Grid container spacing={2} alignItems='center'>
-                            <Grid item xs={3}>
-                                <Select
-                                    labelId="visibility-label"
-                                    id="visibility"
-                                    name="visibility"
-                                    size='small'
-                                    value={visibility}
-                                    fullWidth
-                                    onChange={handleVisibilityChange}
-                                >
-                                    <MenuItem value="PUBLIC">Public</MenuItem>
-                                    <MenuItem value="PRIVATE">Private</MenuItem>
-                                </Select>
-                            </Grid>
-                            <Grid item xs={9}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={7}>
+
+
+                            <Box>
                                 <TextField
                                     required
-                                    margin='dense'
                                     size="small"
                                     id="name"
                                     name="name"
                                     fullWidth
-                                    variant="outlined"
-                                    onChange={(e) => setName(e.target.value)}
-                                    sx={{
-                                        m: 0
+                                    variant="standard"
+                                    placeholder='Name of task...'
+                                    InputProps={{
+                                        disableUnderline: true,
+                                        sx: {
+                                            fontSize: 18,
+                                            fontWeight: 500
+                                        }
                                     }}
+                                    onChange={(e) => setName(e.target.value)}
                                 />
+                            </Box>
+                            <Grid container spacing={6} mt={2}>
+                                <Grid item xs={6}>
+                                    <Grid container spacing={2} alignItems='center'>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Status
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <Select
+                                                size='small'
+                                            >
+
+                                            </Select>
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Date
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <TextField
+                                                required
+                                                size="small"
+                                                id="date"
+                                                name="date"
+                                                fullWidth
+                                                variant="outlined"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Time Estimate
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <TextField
+                                                required
+                                                size="small"
+                                                id="time_estimate"
+                                                name="time_estimate"
+                                                fullWidth
+                                                variant="outlined"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Tags
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <TextField
+                                                required
+                                                size="small"
+                                                id="tags"
+                                                name="tags"
+                                                fullWidth
+                                                variant="outlined"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+
+                                <Grid item xs={6}>
+                                    <Grid container spacing={2} alignItems='center'>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Assignees
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <Select
+                                                size='small'
+                                            >
+
+                                            </Select>
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Priority
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <TextField
+                                                required
+                                                size="small"
+                                                id="date"
+                                                name="date"
+                                                fullWidth
+                                                variant="outlined"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Typography>
+                                                Linked task
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <TextField
+                                                required
+                                                size="small"
+                                                id="time_estimate"
+                                                name="time_estimate"
+                                                fullWidth
+                                                variant="outlined"
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
                             </Grid>
 
+                            <Box mt={6}>
+                                <Typography
+                                    variant='h6'
+                                    fontWeight={650}
+                                    sx={{
+                                        mb: 1
+                                    }}
+                                >
+                                    Description
+                                </Typography>
+                                <Box
+                                    mt={2}
+                                    bgcolor={theme.palette.mode === "light" ? "#fff" : '#1F1F1F'}
+                                    border="1px solid"
+                                    borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                    minHeight={100}
+                                    borderRadius={2}
+                                >
+                                    <CustomLongTextEditor />
+                                </Box>
+                            </Box>
+
+                            <Box mt={6}>
+                                <Typography variant='h6' fontWeight={650}>
+                                    Custom Fields
+                                </Typography>
+                                <Grid container mt={2}>
+                                    <Grid
+                                        item
+                                        borderRadius={"8px 0 0 0 "}
+                                        xs={4}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        p={2}
+                                    >
+                                        Field
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={8}
+                                        borderRadius={"0 8px 0 0"}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        borderLeft='none'
+                                        p={2}
+                                    >
+                                        Value
+                                    </Grid>
+
+                                    <Grid
+                                        item
+                                        // borderRadius={"8px 0 0 0 "}
+                                        xs={4}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        borderTop='none'
+                                        p={2}
+                                    >
+                                        Field 2
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={8}
+                                        // borderRadius={"0 8px 0 0"}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        borderTop='none'
+                                        borderLeft='none'
+                                        p={2}
+                                    >
+                                        Value 2
+                                    </Grid>
+
+                                    <Grid
+                                        item
+                                        borderRadius={"0 0 0 8px "}
+                                        xs={4}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        borderTop='none'
+                                        p={2}
+                                    >
+                                        Field 3
+                                    </Grid>
+                                    <Grid
+                                        item
+                                        xs={8}
+                                        borderRadius={"0 0 8px 0"}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        borderLeft='none'
+                                        borderTop='none'
+                                        p={2}
+                                    >
+                                        Value 3
+                                    </Grid>
+                                </Grid>
+                            </Box>
+
+                            <Box mt={6}>
+                                <Typography variant='h6' fontWeight={650}>
+                                    Subtasks
+                                </Typography>
+                                <Stack mt={2}>
+                                    <Box
+                                        flexGrow={1}
+                                        borderRadius={"8px 8px 0 0"}
+                                        border="1px solid"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        p={2}
+                                    >
+                                        Test 1
+                                    </Box>
+                                    <Box
+                                        flexGrow={1}
+                                        borderRadius={"0 0 8px 8px"}
+                                        border="1px solid"
+                                        borderTop="none"
+                                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
+                                        p={2}
+                                    >
+                                        Test 2
+                                    </Box>
+                                </Stack>
+                            </Box>
+
+                            <Box mt={6}>
+                                <Typography variant='h6' fontWeight={650}>
+                                    Attachments
+                                </Typography>
+                                <Box>
+                                    <CustomFileUploader />
+                                </Box>
+                            </Box>
                         </Grid>
+                    </Grid>
 
-                    </Box>
 
-                    <Box mt={2}>
-                        <InputLabel
-                            htmlFor="name"
-                            sx={{
-                                mb: 1,
-                                fontWeight: 650,
-                                color: theme.palette.text.primary
-                            }}
-                        >
-                            Description
-                        </InputLabel>
-                        <TextField
-                            required
-                            size="small"
-                            id="description"
-                            name="description"
-                            fullWidth
-                            variant="outlined"
-                            multiline
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                        />
-                    </Box>
                 </DialogContent>
             </Dialog>
         </React.Fragment>

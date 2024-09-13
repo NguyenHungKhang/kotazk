@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Stack, Typography, lighten, useTheme } from "@mui/material";
+import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Typography, lighten, useTheme } from "@mui/material";
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 
@@ -13,7 +13,13 @@ const CardKanban = ({ task }) => {
 
     return (
         <Card
-            sx={{ bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B" }}
+            sx={{
+                bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
+                borderRadius: 2,
+                boxShadow: 1,
+                border: '1px solid',
+                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]
+            }}
         >
             <CardContent
                 sx={{
@@ -46,6 +52,7 @@ const CardKanban = ({ task }) => {
                 {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
                     Test desciption a akjn al la a a las la va
                 </Typography> */}
+                <Divider sx={{my: 2}} />
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
                     sx={{
                         mt: 2

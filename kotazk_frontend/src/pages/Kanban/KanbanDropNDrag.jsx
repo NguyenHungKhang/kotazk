@@ -1,7 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import UnfoldLessTwoToneIcon from '@mui/icons-material/UnfoldLessTwoTone';
-import { Box, Card, CardContent, IconButton, Stack, Typography, alpha, lighten, useTheme } from "@mui/material";
+import { Box, Card, CardContent, IconButton, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import "../../App.css";
@@ -202,18 +202,27 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
 
   return (
     <Droppable droppableId={id.toString()}>
-      {(provided) => (
+      {(provided, snapshot) => (
         <div {...provided.droppableProps} ref={provided.innerRef}>
-          <Card
-            sx={{
-              width: 320,
-              boxShadow: "none",
-              borderRadius: 2,
-              bgcolor: theme.palette.mode === "light" ? "#F1F2F4" : "#121212",
-            }}
+          <Box
+          sx={{
+            p:1,
+            borderRadius: 2,
+            border: '2px dashed',
+            borderColor: snapshot.isDraggingOver ? theme.palette.text.secondary
+            : 'transparent'
+          }}
           >
-            <CardContent>
-              <Box mb={2}>
+            <Box
+              mb={2}
+              p={2}
+              width={320}
+              boxShadow={1}
+              borderRadius={2}
+              bgcolor={theme.palette.mode === "light" ? "#F6F7FA" : lighten(theme.palette.background.default, 0.2)}
+
+            >
+              <Box >
                 <Stack
                   direction='row'
                   alignItems='center'
@@ -236,50 +245,50 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
                   </IconButton>
                 </Stack>
               </Box>
-              <Box maxHeight='calc(100vh - 400px)'
-                sx={{
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  '&::-webkit-scrollbar': {
-                    width: '0.6em',
-                  },
-                  '&::-webkit-scrollbar-track': {
-                    boxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
-                    webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
-                  },
-                  '&::-webkit-scrollbar-thumb': {
-                    backgroundClip: 'padding-box',
-                    backgroundColor: 'slategrey',
-                    borderLeft: 'solid 4px transparent'
-           
-                  }
-                }}
-              >
-                <Stack spacing={2}>
-                  {items?.map((task, index) => (
-                    <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
-                      {(provided, snapshot) => (
-                        <div
-                          {...provided.dragHandleProps}
-                          {...provided.draggableProps}
-                          ref={provided.innerRef}
-                        >
-                          <CardKanban task={task} />
-                        </div>
-                      )}
+            </Box>
 
-                    </Draggable>
 
-                  ))}
-                  {provided.placeholder}
+            <Box maxHeight='calc(100vh - 230px)'
+              sx={{
+                pb: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                '&::-webkit-scrollbar': {
+                  width: '0.6em',
+                },
+                '&::-webkit-scrollbar-track': {
+                  boxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
+                  webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundClip: 'padding-box',
+                  backgroundColor: 'slategrey',
+                  borderLeft: 'solid 4px transparent'
 
-                </Stack>
-              </Box>
-              <Box mt={2} >
-                {(isFromStart || isFromAny) && <AddCardKanban currentGroupBy={"status"} groupId={id} />}
-              </Box>
-            </CardContent>
-          </Card>
+                }
+              }}
+            >
+              <Stack spacing={2}>
+                {items?.map((task, index) => (
+                  <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
+                    {(provided, snapshot) => (
+                      <div
+                        {...provided.dragHandleProps}
+                        {...provided.draggableProps}
+                        ref={provided.innerRef}
+                      >
+                        <CardKanban task={task} />
+                      </div>
+                    )}
+
+                  </Draggable>
+
+                ))}
+                {provided.placeholder}
+
+              </Stack>
+            </Box>
+          </Box>
         </div>
       )}
     </Droppable>

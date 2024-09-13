@@ -14,10 +14,10 @@ const SideBar = () => {
     const theme = useTheme();
     const [open, setOpen] = useState(true);
     const Menus = [
-        { title: "Dashboard", src: <IconLayoutDashboardFilled /> },
-        { title: "Members", src: <IconUsers /> },
-        { title: "Setting", src: <IconSettingsFilled /> },
-        { title: "Project Name", src: <IconVectorBezier2 />, gap: true },
+        { title: "Dashboard", src: <IconLayoutDashboardFilled size={20} /> },
+        { title: "Members", src: <IconUsers size={20} /> },
+        { title: "Setting", src: <IconSettingsFilled size={20}  /> },
+        { title: "Project Name", src: <IconVectorBezier2 size={20}  />, gap: true },
         // { title: "Schedule ", src: "Calendar" },
         // { title: "Search", src: "Search" },
         // { title: "Analytics", src: "Chart" },
@@ -34,7 +34,7 @@ const SideBar = () => {
             }}
         >
             <div
-                className={` ${open ? "w-72" : "w-20 "
+                className={` ${open ? "w-72" : "w-20"
                     } p-5  pt-8 relative duration-300`}
                 style={{
                     flexGrow: 1
@@ -42,10 +42,11 @@ const SideBar = () => {
             >
                 <ArrowBackIosNewIcon
                     sx={{
-                        background: "white",
+                        background: theme.palette.background.default,
+                        color: theme.palette.text.primary,
                         border: "2px solid",
-                        height: 30,
-                        width: 30
+                        height: 25,
+                        width: 25
                     }}
                     className={`absolute cursor-pointer -right-3 top-9 w-7
           border-2 rounded-full  ${!open && "rotate-180"}`}
@@ -72,8 +73,8 @@ const SideBar = () => {
                     {Menus.map((Menu, index) => (
                         <li
                             key={index}
-                            className={`flex  rounded-md p-2 cursor-pointer hover:bg-light-white text-gray-300 text-sm items-center gap-x-4 
-              ${Menu.gap ? "mt-9" : "mt-2"} ${index === 0 && "bg-light-white"
+                            className={`flex  rounded-md p-1 cursor-pointer hover:bg-light-white text-gray-300 text-sm items-center gap-x-4 
+              ${Menu.gap ? "mt-9" : "mt-1"} ${index === 0 && "bg-light-white"
                                 } `}
                         >
                             {Menu.src}
@@ -84,7 +85,7 @@ const SideBar = () => {
                     ))}
                 </ul>
             </div>
-            <Box
+            {/* <Box
                 width='100%'
                 p={2}
             >
@@ -101,7 +102,7 @@ const SideBar = () => {
                 >
                     {open ? 'Add Project' : null}
                 </Button>
-            </Box>
+            </Box> */}
 
 
         </Stack>

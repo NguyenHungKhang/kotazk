@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Stack, Typography, useTheme } from "@mui/material";
+import { Box, Card, Divider, Stack, Typography, lighten, useTheme } from "@mui/material";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import CustomHeader from "../../components/CustomHeader";
 import SideBar from "../../components/SideBar";
@@ -32,13 +32,20 @@ const Project = ({ children }) => {
     return (
         <div className="flex h-screen">
             <SideBar />
-            <div className="flex-1 p-7">
+            <div className="flex-1">
                 <Stack
-                    height='calc(100vh - 2*1.75rem);'
+                    height='100vh'
                     display="flex"
                     flexDirection="column"
+                    spacing={1}
                 >
-                    <Box flex=' 0 1 auto'>
+                    <Box
+                        flex=' 0 1 auto'
+                        px={4}
+                        pt={4}
+                        boxShadow={4}
+                        pb={2}
+                    >
                         <CustomHeader />
                         <CustomBreadcrumb />
                         <Stack direction='row' mt={2}>
@@ -49,21 +56,21 @@ const Project = ({ children }) => {
                                 <CustomFilterBar />
                             </Box>
                         </Stack>
-                        <Divider
-                            sx={{
-                                my: 2
-                            }}
-                        />
+
                     </Box>
                     <Box
-                        flex=' 1 1 auto'
+                        flexGrow={1}
                         sx={{
-                            backgroundImage: 'url("https://i.natgeofe.com/n/2a832501-483e-422f-985c-0e93757b7d84/6_3x2.jpg")',
-                            backgroundSize: 'cover',
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: 'center',
+                            '--dot-bg': theme.palette.background.default,
+                            '--dot-color': theme.palette.text.secondary,
+                            '--dot-size': '1px',
+                            '--dot-space': '10px',
+                            background: `
+                              linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+                              linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+                              var(--dot-color)
+                            `,
                             p: 4,
-                            borderRadius: 2,
                             overflow: 'hidden'
                         }}
                     >

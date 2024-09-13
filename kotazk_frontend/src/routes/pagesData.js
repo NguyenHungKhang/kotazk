@@ -1,6 +1,7 @@
 import CustomAddWorkspaceDialog from "../components/CustomAddWorkspaceDialog";
 import CustomDarkModeSwitch from "../components/CustomDarkModeSwitch";
 import CustomSaveProjectDialog from "../components/CustomSaveProjectDialog";
+import CustomTaskDialog from "../components/CustomTaskDialog";
 import Home from "../pages/Home";
 import Kanban from "../pages/Kanban";
 import Login from "../pages/Login";
@@ -43,7 +44,7 @@ const pagesData = [
   },
   {
     path: "/playground",
-    element: <CustomSaveProjectDialog />,
+    element: <CustomTaskDialog />,
     title: "playground"
   },
   {
