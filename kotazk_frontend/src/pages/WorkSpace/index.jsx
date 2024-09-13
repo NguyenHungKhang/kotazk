@@ -1,7 +1,8 @@
 import React from 'react';
 import {
   AppBar, Toolbar, IconButton, Typography, Button, TextField, Card, CardContent, Grid,
-  Box, Container, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+  Box, Container, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  useTheme
 } from '@mui/material';
 import { Search as SearchIcon, Add as AddIcon, Person as PersonIcon, Star as StarIcon } from '@mui/icons-material';
 
@@ -13,10 +14,19 @@ const workspaces = [
 ];
 
 const WorkSpace = () => {
+  // Get the current theme to apply colors dynamically
+  const theme = useTheme();
+
   return (
     <div>
       {/* Header/Navbar */}
-      <AppBar position="static" style={{ backgroundColor: '#fff', color: '#000' }}>
+      <AppBar
+        position="static"
+        style={{
+          backgroundColor: theme.palette.background.paper, // Use theme background color
+          color: theme.palette.text.primary, // Use theme text color
+        }}
+      >
         <Toolbar>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             Kotazk
@@ -35,8 +45,22 @@ const WorkSpace = () => {
 
       {/* Main Content */}
       <Container style={{ padding: '24px' }}>
-        {/* Search Bar */}
-        <Box display="flex" justifyContent="center" marginBottom={4}>
+        {/* Search Bar with Background Image */}
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          marginBottom={4}
+          style={{
+            backgroundImage: `url('https://cellphones.com.vn/sforum/wp-content/uploads/2023/08/hinh-nen-desktop-5.jpg')`, // Replace 'path_to_image' with your image URL
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            width: '100%',
+            height: '200px', // Adjust height as needed
+            borderRadius: '12px',
+            padding: '16px'
+          }}
+        >
           <TextField
             placeholder="Search"
             variant="outlined"
@@ -44,7 +68,7 @@ const WorkSpace = () => {
             InputProps={{
               startAdornment: <SearchIcon />,
             }}
-            style={{ maxWidth: 600 }}
+            style={{ maxWidth: 600, backgroundColor: '#fff', borderRadius: '8px' }} // White background for input
           />
         </Box>
 
