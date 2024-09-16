@@ -7,6 +7,7 @@ import ChatIcon from '@mui/icons-material/Chat';
 import { useTheme } from "@mui/material";
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
+import CustomColorIconPicker from "../CustomProjectColorIconPicker";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -18,7 +19,7 @@ const CustomHeader = () => {
             <Stack direction='row' spacing={3} alignItems="center">
                 <Stack flexGrow={1} direction='row' spacing={3} alignItems="center">
                     <Stack direction='row' spacing={2} alignItems='center'>
-                        <AccountTreeIcon />
+                        <CustomColorIconPicker />
                         <Typography
                             variant="h5"
                             fontWeight={650}

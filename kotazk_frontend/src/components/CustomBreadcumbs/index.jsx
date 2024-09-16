@@ -47,10 +47,10 @@ export default function CustomBreadcrumb() {
                 '&::before': {
                     content: '""',
                     position: 'absolute',
-                    top: -12, // Điều chỉnh vị trí của đường cong
+                    top: -5, // Điều chỉnh vị trí của đường cong
                     left: 10,
                     width: 18,
-                    height: 28, // Chiều cao của đường cong
+                    height: 21, // Chiều cao của đường cong
                     background: 'transparent', // Màu sắc của đường cong
                     // Tạo đường cong hình elip
                     border: "2px solid grey",

@@ -15,7 +15,7 @@ import { Box, Divider, IconButton, Stack, Typography, useTheme } from '@mui/mate
 import CloseIcon from '@mui/icons-material/Close';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import CustomColorPicker from '../CustomColorPicker';
-import CustomIconPicker from '../CustomIconPicker';
+import CustomIconPicker from '../CustomProjectColorIconPicker';
 import * as TablerIcons from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';

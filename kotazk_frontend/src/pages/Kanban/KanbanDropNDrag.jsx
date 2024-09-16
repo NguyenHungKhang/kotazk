@@ -11,6 +11,7 @@ import { useSelector } from 'react-redux';
 import * as apiService from "../../api/index"
 import { useDispatch } from 'react-redux';
 import { setCurrentKanbanTaskList } from '../../redux/actions/task.action';
+import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
 
 
 // const DATA = [
@@ -226,8 +227,9 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
                 <Stack
                   direction='row'
                   alignItems='center'
-                  spacing={1}
+                  spacing={2}
                 >
+                  <CustomStatusColorIconPicker />
                   <Box flexGrow={1}>
                     <Typography variant='body1' fontWeight='bold'>
                       {name}
@@ -248,7 +250,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
             </Box>
 
 
-            <Box maxHeight='calc(100vh - 230px)'
+            <Box height='calc(100vh - 230px)'
               sx={{
                 pb: 1,
                 overflowY: 'auto',

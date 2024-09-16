@@ -62,7 +62,7 @@ const Project = ({ children }) => {
                         flexGrow={1}
                         sx={{
                             '--dot-bg': theme.palette.background.default,
-                            '--dot-color': theme.palette.text.secondary,
+                            '--dot-color':  theme.palette.mode === "light" ?  theme.palette.text.secondary : theme.palette.grey[700],
                             '--dot-size': '1px',
                             '--dot-space': '10px',
                             background: `

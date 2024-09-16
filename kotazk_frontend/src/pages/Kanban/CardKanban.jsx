@@ -14,7 +14,7 @@ const CardKanban = ({ task }) => {
     return (
         <Card
             sx={{
-                bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
+                // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
                 borderRadius: 2,
                 boxShadow: 1,
                 border: '1px solid',

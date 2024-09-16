@@ -1,5 +1,6 @@
 import CustomAddWorkspaceDialog from "../components/CustomAddWorkspaceDialog";
 import CustomDarkModeSwitch from "../components/CustomDarkModeSwitch";
+import CustomIconPicker from "../components/CustomProjectColorIconPicker";
 import CustomSaveProjectDialog from "../components/CustomSaveProjectDialog";
 import CustomTaskDialog from "../components/CustomTaskDialog";
 import Home from "../pages/Home";
@@ -9,7 +10,13 @@ import Project from "../pages/Project";
 import ProjectDashBoard from "../pages/ProjectDashBoard";
 import ProjectMember from "../pages/ProjectMember";
 import Workspace from "../pages/WorkSpace";
+import AllIconDisplay from "../playgrounds/components/AllIconDisplay";
 import TestGantt from "../playgrounds/components/TestGantt";
+import CustomStatusColorIconPicker from "../components/CustomStatusColorIconPicker";
+import CustomTaskType from "../components/CustomTaskType";
+import CustomColorIconPicker from "../components/CustomColorIconPicker";
+import { taskTypeIconsList } from "../utils/iconsListUtil";
+import CustomTaskTypePicker from "../components/CustomTaskTypePicker";
 
 const pagesData = [
   {
@@ -48,8 +55,13 @@ const pagesData = [
     title: "playground"
   },
   {
+    path: "/playground/tasktype",
+    element: <CustomTaskTypePicker />,
+    title: "playground"
+  },
+  {
     path: "/test/darkmode",
-    element: <CustomDarkModeSwitch />,
+    element: <CustomStatusColorIconPicker />,
     title: "playground"
   },
 ];

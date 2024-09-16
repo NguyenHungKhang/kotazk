@@ -15,7 +15,7 @@ import { Box, Divider, IconButton, Stack, Typography, useTheme } from '@mui/mate
 import CloseIcon from '@mui/icons-material/Close';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import CustomColorPicker from '../CustomColorPicker';
-import CustomIconPicker from '../CustomIconPicker';
+import CustomIconPicker from '../CustomProjectColorIconPicker';
 import * as TablerIcons from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
@@ -25,6 +25,13 @@ import { setCurrentProjectList } from '../../redux/actions/project.action';
 import CustomBreadcrumb from '../CustomBreadcumbs';
 import CustomLongTextEditor from '../CustomLongTextEditor';
 import CustomFileUploader from '../CustomFileUploader';
+import CustomStatusColorIconPicker from '../CustomStatusColorIconPicker';
+import { TextFields } from '@mui/icons-material';
+import StartAndEndDatePicker from './StartAndEndDatePicker';
+import CustomStartAndEndDatePicker from './StartAndEndDatePicker';
+import LabelComponent from './LabelComponent';
+import AssigneesComponent from './AssigneesComponent';
+import PriorityComponent from './PriorityComponent';
 
 const CustomTaskDialog = () => {
     const theme = useTheme();
@@ -38,6 +45,14 @@ const CustomTaskDialog = () => {
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
 
+    const StatusIcon = TablerIcons["IconPlaystationCircle"];
+    const DateIcon = TablerIcons["IconCalendarDue"];
+    const TimeEstimateIcon = TablerIcons["IconHourglass"];
+    const LabelsIcon = TablerIcons["IconTagsFilled"];
+    const AssigneeIcon = TablerIcons["IconUser"];
+    const CollaboratorsIcon = TablerIcons["IconUsers"];
+    const PriorityIcon = TablerIcons["IconFlag"]
+    const LinkedTasksIcon = TablerIcons["IconHierarchy"];
     // useEffect(() => {
     //     if (workspace != null)
     //         console.log(workspace.id);
@@ -92,7 +107,7 @@ const CustomTaskDialog = () => {
             </Button>
             <Dialog
                 fullWidth
-                maxWidth='lg'
+                maxWidth='xl'
                 open={open}
                 onClose={handleClose}
                 PaperProps={{
@@ -142,62 +157,146 @@ const CustomTaskDialog = () => {
                             </Box>
                             <Grid container spacing={6} mt={2}>
                                 <Grid item xs={6}>
-                                    <Grid container spacing={2} alignItems='center'>
-                                        <Grid item xs={4}>
-                                            <Typography>
-                                                Status
-                                            </Typography>
+                                    <Grid container spacing={0.5} alignItems='center'>
+                                        <Grid item xs={4} display='flex' alignItems='center'>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <StatusIcon size={16} stroke={2} />
+                                                <Typography pt={0.5}>
+                                                    Status
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
-                                            <Select
-                                                size='small'
-                                            >
+                                            <Stack direction='row' spacing={2}>
+                                                <TextField
+                                                    size='small'
+                                                    defaultValue={1}
+                                                    select
+                                                    margin="none"
+                                                    fullWidth
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            borderRadius: 2,
+                                                            py: 0,  // Removes padding inside the root container
+                                                            '& .MuiSelect-select': {
+                                                                py: 1,
+                                                                px: 2,  // Removes padding between value and border
+                                                                minHeight: 'auto',  // Resets the default min height
+                                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
+                                                                "& ul": {
+                                                                    p: 0
+                                                                }
+                                                            },
 
-                                            </Select>
+                                                            '& fieldset': {
+                                                                borderColor: 'transparent !important',
+                                                            },
+                                                            '&:hover fieldset': {
+                                                                bgcolor: theme.palette.action.hover
+                                                            },
+                                                            '&:focus fieldset': {
+                                                                bgcolor: theme.palette.action.focus
+                                                            },
+                                                            '& .MuiSelect-icon': {
+                                                                display: 'none',  // Hides the arrow icon
+                                                            },
+                                                        },
+                                                    }}
+                                                    InputProps={{
+                                                        size: 'small',
+                                                        style: {
+                                                            outline: 'none !important'
+                                                        }
+                                                    }}
+                                                    SelectProps={{
+                                                        style: {
+                                                            p: 0
+                                                        }
+                                                    }}
+
+                                                >
+                                                    <MenuItem
+                                                        value={1}
+                                                        sx={{
+                                                            fontSize: '12px',  // Smaller font size for menu items
+                                                            padding: '4px 8px',  // Smaller padding to make items more compact
+                                                            minHeight: 'unset',  // Remove default min-height to shrink items
+                                                        }}
+                                                    >
+                                                        <CustomStatusColorIconPicker name={"To do"} />
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        value={2}
+                                                        sx={{
+                                                            fontSize: '12px',  // Smaller font size for menu items
+                                                            padding: '4px 8px',  // Smaller padding to make items more compact
+                                                            minHeight: 'unset',  // Remove default min-height to shrink items
+                                                        }}
+                                                    >
+                                                        <CustomStatusColorIconPicker name={"In Process"} />
+                                                    </MenuItem>
+                                                </TextField>
+                                                <IconButton>
+
+                                                </IconButton>
+                                            </Stack>
+                                        </Grid>
+
+                                        <Grid item xs={4}>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <DateIcon size={16} stroke={2} />
+                                                <Typography pt={0.5}>
+                                                    Date
+                                                </Typography>
+                                            </Stack>
+
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <StartAndEndDatePicker />
                                         </Grid>
                                         <Grid item xs={4}>
-                                            <Typography>
-                                                Date
-                                            </Typography>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <TimeEstimateIcon size={16} stroke={2} />
+                                                <Typography pt={0.5}>
+                                                    Time Estimate
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
                                             <TextField
                                                 required
-                                                size="small"
-                                                id="date"
-                                                name="date"
-                                                fullWidth
-                                                variant="outlined"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Typography>
-                                                Time Estimate
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <TextField
-                                                required
+                                                inputProps={{ type: 'number' }}
                                                 size="small"
                                                 id="time_estimate"
                                                 name="time_estimate"
                                                 fullWidth
+                                                placeholder='Empty'
                                                 variant="outlined"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Typography>
-                                                Tags
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <TextField
-                                                required
-                                                size="small"
-                                                id="tags"
-                                                name="tags"
-                                                fullWidth
-                                                variant="outlined"
+                                                sx={{
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: 2,
+                                                        py: 0,  // Removes padding inside the root container
+                                                        '& .MuiSelect-select': {
+                                                            py: 1,
+                                                            px: 1,  // Removes padding between value and border
+                                                            minHeight: 'auto',  // Resets the default min height
+                                                            lineHeight: 'normal',  // Adjusts line height to prevent extra space
+                                                        },
+                                                        '& fieldset': {
+                                                            borderColor: 'transparent !important',
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            bgcolor: theme.palette.action.hover
+                                                        },
+                                                        '&:focus fieldset': {
+                                                            bgcolor: theme.palette.action.focus
+                                                        },
+                                                        '& .MuiSelect-icon': {
+                                                            display: 'none',  // Hides the arrow icon
+                                                        },
+                                                    },
+                                                }}
+
                                             />
                                         </Grid>
                                     </Grid>
@@ -206,36 +305,45 @@ const CustomTaskDialog = () => {
                                 <Grid item xs={6}>
                                     <Grid container spacing={2} alignItems='center'>
                                         <Grid item xs={4}>
-                                            <Typography>
-                                                Assignees
-                                            </Typography>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <AssigneeIcon size={16} stroke={2} />
+                                                <Typography variant='body2' pt={0.5}>
+                                                    Assignee
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
-                                            <Select
-                                                size='small'
-                                            >
-
-                                            </Select>
+                                            <AssigneesComponent />
                                         </Grid>
                                         <Grid item xs={4}>
-                                            <Typography>
-                                                Priority
-                                            </Typography>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <CollaboratorsIcon size={16} stroke={2} />
+                                                <Typography variant='body2' pt={0.5}>
+                                                    Collaborators
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
-                                            <TextField
-                                                required
-                                                size="small"
-                                                id="date"
-                                                name="date"
-                                                fullWidth
-                                                variant="outlined"
-                                            />
+                                            <AssigneesComponent />
                                         </Grid>
                                         <Grid item xs={4}>
-                                            <Typography>
-                                                Linked task
-                                            </Typography>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <PriorityIcon size={16} stroke={2} />
+                                                <Typography variant='body2' pt={0.5}>
+                                                    Priority
+                                                </Typography>
+                                            </Stack>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <PriorityComponent />
+                                        </Grid>
+                                        {/* <Grid item xs={4}>
+                                        <Stack direction='row' spacing={2} alignItems='center'>
+                                                <LinkedTasksIcon size={16} stroke={2} />
+                                                <Typography variant='body2' pt={0.5}>
+                                                    Linked Tasks
+                                                </Typography>
+                                            </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
                                             <TextField
@@ -246,11 +354,23 @@ const CustomTaskDialog = () => {
                                                 fullWidth
                                                 variant="outlined"
                                             />
-                                        </Grid>
+                                        </Grid> */}
                                     </Grid>
                                 </Grid>
                             </Grid>
-
+                            <Grid container spacing={2} mt={2}>
+                                <Grid item xs={2}>
+                                    <Stack direction='row' spacing={2} alignItems='center'>
+                                        <LabelsIcon size={16} stroke={2} />
+                                        <Typography pt={0.5}>
+                                            Labels
+                                        </Typography>
+                                    </Stack>
+                                </Grid>
+                                <Grid item xs={10}>
+                                    <LabelComponent />
+                                </Grid>
+                            </Grid>
                             <Box mt={6}>
                                 <Typography
                                     variant='h6'
@@ -391,7 +511,7 @@ const CustomTaskDialog = () => {
 
                 </DialogContent>
             </Dialog>
-        </React.Fragment>
+        </React.Fragment >
     );
 }
 
