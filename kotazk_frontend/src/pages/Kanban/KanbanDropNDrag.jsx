@@ -12,46 +12,8 @@ import * as apiService from "../../api/index"
 import { useDispatch } from 'react-redux';
 import { setCurrentKanbanTaskList } from '../../redux/actions/task.action';
 import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
-
-
-// const DATA = [
-//   {
-//     id: "0e2f0db1-5457-46b0-949e-8032d2f9997a",
-//     name: "Walmart",
-//     customization: {
-//       backgroundColor: "#E5826F"
-//     },
-//     items: [
-//       { id: "26fd50b3-3841-496e-8b32-73636f6f4197", name: "3% Milk" },
-//       { id: "b0ee9d50-d0a6-46f8-96e3-7f3f0f9a2525", name: "Butter" },
-//     ],
-//   },
-//   {
-//     id: "487f68b4-1746-438c-920e-d67b7df46247",
-//     name: "Indigo",
-//     customization: {
-//       backgroundColor: "#7F7CFF"
-//     },
-//     items: [
-//       {
-//         id: "95ee6a5d-f927-4579-8c15-2b4eb86210ae",
-//         name: "Designing Data Intensive Applications",
-//       },
-//       { id: "5bee94eb-6bde-4411-b438-1c37fa6af364", name: "Atomic Habits" },
-//     ],
-//   },
-//   {
-//     id: "25daffdc-aae0-4d73-bd31-43f73101e7c0",
-//     name: "Lowes",
-//     customization: {
-//       backgroundColor: "#54D585"
-//     },
-//     items: [
-//       { id: "960cbbcf-89a0-4d79-aa8e-56abbc15eacc", name: "Workbench" },
-//       { id: "d3edf796-6449-4931-a777-ff66965a025b", name: "Hammer" },
-//     ],
-//   },
-// ];
+import CustomStatusPicker from '../../components/CustomStatusPicker';
+import CustomStatus from '../../components/CustomStatus';
 
 function KanbanDropNDrag() {
   const stores = useSelector((state) => state.task.currentKanbanTaskList);
@@ -183,7 +145,7 @@ function KanbanDropNDrag() {
                         {...provided.draggableProps}
                         ref={provided.innerRef}
                       >
-                        <StoreList {...status} />
+                        <StoreList {...status} status={status} />
                       </Box>
                     )}
                   </Draggable>
@@ -198,7 +160,7 @@ function KanbanDropNDrag() {
   );
 }
 
-function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
+function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status }) {
   const theme = useTheme();
 
   return (
@@ -206,13 +168,13 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
       {(provided, snapshot) => (
         <div {...provided.droppableProps} ref={provided.innerRef}>
           <Box
-          sx={{
-            p:1,
-            borderRadius: 2,
-            border: '2px dashed',
-            borderColor: snapshot.isDraggingOver ? theme.palette.text.secondary
-            : 'transparent'
-          }}
+            sx={{
+              p: 1,
+              borderRadius: 2,
+              border: '2px dashed',
+              borderColor: snapshot.isDraggingOver ? theme.palette.text.secondary
+                : 'transparent'
+            }}
           >
             <Box
               mb={2}
@@ -229,11 +191,8 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny }) {
                   alignItems='center'
                   spacing={2}
                 >
-                  <CustomStatusColorIconPicker />
                   <Box flexGrow={1}>
-                    <Typography variant='body1' fontWeight='bold'>
-                      {name}
-                    </Typography>
+                    <CustomStatus status={status} changeable={false} />
                   </Box>
                   {/* Action buttons */}
                   <IconButton size="small">
