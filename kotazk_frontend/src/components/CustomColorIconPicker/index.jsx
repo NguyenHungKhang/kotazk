@@ -1,10 +1,10 @@
 import { Box, Button, ClickAwayListener, Divider, Grid, IconButton, Popover, alpha } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import * as allIcons from "@tabler/icons-react";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import CustomColorPicker from '../CustomColorPicker';
 
-const CustomColorIconPicker = ({ changeable, icons }) => {
+const CustomColorIconPicker = ({ changeable, icons, customization, setCustomization }) => {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedIcon, setSelectedIcon] = useState(icons[0]);
@@ -12,6 +12,21 @@ const CustomColorIconPicker = ({ changeable, icons }) => {
     const [tempIcon, setTempIcon] = useState(selectedIcon);
     const [tempColor, setTempColor] = useState(selectedColor);
     const [iconsList, setIconsList] = useState(icons);
+
+    useEffect(() => {
+        if (customization) {
+            if (Object.keys(customization).length === 0) {
+                const data = {
+                    "icon": selectedIcon,
+                    "color": selectedColor
+                }
+                setCustomization(data);
+            } else {
+                setSelectedIcon(customization.icon)
+                setSelectedColor(customization.color)
+            }
+        }
+    }, [customization])
 
     const handleClick = (event) => {
         if (changeable)
@@ -50,7 +65,7 @@ const CustomColorIconPicker = ({ changeable, icons }) => {
                     p: 1,
                     color: theme.palette.getContrastText(selectedColor),
                     '&:hover': {
-                        backgroundColor: alpha(selectedColor, 0.5),
+                        backgroundColor: changeable ? alpha(selectedColor, 0.5) : selectedColor,
                     },
                 }}
             >

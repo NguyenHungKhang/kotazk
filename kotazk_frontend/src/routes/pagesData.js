@@ -50,7 +50,7 @@ const pagesData = [
     title: "playground"
   },
   {
-    path: "/playground",
+    path: "/playground/task",
     element: <CustomTaskDialog />,
     title: "playground"
   },

@@ -1,39 +1,29 @@
-import * as React from 'react';
+import { Box, IconButton, Stack, Typography, useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import Grid from '@mui/material/Grid';
-import { Box, Divider, IconButton, Stack, Typography, useTheme } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { getSecondBackgroundColor } from '../../utils/themeUtil';
-import CustomColorPicker from '../CustomColorPicker';
-import CustomIconPicker from '../CustomProjectColorIconPicker';
+import MenuItem from '@mui/material/MenuItem';
+import TextField from '@mui/material/TextField';
 import * as TablerIcons from '@tabler/icons-react';
-import { useSelector } from 'react-redux';
-import { useEffect } from 'react';
-import * as apiService from '../../api/index'
-import { useDispatch } from 'react-redux';
+import * as React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as apiService from '../../api/index';
 import { setCurrentProjectList } from '../../redux/actions/project.action';
-import CustomBreadcrumb from '../CustomBreadcumbs';
-import CustomLongTextEditor from '../CustomLongTextEditor';
 import CustomFileUploader from '../CustomFileUploader';
+import CustomLongTextEditor from '../CustomLongTextEditor';
 import CustomStatusColorIconPicker from '../CustomStatusColorIconPicker';
-import { TextFields } from '@mui/icons-material';
-import StartAndEndDatePicker from './StartAndEndDatePicker';
-import CustomStartAndEndDatePicker from './StartAndEndDatePicker';
-import LabelComponent from './LabelComponent';
+import CustomTaskTypePicker from '../CustomTaskTypePicker';
 import AssigneesComponent from './AssigneesComponent';
+import LabelComponent from './LabelComponent';
 import PriorityComponent from './PriorityComponent';
+import StartAndEndDatePicker from './StartAndEndDatePicker';
+import CustomStatusPicker from '../CustomStatusPicker';
+import CustomTextField from '../CustomBasicTextField';
+import CustomBasicTextField from '../CustomBasicTextField';
 
-const CustomTaskDialog = () => {
+const CustomTaskDialog = ({ task }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
@@ -49,14 +39,12 @@ const CustomTaskDialog = () => {
     const DateIcon = TablerIcons["IconCalendarDue"];
     const TimeEstimateIcon = TablerIcons["IconHourglass"];
     const LabelsIcon = TablerIcons["IconTagsFilled"];
-    const AssigneeIcon = TablerIcons["IconUser"];
+    const AssigneeIcon = TablerIcons["IconUserFilled"];
+    const ReporterIcon = TablerIcons["IconUser"];
     const CollaboratorsIcon = TablerIcons["IconUsers"];
     const PriorityIcon = TablerIcons["IconFlag"]
     const LinkedTasksIcon = TablerIcons["IconHierarchy"];
-    // useEffect(() => {
-    //     if (workspace != null)
-    //         console.log(workspace.id);
-    // }, [dispatch, workspace])
+    const TaskTypeIcon = TablerIcons["IconBoxModel2"]
 
     const handleVisibilityChange = (event) => {
         setVisibility(event.target.value);
@@ -134,30 +122,49 @@ const CustomTaskDialog = () => {
                 <DialogContent>
                     <Grid container spacing={2}>
                         <Grid item xs={7}>
-
-
                             <Box>
-                                <TextField
+                                <CustomBasicTextField
                                     required
                                     size="small"
                                     id="name"
                                     name="name"
                                     fullWidth
-                                    variant="standard"
                                     placeholder='Name of task...'
                                     InputProps={{
-                                        disableUnderline: true,
                                         sx: {
-                                            fontSize: 18,
-                                            fontWeight: 500
+                                            fontSize: 20,
+                                            fontWeight: 650
                                         }
                                     }}
                                     onChange={(e) => setName(e.target.value)}
                                 />
                             </Box>
-                            <Grid container spacing={6} mt={2}>
+                            <Box mt={6}>
+                            <Typography
+                                    variant='h6'
+                                    fontWeight={650}
+                                    sx={{
+                                        mb: 1
+                                    }}
+                                >
+                                    Attributes
+                                </Typography>
+                         
+                            <Grid container spacing={2} >
                                 <Grid item xs={6}>
                                     <Grid container spacing={0.5} alignItems='center'>
+                                        <Grid item xs={4}>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
+                                                <TaskTypeIcon size={16} stroke={2} />
+                                                <Typography pt={0.5}>
+                                                    Task type
+                                                </Typography>
+                                            </Stack>
+
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <CustomTaskTypePicker />
+                                        </Grid>
                                         <Grid item xs={4} display='flex' alignItems='center'>
                                             <Stack direction='row' spacing={2} alignItems='center'>
                                                 <StatusIcon size={16} stroke={2} />
@@ -167,79 +174,7 @@ const CustomTaskDialog = () => {
                                             </Stack>
                                         </Grid>
                                         <Grid item xs={8}>
-                                            <Stack direction='row' spacing={2}>
-                                                <TextField
-                                                    size='small'
-                                                    defaultValue={1}
-                                                    select
-                                                    margin="none"
-                                                    fullWidth
-                                                    sx={{
-                                                        '& .MuiOutlinedInput-root': {
-                                                            borderRadius: 2,
-                                                            py: 0,  // Removes padding inside the root container
-                                                            '& .MuiSelect-select': {
-                                                                py: 1,
-                                                                px: 2,  // Removes padding between value and border
-                                                                minHeight: 'auto',  // Resets the default min height
-                                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
-                                                                "& ul": {
-                                                                    p: 0
-                                                                }
-                                                            },
-
-                                                            '& fieldset': {
-                                                                borderColor: 'transparent !important',
-                                                            },
-                                                            '&:hover fieldset': {
-                                                                bgcolor: theme.palette.action.hover
-                                                            },
-                                                            '&:focus fieldset': {
-                                                                bgcolor: theme.palette.action.focus
-                                                            },
-                                                            '& .MuiSelect-icon': {
-                                                                display: 'none',  // Hides the arrow icon
-                                                            },
-                                                        },
-                                                    }}
-                                                    InputProps={{
-                                                        size: 'small',
-                                                        style: {
-                                                            outline: 'none !important'
-                                                        }
-                                                    }}
-                                                    SelectProps={{
-                                                        style: {
-                                                            p: 0
-                                                        }
-                                                    }}
-
-                                                >
-                                                    <MenuItem
-                                                        value={1}
-                                                        sx={{
-                                                            fontSize: '12px',  // Smaller font size for menu items
-                                                            padding: '4px 8px',  // Smaller padding to make items more compact
-                                                            minHeight: 'unset',  // Remove default min-height to shrink items
-                                                        }}
-                                                    >
-                                                        <CustomStatusColorIconPicker name={"To do"} />
-                                                    </MenuItem>
-                                                    <MenuItem
-                                                        value={2}
-                                                        sx={{
-                                                            fontSize: '12px',  // Smaller font size for menu items
-                                                            padding: '4px 8px',  // Smaller padding to make items more compact
-                                                            minHeight: 'unset',  // Remove default min-height to shrink items
-                                                        }}
-                                                    >
-                                                        <CustomStatusColorIconPicker name={"In Process"} />
-                                                    </MenuItem>
-                                                </TextField>
-                                                <IconButton>
-
-                                                </IconButton>
-                                            </Stack>
+                                            <CustomStatusPicker />
                                         </Grid>
 
                                         <Grid item xs={4}>
@@ -317,6 +252,17 @@ const CustomTaskDialog = () => {
                                         </Grid>
                                         <Grid item xs={4}>
                                             <Stack direction='row' spacing={2} alignItems='center'>
+                                                <ReporterIcon size={16} stroke={2} />
+                                                <Typography variant='body2' pt={0.5}>
+                                                    Reporter
+                                                </Typography>
+                                            </Stack>
+                                        </Grid>
+                                        <Grid item xs={8}>
+                                            <AssigneesComponent />
+                                        </Grid>
+                                        <Grid item xs={4}>
+                                            <Stack direction='row' spacing={2} alignItems='center'>
                                                 <CollaboratorsIcon size={16} stroke={2} />
                                                 <Typography variant='body2' pt={0.5}>
                                                     Collaborators
@@ -371,6 +317,7 @@ const CustomTaskDialog = () => {
                                     <LabelComponent />
                                 </Grid>
                             </Grid>
+                            </Box>
                             <Box mt={6}>
                                 <Typography
                                     variant='h6'
@@ -406,7 +353,12 @@ const CustomTaskDialog = () => {
                                         borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
                                         p={2}
                                     >
-                                        Field
+                                        <CustomBasicTextField
+                                            size='small'
+                                            contentEditable={false}
+                                            fullWidth
+                                            placeholder='Name of field...'
+                                        />
                                     </Grid>
                                     <Grid
                                         item
