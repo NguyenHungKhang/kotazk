@@ -23,11 +23,12 @@ import CustomStatusPicker from '../CustomStatusPicker';
 import CustomTextField from '../CustomBasicTextField';
 import CustomBasicTextField from '../CustomBasicTextField';
 
-const CustomTaskDialog = ({ task }) => {
+const CustomTaskDialog = ({ taskData, OpenComponent }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const [visibility, setVisibility] = React.useState('PUBLIC');
+    const [task, setTask] = React.useState(taskData)
     const AddIcon = TablerIcons['IconSquarePlus'];
     const ProjectIcon = TablerIcons['IconTableFilled'];
     const [open, setOpen] = React.useState(false);
@@ -84,15 +85,7 @@ const CustomTaskDialog = ({ task }) => {
 
     return (
         <React.Fragment>
-            <Button
-                variant="contained"
-                color='success'
-                size="small"
-                onClick={handleClickOpen}
-                startIcon={<AddIcon size={20} />}
-            >
-                Create task
-            </Button>
+            <OpenComponent onClick={handleClickOpen} />
             <Dialog
                 fullWidth
                 maxWidth='xl'
@@ -125,6 +118,7 @@ const CustomTaskDialog = ({ task }) => {
                             <Box>
                                 <CustomBasicTextField
                                     required
+                                    defaultValue={task?.name}
                                     size="small"
                                     id="name"
                                     name="name"
