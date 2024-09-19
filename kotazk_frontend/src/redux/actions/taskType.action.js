@@ -1,0 +1,1 @@
+export const setCurrentTaskTypeList = (listTaskType) => ({type: 'SET_CURRENT_TASK_TYPE_LIST', payload: listTaskType});
