@@ -6,6 +6,7 @@ import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.service.IProjectService;
@@ -77,6 +78,13 @@ public class ProjectController {
     public ProjectResponseDto getOne(@PathVariable Long id) {
         return projectService.getOne(id);
     }
+
+    @GetMapping("/details/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectDetailsResponseDto getDetailsOne(@PathVariable Long id) {
+        return projectService.getDetailsOne(id);
+    }
+
 
     @PostMapping("/page/by-work-space/{id}")
     @ResponseStatus(HttpStatus.OK)

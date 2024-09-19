@@ -148,6 +148,7 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .path(request.getDescription(false))
                 .build();
+        ex.printStackTrace();
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

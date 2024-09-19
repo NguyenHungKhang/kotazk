@@ -58,7 +58,7 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
-    private Set<MemberRole> memberRoles;
+    private List<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @OrderBy("role.position, name")
@@ -92,7 +92,8 @@ public class Project {
     private List<Priority> priorities;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Label> labels;
+    @OrderBy("name")
+    private List<Label> labels;
 
 
     @CreationTimestamp

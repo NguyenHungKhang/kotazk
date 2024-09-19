@@ -10,6 +10,7 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
@@ -103,7 +104,7 @@ public class ProjectService implements IProjectService {
                 .position(RepositionUtil.calculateNewLastPosition(workSpace.getProjects().size()))
                 .member(currentMember)
                 .workSpace(workSpace)
-                .memberRoles(new HashSet<>(memberRoles))
+                .memberRoles(memberRoles)
                 .members(Collections.singletonList(member))
                 .statuses(statuses)
                 .taskTypes(taskTypes)
@@ -352,7 +353,6 @@ public class ProjectService implements IProjectService {
 
     @Override
     public ProjectResponseDto getOne(Long id) {
-        System.out.println(123);
         Project currentProject = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
@@ -391,6 +391,48 @@ public class ProjectService implements IProjectService {
 
 
         return ModelMapperUtil.mapOne(currentProject, ProjectResponseDto.class);
+    }
+
+    @Override
+    public ProjectDetailsResponseDto getDetailsOne(Long id) {
+        Project currentProject = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = currentProject.getWorkSpace();
+
+
+        Member currentProjectMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                currentProject.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                false
+        );
+
+        Member currentWorkSpaceMember = null;
+
+        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
+                    false
+            );
+        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
+            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                    currentUser.getId(),
+                    workSpace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                    false
+            );
+
+        if (currentProjectMember == null && currentWorkSpaceMember == null)
+            throw new CustomException("This member's role is not permission with this action!");
+
+
+        return ModelMapperUtil.mapOne(currentProject, ProjectDetailsResponseDto.class);
     }
 
     @Override
