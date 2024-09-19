@@ -1,7 +1,8 @@
 import { Box, Button, ListItem, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomStatus from "../CustomStatus";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 const dummyData = [
     { id: 1, name: 'Status 1' },
@@ -11,9 +12,17 @@ const dummyData = [
     // Add more objects if needed
 ];
 
-const CustomStatusPicker = () => {
-    const [status, setStatus] = useState(dummyData[0]);
-    return (
+const CustomStatusPicker = ({ statusId }) => {
+    const statuses = useSelector((state) => state.status.currentStatusList);
+    const [status, setStatus] = useState(null);
+    useEffect(() => {
+        if (statuses && statusId != null) {
+            const foundStatus = statuses.find(status => status.id === statusId);
+            setStatus(foundStatus || null); 
+        }
+    }, [statuses, statusId]);
+
+    return status == null ? <>Loading</> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
@@ -23,7 +32,7 @@ const CustomStatusPicker = () => {
                 selectedObject={status}
                 setSelectedObject={setStatus}
                 ItemComponent={CustomStatusItemPicker}
-                objectsData={dummyData}
+                objectsData={statuses}
                 isNotNull={true}
             />
         </Box>
@@ -44,10 +53,10 @@ const CustomStatusOpenComponent = ({ onClick, status, isFocusing }) => {
                 '&:hover': {
                     bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
                 },
-                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null 
+                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
             }}
         >
-            <CustomStatus status={status} changeable={false}/>
+            <CustomStatus status={status} changeable={false} />
         </Box>
     )
 }
@@ -68,7 +77,7 @@ const CustomStatusItemPicker = (props) => {
             onClick={() => props.onClick(props.object)}
             dense
         >
-            <CustomStatus status={props.object} changeable={false}/>
+            <CustomStatus status={props.object} changeable={false} />
         </ListItem>
     )
 }

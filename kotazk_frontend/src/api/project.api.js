@@ -6,4 +6,6 @@ export const getPageByWorkspace = async (workspaceId, data) => await axiosInstan
 
 export const getById = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/${projectId}`);
 
+export const getDetailsById = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/details/${projectId}`);
+
 export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/`, data);

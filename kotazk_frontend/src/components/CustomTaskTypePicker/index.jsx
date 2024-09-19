@@ -1,19 +1,20 @@
 import { Box, Button, ListItem, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomTaskType from "../CustomTaskType";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
-const dummyData = [
-    { id: 1, name: 'Task Type 1' },
-    { id: 2, name: 'Task Type 2' },
-    { id: 3, name: 'Task Type 3' },
-    { id: 4, name: 'Task Type 4' },
-    // Add more objects if needed
-];
+const CustomTaskTypePicker = ({ taskTypeId }) => {
+    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
+    const [taskType, setTaskType] = useState(null);
 
-const CustomTaskTypePicker = () => {
-    const [taskType, setTaskType] = useState(dummyData[0]);
-    return (
+    useEffect(() => {
+        if (taskTypes && taskTypeId != null) {
+            const foundTaskType = taskTypes.find(taskType => taskType.id === taskTypeId);
+            setTaskType(foundTaskType || null); 
+        }
+    }, [taskTypes, taskTypeId]);
+    return taskType == null ? <>Loading...</> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
@@ -23,7 +24,7 @@ const CustomTaskTypePicker = () => {
                 selectedObject={taskType}
                 setSelectedObject={setTaskType}
                 ItemComponent={CustomTaskTypeItemPicker}
-                objectsData={dummyData}
+                objectsData={taskTypes}
                 isNotNull={true}
             />
         </Box>

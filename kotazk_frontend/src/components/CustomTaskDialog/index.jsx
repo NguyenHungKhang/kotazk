@@ -134,7 +134,7 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
                                 />
                             </Box>
                             <Box mt={6}>
-                            <Typography
+                                <Typography
                                     variant='h6'
                                     fontWeight={650}
                                     sx={{
@@ -143,141 +143,141 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
                                 >
                                     Attributes
                                 </Typography>
-                         
-                            <Grid container spacing={2} >
-                                <Grid item xs={6}>
-                                    <Grid container spacing={0.5} alignItems='center'>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <TaskTypeIcon size={16} stroke={2} />
-                                                <Typography pt={0.5}>
-                                                    Task type
-                                                </Typography>
-                                            </Stack>
 
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <CustomTaskTypePicker />
-                                        </Grid>
-                                        <Grid item xs={4} display='flex' alignItems='center'>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <StatusIcon size={16} stroke={2} />
-                                                <Typography pt={0.5}>
-                                                    Status
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <CustomStatusPicker />
-                                        </Grid>
+                                <Grid container spacing={2} >
+                                    <Grid item xs={6}>
+                                        <Grid container spacing={0.5} alignItems='center'>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <TaskTypeIcon size={16} stroke={2} />
+                                                    <Typography pt={0.5}>
+                                                        Task type
+                                                    </Typography>
+                                                </Stack>
 
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <DateIcon size={16} stroke={2} />
-                                                <Typography pt={0.5}>
-                                                    Date
-                                                </Typography>
-                                            </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <CustomTaskTypePicker taskTypeId={task.taskTypeId}/>
+                                            </Grid>
+                                            <Grid item xs={4} display='flex' alignItems='center'>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <StatusIcon size={16} stroke={2} />
+                                                    <Typography pt={0.5}>
+                                                        Status
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <CustomStatusPicker statusId={task.statusId} />
+                                            </Grid>
 
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <StartAndEndDatePicker />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <TimeEstimateIcon size={16} stroke={2} />
-                                                <Typography pt={0.5}>
-                                                    Time Estimate
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <TextField
-                                                required
-                                                inputProps={{ type: 'number' }}
-                                                size="small"
-                                                id="time_estimate"
-                                                name="time_estimate"
-                                                fullWidth
-                                                placeholder='Empty'
-                                                variant="outlined"
-                                                sx={{
-                                                    '& .MuiOutlinedInput-root': {
-                                                        borderRadius: 2,
-                                                        py: 0,  // Removes padding inside the root container
-                                                        '& .MuiSelect-select': {
-                                                            py: 1,
-                                                            px: 1,  // Removes padding between value and border
-                                                            minHeight: 'auto',  // Resets the default min height
-                                                            lineHeight: 'normal',  // Adjusts line height to prevent extra space
-                                                        },
-                                                        '& fieldset': {
-                                                            borderColor: 'transparent !important',
-                                                        },
-                                                        '&:hover fieldset': {
-                                                            bgcolor: theme.palette.action.hover
-                                                        },
-                                                        '&:focus fieldset': {
-                                                            bgcolor: theme.palette.action.focus
-                                                        },
-                                                        '& .MuiSelect-icon': {
-                                                            display: 'none',  // Hides the arrow icon
-                                                        },
-                                                    },
-                                                }}
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <DateIcon size={16} stroke={2} />
+                                                    <Typography pt={0.5}>
+                                                        Date
+                                                    </Typography>
+                                                </Stack>
 
-                                            />
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <StartAndEndDatePicker />
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <TimeEstimateIcon size={16} stroke={2} />
+                                                    <Typography pt={0.5}>
+                                                        Time Estimate
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <TextField
+                                                    required
+                                                    inputProps={{ type: 'number' }}
+                                                    size="small"
+                                                    id="time_estimate"
+                                                    name="time_estimate"
+                                                    fullWidth
+                                                    placeholder='Empty'
+                                                    variant="outlined"
+                                                    sx={{
+                                                        '& .MuiOutlinedInput-root': {
+                                                            borderRadius: 2,
+                                                            py: 0,  // Removes padding inside the root container
+                                                            '& .MuiSelect-select': {
+                                                                py: 1,
+                                                                px: 1,  // Removes padding between value and border
+                                                                minHeight: 'auto',  // Resets the default min height
+                                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
+                                                            },
+                                                            '& fieldset': {
+                                                                borderColor: 'transparent !important',
+                                                            },
+                                                            '&:hover fieldset': {
+                                                                bgcolor: theme.palette.action.hover
+                                                            },
+                                                            '&:focus fieldset': {
+                                                                bgcolor: theme.palette.action.focus
+                                                            },
+                                                            '& .MuiSelect-icon': {
+                                                                display: 'none',  // Hides the arrow icon
+                                                            },
+                                                        },
+                                                    }}
+
+                                                />
+                                            </Grid>
                                         </Grid>
                                     </Grid>
-                                </Grid>
 
-                                <Grid item xs={6}>
-                                    <Grid container spacing={2} alignItems='center'>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <AssigneeIcon size={16} stroke={2} />
-                                                <Typography variant='body2' pt={0.5}>
-                                                    Assignee
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <AssigneesComponent />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <ReporterIcon size={16} stroke={2} />
-                                                <Typography variant='body2' pt={0.5}>
-                                                    Reporter
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <AssigneesComponent />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <CollaboratorsIcon size={16} stroke={2} />
-                                                <Typography variant='body2' pt={0.5}>
-                                                    Collaborators
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <AssigneesComponent />
-                                        </Grid>
-                                        <Grid item xs={4}>
-                                            <Stack direction='row' spacing={2} alignItems='center'>
-                                                <PriorityIcon size={16} stroke={2} />
-                                                <Typography variant='body2' pt={0.5}>
-                                                    Priority
-                                                </Typography>
-                                            </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
-                                            <PriorityComponent />
-                                        </Grid>
-                                        {/* <Grid item xs={4}>
+                                    <Grid item xs={6}>
+                                        <Grid container spacing={2} alignItems='center'>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <AssigneeIcon size={16} stroke={2} />
+                                                    <Typography variant='body2' pt={0.5}>
+                                                        Assignee
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <AssigneesComponent />
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <ReporterIcon size={16} stroke={2} />
+                                                    <Typography variant='body2' pt={0.5}>
+                                                        Reporter
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <AssigneesComponent />
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <CollaboratorsIcon size={16} stroke={2} />
+                                                    <Typography variant='body2' pt={0.5}>
+                                                        Collaborators
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <AssigneesComponent />
+                                            </Grid>
+                                            <Grid item xs={4}>
+                                                <Stack direction='row' spacing={2} alignItems='center'>
+                                                    <PriorityIcon size={16} stroke={2} />
+                                                    <Typography variant='body2' pt={0.5}>
+                                                        Priority
+                                                    </Typography>
+                                                </Stack>
+                                            </Grid>
+                                            <Grid item xs={8}>
+                                                <PriorityComponent />
+                                            </Grid>
+                                            {/* <Grid item xs={4}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
                                                 <LinkedTasksIcon size={16} stroke={2} />
                                                 <Typography variant='body2' pt={0.5}>
@@ -295,22 +295,22 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
                                                 variant="outlined"
                                             />
                                         </Grid> */}
+                                        </Grid>
                                     </Grid>
                                 </Grid>
-                            </Grid>
-                            <Grid container spacing={2} mt={2}>
-                                <Grid item xs={2}>
-                                    <Stack direction='row' spacing={2} alignItems='center'>
-                                        <LabelsIcon size={16} stroke={2} />
-                                        <Typography pt={0.5}>
-                                            Labels
-                                        </Typography>
-                                    </Stack>
+                                <Grid container spacing={2} mt={2}>
+                                    <Grid item xs={2}>
+                                        <Stack direction='row' spacing={2} alignItems='center'>
+                                            <LabelsIcon size={16} stroke={2} />
+                                            <Typography pt={0.5}>
+                                                Labels
+                                            </Typography>
+                                        </Stack>
+                                    </Grid>
+                                    <Grid item xs={10}>
+                                        <LabelComponent />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={10}>
-                                    <LabelComponent />
-                                </Grid>
-                            </Grid>
                             </Box>
                             <Box mt={6}>
                                 <Typography

@@ -12,6 +12,8 @@ import * as apiService from '../../api/index'
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setCurrentProject } from "../../redux/actions/project.action";
+import { setCurrentStatusList } from "../../redux/actions/status.action";
+import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -24,10 +26,27 @@ const Project = ({ children }) => {
     }, [, projectId])
 
     const fetchInitial = async () => {
-        await apiService.projectAPI.getById(projectId)
-            .then(res => dispatch(setCurrentProject(res.data)))
-            .catch(err => console.log(err));
-    }
+        try {
+            const res = await apiService.projectAPI.getDetailsById(projectId);
+            const {
+                statuses,
+                labels, // Fixed typo from "lables"
+                priorities,
+                members,
+                sections,
+                taskTypes,
+                memberRoles,
+                ...projectBasicInfoRes
+            } = res.data;
+    
+            dispatch(setCurrentProject(projectBasicInfoRes));
+            dispatch(setCurrentStatusList(statuses));
+            dispatch(setCurrentTaskTypeList(taskTypes));
+        } catch (err) {
+            console.error('Error fetching project details:', err);
+        }
+    };
+    
 
     return (
         <div className="flex h-screen">
