@@ -29,6 +29,8 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
+
 @Service
 @Transactional
 public class TaskService implements ITaskService {
@@ -177,6 +179,12 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getLabelIds())
                 .filter(labelIds -> !labelIds.isEmpty())
                 .ifPresent(labelIds -> currentTask.setLabels(checkLabels(project, labelIds)));
+
+        Optional.ofNullable(taskRequestDto.getRePositionReq())
+                .ifPresent(rePositionReq -> {
+                    Long newPosition = calculateNewPositionForTask(rePositionReq, project, currentTask);
+                    currentTask.setPosition(newPosition);
+                });
 
         Task savedTask = taskRepository.save(currentTask);
 
@@ -427,4 +435,130 @@ public class TaskService implements ITaskService {
                         .orElseThrow(() -> new ResourceNotFoundException("Label", "id", labelId)))
                 .collect(Collectors.toSet());
     }
+
+    public Long calculateNewPositionForTask(RePositionRequestDto rePositionReq, Project project, Task currentTask) {
+        if (rePositionReq.getPreviousItemId() != null) {
+            Long newPositionBaseOnPrevious = handlePreviousTaskPosition(rePositionReq.getPreviousItemId(), currentTask, project);
+            if (newPositionBaseOnPrevious != null)
+                return newPositionBaseOnPrevious;
+        } else if (rePositionReq.getNextItemId() != null) {
+            Long newPositionBaseOnNext = handleNextTaskPosition(rePositionReq.getNextItemId(), currentTask, project);
+            if (newPositionBaseOnNext != null)
+                return newPositionBaseOnNext;
+        }
+
+        throw new CustomException("Both previous and next positions cannot be null.");
+    }
+
+    private Long getTaskPosition(Long taskId, Project project) {
+        return Optional.ofNullable(taskId)
+                .flatMap(id -> project.getTasks().stream()
+                        .filter(t -> t.getId().equals(id))
+                        .findFirst()
+                        .map(Task::getPosition))
+                .orElse(null);
+    }
+
+    private Long handlePreviousTaskPosition(Long previousTaskId, Task currentTask, Project project) {
+        Optional<Task> previousTaskOpt = project.getTasks().stream()
+                .filter(task -> task.getId().equals(previousTaskId))
+                .findFirst();
+
+        if (previousTaskOpt.isEmpty()) {
+            return null;
+        }
+
+        long previousTaskPosition = previousTaskOpt.get().getPosition();
+
+        Long nextTaskPosition = project.getTasks().stream()
+                .map(Task::getPosition)
+                .filter(position -> position > previousTaskPosition)
+                .min(Long::compare)
+                .orElse(roundDownToSignificant(previousTaskPosition + DEFAULT_POSITION_STEP));
+
+        if (nextTaskPosition - previousTaskPosition <= 1) {
+            repositionAllTasks(project); // This will reorder tasks
+
+            long updatedPreviousTaskPosition = project.getTasks().stream()
+                    .filter(task -> task.getId().equals(previousTaskId))
+                    .map(Task::getPosition)
+                    .findFirst()
+                    .orElse(0L);
+
+            nextTaskPosition = project.getTasks().stream()
+                    .map(Task::getPosition)
+                    .filter(position -> position > updatedPreviousTaskPosition)
+                    .min(Long::compare)
+                    .orElse(roundDownToSignificant(updatedPreviousTaskPosition + DEFAULT_POSITION_STEP));
+
+            return (updatedPreviousTaskPosition + nextTaskPosition) / 2;
+        }
+
+        System.out.println(previousTaskPosition);
+        System.out.println(nextTaskPosition);
+        System.out.println((previousTaskPosition + nextTaskPosition) / 2);
+
+        return (previousTaskPosition + nextTaskPosition) / 2;
+    }
+
+    // Function to round down to the nearest "significant" value, like 1,000,000 or 10,000
+    private long roundDownToSignificant(long value) {
+        if (value <= 0) return 0;
+        int magnitude = (int) Math.log10(value);  // Get the number of digits - 1
+        long factor = (long) Math.pow(10, magnitude); // Calculate the power of 10 based on magnitude
+        return (value / factor) * factor; // Round down by removing less significant digits
+    }
+
+    private Long handleNextTaskPosition(Long nextTaskId, Task currentTask, Project project) {
+        Optional<Task> nextTaskOpt = project.getTasks().stream()
+                .filter(task -> task.getId().equals(nextTaskId))
+                .findFirst();
+
+        if (nextTaskOpt.isEmpty()) {
+            return null;
+        }
+
+        final Long nextTaskPosition = nextTaskOpt.get().getPosition();
+
+        long previousTaskPosition = project.getTasks().stream()
+                .map(Task::getPosition)
+                .filter(position -> position < nextTaskPosition)
+                .max(Long::compare)
+                .orElse(0L);
+
+        if (nextTaskPosition - previousTaskPosition <= 1) {
+            repositionAllTasks(project); // This will reorder tasks
+
+            // After repositioning, refetch the previous and next task positions
+            final Long updatedNextTaskPosition = project.getTasks().stream()
+                    .filter(task -> task.getId().equals(nextTaskId)) // Fetch the new position of the previous task by ID
+                    .map(Task::getPosition)
+                    .findFirst()
+                    .orElse(0L); // Default to 0 if no previous task found
+
+            previousTaskPosition = project.getTasks().stream()
+                    .map(Task::getPosition)
+                    .filter(position -> position < updatedNextTaskPosition)
+                    .max(Long::compare)
+                    .orElse(roundDownToSignificant(updatedNextTaskPosition + DEFAULT_POSITION_STEP));
+
+            return (updatedNextTaskPosition + previousTaskPosition) / 2;
+        }
+
+        return (previousTaskPosition + nextTaskPosition) / 2;
+    }
+
+    private void repositionAllTasks(Project project) {
+        List<Task> orderedTasks = project.getTasks().stream()
+                .sorted(Comparator.comparing(Task::getPosition))
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < orderedTasks.size(); i++) {
+            Task taskToReposition = orderedTasks.get(i);
+            taskToReposition.setPosition(RepositionUtil.calculateNewLastPosition(i));
+        }
+
+        taskRepository.saveAll(orderedTasks);
+    }
+
 }

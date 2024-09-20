@@ -3,6 +3,7 @@ import ProjectReducer from "./project.reducer";
 import TaskReducer from "./task.reducer";
 import StatusReducer from "./status.reducer";
 import TaskTypeReducer from "./taskType.reducer";
+import DialogReducer from "./dialog.reducer";
 import { combineReducers } from 'redux'
 
 const allReducers = {
@@ -10,7 +11,8 @@ const allReducers = {
     project: ProjectReducer,
     task: TaskReducer,
     status: StatusReducer,
-    taskType: TaskTypeReducer
+    taskType: TaskTypeReducer,
+    dialog: DialogReducer
 }
 
 const rootReducer = combineReducers(allReducers);

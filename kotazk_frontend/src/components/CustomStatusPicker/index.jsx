@@ -3,24 +3,42 @@ import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomStatus from "../CustomStatus";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import * as apiService from '../../api/index'
+import { useDispatch } from "react-redux";
+import { setCurrentTaskList } from "../../redux/actions/task.action";
+import { updateAndAddArray } from "../../utils/arrayUtil";
+import { setTaskDialog } from "../../redux/actions/dialog.action";
 
-const dummyData = [
-    { id: 1, name: 'Status 1' },
-    { id: 2, name: 'Status 2' },
-    { id: 3, name: 'Status 3' },
-    { id: 4, name: 'Status 4' },
-    // Add more objects if needed
-];
-
-const CustomStatusPicker = ({ statusId }) => {
+const CustomStatusPicker = ({ statusId, taskId }) => {
     const statuses = useSelector((state) => state.status.currentStatusList);
+    const dispatch = useDispatch();
+    const tasks = useSelector((state) => state.task.currentTaskList);
     const [status, setStatus] = useState(null);
     useEffect(() => {
         if (statuses && statusId != null) {
             const foundStatus = statuses.find(status => status.id === statusId);
-            setStatus(foundStatus || null); 
+            setStatus(foundStatus || null);
         }
     }, [statuses, statusId]);
+
+    const saveTaskStatus = async (object) => {
+        const data = {
+            "statusId": object?.id,
+        }
+
+        try {
+            const response = await apiService.taskAPI.update(taskId, data);
+            if (response?.data) {
+                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                const taskDialogData = {
+                    task: response.data
+                };
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
 
     return status == null ? <>Loading</> : (
         <Box>
@@ -31,6 +49,7 @@ const CustomStatusPicker = ({ statusId }) => {
                 )}
                 selectedObject={status}
                 setSelectedObject={setStatus}
+                saveMethod={saveTaskStatus}
                 ItemComponent={CustomStatusItemPicker}
                 objectsData={statuses}
                 isNotNull={true}

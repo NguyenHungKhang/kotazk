@@ -1,6 +1,7 @@
 package com.taskmanagement.kotazk.payload.request.task;
 
 import com.taskmanagement.kotazk.entity.TaskType;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class TaskRequestDto {
     Timestamp startAt;
     Timestamp endAt;
     Long taskTypeId;
+    RePositionRequestDto rePositionReq;
     Set<Long> collaboratorIds = new HashSet<>();
     Set<Long> labelIds = new HashSet<>();
 }

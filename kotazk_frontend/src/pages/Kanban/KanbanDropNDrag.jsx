@@ -10,65 +10,97 @@ import CardKanban from './CardKanban';
 import { useSelector } from 'react-redux';
 import * as apiService from "../../api/index"
 import { useDispatch } from 'react-redux';
-import { setCurrentKanbanTaskList } from '../../redux/actions/task.action';
+import { setCurrentKanbanTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
 import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomStatus from '../../components/CustomStatus';
+import { updateAndAddArray } from '../../utils/arrayUtil';
+import CustomTaskDialog from '../../components/CustomTaskDialog';
 
 function KanbanDropNDrag() {
-  const stores = useSelector((state) => state.task.currentKanbanTaskList);
+  const [stores, setStores] = useState([]);
+  const tasks = useSelector((state) => state.task.currentTaskList);
+  const statuses = useSelector((state) => state.status.currentStatusList);
   const dispatch = useDispatch();
   const project = useSelector((state) => state.project.currentProject);
+  const [open, setOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(false);
 
   useEffect(() => {
-    if (project != null)
+    if (statuses != null && project != null)
       initialFetch();
-  }, [project])
+  }, [project, statuses]);
+
+  useEffect(() => {
+    if (tasks != null && statuses != null)
+      tasksMapping();
+  }, [statuses, tasks])
+
 
   const initialFetch = async () => {
-    const data = {
-      "sortBy": "position",
-      "sortDirectionAsc": true,
-      "filters": []
-    };
+    try {
+      const allTasks = await Promise.all(
+        statuses.map(async (status) => {
+          const taskData = {
+            "sortBy": "position",
+            "sortDirectionAsc": true,
+            "filters": [
+              {
+                "key": "status.id",
+                "operation": "EQUAL",
+                "value": status.id,
+                "values": []
+              }
+            ]
+          };
 
-    await apiService.statusAPI.getPageByProject(project.id, data)
-      .then(async (statusRes) => {
-        const tempList = statusRes.data.content;
+          const taskRes = await apiService.taskAPI.getPageByProject(status.projectId, taskData);
+          return taskRes.data.content;
+        })
+      );
 
-        const statusesWithTasks = await Promise.all(
-          tempList.map(async (item) => {
-            const taskData = {
-              "sortBy": "position",
-              "sortDirectionAsc": true,
-              "filters": [
-                {
-                  "key": "status.id",
-                  "operation": "EQUAL",
-                  "value": item.id,
-                  "values": []
-                }
-              ]
-            };
-
-            await apiService.taskAPI.getPageByProject(item.projectId, taskData)
-              .then(taskRes => {
-                item.items = taskRes.data.content;
-              })
-              .catch(taskErr => {
-                console.warn(`Error fetching tasks for status ${item.id}:`, taskErr);
-                item.items = []
-              });
-
-            return item;
-          })
-        );
-        dispatch(setCurrentKanbanTaskList(statusesWithTasks));
-      })
-      .catch(statusErr => console.warn("Error fetching statuses:", statusErr));
+      const combinedTasks = updateAndAddArray(tasks, allTasks.flat());
+      dispatch(setCurrentTaskList(combinedTasks));
+      console.log(combinedTasks)
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
   };
 
-  const handleDragAndDrop = (results) => {
+  const tasksMapping = () => {
+    const groupedTasks = statuses.reduce((acc, status) => {
+      const tasksForStatus = tasks.filter(task => task.statusId === status.id);
+      acc.push({
+        ...status,
+        items: tasksForStatus
+      });
+
+
+      return acc;
+    }, []);
+    setStores(groupedTasks);
+  }
+  const updateItemAPI = async (itemId, previousItemId, nextItemId, statusId) => {
+    console.log(nextItemId)
+    const data = {
+      rePositionReq: (nextItemId == null && previousItemId == null) ? null : {
+        currentItemId: itemId,
+        nextItemId: nextItemId,
+        previousItemId: previousItemId
+      },
+      statusId: statusId
+    };
+
+
+    const response = await apiService.taskAPI.update(itemId, data);
+    if (response?.data) {
+      const finalAr = updateAndAddArray(tasks, [response.data]);
+      dispatch(setCurrentTaskList(finalAr));
+      console.log(finalAr)
+    }
+  };
+
+  const handleDragAndDrop = async (results) => {
     const { source, destination, type } = results;
 
     if (!destination) return;
@@ -76,8 +108,7 @@ function KanbanDropNDrag() {
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
-    )
-      return;
+    ) return;
 
     if (type === "group") {
       const reorderedStores = [...stores];
@@ -88,12 +119,13 @@ function KanbanDropNDrag() {
       const [removedStore] = reorderedStores.splice(storeSourceIndex, 1);
       reorderedStores.splice(storeDestinatonIndex, 0, removedStore);
 
-      return dispatch(setCurrentKanbanTaskList(reorderedStores))
+      setStores(reorderedStores);
+      // Optionally call updateGroupAPI here if needed
+      return;
     }
+
     const itemSourceIndex = source.index;
     const itemDestinationIndex = destination.index;
-
-    console.log(source.droppableId);
 
     const storeSourceIndex = stores.findIndex(
       (store) => store.id.toString() === source.droppableId
@@ -101,8 +133,6 @@ function KanbanDropNDrag() {
     const storeDestinationIndex = stores.findIndex(
       (store) => store.id.toString() === destination.droppableId
     );
-
-
 
     const newSourceItems = [...stores[storeSourceIndex].items];
     const newDestinationItems =
@@ -124,39 +154,52 @@ function KanbanDropNDrag() {
       items: newDestinationItems,
     };
 
-    dispatch(setCurrentKanbanTaskList(newStores))
+    setStores(newStores);
+
+    // Call API to update items with previous and next item IDs and group ID
+    const previousItemId = itemDestinationIndex > 0
+      ? newSourceItems[itemDestinationIndex - 1]?.id
+      : null;
+    const nextItemId = newDestinationItems[itemDestinationIndex + 1]?.id;
+    const statusId = stores[storeDestinationIndex]?.id; // Get the status ID from the destination store
+
+    await updateItemAPI(deletedItem.id, previousItemId, nextItemId, statusId);
   };
 
+
   return (
-    <div className="layout__wrapper">
-      <div className="card">
-        <DragDropContext onDragEnd={handleDragAndDrop}>
-          <Droppable droppableId="ROOT" type="group" direction="horizontal">
-            {(provided) => (
-              <Stack direction='row' spacing={2} {...provided.droppableProps} ref={provided.innerRef}>
-                {stores?.map((status, index) => (
-                  <Draggable
-                    draggableId={status.id.toString()}
-                    index={index}
-                    key={status.id}>
-                    {(provided) => (
-                      <Box
-                        {...provided.dragHandleProps}
-                        {...provided.draggableProps}
-                        ref={provided.innerRef}
-                      >
-                        <StoreList {...status} status={status} />
-                      </Box>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </Stack>
-            )}
-          </Droppable>
-        </DragDropContext>
+    <>
+      <div className="layout__wrapper">
+        <div className="card">
+          <DragDropContext onDragEnd={handleDragAndDrop}>
+            <Droppable droppableId="ROOT" type="group" direction="horizontal">
+              {(provided) => (
+                <Stack direction='row' spacing={2} {...provided.droppableProps} ref={provided.innerRef}>
+                  {stores?.map((status, index) => (
+                    <Draggable
+                      draggableId={status.id.toString()}
+                      index={index}
+                      key={status.id}>
+                      {(provided) => (
+                        <Box
+                          {...provided.dragHandleProps}
+                          {...provided.draggableProps}
+                          ref={provided.innerRef}
+                        >
+                          <StoreList {...status} status={status} />
+                        </Box>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Stack>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </div>
       </div>
-    </div>
+      <CustomTaskDialog />
+    </>
   );
 }
 

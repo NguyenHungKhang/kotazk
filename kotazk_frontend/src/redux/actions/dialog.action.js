@@ -1,0 +1,1 @@
+export const setTaskDialog = (taskDialog) => ({type: 'SET_TASK_DIALOG', payload: taskDialog});

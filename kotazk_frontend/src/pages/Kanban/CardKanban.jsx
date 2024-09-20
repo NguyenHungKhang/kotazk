@@ -2,9 +2,12 @@ import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Typography, light
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
+import { useDispatch } from "react-redux";
+import { setTaskDialog } from "../../redux/actions/dialog.action";
 
 const CardKanban = ({ task }) => {
     const theme = useTheme();
+    const dispatch = useDispatch();
     const [displayLabels, setDisplayLabels] = useState(false);
 
     const CalendarIcon = allIcons["IconCalendar"];
@@ -12,26 +15,32 @@ const CardKanban = ({ task }) => {
     const AttachmentIcon = allIcons["IconPaperclip"];
     const CommentIcon = allIcons["IconMessageDots"];
 
+    const openTaskDialog = () => {
+        const taskDialogData = {
+            task: task,
+            open: true
+        }
+        console.log(taskDialogData);
+        dispatch(setTaskDialog(taskDialogData));
+    }
+
     return (
-        <CustomTaskDialog
-            taskData={task}
-            OpenComponent={({ onClick }) => (
-                <Card
-                    onClick={onClick}
-                    sx={{
-                        // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
-                        borderRadius: 2,
-                        boxShadow: 1,
-                        border: '1px solid',
-                        borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]
-                    }}
-                >
-                    <CardContent
-                        sx={{
-                            p: 4
-                        }}
-                    >
-                        {/* <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap mb={2}>
+        <Card
+            onClick={openTaskDialog}
+            sx={{
+                // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
+                borderRadius: 2,
+                boxShadow: 1,
+                border: '1px solid',
+                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]
+            }}
+        >
+            <CardContent
+                sx={{
+                    p: 4
+                }}
+            >
+                {/* <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap mb={2}>
                     <Box
                         bgcolor='#E5826F'
                         borderRadius={1}
@@ -51,19 +60,19 @@ const CardKanban = ({ task }) => {
                         )}
                     </Box>
                 </Stack> */}
-                        <Typography variant='body2' fontWeight='bold' noWrap>
-                            {task?.name}
-                        </Typography>
-                        {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
+                <Typography variant='body2' fontWeight='bold' noWrap>
+                    {task?.name}
+                </Typography>
+                {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
                     Test desciption a akjn al la a a las la va
                 </Typography> */}
-                        <Divider sx={{ my: 2 }} />
-                        <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
-                            sx={{
-                                mt: 2
-                            }}
-                        >
-                            {/* <Stack direction='row' alignItems='center' spacing={1}>
+                <Divider sx={{ my: 2 }} />
+                <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
+                    sx={{
+                        mt: 2
+                    }}
+                >
+                    {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <CalendarIcon color={theme.palette.text.secondary} size={16} />
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             3/9/2024
@@ -88,22 +97,19 @@ const CardKanban = ({ task }) => {
                             2
                         </Typography>
                     </Stack> */}
-                            <Avatar
-                                sx={{
-                                    marginLeft: 'auto',
-                                    width: 24,
-                                    height: 24,
-                                    fontSize: 16
-                                }}
-                            >
-                                H
-                            </Avatar>
-                        </Stack>
-                    </CardContent>
-                </Card>
-            )}
-        />
-
+                    <Avatar
+                        sx={{
+                            marginLeft: 'auto',
+                            width: 24,
+                            height: 24,
+                            fontSize: 16
+                        }}
+                    >
+                        H
+                    </Avatar>
+                </Stack>
+            </CardContent>
+        </Card>
     );
 }
 

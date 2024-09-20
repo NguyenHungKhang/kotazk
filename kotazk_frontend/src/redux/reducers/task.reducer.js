@@ -1,13 +1,13 @@
 const initialState = {
-    currentKanbanTaskList: null,
+    currentTaskList: [],
 }
 
 const TaskReducer = (state = initialState, action) => {
     switch (action.type) {
-        case 'SET_CURRENT_KANBAN_TASK_LIST':
+        case 'SET_CURRENT_TASK_LIST':
             return {
                 ...state,
-                currentKanbanTaskList: action.payload
+                currentTaskList: action.payload
             };
         default:
             return state;

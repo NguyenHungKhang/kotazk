@@ -8,7 +8,7 @@ import {
 import React, { useState } from 'react';
 
 
-const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, objectsData, OpenComponent, ItemComponent,  isNotNull = false}) => {
+const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, saveMethod, objectsData, OpenComponent, ItemComponent, isNotNull = false }) => {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,8 +27,11 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, obj
     const handleSelectObject = (object) => {
         if (!isNotNull && selectedObject != null && object.id == selectedObject?.id)
             setSelectedObject(null);
-        else
+        else {
+            if (saveMethod != null)
+                saveMethod(object);
             setSelectedObject(object);
+        }
         handleClosePopover();
     };
 
@@ -38,7 +41,7 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, obj
 
     return (
         <div>
-            <OpenComponent onClick={handleOpenPopover} isFocusing={openPopover}/>
+            <OpenComponent onClick={handleOpenPopover} isFocusing={openPopover} />
             <Popover
                 open={openPopover}
                 anchorEl={anchorEl}

@@ -22,16 +22,16 @@ import StartAndEndDatePicker from './StartAndEndDatePicker';
 import CustomStatusPicker from '../CustomStatusPicker';
 import CustomTextField from '../CustomBasicTextField';
 import CustomBasicTextField from '../CustomBasicTextField';
+import { setTaskDialog } from '../../redux/actions/dialog.action';
 
-const CustomTaskDialog = ({ taskData, OpenComponent }) => {
+const CustomTaskDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const [visibility, setVisibility] = React.useState('PUBLIC');
-    const [task, setTask] = React.useState(taskData)
+    const { task, open } = useSelector((state) => state.dialog.taskDialog);
     const AddIcon = TablerIcons['IconSquarePlus'];
     const ProjectIcon = TablerIcons['IconTableFilled'];
-    const [open, setOpen] = React.useState(false);
     const [selectedIcon, setSelectedIcon] = React.useState('IconHome');  // Default icon
     const [name, setName] = React.useState("");
     const [description, setDescription] = React.useState("");
@@ -47,16 +47,12 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
     const LinkedTasksIcon = TablerIcons["IconHierarchy"];
     const TaskTypeIcon = TablerIcons["IconBoxModel2"]
 
-    const handleVisibilityChange = (event) => {
-        setVisibility(event.target.value);
-    };
-
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
     const handleClose = () => {
-        setOpen(false);
+        const taskDialogData = {
+            open: false,
+            task: null
+        }
+        dispatch(setTaskDialog(taskDialogData));
     };
 
     const saveProject = async () => {
@@ -84,9 +80,7 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
     const SelectedIconComponent = TablerIcons[selectedIcon];
 
     return (
-        <React.Fragment>
-            <OpenComponent onClick={handleClickOpen} />
-            <Dialog
+        <Dialog
                 fullWidth
                 maxWidth='xl'
                 open={open}
@@ -157,7 +151,7 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
 
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <CustomTaskTypePicker taskTypeId={task.taskTypeId}/>
+                                                <CustomTaskTypePicker taskTypeId={task?.taskTypeId} />
                                             </Grid>
                                             <Grid item xs={4} display='flex' alignItems='center'>
                                                 <Stack direction='row' spacing={2} alignItems='center'>
@@ -168,7 +162,7 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
                                                 </Stack>
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <CustomStatusPicker statusId={task.statusId} />
+                                                <CustomStatusPicker statusId={task?.statusId} taskId={task?.id} />
                                             </Grid>
 
                                             <Grid item xs={4}>
@@ -457,7 +451,6 @@ const CustomTaskDialog = ({ taskData, OpenComponent }) => {
 
                 </DialogContent>
             </Dialog>
-        </React.Fragment >
     );
 }
 
