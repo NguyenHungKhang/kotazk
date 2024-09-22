@@ -23,8 +23,6 @@ function KanbanDropNDrag() {
   const statuses = useSelector((state) => state.status.currentStatusList);
   const dispatch = useDispatch();
   const project = useSelector((state) => state.project.currentProject);
-  const [open, setOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(false);
 
   useEffect(() => {
     if (statuses != null && project != null)
@@ -281,7 +279,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
                         {...provided.draggableProps}
                         ref={provided.innerRef}
                       >
-                        <CardKanban task={task} />
+                          <CardKanban task={task} isDragging={snapshot.isDragging} />
                       </div>
                     )}
 

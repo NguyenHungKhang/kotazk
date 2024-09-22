@@ -1,6 +1,6 @@
-import { Box, Button, ListItem, useTheme } from "@mui/material";
+import { Box, Button, ListItem, Typography, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
-import CustomTaskType from "../CustomTaskType";
+import CustomPriority from "../CustomPriority";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -9,22 +9,22 @@ import { updateAndAddArray } from "../../utils/arrayUtil";
 import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 
-const CustomTaskTypePicker = ({ taskTypeId, taskId }) => {
-    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
+const CustomPriorityPicker = ({ priorityId, taskId }) => {
+    const prioritys = useSelector((state) => state.priority.currentPriorityList)
     const tasks = useSelector((state) => state.task.currentTaskList)
-    const [taskType, setTaskType] = useState(null);
+    const [priority, setPriority] = useState(null);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (taskTypes && taskTypeId != null) {
-            const foundTaskType = taskTypes.find(taskType => taskType.id === taskTypeId);
-            setTaskType(foundTaskType || null); 
+        if (prioritys && priorityId != null) {
+            const foundPriority = prioritys.find(priority => priority.id === priorityId);
+            setPriority(foundPriority || null);
         }
-    }, [taskTypes, taskTypeId]);
+    }, [prioritys, priorityId]);
 
-    const saveTaskType = async (object) => {
+    const savePriority = async (object) => {
         const data = {
-            "taskTypeId": object?.id,
+            "priorityId": object ? object.id : 0,
         }
 
         try {
@@ -41,25 +41,25 @@ const CustomTaskTypePicker = ({ taskTypeId, taskId }) => {
         }
     }
 
-    return taskType == null ? <>Loading...</> : (
+    return (
         <Box>
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomTaskTypeOpenComponent {...props} taskType={taskType} />
+                    <CustomPriorityOpenComponent {...props} priority={priority} />
                 )}
-                selectedObject={taskType}
-                setSelectedObject={setTaskType}
-                saveMethod={saveTaskType}
-                ItemComponent={CustomTaskTypeItemPicker}
-                objectsData={taskTypes}
-                isNotNull={true}
+                selectedObject={priority}
+                setSelectedObject={setPriority}
+                saveMethod={savePriority}
+                ItemComponent={CustomPriorityItemPicker}
+                objectsData={prioritys}
+                isNotNull={false}
             />
         </Box>
     );
 }
 
-const CustomTaskTypeOpenComponent = ({ onClick, taskType, isFocusing }) => {
+const CustomPriorityOpenComponent = ({ onClick, priority, isFocusing }) => {
     const theme = useTheme();
     return (
         <Box
@@ -73,15 +73,29 @@ const CustomTaskTypeOpenComponent = ({ onClick, taskType, isFocusing }) => {
                 '&:hover': {
                     bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
                 },
-                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null 
+                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
             }}
         >
-            <CustomTaskType taskType={taskType} changeable={false}/>
+            {priority != null ?
+                <CustomPriority priority={priority} changeable={false} />
+                :
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        borderRadius: 2,
+                        px: 2,
+                        py: 1,
+                    }}
+                >
+                    <Typography variant='body2'>Empty</Typography>
+                </Box>
+            }
         </Box>
     )
 }
 
-const CustomTaskTypeItemPicker = (props) => {
+const CustomPriorityItemPicker = (props) => {
     const theme = useTheme();
     return (
         <ListItem
@@ -97,9 +111,9 @@ const CustomTaskTypeItemPicker = (props) => {
             onClick={() => props.onClick(props.object)}
             dense
         >
-            <CustomTaskType taskType={props.object} changeable={false}/>
+            <CustomPriority priority={props.object} changeable={false} />
         </ListItem>
     )
 }
 
-export default CustomTaskTypePicker;
+export default CustomPriorityPicker;

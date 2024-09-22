@@ -27,8 +27,8 @@ public class TaskRequestDto {
     Long timeEstimate;
     Long timeTracking;
     Boolean isCompleted = false;
-    Timestamp startAt;
-    Timestamp endAt;
+    String startAt;
+    String endAt;
     Long taskTypeId;
     RePositionRequestDto rePositionReq;
     Set<Long> collaboratorIds = new HashSet<>();

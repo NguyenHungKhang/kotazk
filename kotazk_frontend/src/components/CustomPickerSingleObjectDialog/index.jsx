@@ -25,13 +25,18 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
     const openPopover = Boolean(anchorEl);
 
     const handleSelectObject = (object) => {
-        if (!isNotNull && selectedObject != null && object.id == selectedObject?.id)
+
+        if (!isNotNull && selectedObject != null && object.id == selectedObject?.id) {
             setSelectedObject(null);
+            if (saveMethod != null)
+                saveMethod(null);
+        }
         else {
+            setSelectedObject(object);
             if (saveMethod != null)
                 saveMethod(object);
-            setSelectedObject(object);
         }
+
         handleClosePopover();
     };
 

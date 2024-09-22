@@ -14,6 +14,7 @@ import { useDispatch } from "react-redux";
 import { setCurrentProject } from "../../redux/actions/project.action";
 import { setCurrentStatusList } from "../../redux/actions/status.action";
 import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
+import { setCurrentPriorityList } from "../../redux/actions/priority.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -42,6 +43,7 @@ const Project = ({ children }) => {
             dispatch(setCurrentProject(projectBasicInfoRes));
             dispatch(setCurrentStatusList(statuses));
             dispatch(setCurrentTaskTypeList(taskTypes));
+            dispatch(setCurrentPriorityList(priorities));
         } catch (err) {
             console.error('Error fetching project details:', err);
         }

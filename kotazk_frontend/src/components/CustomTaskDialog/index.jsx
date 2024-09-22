@@ -17,12 +17,14 @@ import CustomStatusColorIconPicker from '../CustomStatusColorIconPicker';
 import CustomTaskTypePicker from '../CustomTaskTypePicker';
 import AssigneesComponent from './AssigneesComponent';
 import LabelComponent from './LabelComponent';
-import PriorityComponent from './PriorityComponent';
-import StartAndEndDatePicker from './StartAndEndDatePicker';
 import CustomStatusPicker from '../CustomStatusPicker';
 import CustomTextField from '../CustomBasicTextField';
 import CustomBasicTextField from '../CustomBasicTextField';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
+import { setCurrentTaskList } from '../../redux/actions/task.action';
+import { updateAndAddArray } from '../../utils/arrayUtil';
+import CustomPriorityPicker from '../CustomPrirorityPicker';
+import CustomDueTimePicker from '../CustomDueTimePicker';
 
 const CustomTaskDialog = () => {
     const theme = useTheme();
@@ -30,6 +32,7 @@ const CustomTaskDialog = () => {
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const [visibility, setVisibility] = React.useState('PUBLIC');
     const { task, open } = useSelector((state) => state.dialog.taskDialog);
+    const tasks = useSelector((state) => state.task.currentTaskList)
     const AddIcon = TablerIcons['IconSquarePlus'];
     const ProjectIcon = TablerIcons['IconTableFilled'];
     const [selectedIcon, setSelectedIcon] = React.useState('IconHome');  // Default icon
@@ -75,6 +78,25 @@ const CustomTaskDialog = () => {
                     .catch(projectListErr => console.log(projectListErr))
             })
             .catch(workspaceErr => console.error(workspaceErr));
+    }
+
+    const saveName = async () => {
+        const data = {
+            "name": name,
+        }
+
+        try {
+            const response = await apiService.taskAPI.update(task.id, data);
+            if (response?.data) {
+                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                const taskDialogData = {
+                    task: response.data
+                };
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
     }
 
     const SelectedIconComponent = TablerIcons[selectedIcon];
@@ -125,6 +147,7 @@ const CustomTaskDialog = () => {
                                         }
                                     }}
                                     onChange={(e) => setName(e.target.value)}
+                                    onBlur={() => saveName()}
                                 />
                             </Box>
                             <Box mt={6}>
@@ -151,7 +174,7 @@ const CustomTaskDialog = () => {
 
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <CustomTaskTypePicker taskTypeId={task?.taskTypeId} />
+                                                <CustomTaskTypePicker taskTypeId={task?.taskTypeId} taskId={task?.id} />
                                             </Grid>
                                             <Grid item xs={4} display='flex' alignItems='center'>
                                                 <Stack direction='row' spacing={2} alignItems='center'>
@@ -175,7 +198,7 @@ const CustomTaskDialog = () => {
 
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <StartAndEndDatePicker />
+                                                <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id}/>
                                             </Grid>
                                             <Grid item xs={4}>
                                                 <Stack direction='row' spacing={2} alignItems='center'>
@@ -269,7 +292,8 @@ const CustomTaskDialog = () => {
                                                 </Stack>
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <PriorityComponent />
+                                                {/* <PriorityComponent /> */}
+                                                <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
                                             </Grid>
                                             {/* <Grid item xs={4}>
                                         <Stack direction='row' spacing={2} alignItems='center'>

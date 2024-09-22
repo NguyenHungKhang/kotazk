@@ -1,0 +1,1 @@
+export const setCurrentPriorityList = (listPriority) => ({type: 'SET_CURRENT_PRIORITY_LIST', payload: listPriority});

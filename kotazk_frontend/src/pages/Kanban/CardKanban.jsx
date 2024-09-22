@@ -4,12 +4,14 @@ import { useState } from "react";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
 import { useDispatch } from "react-redux";
 import { setTaskDialog } from "../../redux/actions/dialog.action";
+import dayjs from "dayjs";
+import CustomStatus from "../../components/CustomStatus";
+import { useSelector } from "react-redux";
 
-const CardKanban = ({ task }) => {
+const CardKanban = ({ task, isDragging }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [displayLabels, setDisplayLabels] = useState(false);
-
     const CalendarIcon = allIcons["IconCalendar"];
     const TimeIcon = allIcons["IconClock2"];
     const AttachmentIcon = allIcons["IconPaperclip"];
@@ -31,8 +33,13 @@ const CardKanban = ({ task }) => {
                 // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
                 borderRadius: 2,
                 boxShadow: 1,
-                border: '1px solid',
-                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]
+                border: '2px solid',
+                borderColor: isDragging ? theme.palette.info.main : (theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]),
+                transform: isDragging ? 'rotate(2deg)' : null,
+                // borderColor: "transparent",
+                '&:hover': {
+                    borderColor: theme.palette.primary.main
+                }
             }}
         >
             <CardContent
@@ -40,13 +47,26 @@ const CardKanban = ({ task }) => {
                     p: 4
                 }}
             >
-                {/* <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap mb={2}>
+                <Stack
+                    direction='row'
+                    spacing={2}
+                    alignItems='center'
+                    flexWrap='wrap'
+                    useFlexGap
+                    mb={2}
+                    sx={{
+                        cursor: 'pointer'
+                    }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setDisplayLabels(!displayLabels);
+                    }}
+                >
                     <Box
                         bgcolor='#E5826F'
                         borderRadius={1}
                         height={!displayLabels ? 8 : 'auto'}
                         width={!displayLabels ? 50 : 'auto'}
-                        onClick={() => setDisplayLabels(!displayLabels)}
                     >
                         {displayLabels && (
                             <Typography
@@ -59,7 +79,7 @@ const CardKanban = ({ task }) => {
                             </Typography>
                         )}
                     </Box>
-                </Stack> */}
+                </Stack>
                 <Typography variant='body2' fontWeight='bold' noWrap>
                     {task?.name}
                 </Typography>
@@ -72,18 +92,21 @@ const CardKanban = ({ task }) => {
                         mt: 2
                     }}
                 >
+                    {
+                        task?.endAt &&
+                        <Stack direction='row' alignItems='center' spacing={1}>
+                            <CalendarIcon color={theme.palette.text.secondary} size={16} />
+                            <Typography color={theme.palette.text.secondary} variant='body2'>
+                                {dayjs(task?.endAt).format("HH:mm MM/DD/YYYY")}
+                            </Typography>
+                        </Stack>
+                    }
                     {/* <Stack direction='row' alignItems='center' spacing={1}>
-                        <CalendarIcon color={theme.palette.text.secondary} size={16} />
-                        <Typography color={theme.palette.text.secondary} variant='body2'>
-                            3/9/2024
-                        </Typography>
-                    </Stack>
-                    <Stack direction='row' alignItems='center' spacing={1}>
                         <TimeIcon color={theme.palette.text.secondary} size={16} />
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             12:00 AM
                         </Typography>
-                    </Stack>
+                    </Stack> */}
 
                     <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />
@@ -96,7 +119,7 @@ const CardKanban = ({ task }) => {
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             2
                         </Typography>
-                    </Stack> */}
+                    </Stack>
                     <Avatar
                         sx={{
                             marginLeft: 'auto',

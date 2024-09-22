@@ -78,7 +78,7 @@ public class TaskService implements ITaskService {
         Long timeEstimate = taskRequestDto.getTimeEstimate();
         Boolean isCompleted = taskRequestDto.getIsCompleted();
 
-        List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, taskRequestDto.getStartAt(), taskRequestDto.getEndAt());
+        List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));
         Timestamp startAt = startAndEndTime.get(0);
         Timestamp endAt = startAndEndTime.get(1);
 
@@ -158,20 +158,19 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getPriorityId())
                 .ifPresent(priorityId -> currentTask.setPriority(checkPriority(project, priorityId)));
 
+
         Optional.ofNullable(taskRequestDto.getTimeEstimate())
                 .ifPresent(currentTask::setTimeEstimate);
 
         Optional.ofNullable(taskRequestDto.getIsCompleted())
                 .ifPresent(currentTask::setIsCompleted);
 
-        if (taskRequestDto.getStartAt() != null || taskRequestDto.getEndAt() != null) {
-            Timestamp startAt = Optional.ofNullable(taskRequestDto.getStartAt()).orElse(currentTask.getStartAt());
-            Timestamp endAt = Optional.ofNullable(taskRequestDto.getEndAt()).orElse(currentTask.getEndAt());
-
-            List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, startAt, endAt);
+        if(taskRequestDto.getStartAt() != null && taskRequestDto.getEndAt() != null) {
+            List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));
             currentTask.setStartAt(startAndEndTime.get(0));
             currentTask.setEndAt(startAndEndTime.get(1));
         }
+
 
         Optional.ofNullable(taskRequestDto.getTaskTypeId())
                 .ifPresent(taskTypeId -> currentTask.setTaskType(checkTaskType(project, taskTypeId)));
@@ -450,15 +449,6 @@ public class TaskService implements ITaskService {
         throw new CustomException("Both previous and next positions cannot be null.");
     }
 
-    private Long getTaskPosition(Long taskId, Project project) {
-        return Optional.ofNullable(taskId)
-                .flatMap(id -> project.getTasks().stream()
-                        .filter(t -> t.getId().equals(id))
-                        .findFirst()
-                        .map(Task::getPosition))
-                .orElse(null);
-    }
-
     private Long handlePreviousTaskPosition(Long previousTaskId, Task currentTask, Project project) {
         Optional<Task> previousTaskOpt = project.getTasks().stream()
                 .filter(task -> task.getId().equals(previousTaskId))
@@ -493,10 +483,6 @@ public class TaskService implements ITaskService {
 
             return (updatedPreviousTaskPosition + nextTaskPosition) / 2;
         }
-
-        System.out.println(previousTaskPosition);
-        System.out.println(nextTaskPosition);
-        System.out.println((previousTaskPosition + nextTaskPosition) / 2);
 
         return (previousTaskPosition + nextTaskPosition) / 2;
     }

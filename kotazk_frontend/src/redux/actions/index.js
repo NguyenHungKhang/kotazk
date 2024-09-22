@@ -4,5 +4,6 @@ import * as TaskActions from './task.action'
 import * as StatusActions from './status.action'
 import * as TaskTypeActions from './taskType.action'
 import * as DialogActions from './dialog.action'
+import * as PriorityActions from './priority.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions }
+export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions }
