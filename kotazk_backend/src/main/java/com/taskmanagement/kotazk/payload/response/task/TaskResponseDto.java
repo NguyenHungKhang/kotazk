@@ -32,5 +32,5 @@ public class TaskResponseDto {
     Long taskTypeId;
     Long position;
     Set<Long> collaboratorIds = new HashSet<>();
-    Set<Long> labelIds = new HashSet<>();
+    Set<TaskLabelResponseDto> labels = new HashSet<>();
 }

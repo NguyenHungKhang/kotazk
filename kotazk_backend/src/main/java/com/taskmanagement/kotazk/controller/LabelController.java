@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/label")
+@RequestMapping("/api/v1/secure/label")
 public class LabelController {
     @Autowired
     ILabelService labelService = new LabelService();

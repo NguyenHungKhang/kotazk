@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Stack, Typography, lighten, useTheme } from "@mui/material";
+import { Box, Card, Divider, Paper, Stack, Typography, alpha, lighten, useTheme } from "@mui/material";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import CustomHeader from "../../components/CustomHeader";
 import SideBar from "../../components/SideBar";
@@ -15,6 +15,8 @@ import { setCurrentProject } from "../../redux/actions/project.action";
 import { setCurrentStatusList } from "../../redux/actions/status.action";
 import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 import { setCurrentPriorityList } from "../../redux/actions/priority.action";
+import { setCurrentLabelList } from "../../redux/actions/label.action";
+import { setCurrentProjectMemberList } from "../../redux/actions/member.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -39,33 +41,46 @@ const Project = ({ children }) => {
                 memberRoles,
                 ...projectBasicInfoRes
             } = res.data;
-    
+
             dispatch(setCurrentProject(projectBasicInfoRes));
             dispatch(setCurrentStatusList(statuses));
             dispatch(setCurrentTaskTypeList(taskTypes));
             dispatch(setCurrentPriorityList(priorities));
+            dispatch(setCurrentLabelList(labels));
+            dispatch(setCurrentProjectMemberList(members));
         } catch (err) {
             console.error('Error fetching project details:', err);
         }
     };
-    
+
 
     return (
-        <div className="flex h-screen">
-            <SideBar />
-            <div className="flex-1">
+        <Box p={4}
+            height={"100vh"}
+            sx={{
+                backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            <Stack direction='row' spacing={4} alignItems="stretch" height={"calc(100% - 32px)"}>
+                <SideBar />
                 <Stack
-                    height='100vh'
                     display="flex"
                     flexDirection="column"
-                    spacing={1}
+                    spacing={4}
+                    ml={4}
+                    flexGrow={1}
                 >
-                    <Box
-                        flex=' 0 1 auto'
-                        px={4}
-                        pt={4}
-                        boxShadow={4}
-                        pb={2}
+                    <Paper
+                        sx={{
+                            flex: '0 1 auto',
+                            px: 4,
+                            pt: 4,
+                            boxShadow: 4,
+                            pb: 2,
+                            borderRadius: 4
+                        }}
                     >
                         <CustomHeader />
                         <CustomBreadcrumb />
@@ -78,28 +93,41 @@ const Project = ({ children }) => {
                             </Box>
                         </Stack>
 
-                    </Box>
+                    </Paper>
                     <Box
                         flexGrow={1}
                         sx={{
-                            '--dot-bg': theme.palette.background.default,
-                            '--dot-color':  theme.palette.mode === "light" ?  theme.palette.text.secondary : theme.palette.grey[700],
-                            '--dot-size': '1px',
-                            '--dot-space': '10px',
-                            background: `
-                              linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-                              linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-                              var(--dot-color)
-                            `,
-                            p: 4,
-                            overflow: 'hidden'
+        //                     '--dot-bg': alpha(theme.palette.background.default, 0.2),  // Initial opacity (20%)
+        //                     '--dot-color': theme.palette.mode === "light"
+        //                         ? alpha(theme.palette.text.secondary, 0.2)  // Initial opacity (20%)
+        //                         : alpha(theme.palette.grey[700], 0.2),      // Initial opacity (20%)
+        //                     '--dot-size': '1px',
+        //                     '--dot-space': '15px',
+        //                     background: `
+        //     linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+        //     linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+        //     var(--dot-color)
+        // `,
+                            overflow: 'hidden',
+                            borderRadius: 4,
+                            // transition: 'all 0.3s ease',  // Smooth transition when hover happens
+                            // border: "2px solid",
+                            // borderColor: "transparent",
+                            // '&:hover': {
+                            //     borderColor: theme.palette.background.default,
+                            //     '--dot-bg': alpha(theme.palette.background.default, 0.5),  // Opacity on hover (30%)
+                            //     '--dot-color': theme.palette.mode === "light"
+                            //         ? alpha(theme.palette.text.secondary, 0.5)  // Opacity on hover (30%)
+                            //         : alpha(theme.palette.grey[700], 0.5)       // Opacity on hover (30%)
+                            // }
                         }}
                     >
                         {children}
                     </Box>
+
                 </Stack>
-            </div>
-        </div>
+            </Stack>
+        </Box>
     );
 }
 

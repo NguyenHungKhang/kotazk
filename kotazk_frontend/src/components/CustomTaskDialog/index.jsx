@@ -25,6 +25,8 @@ import { setCurrentTaskList } from '../../redux/actions/task.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import CustomPriorityPicker from '../CustomPrirorityPicker';
 import CustomDueTimePicker from '../CustomDueTimePicker';
+import CustomLabelPicker from '../CustomLabelPicker';
+import CustomAssigneePicker from '../CustomAssigneePicker';
 
 const CustomTaskDialog = () => {
     const theme = useTheme();
@@ -259,7 +261,7 @@ const CustomTaskDialog = () => {
                                                 </Stack>
                                             </Grid>
                                             <Grid item xs={8}>
-                                                <AssigneesComponent />
+                                                <CustomAssigneePicker memberId={task?.assigneeId} taskId={task?.id} />
                                             </Grid>
                                             <Grid item xs={4}>
                                                 <Stack direction='row' spacing={2} alignItems='center'>
@@ -326,7 +328,8 @@ const CustomTaskDialog = () => {
                                         </Stack>
                                     </Grid>
                                     <Grid item xs={10}>
-                                        <LabelComponent />
+                                        {/* <LabelComponent /> */}
+                                        <CustomLabelPicker labelIds={task?.labels.map(label => label.labelId)} taskId={task?.id} />
                                     </Grid>
                                 </Grid>
                             </Box>

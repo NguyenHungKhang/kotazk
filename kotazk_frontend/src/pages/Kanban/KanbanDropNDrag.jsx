@@ -212,13 +212,12 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
             sx={{
               p: 1,
               borderRadius: 2,
-              border: '2px dashed',
-              borderColor: snapshot.isDraggingOver ? theme.palette.text.secondary
-                : 'transparent'
+              background: snapshot.isDraggingOver ? `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.8)} 0%,  ${alpha(theme.palette.background.default, 0.3)} 100%)`
+                :  `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.6)} 0%,  ${alpha(theme.palette.background.default, 0.1)} 100%)`
             }}
           >
             <Box
-              mb={2}
+              mb={1}
               p={2}
               width={320}
               boxShadow={1}
@@ -250,7 +249,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
             </Box>
 
 
-            <Box height='calc(100vh - 230px)'
+            <Box height='calc(100vh - 268px)'
               sx={{
                 pb: 1,
                 overflowY: 'auto',
@@ -270,7 +269,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
                 }
               }}
             >
-              <Stack spacing={2}>
+              <Stack spacing={0.5}>
                 {items?.map((task, index) => (
                   <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
                     {(provided, snapshot) => (
@@ -279,7 +278,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
                         {...provided.draggableProps}
                         ref={provided.innerRef}
                       >
-                          <CardKanban task={task} isDragging={snapshot.isDragging} />
+                        <CardKanban task={task} isDragging={snapshot.isDragging} />
                       </div>
                     )}
 

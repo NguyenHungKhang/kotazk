@@ -1,0 +1,1 @@
+export const setCurrentProjectMemberList = (projectMemberList) => ({type: 'SET_CURRENT_PROJECT_MEMBER_LIST', payload: projectMemberList});

@@ -32,5 +32,5 @@ public class TaskRequestDto {
     Long taskTypeId;
     RePositionRequestDto rePositionReq;
     Set<Long> collaboratorIds = new HashSet<>();
-    Set<Long> labelIds = new HashSet<>();
+    Set<Long> labelIds;
 }

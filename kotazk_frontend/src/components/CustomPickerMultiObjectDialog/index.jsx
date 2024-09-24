@@ -8,14 +8,17 @@ import {
 import React, { useState } from 'react';
 
 
-const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, saveMethod, objectsData, OpenComponent, ItemComponent, isNotNull = false }) => {
+const CustomPickerMultiObjectDialog = ({ selectedObjects, setSelectedObjects, saveMethod, objectsData, OpenComponent, ItemComponent, isNotNull = false }) => {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [objects, setObjects] = useState(objectsData);
 
     const handleOpenPopover = (event) => {
-        setAnchorEl(event.currentTarget);
+        console.log('AnchorEl:', event.currentTarget);
+        if (!anchorEl) {
+            setAnchorEl(event.currentTarget);
+        }
     };
 
     const handleClosePopover = () => {
@@ -24,31 +27,29 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
 
     const openPopover = Boolean(anchorEl);
 
-    const handleSelectObject = (object) => {
-        if (!isNotNull && selectedObject != null && object.id == selectedObject?.id) {
-            setSelectedObject(null);
-            if (saveMethod != null)
-                saveMethod(null);
+    const handleSelectObject = (object, event) => {
+        event.stopPropagation();
+        let objectList;
+        if (selectedObjects.includes(object)) {
+            objectList = selectedObjects.filter((obj) => obj.id !== object.id);
+        } else {
+            objectList = [...selectedObjects, object];
         }
-        else {
-            setSelectedObject(object);
-            if (saveMethod != null)
-                saveMethod(object);
-        }
-
-        handleClosePopover();
+        setSelectedObjects(objectList)
+        saveMethod(objectList);
     };
 
-    const filteredObjects = objects.filter((object) => {
-        if (object?.name != null)
-            return object.name.toLowerCase().includes(searchTerm.toLowerCase())
-        else
-            return objects;
-    });
+    const filteredObjects = objects.filter((object) =>
+        object.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div>
-            <OpenComponent onClick={handleOpenPopover} isFocusing={openPopover} />
+            <Box
+                onClick={handleOpenPopover}
+                isFocusing={openPopover}>
+                <OpenComponent />
+            </Box>
             <Popover
                 open={openPopover}
                 anchorEl={anchorEl}
@@ -61,6 +62,11 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
                     vertical: 'top',
                     horizontal: 'right',
                 }}
+                disableAutoFocus
+                disableEnforceFocus
+                disableRestoreFocus
+                disablePortal
+                keepMounted
             >
                 <div style={{ padding: '8px', width: '300px' }}>
                     <TextField
@@ -94,4 +100,4 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
     );
 };
 
-export default CustomPickerSingleObjectDialog;
+export default CustomPickerMultiObjectDialog;

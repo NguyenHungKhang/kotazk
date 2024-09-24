@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Typography, lighten, useTheme } from "@mui/material";
+import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Tooltip, Typography, lighten, styled, useTheme } from "@mui/material";
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
@@ -7,15 +7,36 @@ import { setTaskDialog } from "../../redux/actions/dialog.action";
 import dayjs from "dayjs";
 import CustomStatus from "../../components/CustomStatus";
 import { useSelector } from "react-redux";
+import CustomTaskType from "../../components/CustomTaskType";
+import CustomPriority from "../../components/CustomPriority";
+import CustomLabel from "../../components/CustomLabel";
+import { setShowLabel } from "../../redux/actions/label.action";
+import CustomMember from "../../components/CustomMember";
+
+const FieldBoxForKanbanCard = styled((props) => <Stack {...props} />)(
+    ({ theme }) => ({
+        backgroundColor: theme.palette.mode === 'light'
+            ? theme.palette.grey[200]
+            : theme.palette.grey[800],
+        borderRadius: 10, // borderRadius={10}
+    })
+);
 
 const CardKanban = ({ task, isDragging }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [displayLabels, setDisplayLabels] = useState(false);
+    const showLabel = useSelector((state) => state.label.showLabel);
+    const statuses = useSelector((state) => state.status.currentStatusList);
+    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList);
+    const priorities = useSelector((state) => state.priority.currentPriorityList);
+    const labels = useSelector((state) => state.label.currentLabelList)
+    const members = useSelector((state) => state.member.currentProjectMemberList)
     const CalendarIcon = allIcons["IconCalendar"];
     const TimeIcon = allIcons["IconClock2"];
     const AttachmentIcon = allIcons["IconPaperclip"];
     const CommentIcon = allIcons["IconMessageDots"];
+    const PriorityIcon = allIcons["IconFlag"]
 
     const openTaskDialog = () => {
         const taskDialogData = {
@@ -26,11 +47,22 @@ const CardKanban = ({ task, isDragging }) => {
         dispatch(setTaskDialog(taskDialogData));
     }
 
+    const handleChangeShowLabel = () => {
+        dispatch(setShowLabel(!showLabel))
+    }
+
+    const getAssignee = (id) => {
+        const member = members.find(m => m.id === id);
+        return member ? `${member.user.firstName} ${member.user.lastName}` : "Unassigned";
+    };
+
+
     return (
         <Card
             onClick={openTaskDialog}
             sx={{
                 // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
+                width: 320,
                 borderRadius: 2,
                 boxShadow: 1,
                 border: '2px solid',
@@ -47,46 +79,62 @@ const CardKanban = ({ task, isDragging }) => {
                     p: 4
                 }}
             >
-                <Stack
-                    direction='row'
-                    spacing={2}
-                    alignItems='center'
-                    flexWrap='wrap'
-                    useFlexGap
-                    mb={2}
-                    sx={{
-                        cursor: 'pointer'
-                    }}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setDisplayLabels(!displayLabels);
-                    }}
-                >
-                    <Box
-                        bgcolor='#E5826F'
-                        borderRadius={1}
-                        height={!displayLabels ? 8 : 'auto'}
-                        width={!displayLabels ? 50 : 'auto'}
+                {task?.labels?.length > 0 &&
+                    <Stack
+                        direction='row'
+                        spacing={2}
+                        alignItems='center'
+                        flexWrap='wrap'
+                        useFlexGap
+                        mb={2}
+                        sx={{
+                            cursor: 'pointer'
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleChangeShowLabel();
+                        }}
                     >
-                        {displayLabels && (
-                            <Typography
-                                sx={{
-                                    mx: 2
-                                }}
-                                color={theme.palette.getContrastText("#E5826F")}
-                            >
-                                Test Label
-                            </Typography>
-                        )}
+                        {task?.labels.map((l) => (
+                            <CustomLabel key={l.id} label={labels.find(i => i.labelId === l.id)} />
+                        ))}
+
+                    </Stack>
+                }
+
+
+
+                <Stack direction="row" spacing={2} alignItems='center'>
+                    <Box
+                        mb={1}
+                        mt={2}
+                        borderRadius={2}
+                        py={1}
+                        sx={{
+                            "&:hover": {
+                                px: 1,
+                                bgcolor: theme.palette.mode === 'light'
+                                    ? theme.palette.grey[200]
+                                    : theme.palette.grey[800],
+                                transition: 'all 0.2s ease'
+                            }
+                        }}
+                    >
+                        <CustomTaskType taskType={taskTypes.find(t => t.id === task?.taskTypeId)} changeable={false} displayTextOnHoverOnly={true} />
                     </Box>
+                    <Typography variant='body2' fontWeight='bold' noWrap>
+                        {task?.name}
+                    </Typography>
+
                 </Stack>
-                <Typography variant='body2' fontWeight='bold' noWrap>
-                    {task?.name}
-                </Typography>
+
                 {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
                     Test desciption a akjn al la a a las la va
                 </Typography> */}
                 <Divider sx={{ my: 2 }} />
+
+                <CustomStatus status={statuses.find(s => s.id === task?.statusId)} changeable={false} />
+
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
                     sx={{
                         mt: 2
@@ -94,21 +142,34 @@ const CardKanban = ({ task, isDragging }) => {
                 >
                     {
                         task?.endAt &&
-                        <Stack direction='row' alignItems='center' spacing={1}>
-                            <CalendarIcon color={theme.palette.text.secondary} size={16} />
-                            <Typography color={theme.palette.text.secondary} variant='body2'>
-                                {dayjs(task?.endAt).format("HH:mm MM/DD/YYYY")}
-                            </Typography>
-                        </Stack>
-                    }
-                    {/* <Stack direction='row' alignItems='center' spacing={1}>
-                        <TimeIcon color={theme.palette.text.secondary} size={16} />
-                        <Typography color={theme.palette.text.secondary} variant='body2'>
-                            12:00 AM
-                        </Typography>
-                    </Stack> */}
 
-                    <Stack direction='row' alignItems='center' spacing={1}>
+                        <FieldBoxForKanbanCard px={2} py={1}>
+                            <Tooltip title="Due date-time" placement="top">
+                                <Stack direction='row' alignItems='center' spacing={1}>
+                                    <CalendarIcon color={theme.palette.text.secondary} size={16} />
+                                    <Typography color={theme.palette.text.secondary} variant='body2'>
+                                        {dayjs(task?.endAt).format("HH:mm MM/DD/YYYY")}
+                                    </Typography>
+                                </Stack>
+                            </Tooltip>
+                        </FieldBoxForKanbanCard>
+
+                    }
+                    {task?.priorityId &&
+                        <FieldBoxForKanbanCard px={2} py={0.5}>
+                            <Tooltip title="Priority" placement="top">
+                                <Stack direction='row' alignItems='center' spacing={1}>
+                                    <PriorityIcon color={theme.palette.text.secondary} size={16} />
+                                    <Typography color={theme.palette.text.secondary} variant='body2'>
+                                        {priorities.find(p => p.id === task?.priorityId).name}
+                                    </Typography>
+                                </Stack>
+                            </Tooltip>
+                        </FieldBoxForKanbanCard>
+
+                    }
+
+                    {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             2
@@ -119,21 +180,36 @@ const CardKanban = ({ task, isDragging }) => {
                         <Typography color={theme.palette.text.secondary} variant='body2'>
                             2
                         </Typography>
-                    </Stack>
-                    <Avatar
-                        sx={{
-                            marginLeft: 'auto',
-                            width: 24,
-                            height: 24,
-                            fontSize: 16
-                        }}
-                    >
-                        H
-                    </Avatar>
+                    </Stack> */}
+                    <Box sx={{ marginLeft: 'auto' }}>
+                        <Tooltip title={task?.assigneeId ? getAssignee(task.assigneeId) : "Unassigned"} placement="top">
+                            {task?.assigneeId ? (
+                                <Box>
+                                    <CustomMember
+                                        member={members.find(m => m.id === task.assigneeId)}
+                                        isShowName={false}
+                                    />
+                                </Box>
+                            ) : (
+                                <Avatar
+                                    alt="Unassigned"
+                                    sx={{
+                                        width: 24,
+                                        height: 24,
+                                        border: "2px dotted",
+                                        borderColor: theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[400],
+                                    }}
+                                />
+                            )}
+                        </Tooltip>
+                    </Box>
+
                 </Stack>
             </CardContent>
-        </Card>
+        </Card >
     );
 }
+
+
 
 export default CardKanban;

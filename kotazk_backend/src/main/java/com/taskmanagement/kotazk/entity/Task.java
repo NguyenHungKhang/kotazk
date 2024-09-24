@@ -65,7 +65,7 @@ public class Task {
     @Column(name = "position", nullable = false)
     private Long position;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(
             name = "task_label",
             joinColumns = @JoinColumn(name = "task_id"),

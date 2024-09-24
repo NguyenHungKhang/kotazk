@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class MemberResponseDto {
+    Long id;
     Long workSpaceId;
     Long projectId;
     UserResponseDto user;

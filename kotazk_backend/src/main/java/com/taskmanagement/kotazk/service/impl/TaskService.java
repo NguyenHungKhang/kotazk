@@ -158,7 +158,6 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getPriorityId())
                 .ifPresent(priorityId -> currentTask.setPriority(checkPriority(project, priorityId)));
 
-
         Optional.ofNullable(taskRequestDto.getTimeEstimate())
                 .ifPresent(currentTask::setTimeEstimate);
 
@@ -176,7 +175,6 @@ public class TaskService implements ITaskService {
                 .ifPresent(taskTypeId -> currentTask.setTaskType(checkTaskType(project, taskTypeId)));
 
         Optional.ofNullable(taskRequestDto.getLabelIds())
-                .filter(labelIds -> !labelIds.isEmpty())
                 .ifPresent(labelIds -> currentTask.setLabels(checkLabels(project, labelIds)));
 
         Optional.ofNullable(taskRequestDto.getRePositionReq())
@@ -372,8 +370,7 @@ public class TaskService implements ITaskService {
     private Member checkAssignee(Member currentMember, Project project, Long assigneeId) {
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.ASSIGN_TASKS) &&
                 !currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT)
-        )
-            return null;
+        ) return null;
 
         return project.getMembers().stream()
                 .filter(m -> m.getId().equals(assigneeId) &&
@@ -423,7 +420,7 @@ public class TaskService implements ITaskService {
     }
 
     private Set<Label> checkLabels(Project project, Set<Long> labelIds) {
-        if (labelIds == null || labelIds.isEmpty()) {
+        if (labelIds.isEmpty()) {
             return Collections.emptySet();
         }
 
