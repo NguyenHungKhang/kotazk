@@ -16,7 +16,7 @@ const SideBar = () => {
 
     return (
         <Box
-            bgcolor={theme.palette.background.default}
+            bgcolor={theme.palette.background.paper}
             sx={{
                 borderRadius: 4,
                 width: open ? 240 : 80,

@@ -6,14 +6,14 @@ import { IconButton, Popover, Grid, Button, ClickAwayListener, Divider, Box, alp
 
 // Enhanced Icon Colors array
 const enhancedIconColors = [
-    "#FF7369", // Notion Red
-    "#E255A1", // Notion Pink
-    "#9A6DD7", // Notion Purple
-    "#529CCA", // Notion Blue
-    "#4DAB9A", // Notion Green
+    "#f53d3d", // Notion Red
+    "#f53d9f", // Notion Pink
+    "#8a3df5", // Notion Purple
+    "#0d9af2", // Notion Blue
+    "#47ebcd", // Notion Green
     "#FFDC49", // Notion Yellow
     "#FFA344", // Notion Orange
-    "#937264", // Notion Brown
+    "#f5743d", // Notion Brown
     "#979A9B", // Notion Grey
 ];
 

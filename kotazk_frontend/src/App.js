@@ -18,6 +18,8 @@ import '../node_modules/@syncfusion/ej2-treegrid/styles/material.css';
 import Router from './routes/router';
 import "./syncfusion-license";
 import { ThemeProviderWrapper } from './themes/ThemeContext';
+import CustomDeleteDialog from './components/CustomDeleteDialog';
+import CustomSnackbar from './components/CustomSnackbar';
 
 
 const App = () => {
@@ -26,6 +28,8 @@ const App = () => {
       <ThemeProviderWrapper>
         <CssBaseline />
         <Router />
+        <CustomDeleteDialog />
+        <CustomSnackbar />
       </ThemeProviderWrapper>
     </BrowserRouter>
   );

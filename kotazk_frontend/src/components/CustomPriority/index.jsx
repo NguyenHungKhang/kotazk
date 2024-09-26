@@ -11,8 +11,7 @@ const CustomPriority = ({ priority, changeable }) => {
                 alignItems: 'center',
                 borderRadius: 2,
                 // backgroundColor: priority?.color,
-                px: 2,
-                py: 1,
+                p: 1
             }}
         >
             <Typography

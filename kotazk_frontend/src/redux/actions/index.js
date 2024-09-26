@@ -7,5 +7,6 @@ import * as DialogActions from './dialog.action'
 import * as PriorityActions from './priority.action'
 import * as LabelActions from './label.action'
 import * as MemberActions from './member.action'
+import * as SnackbarActions from './snackbar.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions }
+export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions }

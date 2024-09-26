@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Paper, Stack, Typography, alpha, lighten, useTheme } from "@mui/material";
+import { Box, Card, Divider, Paper, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import CustomHeader from "../../components/CustomHeader";
 import SideBar from "../../components/SideBar";
@@ -17,6 +17,7 @@ import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 import { setCurrentPriorityList } from "../../redux/actions/priority.action";
 import { setCurrentLabelList } from "../../redux/actions/label.action";
 import { setCurrentProjectMemberList } from "../../redux/actions/member.action";
+import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -59,6 +60,8 @@ const Project = ({ children }) => {
             height={"100vh"}
             sx={{
                 backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
+                // backgroundImage: `url('https://i.pinimg.com/564x/b0/94/c5/b094c5ceba9148e06fca396ac12367d6.jpg')`,
+                // background: theme.palette.mode == "dark" ? "#EFEFEF": "#121212",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
@@ -77,9 +80,9 @@ const Project = ({ children }) => {
                             flex: '0 1 auto',
                             px: 4,
                             pt: 4,
-                            boxShadow: 4,
                             pb: 2,
-                            borderRadius: 4
+                            borderRadius: 4,
+                            boxShadow: 0
                         }}
                     >
                         <CustomHeader />
@@ -97,17 +100,17 @@ const Project = ({ children }) => {
                     <Box
                         flexGrow={1}
                         sx={{
-        //                     '--dot-bg': alpha(theme.palette.background.default, 0.2),  // Initial opacity (20%)
-        //                     '--dot-color': theme.palette.mode === "light"
-        //                         ? alpha(theme.palette.text.secondary, 0.2)  // Initial opacity (20%)
-        //                         : alpha(theme.palette.grey[700], 0.2),      // Initial opacity (20%)
-        //                     '--dot-size': '1px',
-        //                     '--dot-space': '15px',
-        //                     background: `
-        //     linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-        //     linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-        //     var(--dot-color)
-        // `,
+                            //                     '--dot-bg': alpha(theme.palette.background.default, 0.2),  // Initial opacity (20%)
+                            //                     '--dot-color': theme.palette.mode === "light"
+                            //                         ? alpha(theme.palette.text.secondary, 0.2)  // Initial opacity (20%)
+                            //                         : alpha(theme.palette.grey[700], 0.2),      // Initial opacity (20%)
+                            //                     '--dot-size': '1px',
+                            //                     '--dot-space': '15px',
+                            //                     background: `
+                            //     linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+                            //     linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+                            //     var(--dot-color)
+                            // `,
                             overflow: 'hidden',
                             borderRadius: 4,
                             // transition: 'all 0.3s ease',  // Smooth transition when hover happens
@@ -124,9 +127,9 @@ const Project = ({ children }) => {
                     >
                         {children}
                     </Box>
-
                 </Stack>
             </Stack>
+            <CustomAddTaskDialog />
         </Box>
     );
 }

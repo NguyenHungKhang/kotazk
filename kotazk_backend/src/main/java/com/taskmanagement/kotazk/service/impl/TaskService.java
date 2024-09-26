@@ -420,7 +420,7 @@ public class TaskService implements ITaskService {
     }
 
     private Set<Label> checkLabels(Project project, Set<Long> labelIds) {
-        if (labelIds.isEmpty()) {
+        if (labelIds == null || labelIds.isEmpty()) {
             return Collections.emptySet();
         }
 

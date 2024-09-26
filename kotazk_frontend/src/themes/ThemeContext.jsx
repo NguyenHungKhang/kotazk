@@ -193,6 +193,9 @@ export const ThemeProviderWrapper = ({ children }) => {
         dark: '#C73C4C',  // Darker Pinkish Orange
         contrastText: '#FFFFFF', // White text
       },
+      customSecondBackground: {
+        main: '#f5f5fc',
+      },
     },
     components: {
       MuiButton: {

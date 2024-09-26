@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Divider, Stack, Tooltip, Typography, lighten, styled, useTheme } from "@mui/material";
+import { Avatar, Box, Card, CardContent, Chip, Divider, IconButton, Stack, Tooltip, Typography, lighten, styled, useTheme } from "@mui/material";
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
@@ -12,6 +12,7 @@ import CustomPriority from "../../components/CustomPriority";
 import CustomLabel from "../../components/CustomLabel";
 import { setShowLabel } from "../../redux/actions/label.action";
 import CustomMember from "../../components/CustomMember";
+import CardKanbanMenu from "./CardKanbanMenu";
 
 const FieldBoxForKanbanCard = styled((props) => <Stack {...props} />)(
     ({ theme }) => ({
@@ -37,6 +38,7 @@ const CardKanban = ({ task, isDragging }) => {
     const AttachmentIcon = allIcons["IconPaperclip"];
     const CommentIcon = allIcons["IconMessageDots"];
     const PriorityIcon = allIcons["IconFlag"]
+    const MoreIcon = allIcons["IconDots"]
 
     const openTaskDialog = () => {
         const taskDialogData = {
@@ -79,30 +81,33 @@ const CardKanban = ({ task, isDragging }) => {
                     p: 4
                 }}
             >
-                {task?.labels?.length > 0 &&
-                    <Stack
-                        direction='row'
-                        spacing={2}
-                        alignItems='center'
-                        flexWrap='wrap'
-                        useFlexGap
-                        mb={2}
-                        sx={{
-                            cursor: 'pointer'
-                        }}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleChangeShowLabel();
-                        }}
-                    >
-                        {task?.labels.map((l) => (
-                            <CustomLabel key={l.id} label={labels.find(i => i.labelId === l.id)} />
-                        ))}
 
+                {task?.labels?.length > 0 &&
+                    <Stack direction='row' spacing={2}>
+                        <Stack
+                            flexGrow={1}
+                            direction='row'
+                            spacing={2}
+                            alignItems='center'
+                            flexWrap='wrap'
+                            useFlexGap
+                            mb={2}
+                            sx={{
+                                cursor: 'pointer'
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleChangeShowLabel();
+                            }}
+                        >
+                            {task?.labels.map((l) => (
+                                <CustomLabel key={l.id} label={labels.find(i => i.labelId === l.id)} />
+                            ))}
+
+                        </Stack>
+                        <CardKanbanMenu task={task} />
                     </Stack>
                 }
-
-
 
                 <Stack direction="row" spacing={2} alignItems='center'>
                     <Box
@@ -122,10 +127,12 @@ const CardKanban = ({ task, isDragging }) => {
                     >
                         <CustomTaskType taskType={taskTypes.find(t => t.id === task?.taskTypeId)} changeable={false} displayTextOnHoverOnly={true} />
                     </Box>
-                    <Typography variant='body2' fontWeight='bold' noWrap>
+                    <Typography variant='body2' fontWeight='bold' noWrap flexGrow={1}>
                         {task?.name}
                     </Typography>
-
+                    {task?.labels?.length <= 0 &&
+                        <CardKanbanMenu task={task} />
+                    }
                 </Stack>
 
                 {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>

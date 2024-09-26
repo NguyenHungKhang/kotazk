@@ -8,12 +8,15 @@ import { useTheme } from "@mui/material";
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
 import CustomColorIconPicker from "../CustomProjectColorIconPicker";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const CustomHeader = () => {
     const theme = useTheme();
     const AddIcon = allIcons["IconPlus"];
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
+    const project = useSelector((state) => state.project.currentProject);
     return (
         <Box>
             <Stack direction='row' spacing={3} alignItems="center">
@@ -25,7 +28,7 @@ const CustomHeader = () => {
                             fontWeight={650}
                         >
 
-                            Project name
+                            {project ? project.name : "Project name"}
                         </Typography>
                     </Stack>
 
@@ -144,6 +147,8 @@ const CustomHeader = () => {
                     </Box>
                     <Box>
                         <Button
+                            component={Link}
+                            to={`/project/${project?.id}/setting`}
                             size='small'
                             variant='contained'
                             color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}

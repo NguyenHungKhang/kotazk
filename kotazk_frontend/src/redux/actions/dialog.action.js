@@ -1,1 +1,3 @@
 export const setTaskDialog = (taskDialog) => ({type: 'SET_TASK_DIALOG', payload: taskDialog});
+export const setAddTaskDialog = (addTaskDialog) => ({type: 'SET_ADD_TASK_DIALOG', payload: addTaskDialog});
+export const setDeleteDialog = (deleteDialog) => ({type: 'SET_DELETE_DIALOG', payload: deleteDialog});

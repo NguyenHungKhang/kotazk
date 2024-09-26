@@ -17,6 +17,8 @@ import CustomTaskType from "../components/CustomTaskType";
 import CustomColorIconPicker from "../components/CustomColorIconPicker";
 import { taskTypeIconsList } from "../utils/iconsListUtil";
 import CustomTaskTypePicker from "../components/CustomTaskTypePicker";
+import CustomColorPicker from "../components/CustomColorPicker";
+import ProjectSetting from "../pages/ProjectSetting";
 
 const pagesData = [
   {
@@ -50,13 +52,18 @@ const pagesData = [
     title: "playground"
   },
   {
+    path: "/project/:projectId/setting",
+    element: <Project><ProjectSetting /></Project>,
+    title: "playground"
+  },
+  {
     path: "/playground/task",
     element: <CustomTaskDialog />,
     title: "playground"
   },
   {
     path: "/playground/tasktype",
-    element: <CustomTaskTypePicker />,
+    element: <CustomColorPicker />,
     title: "playground"
   },
   {

@@ -7,6 +7,7 @@ import DialogReducer from "./dialog.reducer";
 import PriorityReducer from "./priority.reducer";
 import LabelReducer from "./label.reducer";
 import MemberReducer from "./member.reducer";
+import SnackbarReducer from "./snackbar.reducer";
 import { combineReducers } from 'redux'
 
 const allReducers = {
@@ -18,7 +19,8 @@ const allReducers = {
     dialog: DialogReducer,
     priority: PriorityReducer,
     label: LabelReducer,
-    member: MemberReducer
+    member: MemberReducer,
+    snackbar: SnackbarReducer
 }
 
 const rootReducer = combineReducers(allReducers);

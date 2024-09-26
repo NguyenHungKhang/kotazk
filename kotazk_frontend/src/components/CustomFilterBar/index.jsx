@@ -4,6 +4,8 @@ import LayersIcon from '@mui/icons-material/Layers';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import * as allIcons from "@tabler/icons-react"
+import { useDispatch } from "react-redux";
+import { setAddTaskDialog } from "../../redux/actions/dialog.action";
 
 const CustomFilterBar = () => {
     const theme = useTheme();
@@ -48,6 +50,12 @@ const CustomFilterBar = () => {
 const CustomAddTaskButton = () => {
     const theme = useTheme();
     const AddIcon = allIcons["IconPlus"];
+    const dispatch = useDispatch();
+
+    const handleOpenAddTaskDialog = () => {
+     dispatch(setAddTaskDialog({ open: true }))   
+    }
+
     return (
 
         <Button
@@ -64,6 +72,7 @@ const CustomAddTaskButton = () => {
             startIcon={
                 <AddIcon size={16} />
             }
+            onClick={handleOpenAddTaskDialog}
         >
             Add task
         </Button>
