@@ -212,9 +212,11 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
             sx={{
               p: 1,
               borderRadius: 2,
-              background: snapshot.isDraggingOver ? `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.8)} 0%,  ${alpha(theme.palette.background.default, 0.3)} 100%)`
-                :  `linear-gradient(180deg, ${alpha(theme.palette.background.default, 0.6)} 0%,  ${alpha(theme.palette.background.default, 0.1)} 100%)`
+              background: `linear-gradient(180deg, 
+          ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
+          ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
             }}
+
           >
             <Box
               mb={1}

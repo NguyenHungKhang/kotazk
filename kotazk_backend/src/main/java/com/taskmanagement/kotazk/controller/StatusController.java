@@ -31,7 +31,7 @@ public class StatusController {
     }
 
     @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     public StatusResponseDto update(@Valid @RequestBody StatusRequestDto statusRequestDto, @PathVariable Long id) {
         return statusService.update(id, statusRequestDto);
     }

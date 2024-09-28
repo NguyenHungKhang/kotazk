@@ -9,7 +9,7 @@ const CustomStatus = ({ status, changeable }) => {
     return (
         <Box>
             <Stack direction='row' spacing={2} alignItems='center' pr={2}>
-                <CustomColorIconPicker changeable={changeable} icons={statusIconsList} />
+                <CustomColorIconPicker changeable={changeable} icons={statusIconsList} customization={status?.customization} />
                 <Typography
                     variant="body1"
                     fontWeight={500}

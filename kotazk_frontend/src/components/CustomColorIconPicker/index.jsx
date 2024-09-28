@@ -23,7 +23,7 @@ const CustomColorIconPicker = ({ changeable, icons, customization, setCustomizat
                 setCustomization(data);
             } else {
                 setSelectedIcon(customization.icon)
-                setSelectedColor(customization.color)
+                setSelectedColor(customization.backgroundColor)
             }
         }
     }, [customization])
@@ -48,6 +48,10 @@ const CustomColorIconPicker = ({ changeable, icons, customization, setCustomizat
     const handleSave = () => {
         setSelectedIcon(tempIcon);
         setSelectedColor(tempColor);
+        setCustomization({
+            "backgroundColor": tempColor,
+            "icon": tempIcon
+        })
         handleClose();
     };
 

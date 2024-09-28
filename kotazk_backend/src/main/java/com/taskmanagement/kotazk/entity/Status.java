@@ -25,9 +25,9 @@ public class Status {
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Không gian chứa dự án
+    private Project project;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
