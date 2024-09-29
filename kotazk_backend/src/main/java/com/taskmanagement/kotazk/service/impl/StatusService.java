@@ -125,17 +125,19 @@ public class StatusService implements IStatusService {
                 true
         );
 
-        Customization customization = Optional.ofNullable(currentStatus.getCustomization())
-                .orElseGet(() -> {
-                    Customization newCustomization = new Customization();
-                    Optional.ofNullable(status.getCustomization()).ifPresent(statusCustomization -> {
-                        Optional.ofNullable(statusCustomization.getBackgroundColor()).ifPresent(newCustomization::setBackgroundColor);
-                        Optional.ofNullable(statusCustomization.getIcon()).ifPresent(newCustomization::setIcon);
+        Optional.ofNullable(status.getCustomization()).ifPresent(statusCustomization -> {
+            Customization customization = Optional.ofNullable(currentStatus.getCustomization())
+                    .orElseGet(() -> {
+                        Customization newCustomization = new Customization();
+                        currentStatus.setCustomization(newCustomization);
+                        return newCustomization;
                     });
-                    currentStatus.setCustomization(newCustomization);
-                    return newCustomization;
-                });
 
+            Optional.ofNullable(statusCustomization.getBackgroundColor())
+                    .ifPresent(customization::setBackgroundColor);
+            Optional.ofNullable(statusCustomization.getIcon())
+                    .ifPresent(customization::setIcon);
+        });
 
         Optional.ofNullable(status.getName()).ifPresent(currentStatus::setName);
         Optional.ofNullable(status.getDescription()).ifPresent(currentStatus::setDescription);

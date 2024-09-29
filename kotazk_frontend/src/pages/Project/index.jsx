@@ -58,6 +58,7 @@ const Project = ({ children }) => {
     return (
         <Box p={4}
             height={"100vh"}
+            width={"100vw !important"}
             sx={{
                 backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
                 // backgroundImage: `url('https://i.pinimg.com/564x/b0/94/c5/b094c5ceba9148e06fca396ac12367d6.jpg')`,
@@ -112,6 +113,7 @@ const Project = ({ children }) => {
                             //     var(--dot-color)
                             // `,
                             overflow: 'hidden',
+                            width: '85vw',
                             borderRadius: 4,
                             // transition: 'all 0.3s ease',  // Smooth transition when hover happens
                             // border: "2px solid",

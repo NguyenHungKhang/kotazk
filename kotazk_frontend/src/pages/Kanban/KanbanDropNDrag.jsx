@@ -1,7 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import UnfoldLessTwoToneIcon from '@mui/icons-material/UnfoldLessTwoTone';
-import { Box, Card, CardContent, IconButton, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
+import { Box, Button, Card, CardContent, IconButton, Paper, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import "../../App.css";
@@ -16,13 +16,20 @@ import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomStatus from '../../components/CustomStatus';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
+import CustomDialogForManage from '../../components/CustomDialogForManage';
+import CustomManageStatus from '../../components/CustomManageStatusDialog';
+import * as TablerIcon from "@tabler/icons-react"
+import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
 function KanbanDropNDrag() {
+  const theme = useTheme();
+  const SettingIcon = TablerIcon["IconSettings"];
   const [stores, setStores] = useState([]);
   const tasks = useSelector((state) => state.task.currentTaskList);
   const statuses = useSelector((state) => state.status.currentStatusList);
   const dispatch = useDispatch();
   const project = useSelector((state) => state.project.currentProject);
+  const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
 
   useEffect(() => {
     if (statuses != null && project != null)
@@ -166,44 +173,77 @@ function KanbanDropNDrag() {
 
 
   return (
-    <>
-      <div className="layout__wrapper">
-        <div className="card">
-          <DragDropContext onDragEnd={handleDragAndDrop}>
-            <Droppable droppableId="ROOT" type="group" direction="horizontal">
-              {(provided) => (
-                <Stack direction='row' spacing={2} {...provided.droppableProps} ref={provided.innerRef}>
-                  {stores?.map((status, index) => (
-                    <Draggable
-                      draggableId={status.id.toString()}
-                      index={index}
-                      key={status.id}>
-                      {(provided) => (
-                        <Box
-                          {...provided.dragHandleProps}
-                          {...provided.draggableProps}
-                          ref={provided.innerRef}
-                        >
-                          <StoreList {...status} status={status} />
-                        </Box>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </Stack>
-              )}
-            </Droppable>
-          </DragDropContext>
-        </div>
-      </div>
+    <Box
+      pr={2}
+    >
+      <DragDropContext onDragEnd={handleDragAndDrop}>
+        <Droppable droppableId="ROOT" type="group" direction="horizontal">
+          {(provided) => (
+            <Stack direction='row'
+              spacing={2}
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              sx={{ overflowX: 'auto' }}
+            >
+              {stores?.map((status, index) => (
+                <Draggable
+                  draggableId={status.id.toString()}
+                  index={index}
+                  key={status.id}>
+                  {(provided) => (
+                    <Box
+                      {...provided.dragHandleProps}
+                      {...provided.draggableProps}
+                      ref={provided.innerRef}
+                    >
+                      <StoreList {...status} status={status} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
+                    </Box>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              <Box>
+                <Paper
+                  sx={{
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.background.paper, 0.5),
+                    height: '100%'
+                  }}
+                >
+                  <Button
+                    variant='outlined'
+                    color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
+                    fullWidth
+                    onClick={() => setOpenGroupByEntityDialog(true)}
+                    startIcon={<SettingIcon stroke={2} size={18} />}
+                    sx={{
+                      height: '100%',
+                      wordWrap: 'normal'
+                    }}
+                  >
+                    <Typography noWrap>
+                      Manage Status
+                    </Typography>
+                  </Button>
+                </Paper>
+              </Box>
+
+            </Stack>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      <CustomDialogForManage children={<CustomManageStatus />} open={openGroupByEntityDialog} setOpen={setOpenGroupByEntityDialog} />
       <CustomTaskDialog />
-    </>
+    </Box>
   );
 }
 
-function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status }) {
+function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status, setOpenGroupByEntityDialog }) {
   const theme = useTheme();
-
+  const [collapse, setCollapse] = useState(false);
+  const EditIcon = TablerIcon["IconEditCircle"];
+  const CollapseIcon = TablerIcon["IconLayoutSidebarLeftCollapseFilled"];
   return (
     <Droppable droppableId={id.toString()}>
       {(provided, snapshot) => (
@@ -212,11 +252,13 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
             sx={{
               p: 1,
               borderRadius: 2,
+              position: 'relative',
+              minHeight: 320,
+              width: !collapse ? "auto" : 40,
               background: `linear-gradient(180deg, 
-          ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
-          ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
+              ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
+              ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
             }}
-
           >
             <Box
               mb={1}
@@ -225,33 +267,34 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
               boxShadow={1}
               borderRadius={2}
               bgcolor={theme.palette.mode === "light" ? "#F6F7FA" : lighten(theme.palette.background.default, 0.2)}
-
+              sx={{
+                transform: collapse ? 'rotate(90deg) translateY(-100%)' : 'none',
+                transformOrigin: '0 0',
+                position: collapse ? 'absolute' : 'relative', // Apply absolute positioning when collapsed
+                top: 0,
+                left: 0,
+              }}
             >
-              <Box >
-                <Stack
-                  direction='row'
-                  alignItems='center'
-                  spacing={2}
-                >
-                  <Box flexGrow={1}>
-                    <CustomStatus status={status} changeable={false} />
-                  </Box>
-                  {/* Action buttons */}
-                  <IconButton size="small">
-                    <UnfoldLessTwoToneIcon fontSize='inherit' />
-                  </IconButton>
-                  <IconButton size="small">
-                    <MoreHorizIcon fontSize='inherit' />
-                  </IconButton>
-                  <IconButton size="small">
-                    <AddIcon fontSize='inherit' />
-                  </IconButton>
-                </Stack>
-              </Box>
+              <Stack
+                direction='row'
+                alignItems='center'
+                spacing={2}
+              >
+                <Box flexGrow={1}>
+                  <CustomStatus status={status} changeable={false} />
+                </Box>
+                {/* Action buttons */}
+                <IconButton size="small" onClick={() => setCollapse(!collapse)}>
+                  <CollapseIcon fontSize='inherit' stroke={2} size={18} />
+                </IconButton>
+                <IconButton size="small" onClick={() => setOpenGroupByEntityDialog(true)}>
+                  <EditIcon fontSize='inherit' stroke={2} size={18} />
+                </IconButton>
+              </Stack>
             </Box>
 
 
-            <Box height='calc(100vh - 268px)'
+            {!collapse && <Box height='calc(100vh - 268px)'
               sx={{
                 pb: 1,
                 overflowY: 'auto',
@@ -291,6 +334,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status 
 
               </Stack>
             </Box>
+            }
           </Box>
         </div>
       )}

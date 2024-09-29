@@ -1,18 +1,19 @@
 import { Box, Button, Card, Checkbox, Grid, IconButton, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import { useSelector } from "react-redux";
-import CustomStatus from '../../components/CustomStatus/index';
+import CustomStatus from '../CustomStatus/index';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useEffect, useRef, useState } from 'react';
 import * as TablerIcons from '@tabler/icons-react'
 import { statusIconsList } from "../../utils/iconsListUtil";
-import CustomBasicTextField from "../../components/CustomBasicTextField";
-import CustomColorIconPicker from "../../components/CustomColorIconPicker";
+import CustomBasicTextField from "../CustomBasicTextField";
+import CustomColorIconPicker from "../CustomColorIconPicker";
 import * as apiService from '../../api/index'
 import { useDispatch } from "react-redux";
 import { setSnackbar } from "../../redux/actions/snackbar.action";
 import { setCurrentStatusList } from "../../redux/actions/status.action";
 import { updateAndAddArray } from "../../utils/arrayUtil";
+import { setDeleteDialog } from "../../redux/actions/dialog.action";
 
 // Helper function to reorder items in the array
 const reorder = (list, startIndex, endIndex) => {
@@ -22,7 +23,7 @@ const reorder = (list, startIndex, endIndex) => {
     return result;
 };
 
-const StatusSetting = () => {
+const CustomManageStatus = () => {
     const theme = useTheme();
     const statuses = useSelector((state) => state.status.currentStatusList);
     const project = useSelector((state) => state.project.currentProject)
@@ -216,7 +217,7 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
                     </Stack>
                     <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} />
                     <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} />
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus}/>
+                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} />
                 </Stack>
             </Card>
             <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -273,9 +274,7 @@ const StatusListItem = ({ status, statuses }) => {
             "isCompletedStatus": isCompletedStatus,
             "customization": customization
         }
-        console.log(data)
         const response = await apiService.statusAPI.update(status.id, data);
-        console.log(response);
         if (response?.data) {
             dispatch(setCurrentStatusList(updateAndAddArray(statuses, [response?.data])))
             setIsChange(false);
@@ -285,6 +284,22 @@ const StatusListItem = ({ status, statuses }) => {
             }))
         }
     }
+
+    const handleOpenDeleteDialog = (event) => {
+        event.stopPropagation();
+        dispatch(setDeleteDialog({
+            title: `Delete status "${name}"?`,
+            content:
+                `You're about to permanently delete this status. <strong>It's task will be moved to the first "Started status"</strong>.
+                <br/><br/>
+                If you're not sure, you can resolve or close this status instead.`,
+            open: true,
+            deleteType: "DELETE_STATUS",
+            deleteProps: {
+                statusId: status?.id
+            }
+        }));
+    };
 
     return (
         <>
@@ -322,11 +337,13 @@ const StatusListItem = ({ status, statuses }) => {
                     <EditIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
                 </IconButton>
             </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton>
-                    <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
-                </IconButton>
-            </Card>
+            {!status.systemRequired &&
+                <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
+                        <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
+                    </IconButton>
+                </Card>
+            }
         </>
     );
 }
@@ -393,4 +410,4 @@ function IsCompletedButton({ selected, setSelected, setIsChange }) {
     );
 }
 
-export default StatusSetting;
+export default CustomManageStatus;

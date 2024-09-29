@@ -11,12 +11,14 @@ import { setDeleteDialog } from '../../redux/actions/dialog.action';
 import * as apiService from '../../api/index'
 import { setCurrentTaskList } from '../../redux/actions/task.action';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
+import { setCurrentStatusList } from '../../redux/actions/status.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
     const dispatch = useDispatch();
     const { title, content, open, deleteType, deleteProps } = useSelector((state) => state.dialog.deleteDialog);
     const tasks = useSelector((state) => state.task.currentTaskList)
+    const statuses = useSelector((state) => state.status.currentStatusList)
 
     const handleClose = () => {
         dispatch(setDeleteDialog({ open: false }));
@@ -26,6 +28,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         if (deleteType == "DELETE_TASK" && deleteProps != null) {
             const taskId = deleteProps.taskId;
             await handleDelete(taskId)
+        } else  if (deleteType == "DELETE_STATUS" && deleteProps != null) {
+            const statusId = deleteProps.statusId;
+            await handleDeleteStatus(statusId)
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -46,6 +51,24 @@ export default function CustomDeleteDialog({ deleteAction }) {
         }
 
     }
+
+    
+    const handleDeleteStatus = async (statusId) => {
+        try {
+            const response = await apiService.statusAPI.remove(statusId)
+            if (response?.data) {
+                dispatch(setCurrentStatusList(statuses.filter(s => s.id != statusId)));
+                dispatch(setSnackbar({
+                    content: "Task deleted successful!",
+                    open: true
+                }))
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+
+    }
+
 
     return (
         <Dialog
