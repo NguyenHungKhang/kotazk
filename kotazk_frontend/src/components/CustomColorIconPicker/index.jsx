@@ -7,9 +7,9 @@ import CustomColorPicker from '../CustomColorPicker';
 const CustomColorIconPicker = ({ changeable, icons, customization, setCustomization }) => {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [selectedIcon, setSelectedIcon] = useState(icons[0]);
-    const [selectedColor, setSelectedColor] = useState("#529CCA");
-    const [tempIcon, setTempIcon] = useState(selectedIcon);
+    const [selectedIcon, setSelectedIcon] = useState(customization?.icon != null ? customization?.icon : icons[0]);
+    const [selectedColor, setSelectedColor] = useState(customization?.backgroundColor != null ? customization?.backgroundColor : "#0d9af2");
+    const [tempIcon, setTempIcon] = useState( selectedIcon);
     const [tempColor, setTempColor] = useState(selectedColor);
     const [iconsList, setIconsList] = useState(icons);
 

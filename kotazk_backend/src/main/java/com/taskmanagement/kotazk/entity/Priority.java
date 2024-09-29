@@ -29,7 +29,7 @@ public class Priority {
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired = false;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 

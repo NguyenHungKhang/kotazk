@@ -12,6 +12,8 @@ import * as apiService from '../../api/index'
 import { setCurrentTaskList } from '../../redux/actions/task.action';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
 import { setCurrentStatusList } from '../../redux/actions/status.action';
+import { updateAndAddArray } from '../../utils/arrayUtil';
+import { setCurrentTaskTypeList } from '../../redux/actions/taskType.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -19,6 +21,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
     const { title, content, open, deleteType, deleteProps } = useSelector((state) => state.dialog.deleteDialog);
     const tasks = useSelector((state) => state.task.currentTaskList)
     const statuses = useSelector((state) => state.status.currentStatusList)
+    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
 
     const handleClose = () => {
         dispatch(setDeleteDialog({ open: false }));
@@ -31,6 +34,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else  if (deleteType == "DELETE_STATUS" && deleteProps != null) {
             const statusId = deleteProps.statusId;
             await handleDeleteStatus(statusId)
+        } else  if (deleteType == "DELETE_TASKTYPE" && deleteProps != null) {
+            const taskTypeId = deleteProps.taskTypeId;
+            await handleDeleteTaskType(taskTypeId)
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -57,18 +63,46 @@ export default function CustomDeleteDialog({ deleteAction }) {
         try {
             const response = await apiService.statusAPI.remove(statusId)
             if (response?.data) {
-                dispatch(setCurrentStatusList(statuses.filter(s => s.id != statusId)));
-                dispatch(setSnackbar({
-                    content: "Task deleted successful!",
+                tasks.forEach(task => {
+                    const matchingUpdate = response?.data.find(updateTask => updateTask.id === task.id);
+                    if (matchingUpdate) {
+                      task.statusId = matchingUpdate.statusId;
+                    }
+                  });
+                await dispatch(setCurrentTaskList(tasks))
+                await dispatch(setCurrentStatusList(statuses.filter(s => s.id != statusId)));
+                await dispatch(setSnackbar({
+                    content: "Status deleted successful!",
                     open: true
                 }))
             }
         } catch (error) {
-            console.error('Failed to update task:', error);
+            console.error('Failed to deleted status:', error);
         }
-
     }
 
+
+    const handleDeleteTaskType = async (taskTypeId) => {
+        try {
+            const response = await apiService.taskTypeAPI.remove(taskTypeId)
+            if (response?.data) {
+                tasks.forEach(task => {
+                    const matchingUpdate = response?.data.find(updateTask => updateTask.id === task.id);
+                    if (matchingUpdate) {
+                      task.taskTypeId = matchingUpdate.taskTypeId;
+                    }
+                  });
+                await dispatch(setCurrentTaskList(tasks))
+                await dispatch(setCurrentTaskTypeList(taskTypes.filter(s => s.id != taskTypeId)));
+                await dispatch(setSnackbar({
+                    content: "Task type deleted successful!",
+                    open: true
+                }))
+            }
+        } catch (error) {
+            console.error('Failed to deleted task type:', error);
+        }
+    }
 
     return (
         <Dialog

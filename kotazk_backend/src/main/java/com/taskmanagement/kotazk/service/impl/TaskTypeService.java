@@ -35,9 +35,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
 
 @Service
 @Transactional
@@ -59,10 +60,21 @@ public class TaskTypeService implements ITaskTypeService {
 
     @Override
     public List<TaskType> initialTaskType() {
+        Customization taskCustomization = new Customization();
+        taskCustomization.setIcon("IconAssembly");
+        taskCustomization.setBackgroundColor("#0d9af2");
+
+        Customization subtaskCustomization = new Customization();
+        subtaskCustomization.setIcon("IconSubtask");
+        subtaskCustomization.setBackgroundColor("#8a3df5");
+
+        Customization milestoneCustomization = new Customization();
+        milestoneCustomization.setIcon("IconAssemblyFilled");
+        milestoneCustomization.setBackgroundColor("#47ebcd");
         return List.of(
-                createDefaultInitialTaskType("Task", "", RepositionUtil.calculateNewLastPosition(0)),
-                createDefaultInitialTaskType("Subtask", "", RepositionUtil.calculateNewLastPosition(1)),
-                createDefaultInitialTaskType("Milestone", "", RepositionUtil.calculateNewLastPosition(2))
+                createDefaultInitialTaskType("Task", "", DEFAULT_POSITION_STEP, taskCustomization),
+                createDefaultInitialTaskType("Subtask", "", 3L*DEFAULT_POSITION_STEP, subtaskCustomization),
+                createDefaultInitialTaskType("Milestone", "", 2L*DEFAULT_POSITION_STEP, milestoneCustomization)
         );
     }
 
@@ -88,10 +100,13 @@ public class TaskTypeService implements ITaskTypeService {
         Long position = RepositionUtil.calculateNewLastPosition(project.getTaskTypes().size());
 
         TaskType newTaskType = TaskType.builder()
+                .project(project)
                 .name(taskTypeRequestDto.getName())
                 .description(taskTypeRequestDto.getDescription())
                 .customization(customization)
                 .position(position)
+                .systemInitial(false)
+                .systemRequired(false)
                 .build();
 
         TaskType savedTaskType = taskTypeRepository.save(newTaskType);
@@ -117,14 +132,28 @@ public class TaskTypeService implements ITaskTypeService {
         if (!isAdmin)
             checkManageTaskTypePermission(currentUser.getId(), project.getId(), workSpace.getId());
 
+        Optional.ofNullable(taskTypeRequestDto.getCustomization()).ifPresent(statusCustomization -> {
+            Customization customization = Optional.ofNullable(currentTaskType.getCustomization())
+                    .orElseGet(() -> {
+                        Customization newCustomization = new Customization();
+                        currentTaskType.setCustomization(newCustomization);
+                        return newCustomization;
+                    });
+
+            Optional.ofNullable(statusCustomization.getBackgroundColor())
+                    .ifPresent(customization::setBackgroundColor);
+            Optional.ofNullable(statusCustomization.getIcon())
+                    .ifPresent(customization::setIcon);
+        });
+
         Optional.ofNullable(taskTypeRequestDto.getName()).ifPresent(currentTaskType::setName);
         Optional.ofNullable(taskTypeRequestDto.getDescription()).ifPresent(currentTaskType::setDescription);
-        Optional.ofNullable(taskTypeRequestDto.getCustomization()).ifPresent(customization -> {
-            Optional.ofNullable(customization.getAvatar()).ifPresent(currentTaskType.getCustomization()::setAvatar);
-            Optional.ofNullable(customization.getBackgroundColor()).ifPresent(currentTaskType.getCustomization()::setBackgroundColor);
-            Optional.ofNullable(customization.getFontColor()).ifPresent(currentTaskType.getCustomization()::setFontColor);
-            Optional.ofNullable(customization.getIcon()).ifPresent(currentTaskType.getCustomization()::setIcon);
-        });
+        Optional.ofNullable(taskTypeRequestDto.getRePositionReq())
+                .ifPresent(rePositionReq -> {
+                    Long newPosition = calculateNewPositionForTaskType(rePositionReq, project, currentTaskType);
+                    currentTaskType.setPosition(newPosition);
+                });
+
 
         TaskType savedTaskType = taskTypeRepository.save(currentTaskType);
 
@@ -132,7 +161,7 @@ public class TaskTypeService implements ITaskTypeService {
     }
 
     @Override
-    public Boolean delete(Long id) {
+    public List<Map<String, Object>> delete(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
         TaskType currentTaskType = taskTypeRepository.findById(id)
@@ -145,11 +174,10 @@ public class TaskTypeService implements ITaskTypeService {
                 .filter(ws -> isAdmin || ws.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
-        Member currentMember = null;
         if (!isAdmin)
             checkManageTaskTypePermission(currentUser.getId(), project.getId(), workSpace.getId());
 
-        if (currentTaskType.getSystemRequired()) throw new CustomException("Can not delete this task type");
+        if (currentTaskType.getSystemRequired()) throw new CustomException("Cannot delete this task type");
 
         TaskType transferTaskType = project.getTaskTypes().stream()
                 .filter(tt -> tt.getName().equals("Task"))
@@ -157,14 +185,28 @@ public class TaskTypeService implements ITaskTypeService {
                 .orElseThrow(() -> new CustomException("Something wrong"));
 
         List<Task> transferTasks = currentTaskType.getTasks();
+
+        // Unset the current task type before deletion
         transferTasks.forEach(task -> task.setTaskType(null));
 
         taskTypeRepository.delete(currentTaskType);
         taskTypeRepository.flush();
 
+        // Reassign the tasks to the new task type
         transferTasks.forEach(task -> task.setTaskType(transferTaskType));
         taskRepository.saveAll(transferTasks);
-        return true;
+
+        // Create a list of maps containing task ids and their new taskTypeId
+        List<Map<String, Object>> taskInfoList = transferTasks.stream()
+                .map(task -> {
+                    Map<String, Object> taskInfo = new HashMap<>();
+                    taskInfo.put("id", task.getId());
+                    taskInfo.put("taskTypeId", transferTaskType.getId());
+                    return taskInfo;
+                })
+                .collect(Collectors.toList());
+
+        return taskInfoList;
     }
 
     @Override
@@ -270,7 +312,7 @@ public class TaskTypeService implements ITaskTypeService {
     }
 
     @Override
-    public PageResponse<TaskTypeResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long projectId) {
+    public PageResponse<TaskTypeResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
         Project project = projectRepository.findById(projectId)
@@ -319,7 +361,8 @@ public class TaskTypeService implements ITaskTypeService {
     private TaskType createDefaultInitialTaskType(
             String name,
             String description,
-            Long position
+            Long position,
+            Customization customization
     ) {
         return TaskType.builder()
                 .name(name)
@@ -327,6 +370,7 @@ public class TaskTypeService implements ITaskTypeService {
                 .position(position)
                 .systemInitial(true)
                 .systemRequired(true)
+                .customization(customization)
                 .build();
     }
 
@@ -353,6 +397,118 @@ public class TaskTypeService implements ITaskTypeService {
                 .orElse(Optional.ofNullable(currentWorkspaceMember)
                         .orElseThrow(() -> new CustomException("Invalid input!")));
 
+    }
+
+    public Long calculateNewPositionForTaskType(RePositionRequestDto rePositionReq, Project project, TaskType currentTaskType) {
+        if (rePositionReq.getPreviousItemId() != null) {
+            Long newPositionBaseOnPrevious = handlePreviousTaskTypePosition(rePositionReq.getPreviousItemId(), currentTaskType, project);
+            if (newPositionBaseOnPrevious != null)
+                return newPositionBaseOnPrevious;
+        } else if (rePositionReq.getNextItemId() != null) {
+            Long newPositionBaseOnNext = handleNextTaskTypePosition(rePositionReq.getNextItemId(), currentTaskType, project);
+            if (newPositionBaseOnNext != null)
+                return newPositionBaseOnNext;
+        }
+
+        throw new CustomException("Both previous and next positions cannot be null.");
+    }
+
+    private Long handlePreviousTaskTypePosition(Long previousTaskTypeId, TaskType currentTaskType, Project project) {
+        Optional<TaskType> previousTaskTypeOpt = project.getTaskTypes().stream()
+                .filter(taskType -> taskType.getId().equals(previousTaskTypeId))
+                .findFirst();
+
+        if (previousTaskTypeOpt.isEmpty()) {
+            return null;
+        }
+
+        long previousTaskTypePosition = previousTaskTypeOpt.get().getPosition();
+
+        Long nextTaskTypePosition = project.getTaskTypes().stream()
+                .map(TaskType::getPosition)
+                .filter(position -> position > previousTaskTypePosition)
+                .min(Long::compare)
+                .orElse(roundDownToSignificant(previousTaskTypePosition + DEFAULT_POSITION_STEP));
+
+        if (nextTaskTypePosition - previousTaskTypePosition <= 1) {
+            repositionAllTaskTypes(project); // This will reorder task types
+
+            long updatedPreviousTaskTypePosition = project.getTaskTypes().stream()
+                    .filter(taskType -> taskType.getId().equals(previousTaskTypeId))
+                    .map(TaskType::getPosition)
+                    .findFirst()
+                    .orElse(0L);
+
+            nextTaskTypePosition = project.getTaskTypes().stream()
+                    .map(TaskType::getPosition)
+                    .filter(position -> position > updatedPreviousTaskTypePosition)
+                    .min(Long::compare)
+                    .orElse(roundDownToSignificant(updatedPreviousTaskTypePosition + DEFAULT_POSITION_STEP));
+
+            return (updatedPreviousTaskTypePosition + nextTaskTypePosition) / 2;
+        }
+
+        return (previousTaskTypePosition + nextTaskTypePosition) / 2;
+    }
+
+    // Function to round down to the nearest "significant" value, like 1,000,000 or 10,000
+    private long roundDownToSignificant(long value) {
+        if (value <= 0) return 0;
+        int magnitude = (int) Math.log10(value);  // Get the number of digits - 1
+        long factor = (long) Math.pow(10, magnitude); // Calculate the power of 10 based on magnitude
+        return (value / factor) * factor; // Round down by removing less significant digits
+    }
+
+    private Long handleNextTaskTypePosition(Long nextTaskTypeId, TaskType currentTaskType, Project project) {
+        Optional<TaskType> nextTaskTypeOpt = project.getTaskTypes().stream()
+                .filter(taskType -> taskType.getId().equals(nextTaskTypeId))
+                .findFirst();
+
+        if (nextTaskTypeOpt.isEmpty()) {
+            return null;
+        }
+
+        final Long nextTaskTypePosition = nextTaskTypeOpt.get().getPosition();
+
+        long previousTaskTypePosition = project.getTaskTypes().stream()
+                .map(TaskType::getPosition)
+                .filter(position -> position < nextTaskTypePosition)
+                .max(Long::compare)
+                .orElse(0L);
+
+        if (nextTaskTypePosition - previousTaskTypePosition <= 1) {
+            repositionAllTaskTypes(project); // This will reorder task types
+
+            // After repositioning, refetch the previous and next task type positions
+            final Long updatedNextTaskTypePosition = project.getTaskTypes().stream()
+                    .filter(taskType -> taskType.getId().equals(nextTaskTypeId)) // Fetch the new position of the previous task type by ID
+                    .map(TaskType::getPosition)
+                    .findFirst()
+                    .orElse(0L); // Default to 0 if no previous task type found
+
+            previousTaskTypePosition = project.getTaskTypes().stream()
+                    .map(TaskType::getPosition)
+                    .filter(position -> position < updatedNextTaskTypePosition)
+                    .max(Long::compare)
+                    .orElse(roundDownToSignificant(updatedNextTaskTypePosition + DEFAULT_POSITION_STEP));
+
+            return (updatedNextTaskTypePosition + previousTaskTypePosition) / 2;
+        }
+
+        return (previousTaskTypePosition + nextTaskTypePosition) / 2;
+    }
+
+    private void repositionAllTaskTypes(Project project) {
+        List<TaskType> orderedTaskTypes = project.getTaskTypes().stream()
+                .sorted(Comparator.comparing(TaskType::getPosition))
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < orderedTaskTypes.size(); i++) {
+            TaskType taskTypeToReposition = orderedTaskTypes.get(i);
+            taskTypeToReposition.setPosition(RepositionUtil.calculateNewLastPosition(i));
+        }
+
+        taskTypeRepository.saveAll(orderedTaskTypes);
     }
 
 }

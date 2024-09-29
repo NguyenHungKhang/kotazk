@@ -14,7 +14,7 @@ const CustomStatus = ({ status, changeable }) => {
                     variant="body1"
                     fontWeight={500}
                 >
-                    {status.name}
+                    {status?.name}
                 </Typography>
             </Stack>
         </Box>

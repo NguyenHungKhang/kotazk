@@ -10,15 +10,16 @@ import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ITaskTypeService {
     List<TaskType> initialTaskType();
     TaskTypeResponseDto create(TaskTypeRequestDto taskTypeRequestDto);
     TaskTypeResponseDto update(Long id, TaskTypeRequestDto taskTypeRequestDto);
-    Boolean delete(Long id);
+    List<Map<String, Object>>  delete(Long id);
     Boolean softDelete(Long id);
     RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
     TaskTypeResponseDto getOne(Long id);
-    PageResponse<TaskTypeResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<TaskTypeResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
 
 }

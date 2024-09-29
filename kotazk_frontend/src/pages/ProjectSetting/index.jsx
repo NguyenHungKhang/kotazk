@@ -7,11 +7,13 @@ import { Paper } from '@mui/material';
 import StatusSetting from './StatusSetting';
 import TaskTypeSetting from './TaskTypeSetting';
 import PrioritySetting from './PrioritySetting';
+import CustomManageStatus from '../../components/CustomManageStatusDialog';
+import CustomManageTaskType from '../../components/CustomManageTaskType';
 
 const dummyData = [
     { title: "General", component: "General" },
-    { title: "Status", component: <StatusSetting />},
-    { title: "Task type", component: <TaskTypeSetting /> },
+    { title: "Status", component: <CustomManageStatus />},
+    { title: "Task type", component: <CustomManageTaskType /> },
     { title: "Label", component: "Label" },
     { title: "Priority", component: <PrioritySetting /> },
     { title: "Custom field", component: "Custom field" },

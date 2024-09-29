@@ -9,12 +9,13 @@ import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDt
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface IStatusService {
     List<Status> initialStatus();
     StatusResponseDto create(StatusRequestDto status);
     StatusResponseDto update(Long id, StatusRequestDto status);
-    Boolean delete(Long id);
+    List<Map<String, Long>> delete(Long id);
     Boolean softDelete(Long id);
     StatusResponseDto getOne(Long id);
     StatusSummaryResponseDto getSummaryOne(Long id);

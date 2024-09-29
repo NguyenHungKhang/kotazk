@@ -1,17 +1,17 @@
 import { Box, Button, Card, Checkbox, Grid, IconButton, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import { useSelector } from "react-redux";
-import CustomStatus from '../CustomStatus/index';
+import CustomTaskType from '../CustomTaskType/index';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useEffect, useRef, useState } from 'react';
 import * as TablerIcons from '@tabler/icons-react'
-import { statusIconsList } from "../../utils/iconsListUtil";
+import { taskTypeIconsList } from "../../utils/iconsListUtil";
 import CustomBasicTextField from "../CustomBasicTextField";
 import CustomColorIconPicker from "../CustomColorIconPicker";
 import * as apiService from '../../api/index'
 import { useDispatch } from "react-redux";
 import { setSnackbar } from "../../redux/actions/snackbar.action";
-import { setCurrentStatusList } from "../../redux/actions/status.action";
+import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 import { updateAndAddArray } from "../../utils/arrayUtil";
 import { setDeleteDialog } from "../../redux/actions/dialog.action";
 
@@ -23,21 +23,21 @@ const reorder = (list, startIndex, endIndex) => {
     return result;
 };
 
-const CustomManageStatus = () => {
+const CustomManageTaskType = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const statuses = useSelector((state) => state.status.currentStatusList);
+    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList);
     const project = useSelector((state) => state.project.currentProject)
-    const [selectedStatus, setSelectedStatus] = useState(null);
-    const [openAddStatus, setOpenAddStatus] = useState(false);
-    const [items, setItems] = useState(statuses);
+    const [selectedTaskType, setSelectedTaskType] = useState(null);
+    const [openAddTaskType, setOpenAddTaskType] = useState(false);
+    const [items, setItems] = useState(taskTypes);
     const DragIcon = TablerIcons["IconGripVertical"];
     const EditIcon = TablerIcons["IconEdit"];
 
     useEffect(() => {
-        if (statuses)
-            setItems(statuses);
-    }, [, statuses])
+        if (taskTypes)
+            setItems(taskTypes);
+    }, [, taskTypes])
 
     const reorderItem = async (currentItemId, previousItemId, nextItemId) => {
         const data = {
@@ -48,10 +48,10 @@ const CustomManageStatus = () => {
             },
         };
 
-        const response = await apiService.statusAPI.update(currentItemId, data);
+        const response = await apiService.taskTypeAPI.update(currentItemId, data);
         if (response?.data) {
-            const finalAr = updateAndAddArray(statuses, [response.data]);
-            dispatch(setCurrentStatusList(finalAr));
+            const finalAr = updateAndAddArray(taskTypes, [response.data]);
+            dispatch(setCurrentTaskTypeList(finalAr));
         }
     }
 
@@ -91,7 +91,7 @@ const CustomManageStatus = () => {
         >
             <Stack direction='row' spacing={2} alignItems='center'>
                 <Typography variant="h5" fontWeight={500} flexGrow={1}>
-                    Status Setting
+                    TaskType Setting
                 </Typography>
             </Stack>
             <Stack
@@ -105,19 +105,19 @@ const CustomManageStatus = () => {
                         fullWidth
                         size="small"
                         margin="dense"
-                        placeholder="Search status..."
+                        placeholder="Search taskType..."
                     />
                 </Box>
                 <Box>
-                    <Button variant="contained" color="success" onClick={() => setOpenAddStatus(true)}>
+                    <Button variant="contained" color="success" onClick={() => setOpenAddTaskType(true)}>
                         Add
                     </Button>
                 </Box>
             </Stack>
-            {openAddStatus && <StatusAddItem statuses={statuses} project={project} setOpenAddStatus={setOpenAddStatus} />}
+            {openAddTaskType && <TaskTypeAddItem taskTypes={taskTypes} project={project} setOpenAddTaskType={setOpenAddTaskType} />}
             {/* DragDropContext to enable drag and drop functionality */}
             <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="statuses">
+                <Droppable droppableId="taskTypes">
                     {(provided) => (
                         <Stack
                             spacing={2}
@@ -125,8 +125,8 @@ const CustomManageStatus = () => {
                             {...provided.droppableProps}
                             ref={provided.innerRef}
                         >
-                            {items?.map((status, index) => (
-                                <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
+                            {items?.map((taskType, index) => (
+                                <Draggable key={taskType.id} draggableId={taskType.id.toString()} index={index}>
                                     {(provided) => (
 
                                         <Stack
@@ -140,7 +140,7 @@ const CustomManageStatus = () => {
                                             <Card {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                 <DragIcon size={20} stroke={2} />
                                             </Card>
-                                            <StatusListItem status={status} statuses={statuses} />
+                                            <TaskTypeListItem taskType={taskType} taskTypes={taskTypes} />
                                         </Stack>
 
                                     )}
@@ -156,16 +156,13 @@ const CustomManageStatus = () => {
 };
 
 
-const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
+const TaskTypeAddItem = ({ taskTypes, project, setOpenAddTaskType }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const SaveIcon = TablerIcons["IconDeviceFloppy"];
     const CancleIcon = TablerIcons["IconX"];
 
     const [name, setName] = useState(null);
-    const [isFromStart, setIsFromStart] = useState(false);
-    const [isFromAny, setIsFromAny] = useState(true);
-    const [isCompletedStatus, setIsCompletedStatus] = useState(false);
     const [customization, setCustomization] = useState(null);
     const [isChange, setIsChange] = useState(false);
 
@@ -176,7 +173,7 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setOpenAddStatus(false); // Close the component when clicking outside
+                setOpenAddTaskType(false); // Close the component when clicking outside
             }
         }
 
@@ -184,30 +181,27 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [setOpenAddStatus]);
+    }, [setOpenAddTaskType]);
 
     useEffect(() => {
         setIsChange(name != null && name != "");
     }, [name]);
 
-    const handleSaveStatus = async () => {
+    const handleSaveTaskType = async () => {
         const data = {
             name,
-            isFromStart,
-            isFromAny,
-            isCompletedStatus,
             customization,
             projectId: project?.id
         };
-        const response = await apiService.statusAPI.create(data);
+        const response = await apiService.taskTypeAPI.create(data);
         if (response?.data) {
-            dispatch(setCurrentStatusList(updateAndAddArray(statuses, [response?.data])));
+            dispatch(setCurrentTaskTypeList(updateAndAddArray(taskTypes, [response?.data])));
             setIsChange(false);
             dispatch(setSnackbar({
-                content: "Update status successful!",
+                content: "Update taskType successful!",
                 open: true
             }));
-            setOpenAddStatus(false);
+            setOpenAddTaskType(false);
         }
     };
 
@@ -227,7 +221,7 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
                     alignItems='center'
                 >
                     <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={statusIconsList} customization={customization} setCustomization={setCustomization} />
+                        <CustomColorIconPicker changeable={true} icons={taskTypeIconsList} customization={customization} setCustomization={setCustomization} />
                         <CustomBasicTextField
                             size="small"
                             margin="dense"
@@ -239,21 +233,18 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
                             }}
                         />
                     </Stack>
-                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} />
-                    <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} />
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} />
                 </Stack>
             </Card>
             <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <IconButton
-                    onClick={handleSaveStatus}
+                    onClick={handleSaveTaskType}
                     disabled={!isChange}
                 >
                     <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.success.main : theme.palette.grey[500]} />
                 </IconButton>
             </Card>
             <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton onClick={() => setOpenAddStatus(false)}>
+                <IconButton onClick={() => setOpenAddTaskType(false)}>
                     <CancleIcon size={20} stroke={2} color={theme.palette.error.main} />
                 </IconButton>
             </Card>
@@ -262,48 +253,39 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
 };
 
 
-const StatusListItem = ({ status, statuses }) => {
+const TaskTypeListItem = ({ taskType, taskTypes }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const DeleteIcon = TablerIcons["IconTrashXFilled"];
     const EditIcon = TablerIcons["IconEdit"];
-    const [name, setName] = useState(status.name);
-    const [isFromStart, setIsFromStart] = useState(status.isFromStart);
-    const [isFromAny, setIsFromAny] = useState(status.isFromAny);
-    const [isCompletedStatus, setIsCompletedStatus] = useState(status.isCompletedStatus);
-    const [customization, setCustomization] = useState(status.customization);
+    const [name, setName] = useState(taskType.name);
+    const [customization, setCustomization] = useState(taskType.customization);
     const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
-        if (status != null) {
-            setName(status.name);
-            setIsFromStart(status.isFromStart);
-            setIsFromAny(status.isFromAny);
-            setIsCompletedStatus(status.isCompletedStatus);
-            setCustomization(status.setCustomization);
+        if (taskType != null) {
+            setName(taskType.name);
+            setCustomization(taskType.setCustomization);
         }
-    }, [status])
+    }, [taskType])
 
     useEffect(() => {
-        if (customization != null && customization != status.customization)
+        if (customization != null && customization != taskType.customization)
             setIsChange(true);
     }, [customization])
 
 
-    const handleSaveStatus = async () => {
+    const handleSaveTaskType = async () => {
         const data = {
             "name": name,
-            "isFromStart": isFromStart,
-            "isFromAny": isFromAny,
-            "isCompletedStatus": isCompletedStatus,
             "customization": customization
         }
-        const response = await apiService.statusAPI.update(status.id, data);
+        const response = await apiService.taskTypeAPI.update(taskType.id, data);
         if (response?.data) {
-            dispatch(setCurrentStatusList(updateAndAddArray(statuses, [response?.data])))
+            dispatch(setCurrentTaskTypeList(updateAndAddArray(taskTypes, [response?.data])))
             setIsChange(false);
             dispatch(setSnackbar({
-                content: "Update status successful!",
+                content: "Update taskType successful!",
                 open: true
             }))
         }
@@ -312,15 +294,15 @@ const StatusListItem = ({ status, statuses }) => {
     const handleOpenDeleteDialog = (event) => {
         event.stopPropagation();
         dispatch(setDeleteDialog({
-            title: `Delete status "${name}"?`,
+            title: `Delete taskType "${name}"?`,
             content:
-                `You're about to permanently delete this status. <strong>It's task will be moved to the first "Started status"</strong>.
+                `You're about to permanently delete this task type. <strong>It's task will be moved to the type "Task"</strong>.
                 <br/><br/>
-                If you're not sure, you can resolve or close this status instead.`,
+                If you're not sure, you can resolve or close this task type instead.`,
             open: true,
-            deleteType: "DELETE_STATUS",
+            deleteType: "DELETE_TASKTYPE",
             deleteProps: {
-                statusId: status?.id
+                taskTypeId: taskType?.id
             }
         }));
     };
@@ -335,7 +317,7 @@ const StatusListItem = ({ status, statuses }) => {
                 spacing={4}
                 alignItems='center'>
                     <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={statusIconsList} customization={customization} setCustomization={setCustomization} />
+                        <CustomColorIconPicker changeable={true} icons={taskTypeIconsList} customization={customization} setCustomization={setCustomization} />
                         <CustomBasicTextField
                             size="small"
                             margin="dense"
@@ -348,20 +330,17 @@ const StatusListItem = ({ status, statuses }) => {
                             }
                         />
                     </Stack>
-                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} setIsChange={setIsChange} />
-                    <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} />
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
                 </Stack>
             </Card>
             <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
                 <IconButton
-                    onClick={handleSaveStatus}
+                    onClick={handleSaveTaskType}
                     disabled={!isChange}
                 >
                     <EditIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
                 </IconButton>
             </Card>
-            {!status.systemRequired &&
+            {!taskType?.systemRequired &&
                 <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
@@ -371,67 +350,4 @@ const StatusListItem = ({ status, statuses }) => {
         </>
     );
 }
-
-function IsFromAnyButton({ selected, setSelected, setIsChange }) {
-
-    return (
-        <ToggleButton
-            value="check"
-            color="info"
-            selected={selected}
-            onChange={() => {
-                setSelected(!selected);
-                setIsChange != null && setIsChange(true);
-            }}
-            sx={{
-                textTransform: 'none'
-            }}
-            size="small"
-        >
-            Flexible status
-        </ToggleButton>
-    );
-}
-
-
-function IsFromStartButton({ selected, setSelected, setIsChange }) {
-    return (
-        <ToggleButton
-            value="check"
-            color="warning"
-            selected={selected}
-            onChange={() => {
-                setSelected(!selected);
-                setIsChange != null && setIsChange(true);
-            }}
-            sx={{
-                textTransform: 'none'
-            }}
-            size="small"
-        >
-            Started status
-        </ToggleButton>
-    );
-}
-
-function IsCompletedButton({ selected, setSelected, setIsChange }) {
-    return (
-        <ToggleButton
-            value="check"
-            color="success"
-            selected={selected}
-            onChange={() => {
-                setSelected(!selected);
-                setIsChange != null && setIsChange(true);
-            }}
-            sx={{
-                textTransform: 'none'
-            }}
-            size="small"
-        >
-            Completed status
-        </ToggleButton>
-    );
-}
-
-export default CustomManageStatus;
+export default CustomManageTaskType;

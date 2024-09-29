@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.request.status;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.customization.CustomizationRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,4 +20,5 @@ public class StatusRequestDto {
     Long position;
     String name;
     String description;
+    RePositionRequestDto rePositionReq;
 }

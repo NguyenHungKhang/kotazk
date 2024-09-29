@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.request.tasktype;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.customization.CustomizationRequestDto;
 import com.taskmanagement.kotazk.payload.request.field.FieldRequestDto;
 import lombok.AllArgsConstructor;
@@ -19,5 +20,5 @@ public class TaskTypeRequestDto {
     String name;
     String description;
     CustomizationRequestDto customization;
-    List<FieldRequestDto> fields = new ArrayList<>();
+    RePositionRequestDto rePositionReq;
 }

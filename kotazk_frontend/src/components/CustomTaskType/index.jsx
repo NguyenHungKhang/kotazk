@@ -12,7 +12,7 @@ const CustomTaskType = ({ taskType, changeable, displayTextOnHoverOnly }) => {
       onMouseLeave={() => setHover(false)}
     >
       <Stack direction='row' spacing={2} alignItems='center'>
-        <CustomColorIconPicker changeable={changeable} icons={taskTypeIconsList} />
+        <CustomColorIconPicker changeable={changeable} icons={taskTypeIconsList} customization={taskType?.customization} />
 
         <Typography
           variant="body1"
@@ -21,7 +21,7 @@ const CustomTaskType = ({ taskType, changeable, displayTextOnHoverOnly }) => {
             display: displayTextOnHoverOnly && !hover ? 'none' : 'block', // Show or hide based on hover
           }}
         >
-          {taskType.name}
+          {taskType?.name}
         </Typography>
       </Stack>
     </Box>
