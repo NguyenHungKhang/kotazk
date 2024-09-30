@@ -12,15 +12,15 @@ import CustomMember from "../CustomMember";
 const CustomAssigneePicker = ({ memberId, taskId }) => {
     const members = useSelector((state) => state.member.currentProjectMemberList)
     const tasks = useSelector((state) => state.task.currentTaskList)
-    const [assignee, setAssignee] = useState(null);
+    const [assignee, setAssignee] = useState(memberId ? members.find(member => member.id === memberId) : null);
     const dispatch = useDispatch();
 
-    useEffect(() => {
-        if (members && memberId != null) {
-            const foundAssignee = members.find(member => member.id === memberId);
-            setAssignee(foundAssignee || null);
-        }
-    }, [members, memberId]);
+    // useEffect(() => {
+    //     if (members && memberId != null) {
+    //         const foundAssignee = members.find(member => member.id === memberId);
+    //         setAssignee(foundAssignee || null);
+    //     }
+    // }, [members, memberId]);
 
     const saveAssignee = async (object) => {
         const data = {

@@ -14,6 +14,7 @@ import { setSnackbar } from '../../redux/actions/snackbar.action';
 import { setCurrentStatusList } from '../../redux/actions/status.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import { setCurrentTaskTypeList } from '../../redux/actions/taskType.action';
+import { setCurrentPriorityList } from '../../redux/actions/priority.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -22,6 +23,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
     const tasks = useSelector((state) => state.task.currentTaskList)
     const statuses = useSelector((state) => state.status.currentStatusList)
     const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
+    const priorities = useSelector((state) => state.priority.currentPriorityList);
 
     const handleClose = () => {
         dispatch(setDeleteDialog({ open: false }));
@@ -37,6 +39,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else  if (deleteType == "DELETE_TASKTYPE" && deleteProps != null) {
             const taskTypeId = deleteProps.taskTypeId;
             await handleDeleteTaskType(taskTypeId)
+        } else  if (deleteType == "DELETE_PRIORITY" && deleteProps != null) {
+            const priorityId = deleteProps.priorityId;
+            await handleDeletePriority(priorityId)
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -93,7 +98,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                     }
                   });
                 await dispatch(setCurrentTaskList(tasks))
-                await dispatch(setCurrentTaskTypeList(taskTypes.filter(s => s.id != taskTypeId)));
+                await dispatch(setCurrentTaskTypeList(taskTypes.filter(tt => tt.id != taskTypeId)));
                 await dispatch(setSnackbar({
                     content: "Task type deleted successful!",
                     open: true
@@ -103,6 +108,32 @@ export default function CustomDeleteDialog({ deleteAction }) {
             console.error('Failed to deleted task type:', error);
         }
     }
+
+    const handleDeletePriority = async (priorityId) => {
+        try {
+            const response = await apiService.priorityAPI.remove(priorityId);
+            if (response?.data) {
+                const updatedTasks = tasks.map(task => {
+                    const matchingUpdate = response?.data.find(updateTaskId => updateTaskId == task.id);
+                    if (matchingUpdate) {
+                        return { ...task, priorityId: null };
+                    }
+                    return task;
+                });
+    
+                const updatedPriorities = priorities.filter(p => p.id != priorityId);
+    
+                dispatch(setCurrentTaskList(updatedTasks));
+                dispatch(setCurrentPriorityList(updatedPriorities));
+                dispatch(setSnackbar({
+                    content: "Priority deleted successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete priority:', error);
+        }
+    };
 
     return (
         <Dialog

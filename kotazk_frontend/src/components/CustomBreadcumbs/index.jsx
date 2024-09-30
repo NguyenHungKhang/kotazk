@@ -5,6 +5,7 @@ import Chip from '@mui/material/Chip';
 import HomeIcon from '@mui/icons-material/Home';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const dummyData = [
     { label: 'Home', href: '#' },
@@ -36,7 +37,7 @@ function handleClick(event) {
     console.info('You clicked a breadcrumb.');
 }
 
-export default function CustomBreadcrumb() {
+export default function CustomBreadcrumb({data}) {
     return (
         <Box
             mt={2}
@@ -63,13 +64,16 @@ export default function CustomBreadcrumb() {
         >
             <div role="presentation" onClick={handleClick}>
                 <Breadcrumbs aria-label="breadcrumb">
-                    {dummyData.map((item, index) => (
+                    {data?.map((item, index) => (
                         <StyledBreadcrumb
                             key={index}
-                            component="a"
-                            href={item.href || '#'}
+                            component={Link}
+                            to={item.href || '#'}
                             label={item.label}
-                            onClick={item.href ? handleClick : undefined}
+                            sx={{
+                                cursor: item.href && 'pointer'
+                            }}
+                            // onClick={item.href ? handleClick : undefined}
                         />
                     ))}
                 </Breadcrumbs>

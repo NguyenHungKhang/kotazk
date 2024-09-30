@@ -7,7 +7,7 @@ const CustomLabel = ({ label, alwaysShowLabel = false }) => {
     
     return (
         <Box
-            bgcolor='#E5826F'
+            bgcolor={label?.customization?.backgroundColor || "#0d9af2"}
             borderRadius={1}
             height={alwaysShowLabel || showLabel ? 'auto' : 8 }
             width={alwaysShowLabel || showLabel ? 'auto' : 50 }
@@ -23,7 +23,7 @@ const CustomLabel = ({ label, alwaysShowLabel = false }) => {
                     sx={{
                         mx: 2
                     }}
-                    color={theme.palette.getContrastText("#E5826F")}
+                    color={theme.palette.getContrastText(label?.customization?.backgroundColor || "#0d9af2")}
                 >
                     {label?.name}
                 </Typography>

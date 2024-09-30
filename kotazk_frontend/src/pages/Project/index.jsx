@@ -18,12 +18,23 @@ import { setCurrentPriorityList } from "../../redux/actions/priority.action";
 import { setCurrentLabelList } from "../../redux/actions/label.action";
 import { setCurrentProjectMemberList } from "../../redux/actions/member.action";
 import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
+import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
     const { projectId } = useParams();
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const breadcrumbData = [
+        {
+            "label": workspace?.name,
+            "href": `/workspace/${workspace.id}`
+        },
+        {
+            "label": project?.name,
+        }
+    ]
     useEffect(() => {
         if (projectId != null)
             fetchInitial();
@@ -40,6 +51,7 @@ const Project = ({ children }) => {
                 sections,
                 taskTypes,
                 memberRoles,
+                workSpace,
                 ...projectBasicInfoRes
             } = res.data;
 
@@ -49,6 +61,7 @@ const Project = ({ children }) => {
             dispatch(setCurrentPriorityList(priorities));
             dispatch(setCurrentLabelList(labels));
             dispatch(setCurrentProjectMemberList(members));
+            dispatch(setCurrentWorkspace(workSpace));
         } catch (err) {
             console.error('Error fetching project details:', err);
         }
@@ -60,9 +73,9 @@ const Project = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
+                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
                 // backgroundImage: `url('https://i.pinimg.com/564x/b0/94/c5/b094c5ceba9148e06fca396ac12367d6.jpg')`,
-                // background: theme.palette.mode == "dark" ? "#EFEFEF": "#121212",
+                background: theme.palette.mode == "light" ? "#EFEFEF" : "#121212",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
@@ -87,7 +100,7 @@ const Project = ({ children }) => {
                         }}
                     >
                         <CustomHeader />
-                        <CustomBreadcrumb />
+                        <CustomBreadcrumb data={breadcrumbData} />
                         <Stack direction='row' mt={2}>
                             <Box flexGrow={1}>
                                 <CustomTab />

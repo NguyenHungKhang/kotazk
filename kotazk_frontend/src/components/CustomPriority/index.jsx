@@ -10,13 +10,14 @@ const CustomPriority = ({ priority, changeable }) => {
                 display: 'flex',
                 alignItems: 'center',
                 borderRadius: 2,
-                // backgroundColor: priority?.color,
-                p: 1
+                backgroundColor: priority?.customization?.backgroundColor,
+                py: 1,
+                px: 2
             }}
         >
             <Typography
                 variant='body2'
-            // color={theme.palette.getContrastText(priority?.color)}
+                color={theme.palette.getContrastText(priority?.customization?.backgroundColor)}
             >
                 {priority?.name}
             </Typography>

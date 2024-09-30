@@ -77,7 +77,9 @@ const CustomPriorityOpenComponent = ({ onClick, priority, isFocusing }) => {
             }}
         >
             {priority != null ?
-                <CustomPriority priority={priority} changeable={false} />
+                <Box width='fit-content'>
+                    <CustomPriority priority={priority} changeable={false} />
+                </Box>
                 :
                 <Box
                     sx={{

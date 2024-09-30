@@ -5,6 +5,8 @@ import * as sectionAPI from './section.api.js'
 import * as taskAPI from './task.api.js'
 import * as statusAPI from './status.api.js'
 import * as taskTypeAPI from './taskType.api.js'
+import * as priorityAPI from './priority.api.js'
+import * as labelAPI from './label.api.js'
 export {
     authAPI,
     projectAPI,
@@ -12,5 +14,7 @@ export {
     sectionAPI,
     taskAPI,
     statusAPI,
-    taskTypeAPI
+    taskTypeAPI,
+    priorityAPI,
+    labelAPI
 };

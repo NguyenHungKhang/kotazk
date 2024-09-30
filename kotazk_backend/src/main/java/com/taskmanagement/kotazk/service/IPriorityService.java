@@ -12,7 +12,7 @@ public interface IPriorityService {
     List<Priority> initialPriority();
     PriorityResponseDto create(PriorityRequestDto priorityRequestDto);
     PriorityResponseDto update(Long id, PriorityRequestDto priorityRequestDto);
-    Boolean delete(Long id);
+    List<Long>  delete(Long id);
     Boolean softDelete(Long id);
     PriorityResponseDto getOne(Long id);
     PageResponse<PriorityResponseDto> getPageByProject(SearchParamRequestDto searchParams, Long projectId);

@@ -10,6 +10,7 @@ import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.section.SectionResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
+import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +29,7 @@ import java.util.List;
 @Builder
 public class ProjectDetailsResponseDto {
     Long id;
-    Long workSpaceId;
+    WorkSpaceSummaryResponseDto workSpace;
     MemberResponseDto member;
     String name;
     Boolean isPinned;

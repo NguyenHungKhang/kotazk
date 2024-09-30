@@ -100,13 +100,19 @@ public class LabelService implements ILabelService {
 
         Member currentMember = checkManageLabel(currentUser, project, workSpace);
 
-        Optional.ofNullable(labelRequestDto.getName()).ifPresent(currentLabel::setName);
-        Optional.ofNullable(labelRequestDto.getCustomization()).ifPresent(customization -> {
-            Optional.ofNullable(customization.getAvatar()).ifPresent(currentLabel.getCustomization()::setAvatar);
-            Optional.ofNullable(customization.getBackgroundColor()).ifPresent(currentLabel.getCustomization()::setBackgroundColor);
-            Optional.ofNullable(customization.getFontColor()).ifPresent(currentLabel.getCustomization()::setFontColor);
-            Optional.ofNullable(customization.getIcon()).ifPresent(currentLabel.getCustomization()::setIcon);
+        Optional.ofNullable(labelRequestDto.getCustomization()).ifPresent(statusCustomization -> {
+            Customization customization = Optional.ofNullable(currentLabel.getCustomization())
+                    .orElseGet(() -> {
+                        Customization newCustomization = new Customization();
+                        currentLabel.setCustomization(newCustomization);
+                        return newCustomization;
+                    });
+
+            Optional.ofNullable(statusCustomization.getBackgroundColor())
+                    .ifPresent(customization::setBackgroundColor);
         });
+
+        Optional.ofNullable(labelRequestDto.getName()).ifPresent(currentLabel::setName);
 
 
         Label savedLabel = labelRepository.save(currentLabel);

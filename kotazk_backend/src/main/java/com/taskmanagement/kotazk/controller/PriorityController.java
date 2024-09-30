@@ -16,8 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
+
 @RestController
-@RequestMapping("/priority")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/priority")
 public class PriorityController {
     @Autowired
     IPriorityService priorityService = new PriorityService();
@@ -36,7 +40,7 @@ public class PriorityController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean delete(@PathVariable Long id) {
+    public List<Long> delete(@PathVariable Long id) {
         return priorityService.delete(id);
     }
 

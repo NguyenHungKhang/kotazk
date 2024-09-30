@@ -83,7 +83,7 @@ const CardKanban = ({ task, isDragging }) => {
             >
 
                 {task?.labels?.length > 0 &&
-                    <Stack direction='row' spacing={2}>
+                    <Stack direction='row' spacing={2} mb={2}>
                         <Stack
                             flexGrow={1}
                             direction='row'
@@ -100,8 +100,8 @@ const CardKanban = ({ task, isDragging }) => {
                                 handleChangeShowLabel();
                             }}
                         >
-                            {task?.labels.map((l) => (
-                                <CustomLabel key={l.id} label={labels.find(i => i.labelId === l.id)} />
+                            {task?.labels?.map((l) => (
+                                <CustomLabel key={l.id} label={labels.find(i => i.id === l.labelId)} />
                             ))}
 
                         </Stack>
@@ -162,19 +162,25 @@ const CardKanban = ({ task, isDragging }) => {
                         </FieldBoxForKanbanCard>
 
                     }
-                    {task?.priorityId &&
-                        <FieldBoxForKanbanCard px={2} py={0.5}>
-                            <Tooltip title="Priority" placement="top">
-                                <Stack direction='row' alignItems='center' spacing={1}>
-                                    <PriorityIcon color={theme.palette.text.secondary} size={16} />
-                                    <Typography color={theme.palette.text.secondary} variant='body2'>
-                                        {priorities.find(p => p.id === task?.priorityId).name}
-                                    </Typography>
-                                </Stack>
-                            </Tooltip>
-                        </FieldBoxForKanbanCard>
-
-                    }
+                    {task?.priorityId && (() => {
+                        const priority = priorities.find(p => p.id === task?.priorityId);
+                        return (
+                            <FieldBoxForKanbanCard px={2} py={0.5}
+                                sx={{
+                                    bgcolor: priority?.customization?.backgroundColor
+                                }}
+                            >
+                                <Tooltip title="Priority" placement="top">
+                                    <Stack direction='row' alignItems='center' spacing={1}>
+                                        <PriorityIcon color={theme.palette.getContrastText(priority?.customization?.backgroundColor)} size={16} />
+                                        <Typography color={theme.palette.getContrastText(priority?.customization?.backgroundColor)} variant='body2'>
+                                            {priority?.name}
+                                        </Typography>
+                                    </Stack>
+                                </Tooltip>
+                            </FieldBoxForKanbanCard>
+                        );
+                    })()}
 
                     {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />

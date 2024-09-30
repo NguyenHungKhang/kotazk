@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "priority")
@@ -38,6 +39,10 @@ public class Priority {
 
     @Column(name = "position", nullable = false)
     private Long position;
+
+    @OneToMany(mappedBy = "priority", fetch = FetchType.LAZY)
+    @OrderBy("position")
+    private List<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

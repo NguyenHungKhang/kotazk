@@ -4,18 +4,17 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
 import { Paper } from '@mui/material';
-import StatusSetting from './StatusSetting';
-import TaskTypeSetting from './TaskTypeSetting';
-import PrioritySetting from './PrioritySetting';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
 import CustomManageTaskType from '../../components/CustomManageTaskType';
+import CustomManagePriority from '../../components/CustomManagePriority';
+import CustomManageLabel from '../../components/CustomManageLabel';
 
 const dummyData = [
     { title: "General", component: "General" },
     { title: "Status", component: <CustomManageStatus />},
     { title: "Task type", component: <CustomManageTaskType /> },
-    { title: "Label", component: "Label" },
-    { title: "Priority", component: <PrioritySetting /> },
+    { title: "Label", component: <CustomManageLabel /> },
+    { title: "Priority", component: <CustomManagePriority /> },
     { title: "Custom field", component: "Custom field" },
 ]
 
