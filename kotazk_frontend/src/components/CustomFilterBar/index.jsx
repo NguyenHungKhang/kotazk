@@ -1,27 +1,18 @@
 import { Button, ButtonGroup, Stack, darken, useTheme } from "@mui/material";
-import FilterListIcon from '@mui/icons-material/FilterList';
 import LayersIcon from '@mui/icons-material/Layers';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import * as allIcons from "@tabler/icons-react"
 import { useDispatch } from "react-redux";
 import { setAddTaskDialog } from "../../redux/actions/dialog.action";
+import CustomFilterDialog from "../CustomFilterDialog";
 
 const CustomFilterBar = () => {
     const theme = useTheme();
 
     return (
         <Stack direction='row' spacing={2}>
-            <Button
-                sx={{
-                    textTransform: 'none',
-                }}
-                color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                size="small"
-                startIcon={<FilterListIcon fontSize="small" />}
-            >
-                Filter
-            </Button>
+            <CustomFilterDialog />
             <Button
                 sx={{
                     textTransform: 'none',
@@ -53,7 +44,7 @@ const CustomAddTaskButton = () => {
     const dispatch = useDispatch();
 
     const handleOpenAddTaskDialog = () => {
-     dispatch(setAddTaskDialog({ open: true }))   
+        dispatch(setAddTaskDialog({ open: true }))
     }
 
     return (

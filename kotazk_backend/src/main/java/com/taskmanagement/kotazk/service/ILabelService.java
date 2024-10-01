@@ -12,7 +12,7 @@ import java.util.List;
 public interface ILabelService {
     LabelResponseDto create(LabelRequestDto labelRequestDto);
     LabelResponseDto update(Long id, LabelRequestDto labelRequestDto);
-    Boolean delete(Long id);
+    List<Long>  delete(Long id);
     Boolean softDelete(Long id);
     LabelResponseDto getOne(Long id);
     PageResponse<LabelResponseDto> getPageByProject(SearchParamRequestDto searchParams, Long projectId);

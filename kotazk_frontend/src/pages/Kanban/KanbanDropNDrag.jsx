@@ -20,6 +20,7 @@ import CustomDialogForManage from '../../components/CustomDialogForManage';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
 import * as TablerIcon from "@tabler/icons-react"
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import { applyTaskFilters } from '../../utils/filterUtil';
 
 function KanbanDropNDrag() {
   const theme = useTheme();
@@ -30,61 +31,90 @@ function KanbanDropNDrag() {
   const dispatch = useDispatch();
   const project = useSelector((state) => state.project.currentProject);
   const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
+  const filters = useSelector((state) => state.filter.currentFilterList);
 
   useEffect(() => {
     if (statuses != null && project != null)
       initialFetch();
-  }, [project, statuses]);
+  }, [project, statuses, filters]);
 
   useEffect(() => {
     if (tasks != null && statuses != null)
       tasksMapping();
-  }, [statuses, tasks])
+  }, [statuses, tasks, filters])
 
 
   const initialFetch = async () => {
     try {
       const allTasks = await Promise.all(
         statuses.map(async (status) => {
+          // Define the filter for the current status
+          const statusFilter = {
+            key: "status.id",
+            operation: "EQUAL",
+            value: status.id,
+            values: []
+          };
+
+          // Prepare filters: if `filters` is null or undefined, use an empty array
+          const currentFilters = filters || [];
+
+          // Create the task data, merging the current filters with the status filter
           const taskData = {
-            "sortBy": "position",
-            "sortDirectionAsc": true,
-            "filters": [
-              {
-                "key": "status.id",
-                "operation": "EQUAL",
-                "value": status.id,
-                "values": []
-              }
-            ]
+            sortBy: "position",
+            sortDirectionAsc: true,
+            filters: [...currentFilters, statusFilter] // Combine filters
           };
 
           const taskRes = await apiService.taskAPI.getPageByProject(status.projectId, taskData);
-          return taskRes.data.content;
+          return taskRes.data.content; // Return the task content
         })
       );
 
       const combinedTasks = updateAndAddArray(tasks, allTasks.flat());
       dispatch(setCurrentTaskList(combinedTasks));
-      console.log(combinedTasks)
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
   };
 
+
+  // Utility method for updating filters with a status filter
+  const updateFiltersWithStatus = (filters, statusId) => {
+    const statusFilter = {
+      key: "status.id",
+      operation: "EQUAL",
+      value: statusId,
+      values: []
+    };
+
+    // Check if filters is null, undefined, or an empty array
+    if (!filters || filters.length === 0) {
+      return [statusFilter];
+    }
+
+    return [...filters, statusFilter];
+  };
+
+
   const tasksMapping = () => {
+    console.log(filters);
+    const filteredTasks = applyTaskFilters(tasks, filters);
+    console.log(tasks)
     const groupedTasks = statuses.reduce((acc, status) => {
-      const tasksForStatus = tasks.filter(task => task.statusId === status.id);
+      const tasksForStatus = filteredTasks.filter(task => task.statusId === status.id);
+
       acc.push({
         ...status,
-        items: tasksForStatus
+        items: tasksForStatus,
       });
-
 
       return acc;
     }, []);
+
     setStores(groupedTasks);
-  }
+  };
+
   const updateItemAPI = async (itemId, previousItemId, nextItemId, statusId) => {
     console.log(nextItemId)
     const data = {
@@ -279,6 +309,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status,
                 direction='row'
                 alignItems='center'
                 spacing={2}
+                maxWidth={320}
               >
                 <Box flexGrow={1}>
                   <CustomStatus status={status} changeable={false} />

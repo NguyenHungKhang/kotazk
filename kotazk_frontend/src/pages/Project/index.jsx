@@ -26,10 +26,11 @@ const Project = ({ children }) => {
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const [open, setOpen] = useState(true);
     const breadcrumbData = [
         {
             "label": workspace?.name,
-            "href": `/workspace/${workspace.id}`
+            "href": `/workspace/${workspace?.id}`
         },
         {
             "label": project?.name,
@@ -81,7 +82,7 @@ const Project = ({ children }) => {
             }}
         >
             <Stack direction='row' spacing={4} alignItems="stretch" height={"calc(100% - 32px)"}>
-                <SideBar />
+                <SideBar open={open} setOpen={setOpen} />
                 <Stack
                     display="flex"
                     flexDirection="column"
@@ -126,8 +127,9 @@ const Project = ({ children }) => {
                             //     var(--dot-color)
                             // `,
                             overflow: 'hidden',
-                            width: '85vw',
+                            width: open ? '85vw' : '94vw',
                             borderRadius: 4,
+                            transition: 'width 0.3s',
                             // transition: 'all 0.3s ease',  // Smooth transition when hover happens
                             // border: "2px solid",
                             // borderColor: "transparent",

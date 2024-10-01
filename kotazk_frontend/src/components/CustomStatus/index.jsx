@@ -13,6 +13,7 @@ const CustomStatus = ({ status, changeable }) => {
                 <Typography
                     variant="body1"
                     fontWeight={500}
+                    noWrap
                 >
                     {status?.name}
                 </Typography>

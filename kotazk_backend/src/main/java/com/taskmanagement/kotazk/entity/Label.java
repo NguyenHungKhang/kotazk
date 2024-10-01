@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "label")
@@ -35,6 +36,9 @@ public class Label {
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToMany(mappedBy = "labels")
+    private Set<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

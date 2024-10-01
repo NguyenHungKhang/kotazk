@@ -8,6 +8,7 @@ import PriorityReducer from "./priority.reducer";
 import LabelReducer from "./label.reducer";
 import MemberReducer from "./member.reducer";
 import SnackbarReducer from "./snackbar.reducer";
+import FilterReducer from "./filter.reducer";
 import { combineReducers } from 'redux'
 
 const allReducers = {
@@ -20,7 +21,8 @@ const allReducers = {
     priority: PriorityReducer,
     label: LabelReducer,
     member: MemberReducer,
-    snackbar: SnackbarReducer
+    snackbar: SnackbarReducer,
+    filter: FilterReducer
 }
 
 const rootReducer = combineReducers(allReducers);

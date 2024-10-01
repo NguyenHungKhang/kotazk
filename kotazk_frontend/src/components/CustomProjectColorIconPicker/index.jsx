@@ -142,7 +142,7 @@ const CustomProjectColorIconPicker = () => {
                     },
                 }}
             >
-                {selectedIcon in allIcons ? React.createElement(allIcons[selectedIcon], { size: 24, stroke: 2 }) : null}
+                {selectedIcon in allIcons ? React.createElement(allIcons[selectedIcon], { size: 16, stroke: 2 }) : null}
             </IconButton>
 
             <Popover

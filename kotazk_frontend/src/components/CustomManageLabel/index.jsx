@@ -227,7 +227,7 @@ const LabelListItem = ({ label, labels }) => {
                 <br/><br/>
                 If you're not sure, you can resolve or close this label instead.`,
             open: true,
-            deleteType: "DELETE_PRIORITY",
+            deleteType: "DELETE_LABEL",
             deleteProps: {
                 labelId: label?.id
             }

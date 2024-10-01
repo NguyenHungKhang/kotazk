@@ -8,5 +8,6 @@ import * as PriorityActions from './priority.action'
 import * as LabelActions from './label.action'
 import * as MemberActions from './member.action'
 import * as SnackbarActions from './snackbar.action'
+import * as FilterActions from './filter.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions }
+export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions }

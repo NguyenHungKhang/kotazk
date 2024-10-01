@@ -37,6 +37,7 @@ import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -120,25 +121,36 @@ public class LabelService implements ILabelService {
         return ModelMapperUtil.mapOne(savedLabel, LabelResponseDto.class);
     }
 
+
     @Override
-    public Boolean delete(Long id) {
+    public List<Long> delete(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
         Label currentLabel = labelRepository.findById(id)
                 .filter(l -> isAdmin || l.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("Label", "id", id));
-        Project project =  Optional.of(currentLabel.getProject())
+
+        Project project = Optional.of(currentLabel.getProject())
                 .filter(p -> isAdmin || p.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", currentLabel.getProject().getId()));
+
         WorkSpace workSpace = Optional.of(project.getWorkSpace())
                 .filter(ws -> isAdmin || ws.getDeletedAt() == null)
                 .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
 
         Member currentMember = checkManageLabel(currentUser, project, workSpace);
 
+        List<Long> taskIds = currentLabel.getTasks().stream()
+                .map(Task::getId)
+                .collect(Collectors.toList());
+
+        currentLabel.getTasks().forEach(task -> task.getLabels().remove(currentLabel));
         labelRepository.delete(currentLabel);
-        return true;
+
+        return taskIds;
     }
+
 
     @Override
     public Boolean softDelete(Long id) {

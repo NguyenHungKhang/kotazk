@@ -15,6 +15,7 @@ import { setCurrentStatusList } from '../../redux/actions/status.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import { setCurrentTaskTypeList } from '../../redux/actions/taskType.action';
 import { setCurrentPriorityList } from '../../redux/actions/priority.action';
+import { setCurrentLabelList } from '../../redux/actions/label.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -24,6 +25,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
     const statuses = useSelector((state) => state.status.currentStatusList)
     const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
     const priorities = useSelector((state) => state.priority.currentPriorityList);
+    const labels = useSelector((state) => state.label.currentLabelList);
 
     const handleClose = () => {
         dispatch(setDeleteDialog({ open: false }));
@@ -42,6 +44,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else  if (deleteType == "DELETE_PRIORITY" && deleteProps != null) {
             const priorityId = deleteProps.priorityId;
             await handleDeletePriority(priorityId)
+        } else  if (deleteType == "DELETE_LABEL" && deleteProps != null) {
+            const labelId = deleteProps.labelId;
+            await handleDeleteLabel(labelId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -134,6 +139,30 @@ export default function CustomDeleteDialog({ deleteAction }) {
             console.error('Failed to delete priority:', error);
         }
     };
+
+    const handleDeleteLabel = async (labelId) => {
+        try {
+            const response = await apiService.labelAPI.remove(labelId);
+            if (response?.data) {
+                const updatedTasks = tasks.map(task => {
+                    const updatedLabels = task.labels.filter(label => label.labelId !== labelId);
+                    return { ...task, labels: updatedLabels };
+                });
+    
+                const updatedLabels = labels.filter(l => l.id !== labelId);
+    
+                dispatch(setCurrentTaskList(updatedTasks));
+                dispatch(setCurrentLabelList(updatedLabels));
+                dispatch(setSnackbar({
+                    content: "Label deleted successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete label:', error);
+        }
+    };
+    
 
     return (
         <Dialog
