@@ -100,7 +100,7 @@ function KanbanDropNDrag() {
   const tasksMapping = () => {
     console.log(filters);
     const filteredTasks = applyTaskFilters(tasks, filters);
-    console.log(tasks)
+    console.log(filteredTasks)
     const groupedTasks = statuses.reduce((acc, status) => {
       const tasksForStatus = filteredTasks.filter(task => task.statusId === status.id);
 
@@ -116,7 +116,6 @@ function KanbanDropNDrag() {
   };
 
   const updateItemAPI = async (itemId, previousItemId, nextItemId, statusId) => {
-    console.log(nextItemId)
     const data = {
       rePositionReq: (nextItemId == null && previousItemId == null) ? null : {
         currentItemId: itemId,

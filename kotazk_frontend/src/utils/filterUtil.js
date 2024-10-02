@@ -5,8 +5,6 @@ export const applyTaskFilters = (tasks, filters) => {
     console.log(123);
     return tasks.filter((task) => {
         return filters.every((filter) => {
-            if (!filter.active) return true; // Skip inactive filters
-
             const taskFieldValue = getTaskFieldValue(task, filter.key);
 
             console.log(taskFieldValue)

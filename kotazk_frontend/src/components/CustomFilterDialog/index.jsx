@@ -9,8 +9,6 @@ import {
     IconButton,
     Box,
     Stack,
-    Checkbox,
-    FormControlLabel,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -23,11 +21,11 @@ const CustomFilterDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [filterRows, setFilterRows] = useState([{ key: '', operation: '', value: '', active: false }]);
+    const [filterRows, setFilterRows] = useState([{ key: '', operation: '', value: '' }]);
 
     const statuses = useSelector((state) => state.status.currentStatusList);
     const priorities = useSelector((state) => state.priority.currentPriorityList);
-    const members = useSelector((state) => state.member.currentMemberList);
+    const projectMembers = useSelector((state) => state.member.currentProjectMemberList);
 
     // Mapping keys to labels for UI display
     const keyLabelMap = {
@@ -47,7 +45,7 @@ const CustomFilterDialog = () => {
             case 'priority.id':
                 return priorities.map(priority => ({ label: priority.name, value: priority.id }));
             case 'assignee.id':
-                return members.map(member => ({ label: member.name, value: member.id }));
+                return projectMembers.map(member => ({ label: member.user.lastName, value: member.id }));
             default:
                 return [];
         }
@@ -71,52 +69,36 @@ const CustomFilterDialog = () => {
         const updatedRows = filterRows.map((row, i) =>
             i === index ? { ...row, [field]: value } : row
         );
-
         setFilterRows(updatedRows);
 
-        // Filter rows to dispatch only the active ones with full values
+        // Dispatch valid rows (when all fields are filled)
         const validRows = updatedRows.filter(row =>
-            row.active && row.key && row.operation && row.value
+            row.key && row.operation && row.value
         );
-
-        // Dispatch only the filtered valid rows
         dispatch(setCurrentFilterList(validRows));
-    };
-
-    // Handle toggle active state for each row
-    const toggleActive = (index) => {
-        const updatedRows = filterRows.map((row, i) =>
-            i === index ? { ...row, active: !row.active } : row
-        );
-        setFilterRows(updatedRows);
     };
 
     // Add a new row
     const addFilterRow = () => {
-        setFilterRows([...filterRows, { key: '', operation: '', value: '', active: false }]);
+        setFilterRows([...filterRows, { key: '', operation: '', value: '' }]);
     };
 
-    // Delete a row
+    // Delete a row and dispatch
     const deleteFilterRow = (index) => {
-        setFilterRows(filterRows.filter((_, i) => i !== index));
+        const updatedRows = filterRows.filter((_, i) => i !== index);
+        setFilterRows(updatedRows);
+
+        // Dispatch updated rows after deletion
+        const validRows = updatedRows.filter(row =>
+            row.key && row.operation && row.value
+        );
+        dispatch(setCurrentFilterList(validRows));
     };
 
-    // Select All
-    const selectAll = () => {
-        const updatedRows = filterRows.map(row => ({
-            ...row,
-            active: true, // Set all rows to active
-        }));
-        setFilterRows(updatedRows);
-    };
-
-    // Deselect All
-    const deselectAll = () => {
-        const updatedRows = filterRows.map(row => ({
-            ...row,
-            active: false, // Set all rows to inactive
-        }));
-        setFilterRows(updatedRows);
+    // Clear all rows and dispatch an empty list
+    const clearAll = () => {
+        setFilterRows([{ key: '', operation: '', value: '' }]); // Keep one empty row
+        dispatch(setCurrentFilterList([])); // Dispatch empty filter list
     };
 
     return (
@@ -139,30 +121,15 @@ const CustomFilterDialog = () => {
                 PaperProps={{ style: { maxHeight: 700, width: 700, overflow: 'auto' } }} // Enable scroll for popover
             >
                 <Box padding={2}>
-                    {/* Select All and Deselect All Buttons */}
-                    <Stack direction="row" justifyContent="space-between" marginBottom={2}>
-                        <Button variant="contained" onClick={selectAll}>
-                            Select All
-                        </Button>
-                        <Button variant="outlined" onClick={deselectAll}>
-                            Deselect All
+                    {/* Clear All Button */}
+                    <Stack direction="row" justifyContent="flex-end" marginBottom={2}>
+                        <Button variant="outlined" onClick={clearAll}>
+                            Clear All
                         </Button>
                     </Stack>
 
                     {filterRows.map((row, index) => (
                         <Box display="flex" alignItems="center" key={index} marginBottom={2}>
-                            {/* Checkbox for Activating Row */}
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        size='small'
-                                        checked={row.active}
-                                        onChange={() => toggleActive(index)}
-                                    />
-                                }
-                                label="Active"
-                            />
-
                             {/* Key Select */}
                             <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
                                 <InputLabel>Key</InputLabel>

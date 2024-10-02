@@ -85,7 +85,7 @@ const CustomManageStatus = () => {
 
     return (
         <Box
-            bgcolor={getSecondBackgroundColor(theme)}
+
             p={4}
             borderRadius={4}
         >
@@ -95,7 +95,7 @@ const CustomManageStatus = () => {
                 </Typography>
             </Stack>
             <Stack
-                mt={2}
+                my={2}
                 direction="row"
                 spacing={2}
                 alignItems="center"
@@ -114,43 +114,48 @@ const CustomManageStatus = () => {
                     </Button>
                 </Box>
             </Stack>
-            {openAddStatus && <StatusAddItem statuses={statuses} project={project} setOpenAddStatus={setOpenAddStatus} />}
-            {/* DragDropContext to enable drag and drop functionality */}
-            <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="statuses">
-                    {(provided) => (
-                        <Stack
-                            spacing={2}
-                            mt={2}
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                        >
-                            {items?.map((status, index) => (
-                                <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
-                                    {(provided) => (
+            <Box
+                bgcolor={getSecondBackgroundColor(theme)}
+                borderRadius={4}
+                p={4}
+            >
+                {openAddStatus && <StatusAddItem statuses={statuses} project={project} setOpenAddStatus={setOpenAddStatus} />}
+                {/* DragDropContext to enable drag and drop functionality */}
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="statuses">
+                        {(provided) => (
+                            <Stack
+                                spacing={2}
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                            >
+                                {items?.map((status, index) => (
+                                    <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
+                                        {(provided) => (
 
-                                        <Stack
-                                            direction="row"
-                                            spacing={2}
-                                            alignItems='stretch'
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
+                                            <Stack
+                                                direction="row"
+                                                spacing={2}
+                                                alignItems='stretch'
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
 
-                                        >
-                                            <Card {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <DragIcon size={20} stroke={2} />
-                                            </Card>
-                                            <StatusListItem status={status} statuses={statuses} />
-                                        </Stack>
+                                            >
+                                                <Card {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <DragIcon size={20} stroke={2} />
+                                                </Card>
+                                                <StatusListItem status={status} statuses={statuses} />
+                                            </Stack>
 
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </Stack>
-                    )}
-                </Droppable>
-            </DragDropContext>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </Stack>
+                        )}
+                    </Droppable>
+                </DragDropContext>
+            </Box>
         </Box>
     );
 };
