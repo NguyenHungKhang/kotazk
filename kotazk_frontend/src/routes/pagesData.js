@@ -3,6 +3,7 @@ import Login from "../pages/Login";
 import WorkSpace1 from "../pages/Section";
 import WorkSpace from "../pages/Workspace";
 import TestSideBar from "../playgrounds/components/TestSideBar";
+import Register from "../pages/Register";
 
 const pagesData = [
   {
@@ -13,6 +14,11 @@ const pagesData = [
   {
     path: "/login",
     element: <Login />,
+    title: "playground"
+  },
+  {
+    path: "/register",
+    element: <Register />,
     title: "playground"
   },
   {
