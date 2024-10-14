@@ -1,26 +1,29 @@
-import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/mantine";
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-import { useTheme } from "@mui/material";
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import { ClassicEditor, Bold, Essentials, Italic, Mention, Paragraph, Undo } from 'ckeditor5';
+import { SlashCommand } from 'ckeditor5-premium-features';
 
-const darkTheme = {
-  editor: {
-    text: "#fff",
-    background: "#383838",
-  },
+import 'ckeditor5/ckeditor5.css';
+import 'ckeditor5-premium-features/ckeditor5-premium-features.css';
+
+const CustomLongTextEditor = () => {
+  return (
+    <CKEditor
+      editor={ClassicEditor}
+      config={{
+        toolbar: {
+          items: ['undo', 'redo', '|', 'bold', 'italic'],
+        },
+        plugins: [
+          Bold, Essentials, Italic, Mention, Paragraph, SlashCommand, Undo
+        ],
+        licenseKey: '<YOUR_LICENSE_KEY>',
+        mention: {
+          // Mention configuration
+        },
+        initialData: '<p>Hello from CKEditor 5 in React!</p>',
+      }}
+    />
+  );
 }
 
-function CustomLongTextEditor() {
-  const theme = useTheme();
-  const editor = useCreateBlockNote();
-
-  return <BlockNoteView
-    editor={editor}
-    theme={theme.palette.mode === "light" ? "light" : "dark"} 
-    // theme={darkTheme}
-
-  />;
-}
-
-export default CustomLongTextEditor;;
+export default CustomLongTextEditor;

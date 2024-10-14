@@ -68,7 +68,7 @@ const CustomPriorityOpenComponent = ({ onClick, priority, isFocusing }) => {
             sx={{
                 cursor: 'pointer',
                 borderRadius: 2,
-                py: 1,
+                py: 2,
                 px: 2,
                 '&:hover': {
                     bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],

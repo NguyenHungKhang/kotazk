@@ -83,7 +83,7 @@ const CustomAssigneeOpenComponent = ({ onClick, assignee, isFocusing }) => {
                         alignItems: 'center',
                         borderRadius: 2,
                         px: 2,
-                        py: 1,
+                        py: 2,
                     }}
                 >
                     <Typography variant='body2'>Empty</Typography>

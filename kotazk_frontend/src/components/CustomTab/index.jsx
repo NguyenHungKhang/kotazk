@@ -151,6 +151,30 @@ export default function CustomTab() {
                             }
                         />
                     ))}
+                    <AntTab
+                        value={-1}
+                        label={
+                            <Box component={Link} to={`/project/${project?.id}/section/gantt`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <HomeIcon sx={{ fontSize: 20 }} />
+                                <span>Gantt</span>
+                                {sectionId == null &&// Chỉ render icon khi tab được chọn
+                                    <IconButton
+                                        sx={{
+                                            p: 0.5,
+                                            m: 0,
+                                            ml: 1,
+                                            color: theme.palette.background.default,
+                                            transition: 'opacity 0.3s ease',
+                                        }}
+                                        size='small'
+                                        className="more-icon"
+                                    >
+                                        <MoreHorizIcon fontSize='small' />
+                                    </IconButton>
+                                }
+                            </Box>
+                        }
+                    />
                 </AntTabs>
                 <Box py={2}>
                     <Divider orientation="vertical" variant="middle" flexItem />

@@ -9,6 +9,7 @@ import {
     IconButton,
     Box,
     Stack,
+    Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -118,13 +119,18 @@ const CustomFilterDialog = () => {
                 anchorEl={anchorEl}
                 onClose={handleClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                PaperProps={{ style: { maxHeight: 700, width: 700, overflow: 'auto' } }} // Enable scroll for popover
+                PaperProps={{ style: { maxHeight: 700, width: 500, overflow: 'auto' } }} // Enable scroll for popover
             >
-                <Box padding={2}>
+                <Box padding={4}>
                     {/* Clear All Button */}
-                    <Stack direction="row" justifyContent="flex-end" marginBottom={2}>
-                        <Button variant="outlined" onClick={clearAll}>
-                            Clear All
+                    <Stack direction="row" alignItems='center'>
+                        <Box flexGrow={1}>
+                            <Typography variant='h6'>
+                                Filter
+                            </Typography>
+                        </Box>
+                        <Button variant="text" size='small' color='error' onClick={clearAll}>
+                            Clear
                         </Button>
                     </Stack>
 
@@ -189,10 +195,9 @@ const CustomFilterDialog = () => {
 
                     {/* Add Row Button */}
                     <Button
-                        variant="outlined"
+                        variant="text"
                         onClick={addFilterRow}
                         startIcon={<AddIcon />}
-                        fullWidth
                     >
                         Add Filter
                     </Button>

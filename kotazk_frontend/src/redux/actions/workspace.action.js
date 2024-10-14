@@ -1,1 +1,2 @@
+export const setCurrentWorkspaceList = (listWorkspace) => ({type: 'SET_CURRENT_WORKSPACE_LIST', payload: listWorkspace});
 export const setCurrentWorkspace = (workspace) => ({type: 'SET_CURRENT_WORKSPACE', payload: workspace});

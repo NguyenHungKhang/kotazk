@@ -19,6 +19,8 @@ import { taskTypeIconsList } from "../utils/iconsListUtil";
 import CustomTaskTypePicker from "../components/CustomTaskTypePicker";
 import CustomColorPicker from "../components/CustomColorPicker";
 import ProjectSetting from "../pages/ProjectSetting";
+import WorkspaceList from "../pages/WorkspaceList";
+import Gantt from "../pages/Gantt";
 
 const pagesData = [
   {
@@ -30,6 +32,11 @@ const pagesData = [
     path: "/login",
     element: <Login />,
     title: "playground"
+  },
+  {
+    path: "/workspace",
+    element: <WorkspaceList />,
+    title: "workspace"
   },
   {
     path: "/workspace/:workspaceId",
@@ -52,6 +59,11 @@ const pagesData = [
     title: "playground"
   },
   {
+    path: "/project/:projectId/section/gantt",
+    element: <Project><Gantt /></Project>,
+    title: "playground"
+  },
+  {
     path: "/project/:projectId/setting",
     element: <Project><ProjectSetting /></Project>,
     title: "playground"
@@ -64,6 +76,11 @@ const pagesData = [
   {
     path: "/playground/tasktype",
     element: <CustomColorPicker />,
+    title: "playground"
+  },
+  {
+    path: "/playground/gantt",
+    element: <TestGantt />,
     title: "playground"
   },
   {

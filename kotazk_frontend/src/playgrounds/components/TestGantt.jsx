@@ -58,6 +58,9 @@ const projectNewData = [
 
 
 const TestGantt = () => {
+    const [timelineSettings, setTimeLineSettings] = React.useState({
+        timelineViewMode: 'Week'
+    });
     const taskFields = {
         id: 'TaskID',
         name: 'TaskName',
@@ -86,21 +89,35 @@ const TestGantt = () => {
     const labelSettings = {
         leftLabel: 'TaskName'
     };
-    return (<div className='control-pane'>
-      <div className='control-section'>
-        <GanttComponent id='DragandDrop' dataSource={projectNewData} taskFields={taskFields} height='410px' treeColumnIndex={1} allowRowDragAndDrop={true} highlightWeekends={true} labelSettings={labelSettings} projectStartDate={projectStartDate} projectEndDate={projectEndDate} allowTaskbarDragAndDrop={true} splitterSettings={splitterSettings} editSettings={editSettings} selectionSettings={selectionSettings}>
-          <ColumnsDirective>
-            <ColumnDirective field='TaskID' headerText='ID' width='80'></ColumnDirective>
-            <ColumnDirective field='TaskName' headerText='Name' width='250'></ColumnDirective>
-            <ColumnDirective field='StartDate'></ColumnDirective>
-            <ColumnDirective field='EndDate'></ColumnDirective>
-            <ColumnDirective field='Duration'></ColumnDirective>
-            <ColumnDirective field='Progress'></ColumnDirective>
-            <ColumnDirective field='Predecessor' headerText='Dependency'></ColumnDirective>
-          </ColumnsDirective>
-          <Inject services={[Edit, RowDD, Selection]}/>
+    return (
+        <GanttComponent
+            id='DragandDrop'
+            dataSource={projectNewData}
+            taskFields={taskFields}
+            height='410px'
+            treeColumnIndex={1}
+            allowRowDragAndDrop={true}
+            highlightWeekends={true}
+            labelSettings={labelSettings}
+            // projectStartDate={projectStartDate}
+            // projectEndDate={projectEndDate}
+            allowTaskbarDragAndDrop={true}
+            splitterSettings={splitterSettings}
+            editSettings={editSettings}
+            selectionSettings={selectionSettings}
+            timelineSettings={timelineSettings}
+        >
+            <ColumnsDirective>
+                <ColumnDirective field='TaskID' headerText='ID' width='80'></ColumnDirective>
+                <ColumnDirective field='TaskName' headerText='Name' width='250'></ColumnDirective>
+                <ColumnDirective field='StartDate'></ColumnDirective>
+                <ColumnDirective field='EndDate'></ColumnDirective>
+                <ColumnDirective field='Duration'></ColumnDirective>
+                <ColumnDirective field='Progress'></ColumnDirective>
+                <ColumnDirective field='Predecessor' headerText='Dependency'></ColumnDirective>
+            </ColumnsDirective>
+            <Inject services={[Edit, RowDD, Selection]} />
         </GanttComponent>
-      </div>
-    </div>);
+    );
 };
 export default TestGantt;

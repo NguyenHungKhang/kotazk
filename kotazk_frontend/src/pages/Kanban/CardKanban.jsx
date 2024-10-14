@@ -66,9 +66,9 @@ const CardKanban = ({ task, isDragging }) => {
                 // bgcolor: theme.palette.mode === "light" ? "#FFFFFF" : "#22272B",
                 width: 320,
                 borderRadius: 2,
-                boxShadow: 1,
-                border: '2px solid',
-                borderColor: isDragging ? theme.palette.info.main : (theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700]),
+                boxShadow: 0,
+                border: '1px solid',
+                borderColor: isDragging ? theme.palette.info.main : (theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[800]),
                 transform: isDragging ? 'rotate(2deg)' : null,
                 // borderColor: "transparent",
                 '&:hover': {
@@ -78,7 +78,8 @@ const CardKanban = ({ task, isDragging }) => {
         >
             <CardContent
                 sx={{
-                    p: 4
+                    px: 4,
+                    py: 2
                 }}
             >
 

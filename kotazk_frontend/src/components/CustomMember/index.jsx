@@ -8,7 +8,7 @@ const CustomMember = ({ member, isShowName = false }) => {
                 display: 'flex',
                 width: 'fit-content',
                 alignItems: 'center',
-                borderRadius: 2,
+                borderRadius: isShowName ? 2 : 4,
                 backgroundColor:  theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[700],
                 px: isShowName && 2,
                 py: isShowName && 1

@@ -29,21 +29,40 @@ public class BasicSpecificationUtil<T> {
                             castToRequiredType(finalPath.getJavaType(), input.getValue()));
 
                 case GREATER_THAN:
-                    return criteriaBuilder.gt((Path<Number>) finalPath,
-                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    if (Comparable.class.isAssignableFrom(finalPath.getJavaType())) {
+                        return criteriaBuilder.greaterThan((Path<Comparable>) finalPath,
+                                (Comparable) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    } else {
+                        return criteriaBuilder.gt((Path<Number>) finalPath,
+                                (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    }
 
                 case LESS_THAN:
-                    return criteriaBuilder.lt((Path<Number>) finalPath,
-                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    if (Comparable.class.isAssignableFrom(finalPath.getJavaType())) {
+                        return criteriaBuilder.lessThan((Path<Comparable>) finalPath,
+                                (Comparable) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    } else {
+                        return criteriaBuilder.lt((Path<Number>) finalPath,
+                                (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    }
 
                 case GREATER_THAN_OR_EQUAL:
-                    return criteriaBuilder.ge((Path<Number>) finalPath,
-                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    if (Comparable.class.isAssignableFrom(finalPath.getJavaType())) {
+                        return criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) finalPath,
+                                (Comparable) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    } else {
+                        return criteriaBuilder.ge((Path<Number>) finalPath,
+                                (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    }
 
                 case LESS_THAN_OR_EQUAL:
-                    return criteriaBuilder.le((Path<Number>) finalPath,
-                            (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
-
+                    if (Comparable.class.isAssignableFrom(finalPath.getJavaType())) {
+                        return criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) finalPath,
+                                (Comparable) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    } else {
+                        return criteriaBuilder.le((Path<Number>) finalPath,
+                                (Number) castToRequiredType(finalPath.getJavaType(), input.getValue()));
+                    }
                 case LIKE:
                     return criteriaBuilder.like((Path<String>) finalPath,
                             "%" + input.getValue() + "%");

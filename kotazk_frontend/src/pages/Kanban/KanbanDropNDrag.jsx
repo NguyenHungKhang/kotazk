@@ -293,7 +293,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status,
               mb={1}
               p={2}
               width={320}
-              boxShadow={1}
+              // boxShadow={1}
               borderRadius={2}
               bgcolor={theme.palette.mode === "light" ? "#F6F7FA" : lighten(theme.palette.background.default, 0.2)}
               sx={{
