@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class ProjectRequestDto {
-    Long workspaceId;
+    Long workSpaceId;
     CustomizationRequestDto customization;
     String name;
     Boolean isPinned;

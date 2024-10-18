@@ -1,35 +1,35 @@
 import React, { useState } from 'react';
-import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper } from '@mui/material';
+import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper, Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const dummyData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        avatarUrl: 'https://i.pravatar.cc/150?img=1',
-        role: 'Admin',
-    },
-    {
-        id: 2,
-        name: 'Jane Smith',
-        email: 'jane.smith@example.com',
-        avatarUrl: 'https://i.pravatar.cc/150?img=2',
-        role: 'Editor',
-    },
-    {
-        id: 3,
-        name: 'Alice Johnson',
-        email: 'alice.johnson@example.com',
-        avatarUrl: 'https://i.pravatar.cc/150?img=3',
-        role: 'Guest',
-    },
-];
+// const dummyData = [
+//     {
+//         id: 1,
+//         name: 'John Doe',
+//         email: 'john.doe@example.com',
+//         avatarUrl: 'https://i.pravatar.cc/150?img=1',
+//         role: 'Admin',
+//     },
+//     {
+//         id: 2,
+//         name: 'Jane Smith',
+//         email: 'jane.smith@example.com',
+//         avatarUrl: 'https://i.pravatar.cc/150?img=2',
+//         role: 'Editor',
+//     },
+//     {
+//         id: 3,
+//         name: 'Alice Johnson',
+//         email: 'alice.johnson@example.com',
+//         avatarUrl: 'https://i.pravatar.cc/150?img=3',
+//         role: 'Guest',
+//     },
+// ];
 
-const MemberList = ({ members = dummyData }) => {
+const MemberList = ({ members, memberRoles }) => {
     const [selectedMembers, setSelectedMembers] = useState([]);
-    const [roles, setRoles] = useState(members.reduce((acc, member) => ({ ...acc, [member.id]: member.role }), {}));
+    const [roles, setRoles] = useState(memberRoles);
 
     const handleSelect = (id) => {
         setSelectedMembers((prevSelected) =>
@@ -58,8 +58,7 @@ const MemberList = ({ members = dummyData }) => {
     };
 
     return (
-        <Paper
-            elevation={0}
+        <Box
             sx={{
                 height: '100%'
             }}
@@ -102,21 +101,23 @@ const MemberList = ({ members = dummyData }) => {
                                     <ListItemAvatar>
                                         <Avatar src={member.avatarUrl} />
                                     </ListItemAvatar>
-                                    <ListItemText primary={member.name} />
+                                    <ListItemText primary={member.user.firstName + ' ' + member.user.lastName} />
                                 </Stack>
                             </Grid>
                             <Grid item xs={3}>
-                                <ListItemText secondary={member.email} />
+                                <ListItemText secondary={member.user.email} />
                             </Grid>
                             <Grid item xs={4}>
                                 <Select
-                                    value={roles[member.id]}
+                                    value={member.role.id}
                                     onChange={(e) => handleRoleChange(member.id, e.target.value)}
                                     size='small'
                                 >
-                                    <MenuItem value="Admin">Admin</MenuItem>
-                                    <MenuItem value="Editor">Editor</MenuItem>
-                                    <MenuItem value="Guest">Guest</MenuItem>
+                                    {
+                                        memberRoles?.map((mr) => (
+                                            <MenuItem value={mr.id} >{mr.name}</MenuItem>
+                                        ))
+                                    }
                                 </Select>
                             </Grid>
                             <Grid item xs={1}>
@@ -133,7 +134,7 @@ const MemberList = ({ members = dummyData }) => {
                     </ListItem>
                 ))}
             </List>
-        </Paper>
+        </Box>
     );
 };
 

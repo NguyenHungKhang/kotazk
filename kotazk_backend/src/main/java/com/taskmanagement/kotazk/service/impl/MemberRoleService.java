@@ -18,6 +18,10 @@ import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.util.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -262,16 +266,14 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
-    public PageResponse<MemberRoleResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public PageResponse<MemberRoleResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        WorkSpace workSpace = Optional.ofNullable(workSpaceRepository.findById(workSpaceId).orElse(null))
-                .orElseGet(() -> Optional.ofNullable(project)
-                        .map(Project::getWorkSpace)
-                        .orElse(null));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
         Member currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
 
@@ -281,7 +283,15 @@ public class MemberRoleService implements IMemberRoleService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<MemberRole> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<MemberRole> projectSpecification = (Root<MemberRole> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<MemberRole, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), project.getId());
+        };
+
+        Specification<MemberRole> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<MemberRole> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
 
         Page<MemberRole> page = memberRoleRepository.findAll(specification, pageable);
         List<MemberRoleResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberRoleResponseDto.class);

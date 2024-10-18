@@ -231,16 +231,14 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public PageResponse<MemberResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        WorkSpace workSpace = Optional.ofNullable(workSpaceRepository.findById(workSpaceId).orElse(null))
-                .orElseGet(() -> Optional.ofNullable(project)
-                        .map(Project::getWorkSpace)
-                        .orElse(null));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
         Member currentMember = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
         Pageable pageable = PageRequest.of(
@@ -249,7 +247,15 @@ public class MemberService implements IMemberService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<Member> projectSpecification = (Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Member, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), project.getId());
+        };
+
+        Specification<Member> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Member> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
 
         Page<Member> page = memberRepository.findAll(specification, pageable);
         List<MemberResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberResponseDto.class);

@@ -21,8 +21,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
+
 @RestController
-@RequestMapping("/member-role")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/member-role")
 public class MemberRoleController {
     @Autowired
     IMemberRoleService memberRoleService = new MemberRoleService();
@@ -56,13 +58,14 @@ public class MemberRoleController {
         return memberRoleService.getOne(id);
     }
 
-    @PostMapping("/page")
+    @PostMapping("/page/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<MemberRoleResponseDto> search(
-            @RequestParam(required = false) Long workspaceId,
-            @RequestParam(required = false) Long projectId,
-            @RequestBody SearchParamRequestDto searchParam) {
-        return memberRoleService.getListPage(searchParam, workspaceId, projectId);
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long projectId
+
+    ) {
+        return memberRoleService.getPageByProject(searchParam, projectId);
     }
 
     @PostMapping("/re-position/by-project/{projectId}")

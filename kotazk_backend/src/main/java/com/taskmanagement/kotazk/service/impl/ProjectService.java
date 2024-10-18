@@ -60,8 +60,8 @@ public class ProjectService implements IProjectService {
     @Override
     public ProjectResponseDto initialProject(ProjectRequestDto projectDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(projectDto.getWorkspaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", projectDto.getWorkspaceId()));
+        WorkSpace workSpace = workSpaceRepository.findById(projectDto.getWorkSpaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", projectDto.getWorkSpaceId()));
 
         Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
@@ -128,8 +128,8 @@ public class ProjectService implements IProjectService {
     @Override
     public ProjectResponseDto create(ProjectRequestDto project) {
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkspaceId())
-                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkspaceId()));
+        WorkSpace workSpace = workSpaceRepository.findById(project.getWorkSpaceId())
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", project.getWorkSpaceId()));
         Member currentMember = memberService.checkWorkSpaceMember(
                 currentUser.getId(),
                 workSpace.getId(),

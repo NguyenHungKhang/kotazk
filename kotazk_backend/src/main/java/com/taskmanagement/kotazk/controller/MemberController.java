@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
+
 @RestController
-@RequestMapping("/member")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/member")
 @RequiredArgsConstructor
 public class MemberController {
     @Autowired
@@ -56,12 +58,12 @@ public class MemberController {
         return memberService.getOne(id);
     }
 
-    @PostMapping("/page")
+    @PostMapping("/page/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public PageResponse<MemberResponseDto> search(
-            @RequestParam(required = false) Long workspaceId,
-            @RequestParam(required = false) Long projectId,
-            @RequestBody SearchParamRequestDto searchParam) {
-        return memberService.getListPage(searchParam, workspaceId, projectId);
+    public PageResponse<MemberResponseDto> getPageByProject(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long projectId
+    ) {
+        return memberService.getListPageByProject(searchParam, projectId);
     }
 }

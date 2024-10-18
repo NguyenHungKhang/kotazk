@@ -22,6 +22,6 @@ public interface IMemberRoleService {
     MemberRoleResponseDto getOne(Long id);
     RePositionResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId);
     RePositionResponseDto rePositionByWorkspace(RePositionRequestDto rePositionRequestDto, Long workspaceId);
-    PageResponse<MemberRoleResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
+    PageResponse<MemberRoleResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
     List<MemberRole> initialMemberRole(Boolean forWorkSpace);
 }

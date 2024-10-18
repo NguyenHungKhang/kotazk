@@ -1,8 +1,23 @@
 import * as React from 'react';
-import { useEffect } from 'react';
-import { GanttComponent, Inject, Edit, Selection, ColumnsDirective, ColumnDirective, RowDD } from '@syncfusion/ej2-react-gantt';
-
-// import { projectNewData } from './data';
+import {
+    GanttComponent,
+    Inject,
+    Selection,
+    ColumnsDirective,
+    ColumnDirective,
+    RowDD,
+    Toolbar,
+    Edit,
+} from '@syncfusion/ej2-react-gantt';
+import {
+    Button,
+    Stack,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    TextField,
+} from '@mui/material';
 
 const projectNewData = [
     {
@@ -56,11 +71,68 @@ const projectNewData = [
     }
 ];
 
-
 const TestGantt = () => {
-    const [timelineSettings, setTimeLineSettings] = React.useState({
-        timelineViewMode: 'Week'
-    });
+    const ganttRef = React.useRef(null);
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [selectedDate, setSelectedDate] = React.useState(new Date());
+
+    const handleNextTimeSpan = () => {
+        ganttRef.current.nextTimeSpan();
+    };
+
+    const handlePrevTimeSpan = () => {
+        ganttRef.current.previousTimeSpan();
+    };
+
+    const handleZoomIn = () => {
+        ganttRef.current.zoomIn();
+    };
+
+    const handleZoomOut = () => {
+        ganttRef.current.zoomOut();
+    };
+
+    const handleZoomToFit = () => {
+        ganttRef.current.fitToProject();
+    };
+
+    const handleJumpToToday = () => {
+        const today = new Date();
+        ganttRef.current.scrollToDate(today);
+    };
+
+    const handleJumpToSelectedDate = () => {
+        if (selectedDate) {
+            ganttRef.current.scrollToDate(new Date(selectedDate));
+            setOpenDialog(false); // Close the dialog after jumping to the selected date
+        }
+    };
+
+    const handleOpenDialog = () => {
+        setOpenDialog(true);
+    };
+
+    const handleCloseDialog = () => {
+        setOpenDialog(false);
+    };
+
+    // Handle toolbar actions
+    const handleToolbarClick = (args) => {
+        if (args.item.text === 'Add') {
+            alert('Add button clicked!');
+        }
+    };
+
+    // Handle taskbar double-click event
+    const handleTaskbarDoubleClick = () => {
+        // const taskName = args.data.TaskName;
+        alert(`Task double-clicked:`);
+    };
+
+    const handleAddTask = () => {
+        alert('Add Task button clicked!');
+    };
+
     const taskFields = {
         id: 'TaskID',
         name: 'TaskName',
@@ -69,55 +141,156 @@ const TestGantt = () => {
         duration: 'Duration',
         progress: 'Progress',
         dependency: 'Predecessor',
-        child: 'subtasks'
+        child: 'subtasks',
     };
+
     const selectionSettings = {
-        type: 'Multiple'
+        type: 'Multiple',
     };
+
     const splitterSettings = {
-        columnIndex: 3
+        columnIndex: 3,
     };
+
     const editSettings = {
-        allowAdding: true,
-        allowEditing: true,
         allowDeleting: true,
         allowTaskbarEditing: true,
-        showDeleteConfirmDialog: true
+        showDeleteConfirmDialog: true,
     };
-    const projectStartDate = new Date('03/25/2024');
-    const projectEndDate = new Date('07/06/2024');
+
     const labelSettings = {
-        leftLabel: 'TaskName'
+        taskLabel: 'TaskName',
     };
+
+    const toolbarOptions = [
+        'Add',
+        'Edit',
+        'Delete',
+        'Cancel',
+        'Update',
+        'ExpandAll',
+        'CollapseAll',
+        'Search',
+    ];
+
+    const handleActionCompelete = (args) => {
+        console.log(args)
+        if (args.requestType == "indent" || args.requestType == "outdent" || args.requestType == "recordUpdate" || args.requestType === 'save' || args.action === "DrawConnectorLine") {
+            var ganttRec = [];
+            if (args.requestType == "save" || args.action === "DrawConnectorLine")
+                ganttRec.push(args.modifiedRecords);
+            else
+                ganttRec.push(args.data);
+            if (args.updatedRecords && args.updatedRecords.length)
+                ganttRec = ganttRec.concat(args.updatedRecords);
+            alert(ganttRec);
+       }
+    }
+
+    const handleLinkCreate = (args) => {
+        alert("123");
+        const { data } = args;
+        if (data.length) {
+            data.forEach(link => {
+                const { fromTaskId, toTaskId } = link;
+                // Handle the linked tasks as needed
+                alert(`Task linked: From Task ID ${fromTaskId} to Task ID ${toTaskId}`);
+            });
+        }
+    };
+
     return (
-        <GanttComponent
-            id='DragandDrop'
-            dataSource={projectNewData}
-            taskFields={taskFields}
-            height='410px'
-            treeColumnIndex={1}
-            allowRowDragAndDrop={true}
-            highlightWeekends={true}
-            labelSettings={labelSettings}
-            // projectStartDate={projectStartDate}
-            // projectEndDate={projectEndDate}
-            allowTaskbarDragAndDrop={true}
-            splitterSettings={splitterSettings}
-            editSettings={editSettings}
-            selectionSettings={selectionSettings}
-            timelineSettings={timelineSettings}
-        >
-            <ColumnsDirective>
-                <ColumnDirective field='TaskID' headerText='ID' width='80'></ColumnDirective>
-                <ColumnDirective field='TaskName' headerText='Name' width='250'></ColumnDirective>
-                <ColumnDirective field='StartDate'></ColumnDirective>
-                <ColumnDirective field='EndDate'></ColumnDirective>
-                <ColumnDirective field='Duration'></ColumnDirective>
-                <ColumnDirective field='Progress'></ColumnDirective>
-                <ColumnDirective field='Predecessor' headerText='Dependency'></ColumnDirective>
-            </ColumnsDirective>
-            <Inject services={[Edit, RowDD, Selection]} />
-        </GanttComponent>
+        <div>
+            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+                <Button variant="contained" onClick={handlePrevTimeSpan}>
+                    Previous Time Span
+                </Button>
+                <Button variant="contained" onClick={handleNextTimeSpan}>
+                    Next Time Span
+                </Button>
+                <Button variant="contained" onClick={handleZoomIn}>
+                    Zoom In
+                </Button>
+                <Button variant="contained" onClick={handleZoomOut}>
+                    Zoom Out
+                </Button>
+                <Button variant="contained" onClick={handleZoomToFit}>
+                    Zoom To Fit
+                </Button>
+                <Button variant="contained" onClick={handleJumpToToday}>
+                    Jump to Today
+                </Button>
+                <Button variant="contained" onClick={handleOpenDialog}>
+                    Jump to Date
+                </Button>
+                {/* Add Task Button */}
+                <Button variant="contained" onClick={handleAddTask}>
+                    Add Task
+                </Button>
+            </Stack>
+
+            <Dialog open={openDialog} onClose={handleCloseDialog}>
+                <DialogTitle>Jump to Date</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        id="date"
+                        label="Select Date"
+                        type="date"
+                        value={selectedDate.toISOString().split('T')[0]} // Format date to YYYY-MM-DD
+                        onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                        fullWidth
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleJumpToToday}>Jump to Today</Button>
+                    <Button onClick={handleJumpToSelectedDate}>Jump to Selected Date</Button>
+                    <Button onClick={handleCloseDialog}>Cancel</Button>
+                </DialogActions>
+            </Dialog>
+
+            <GanttComponent
+                id="DragandDrop"
+                ref={ganttRef}
+                dataSource={projectNewData}
+                taskFields={taskFields}
+                height="100%"
+                treeColumnIndex={1}
+                allowRowDragAndDrop={true}
+                highlightWeekends={true}
+                labelSettings={labelSettings}
+                enableImmutableMode={true}
+                allowTaskbarDragAndDrop={true}
+                splitterSettings={splitterSettings}
+                editSettings={editSettings}
+                selectionSettings={selectionSettings}
+                toolbar={toolbarOptions}
+                toolbarClick={handleToolbarClick} // Trigger alert on Add click
+                onTaskbarClick={() => handleTaskbarDoubleClick()} // Trigger alert on double-click
+                actionComplete={(args) => handleActionCompelete(args)}
+            >
+                <ColumnsDirective>
+                    <ColumnDirective field="TaskID" headerText="ID" width="80"></ColumnDirective>
+                    <ColumnDirective
+                        field="TaskName"
+                        headerText="Name"
+                        width="250"
+                    ></ColumnDirective>
+                    <ColumnDirective field="StartDate"></ColumnDirective>
+                    <ColumnDirective field="EndDate"></ColumnDirective>
+                    <ColumnDirective field="Duration"></ColumnDirective>
+                    <ColumnDirective field="Progress"></ColumnDirective>
+                    <ColumnDirective
+                        field="Predecessor"
+                        headerText="Dependency"
+                    ></ColumnDirective>
+                </ColumnsDirective>
+                <Inject services={[Edit, RowDD, Toolbar, Selection]} />
+            </GanttComponent>
+        </div>
     );
 };
+
 export default TestGantt;

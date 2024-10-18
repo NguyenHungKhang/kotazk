@@ -24,7 +24,7 @@ const ProjectMemberHeader = () => {
                 alignItems='center'
             >
                 <Box flexGrow={1}>
-                    <Typography variant="h4" fontWeight={650}>
+                    <Typography variant="h5" fontWeight={650}>
                         Project member
                     </Typography>
                 </Box>
@@ -112,20 +112,6 @@ const ProjectMemberHeader = () => {
                         1
                     </Typography>
                     <Typography textAlign='center' variant="h5">Searching Members</Typography>
-                </Box>
-                <Divider orientation="vertical" flexItem />
-                <Box
-                    bgcolor={getSecondBackgroundColor(theme)}
-                    borderRadius={2}
-                    width='100%'
-                    sx={{
-                        p: 4
-                    }}
-                >
-                    <Typography textAlign='center' variant="h2">
-                        0
-                    </Typography>
-                    <Typography textAlign='center' variant="h5">Pending Requests</Typography>
                 </Box>
             </Stack>
         </Box>
