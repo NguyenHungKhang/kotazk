@@ -1,35 +1,19 @@
 import React, { useState } from 'react';
-import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper, Box } from '@mui/material';
+import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper, Box, Typography, TextField, useTheme, Pagination } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import * as TablerIcons from '@tabler/icons-react'
+import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
-// const dummyData = [
-//     {
-//         id: 1,
-//         name: 'John Doe',
-//         email: 'john.doe@example.com',
-//         avatarUrl: 'https://i.pravatar.cc/150?img=1',
-//         role: 'Admin',
-//     },
-//     {
-//         id: 2,
-//         name: 'Jane Smith',
-//         email: 'jane.smith@example.com',
-//         avatarUrl: 'https://i.pravatar.cc/150?img=2',
-//         role: 'Editor',
-//     },
-//     {
-//         id: 3,
-//         name: 'Alice Johnson',
-//         email: 'alice.johnson@example.com',
-//         avatarUrl: 'https://i.pravatar.cc/150?img=3',
-//         role: 'Guest',
-//     },
-// ];
+
 
 const MemberList = ({ members, memberRoles }) => {
+    const theme = useTheme();
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [roles, setRoles] = useState(memberRoles);
+
+    const SaveIcon = TablerIcons["IconDeviceFloppy"]
+    const InviteIcon = TablerIcons["IconUserPlus"]
 
     const handleSelect = (id) => {
         setSelectedMembers((prevSelected) =>
@@ -58,83 +42,170 @@ const MemberList = ({ members, memberRoles }) => {
     };
 
     return (
-        <Box
+        <Card
             sx={{
-                height: '100%'
+                height: '100% !important',
+                p: 4,
+                boxShadow: 0,
+                borderRadius: 4
             }}
         >
-            <List dense>
-                <ListItem>
-                    <Grid container spacing={2} alignItems='center'>
-                        <Grid item xs={1}>
-                            <Checkbox
-                                edge="start"
-                                onChange={handleSelectAll}
-                                checked={selectedMembers.length === members.length}
-                                indeterminate={selectedMembers.length > 0 && selectedMembers.length < members.length}
-                            />
-                        </Grid>
-                        <Grid item xs={3}>Name</Grid>
-                        <Grid item xs={3}>Email</Grid>
-                        <Grid item xs={4}>Role</Grid>
-                        <Grid item xs={1}>Action</Grid>
-                    </Grid>
-
-                </ListItem>
-                <Divider component="li" />
-                {members.map((member) => (
-                    <ListItem key={member.id}>
-                        <Grid container spacing={2} alignItems="center"
-                            sx={{
-                                my: 1
-                            }}
+            <Stack direction={'column'} height={'100%'} >
+                <Box p={2}>
+                    <Typography fontWeight={650} variant='h5'>
+                        Project member
+                    </Typography>
+                </Box>
+                <Box
+                    p={4}
+                    borderRadius={2}
+                    bgcolor={getSecondBackgroundColor(theme)}
+                >
+                    <Typography fontWeight={650} variant='h6'>
+                        Invite to team
+                    </Typography>
+                    <Stack direction='row' spacing={2} alignItems='center'>
+                        <TextField
+                            size='small'
+                            fullWidth
+                            placeholder='Add Team member name or email...'
+                        />
+                        <Button
+                            variant='outlined'
+                            sx={{ whiteSpace: 'nowrap' }}
+                            color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
                         >
-                            <Grid item xs={1}>
-                                <Checkbox
-                                    edge="start"
-                                    onChange={() => handleSelect(member.id)}
-                                    checked={isSelected(member.id)}
-                                />
-                            </Grid>
-                            <Grid item xs={3}>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <ListItemAvatar>
-                                        <Avatar src={member.avatarUrl} />
-                                    </ListItemAvatar>
-                                    <ListItemText primary={member.user.firstName + ' ' + member.user.lastName} />
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={3}>
-                                <ListItemText secondary={member.user.email} />
-                            </Grid>
-                            <Grid item xs={4}>
-                                <Select
-                                    value={member.role.id}
-                                    onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                    size='small'
+                            Find Member
+                        </Button>
+                    </Stack>
+
+
+                    <Box
+                        border={"1px solid"}
+                        borderColor={theme.palette.text.disabled}
+                        borderRadius={2}
+                        mt={2}
+                        pr={2}
+                    >
+                        <Stack direction='row' spacing={2} alignItems='center'>
+                            <ListItem
+                                secondaryAction={
+                                    <Box>
+                                        <Select
+                                            value={memberRoles[0].id}
+                                            size='small'
+                                            variant="standard"
+                                        >
+                                            {
+                                                memberRoles?.map((mr) => (
+                                                    <MenuItem value={mr.id} >{mr.name}</MenuItem>
+                                                ))
+                                            }
+                                        </Select>
+                                    </Box>
+                                }
+                            >
+                                <Stack direction='row' spacing={2} alignItems="center"
                                 >
-                                    {
-                                        memberRoles?.map((mr) => (
-                                            <MenuItem value={mr.id} >{mr.name}</MenuItem>
-                                        ))
-                                    }
-                                </Select>
-                            </Grid>
-                            <Grid item xs={1}>
-                                <Stack direction="row" spacing={1}>
-                                    <IconButton color="primary">
-                                        <EditIcon />
-                                    </IconButton>
-                                    <IconButton color="secondary">
-                                        <DeleteIcon />
-                                    </IconButton>
+                                    <Box width={'100%'} flexGrow={1}>
+                                        <Stack direction='row' spacing={2} alignItems='center'>
+                                            <ListItemAvatar>
+                                                <Avatar />
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={'Temp User Name'}
+                                                secondary={'Temp Email'}
+                                            />
+                                        </Stack>
+                                    </Box>
+
                                 </Stack>
-                            </Grid>
-                        </Grid>
-                    </ListItem>
-                ))}
-            </List>
-        </Box>
+                            </ListItem>
+                            <Button
+                                variant='contained'
+                                sx={{ whiteSpace: 'nowrap', px: 6 }}
+                                color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
+                                startIcon={<InviteIcon stroke={2} size={18} />}
+                            >
+                                Invite Member
+                            </Button>
+                        </Stack>
+                    </Box>
+                </Box>
+                <Box p={2}>
+                    <TextField
+                        size='small'
+                        fullWidth
+                        placeholder='Typing name or email for searching'
+                    />
+                </Box>
+                <Box p={2} flexGrow={1} height={'100%'}>
+                    <Typography fontWeight={650} variant='h6'>
+                        Members (1/1)
+                    </Typography>
+                    <List dense>
+                        {members.map((member) => (
+                            <ListItem key={member.id}
+                                secondaryAction={
+                                    <Stack direction='row' spacing={2} alignItems="center">
+                                        <Box>
+                                            <Select
+                                                value={member.role.id}
+                                                onChange={(e) => handleRoleChange(member.id, e.target.value)}
+                                                size='small'
+                                                variant="standard"
+                                            >
+                                                {
+                                                    memberRoles?.map((mr) => (
+                                                        <MenuItem value={mr.id} >{mr.name}</MenuItem>
+                                                    ))
+                                                }
+                                            </Select>
+                                        </Box>
+                                        <Box>
+                                            <Stack direction="row" spacing={1}>
+                                                <IconButton size='small' color="success">
+                                                    <SaveIcon />
+                                                </IconButton>
+                                                <IconButton size='small' color="secondary">
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </Stack>
+                                        </Box>
+                                    </Stack>
+                                }
+                            >
+                                <Stack direction='row' spacing={2} alignItems="center"
+                                >
+                                    <Checkbox
+                                        edge="start"
+                                        onChange={() => handleSelect(member.id)}
+                                        checked={isSelected(member.id)}
+                                    />
+
+                                    <Box width={'100%'} flexGrow={1}>
+                                        <Stack direction='row' spacing={2} alignItems='center'>
+                                            <ListItemAvatar>
+                                                <Avatar src={member.avatarUrl} />
+                                            </ListItemAvatar>
+                                            <ListItemText
+                                                primary={member.user.firstName + ' ' + member.user.lastName}
+                                                secondary={member.user.email}
+                                            />
+                                        </Stack>
+                                    </Box>
+
+                                </Stack>
+                            </ListItem>
+                        ))}
+                    </List>
+
+                </Box>
+                <Box display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
+                    <Pagination count={10} variant="outlined" shape="rounded" />
+                </Box>
+            </Stack>
+        </Card>
     );
 };
 

@@ -9,11 +9,41 @@ import ProjectMemberHeader from "./ProjectMemberHeader";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import * as apiService from '../../api/index'
+import Invitation from "./Invition";
+
+const dummyMemberData = [
+    {
+        id: 1,
+        name: 'John Doe',
+        user: {
+            firstName: "Khang",
+            lastName: "Nguyễn",
+            email: 'john.doe@example.com',
+        },
+        // avatarUrl: 'https://i.pravatar.cc/150?img=1',
+        role: {
+            id: 1,
+            name: 'Admin',
+        }
+    },
+];
+
+const dummyRoleData = [
+    {
+        id: 1,
+        name: 'Admin',
+    },
+    {
+        id: 2,
+        name: 'Editor',
+    },
+];
+
 
 const ProjectMember = () => {
     const theme = useTheme();
-    const [members, setMembers] = useState(null);
-    const [memberRoles, setMemberRoles] = useState(null);
+    const [members, setMembers] = useState(dummyMemberData);
+    const [memberRoles, setMemberRoles] = useState(dummyRoleData);
     const project = useSelector((state) => state.project.currentProject)
     const workSpace = useSelector((state) => state.workspace.currentWorkspace)
 
@@ -70,20 +100,18 @@ const ProjectMember = () => {
 
 
     return (
-        <Grid container spacing={2}>
-            <Grid xs={6}>
-                <Card
-                    sx={{
-                        p: 4,
-                        width: '100%'
-                    }}
-                >
-                    <ProjectMemberHeader />
+        <Grid container spacing={2} height={'100% !important'}>
+            <Grid
+                item
+                xs={6}
+                height={'100% !important'}
+            >
+            
+                    {/* <ProjectMemberHeader /> */}
                     {(members?.length > 0 && memberRoles?.length > 0) && <MemberList members={members} memberRoles={memberRoles} />}
-                </Card>
             </Grid>
-            <Grid xs={6}>
-
+            <Grid item xs={6}>
+                <Invitation />
             </Grid>
         </Grid>
 

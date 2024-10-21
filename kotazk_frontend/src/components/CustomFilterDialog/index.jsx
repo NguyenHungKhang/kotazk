@@ -17,12 +17,16 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { useTheme } from '@emotion/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentFilterList } from '../../redux/actions/filter.action';
+import * as TablerIcons from '@tabler/icons-react'
+import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
 const CustomFilterDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [anchorEl, setAnchorEl] = useState(null);
     const [filterRows, setFilterRows] = useState([{ key: '', operation: '', value: '' }]);
+
+    const CancleIcon = TablerIcons["IconX"];
 
     const statuses = useSelector((state) => state.status.currentStatusList);
     const priorities = useSelector((state) => state.priority.currentPriorityList);
@@ -119,7 +123,7 @@ const CustomFilterDialog = () => {
                 anchorEl={anchorEl}
                 onClose={handleClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                PaperProps={{ style: { maxHeight: 700, width: 500, overflow: 'auto' } }} // Enable scroll for popover
+                PaperProps={{ style: { maxHeight: 700, width: 500, overflow: 'auto', bgcolor: theme.palette.background.default } }} // Enable scroll for popover
             >
                 <Box padding={4}>
                     {/* Clear All Button */}
@@ -133,69 +137,77 @@ const CustomFilterDialog = () => {
                             Clear
                         </Button>
                     </Stack>
+                    <Box bgcolor={getSecondBackgroundColor(theme)}
+                        p={4}
+                        borderRadius={2}
+                        my={2}
+                    >
+                        {filterRows.map((row, index) => (
+                            <Stack direction={'row'} alignItems="center" key={index}>
+                                {/* Key Select */}
+                                <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
+                                    <InputLabel>Key</InputLabel>
+                                    <Select
+                                        size='small'
+                                        value={row.key}
+                                        onChange={(e) => handleFilterChange(index, 'key', e.target.value)}
+                                    >
+                                        {Object.keys(keyLabelMap).map((key, i) => (
+                                            <MenuItem key={i} value={key}>
+                                                {keyLabelMap[key]}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                    {filterRows.map((row, index) => (
-                        <Box display="flex" alignItems="center" key={index} marginBottom={2}>
-                            {/* Key Select */}
-                            <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
-                                <InputLabel>Key</InputLabel>
-                                <Select
-                                    size='small'
-                                    value={row.key}
-                                    onChange={(e) => handleFilterChange(index, 'key', e.target.value)}
-                                >
-                                    {Object.keys(keyLabelMap).map((key, i) => (
-                                        <MenuItem key={i} value={key}>
-                                            {keyLabelMap[key]}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                {/* Operator Select */}
+                                <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
+                                    <InputLabel>Operator</InputLabel>
+                                    <Select
+                                        size='small'
+                                        value={row.operation}
+                                        onChange={(e) => handleFilterChange(index, 'operation', e.target.value)}
+                                        disabled={!row.key} // Disable until key is selected
+                                    >
+                                        {operations.map((operation, i) => (
+                                            <MenuItem key={i} value={operation}>
+                                                {operation}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                            {/* Operator Select */}
-                            <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
-                                <InputLabel>Operator</InputLabel>
-                                <Select
-                                    size='small'
-                                    value={row.operation}
-                                    onChange={(e) => handleFilterChange(index, 'operation', e.target.value)}
-                                    disabled={!row.key} // Disable until key is selected
-                                >
-                                    {operations.map((operation, i) => (
-                                        <MenuItem key={i} value={operation}>
-                                            {operation}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                {/* Value Select */}
+                                <FormControl size='small' fullWidth margin="normal">
+                                    <InputLabel>Value</InputLabel>
+                                    <Select
+                                        size='small'
+                                        value={row.value}
+                                        onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
+                                        disabled={!row.key} // Disable until key is selected
+                                    >
+                                        {getValueOptions(row.key).map((option, i) => (
+                                            <MenuItem key={i} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                            {/* Value Select */}
-                            <FormControl size='small' fullWidth margin="normal">
-                                <InputLabel>Value</InputLabel>
-                                <Select
-                                    size='small'
-                                    value={row.value}
-                                    onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
-                                    disabled={!row.key} // Disable until key is selected
-                                >
-                                    {getValueOptions(row.key).map((option, i) => (
-                                        <MenuItem key={i} value={option.value}>
-                                            {option.label}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            {/* Delete Button */}
-                            <IconButton onClick={() => deleteFilterRow(index)} sx={{ ml: 1 }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Box>
-                    ))}
-
+                                {/* Delete Button */}
+                                <Box>
+                                    <IconButton size='small' onClick={() => deleteFilterRow(index)} sx={{ ml: 1 }}>
+                                        <CancleIcon size={16} />
+                                    </IconButton>
+                                </Box>
+                            </Stack>
+                        ))}
+                    </Box>
                     {/* Add Row Button */}
                     <Button
                         variant="text"
+                        size='small'
+                        color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
                         onClick={addFilterRow}
                         startIcon={<AddIcon />}
                     >

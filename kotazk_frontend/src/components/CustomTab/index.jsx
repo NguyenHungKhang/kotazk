@@ -12,6 +12,7 @@ import { useSelector } from 'react-redux';
 import * as apiService from '../../api/index'
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import AddSectionDialog from './AddSectionDialog';
 
 const dummyData = [
     { label: 'Dashboard' },
@@ -156,8 +157,8 @@ export default function CustomTab() {
                         label={
                             <Box component={Link} to={`/project/${project?.id}/section/gantt`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <HomeIcon sx={{ fontSize: 20 }} />
-                                <span>Gantt</span>
-                                {sectionId == null &&// Chỉ render icon khi tab được chọn
+                                <span>Gantt template</span>
+                                {/* {sectionId == null &&// Chỉ render icon khi tab được chọn
                                     <IconButton
                                         sx={{
                                             p: 0.5,
@@ -171,7 +172,31 @@ export default function CustomTab() {
                                     >
                                         <MoreHorizIcon fontSize='small' />
                                     </IconButton>
-                                }
+                                } */}
+                            </Box>
+                        }
+                    />
+                     <AntTab
+                        value={-2}
+                        label={
+                            <Box component={Link} to={`/project/${project?.id}/section/calendar`} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <HomeIcon sx={{ fontSize: 20 }} />
+                                <span>Calendar template</span>
+                                {/* {sectionId == null &&// Chỉ render icon khi tab được chọn
+                                    <IconButton
+                                        sx={{
+                                            p: 0.5,
+                                            m: 0,
+                                            ml: 1,
+                                            color: theme.palette.background.default,
+                                            transition: 'opacity 0.3s ease',
+                                        }}
+                                        size='small'
+                                        className="more-icon"
+                                    >
+                                        <MoreHorizIcon fontSize='small' />
+                                    </IconButton>
+                                } */}
                             </Box>
                         }
                     />
@@ -180,9 +205,10 @@ export default function CustomTab() {
                     <Divider orientation="vertical" variant="middle" flexItem />
                 </Box>
                 <Box>
-                    <IconButton size="small">
+                    {/* <IconButton size="small">
                         <AddIcon fontSize='small' />
-                    </IconButton>
+                    </IconButton> */}
+                    <AddSectionDialog />
                 </Box>
             </Stack>
 

@@ -85,7 +85,7 @@ const ProjectMemberHeader = () => {
                     Add member
                 </Button>
             </Stack>
-            <Stack direction='row' spacing={2}>
+            {/* <Stack direction='row' spacing={2}>
                 <Box
                     bgcolor={getSecondBackgroundColor(theme)}
                     borderRadius={2}
@@ -113,7 +113,7 @@ const ProjectMemberHeader = () => {
                     </Typography>
                     <Typography textAlign='center' variant="h5">Searching Members</Typography>
                 </Box>
-            </Stack>
+            </Stack> */}
         </Box>
     );
 }

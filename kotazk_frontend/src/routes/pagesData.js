@@ -21,6 +21,8 @@ import CustomColorPicker from "../components/CustomColorPicker";
 import ProjectSetting from "../pages/ProjectSetting";
 import WorkspaceList from "../pages/WorkspaceList";
 import Gantt from "../pages/Gantt";
+import ProjectCalendar from "../pages/ProjectCalendar";
+import ProjectList from "../pages/ProjectList";
 
 const pagesData = [
   {
@@ -61,6 +63,16 @@ const pagesData = [
   {
     path: "/project/:projectId/section/gantt",
     element: <Project><Gantt /></Project>,
+    title: "playground"
+  },
+  {
+    path: "/project/:projectId/section/calendar",
+    element: <Project><ProjectCalendar /></Project>,
+    title: "playground"
+  },
+  {
+    path: "/project/:projectId/section/list",
+    element: <Project><ProjectList /></Project>,
     title: "playground"
   },
   {

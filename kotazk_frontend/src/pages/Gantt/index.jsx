@@ -30,7 +30,6 @@ import { setTaskDialog } from '../../redux/actions/dialog.action';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import * as TablerIcons from '@tabler/icons-react'
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
-import '@syncfusion/ej2-base/styles/material-dark.css';
 import { styled } from 'styled-components';
 
 const DarkModeGantt = styled.div`

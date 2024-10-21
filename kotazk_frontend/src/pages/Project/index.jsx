@@ -128,7 +128,6 @@ const Project = ({ children }) => {
                             // `,
                             overflow: 'hidden',
                             width: open ? '85vw' : '94vw',
-                            borderRadius: 4,
                             transition: 'width 0.3s',
                             // transition: 'all 0.3s ease',  // Smooth transition when hover happens
                             // border: "2px solid",
