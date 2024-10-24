@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -7,6 +7,11 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import styled from "@emotion/styled";
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
+import * as apiService from '../../api/index'
+import { useSelector } from 'react-redux';
+import CustomTaskDialog from '../../components/CustomTaskDialog';
+import { useDispatch } from 'react-redux';
+import { setTaskDialog } from '../../redux/actions/dialog.action';
 
 export const StyleWrapper = styled.div`
   .fc td {
@@ -17,32 +22,53 @@ export const StyleWrapper = styled.div`
 const CalendarComponent = () => {
 
   const theme = useTheme();
-  // Dummy events
-  const [events] = useState([
-    {
-      title: 'Meeting with John',
-      start: '2024-10-21T10:00:00',
-      end: '2024-10-21T12:00:00',
-      backgroundColor: '#ff0000', // Red background for this event
-    },
-    {
-      title: 'Team Lunch',
-      start: '2024-10-22T13:00:00',
-      end: '2024-10-22T14:00:00',
-      backgroundColor: '#00ff00', // Green background for this event
-    },
-    {
-      title: 'Project Deadline',
-      start: '2024-10-25',
-      backgroundColor: '#0000ff', // Blue background for this event
-    },
-    {
-      title: 'Conference',
-      start: '2024-10-28',
-      end: '2024-10-30',
-      backgroundColor: '#ff9900', // Orange background for this event
-    },
-  ]);
+  const project = useSelector((state) => state.project.currentProject)
+  const [tasks, setTasks] = useState(null);
+  const [displayTasks, setDisplayTasks] = useState(null);
+  const [startDayRange, setStartDateRange] = useState(null);
+  const [endDayRange, setEndDateRange] = useState(null);
+  const [tasksPagination, setTaskPagination] = useState(null);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (project != null && startDayRange != null && endDayRange != null)
+      initialFetch();
+  }, [project, startDayRange, endDayRange])
+
+  const initialFetch = async () => {
+    const filter = {
+      filters: [],
+    };
+
+    const tasksResponse = await apiService.taskAPI.getPageByProject(project?.id, filter);
+    if (tasksResponse?.data) {
+      setTasks(tasksResponse.data.content);
+      setDisplayTasks(
+        tasksResponse.data.content.map(task => ({
+          id: task?.id,
+          title: task?.name,
+          start: task?.startAt,
+          end: task?.endAt,
+          allDay: true
+        }))
+      );
+    }
+  };
+
+  const saveEndDate = async (taskId, range) => {
+    const data = {
+      "startAt": range.start,
+      "endAt": range.end
+    }
+
+    try {
+      const response = await apiService.taskAPI.update(taskId, data);
+      if (response?.data) {
+      }
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  }
 
   // Handle date click
   const handleDateClick = (info) => {
@@ -50,13 +76,31 @@ const CalendarComponent = () => {
   };
 
   const handleEventClick = (info) => {
-    console.log(info)
-    alert(`Clicked on event`);
+    console.log(info);
+    const clickedTask = tasks.find(t => t.id == info.event._def.publicId);
+    console.log(clickedTask);
+    const taskDialogData = {
+      task: clickedTask,
+      open: true
+    }
+    dispatch(setTaskDialog(taskDialogData));
   };
 
   const handleEventChange = (info) => {
-    console.log(info)
+    console.log(info.event._instance.range)
+    saveEndDate(info.event._def.publicId, info.event._instance.range)
     alert(`Change on event`);
+  };
+
+  const handleDatesSet = (dateInfo) => {
+    const { start, end } = dateInfo;
+    setStartDateRange(start)
+    setEndDateRange(end)
+  };
+
+  const handleEventResize = (info) => {
+    saveEndDate(info.event._def.publicId, info.event._instance.range)
+    console.log(info)
   };
 
   return (
@@ -100,19 +144,23 @@ const CalendarComponent = () => {
       <FullCalendar
         plugins={[interactionPlugin, dayGridPlugin]}
         initialView="dayGridWeek"
-        events={events}
+        events={displayTasks}
         dateClick={handleDateClick}
         eventClick={handleEventClick}
-        eventChange={handleEventChange}
         eventBackgroundColor={theme.palette.primary.main}
-        editable={true} // Enables event drag and drop
-        selectable={true} // Allows selecting a date range
+        eventResizableFromStart={true}
+        eventResize={handleEventResize}
+        eventDrop={handleEventChange}
+        editable={true}
+        selectable={true}
         height={'100%'}
+        datesSet={handleDatesSet}
         headerToolbar={{
           left: 'title',
           right: 'prev today next dayGridWeek,dayGridMonth' // user can switch between the two
         }}
       />
+      <CustomTaskDialog />
     </Card>
   );
 };
