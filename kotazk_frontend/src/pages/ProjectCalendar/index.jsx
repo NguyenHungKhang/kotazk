@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
+import styled from "@emotion/styled";
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { Card, useTheme } from '@mui/material';
 import timeGridPlugin from '@fullcalendar/timegrid'
-import styled from "@emotion/styled";
+import multiMonthPlugin from '@fullcalendar/multimonth'
+import FullCalendar from '@fullcalendar/react';
+import { Card, Skeleton, alpha, darken, useTheme } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
-import * as apiService from '../../api/index'
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import * as apiService from '../../api/index';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
-import { useDispatch } from 'react-redux';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
+import { setCurrentTaskList } from '../../redux/actions/task.action';
 
 export const StyleWrapper = styled.div`
   .fc td {
@@ -19,11 +20,34 @@ export const StyleWrapper = styled.div`
   }`
 
 
+const enhancedIconColors = [
+  "#f53d3d", // Notion Red
+  "#f53d9f", // Notion Pink
+  "#8a3df5", // Notion Purple
+  "#0d9af2", // Notion Blue
+  "#47ebcd", // Notion Green
+  "#FFDC49", // Notion Yellow
+  "#FFA344", // Notion Orange
+  "#f5743d", // Notion Brown
+  "#979A9B", // Notion Grey
+];
+
+// Create an array of 100 colors by repeating the enhancedIconColors
+const fullColorPalette = Array.from({ length: 100 }, (_, i) =>
+  enhancedIconColors[i % enhancedIconColors.length]
+);
+
+function getColorFromInteger(num) {
+  // Map the integer to the fullColorPalette by taking modulo 100
+  const colorIndex = (num - 1) % 100;
+  return fullColorPalette[colorIndex];
+}
+
 const CalendarComponent = () => {
 
   const theme = useTheme();
   const project = useSelector((state) => state.project.currentProject)
-  const [tasks, setTasks] = useState(null);
+  const tasks = useSelector((state) => state.task.currentTaskList)
   const [displayTasks, setDisplayTasks] = useState(null);
   const [startDayRange, setStartDateRange] = useState(null);
   const [endDayRange, setEndDateRange] = useState(null);
@@ -42,14 +66,17 @@ const CalendarComponent = () => {
 
     const tasksResponse = await apiService.taskAPI.getPageByProject(project?.id, filter);
     if (tasksResponse?.data) {
-      setTasks(tasksResponse.data.content);
+      dispatch(setCurrentTaskList(tasksResponse.data.content));
       setDisplayTasks(
         tasksResponse.data.content.map(task => ({
           id: task?.id,
           title: task?.name,
           start: task?.startAt,
           end: task?.endAt,
-          allDay: true
+          allDay: true,
+          backgroundColor: getColorFromInteger(task?.id),
+          borderColor: darken(getColorFromInteger(task?.id), 0.3),
+          textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
         }))
       );
     }
@@ -77,6 +104,7 @@ const CalendarComponent = () => {
 
   const handleEventClick = (info) => {
     console.log(info);
+    console.log(tasks);
     const clickedTask = tasks.find(t => t.id == info.event._def.publicId);
     console.log(clickedTask);
     const taskDialogData = {
@@ -110,11 +138,14 @@ const CalendarComponent = () => {
         boxShadow: 0,
         height: '100%',
         display: 'flex', flexDirection: 'column',
-        '& .fc tbody': {
-          bgcolor: getSecondBackgroundColor(theme)
+        '& .fc .fc-scrollgrid-section-body': {
+          bgcolor: theme.palette.mode == "light" ? theme.palette.grey[100] : theme.palette.grey[900]
         },
         '& .fc thead': {
           bgcolor: theme.palette.mode == "light" ? theme.palette.background.paper : 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))'
+        },
+        '& .fc .fc-day': {
+          bgcolor: theme.palette.mode == "light" ? theme.palette.background.default : "#1E1E1E"
         },
         '& .fc th, td': {
           borderColor: theme.palette.mode == "light" ? theme.palette.grey[300] : theme.palette.grey[700],
@@ -138,11 +169,20 @@ const CalendarComponent = () => {
         '& .fc .fc-toolbar h2': {
           fontSize: 18,
           fontWeight: 650
+        },
+        '& .fc .fc-event': {
+          padding: 1,
+          fontSize: 12,
+          fontWeight: 650,
+          borderRadius: 2
+        },
+        '& .fc .fc-day-today': {
+          bgcolor: `${alpha(theme.palette.primary.main, 0.1)} !important`
         }
       }}
     >
       <FullCalendar
-        plugins={[interactionPlugin, dayGridPlugin]}
+        plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin]}
         initialView="dayGridWeek"
         events={displayTasks}
         dateClick={handleDateClick}
@@ -151,13 +191,14 @@ const CalendarComponent = () => {
         eventResizableFromStart={true}
         eventResize={handleEventResize}
         eventDrop={handleEventChange}
+        nowIndicator={true}
         editable={true}
         selectable={true}
         height={'100%'}
         datesSet={handleDatesSet}
         headerToolbar={{
           left: 'title',
-          right: 'prev today next dayGridWeek,dayGridMonth' // user can switch between the two
+          right: 'prev today next timeGridDay,dayGridWeek,dayGridMonth,multiMonthYear' // user can switch between the two
         }}
       />
       <CustomTaskDialog />

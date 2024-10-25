@@ -3,18 +3,16 @@ import * as allIcons from "@tabler/icons-react";
 import { useTheme } from "@mui/material/styles";
 import { IconButton, Popover, Grid, Button, ClickAwayListener, Divider, Box, alpha, Stack, Typography } from "@mui/material";
 
-
-// Enhanced Icon Colors array
 const enhancedIconColors = [
-    "#f53d3d", // Notion Red
-    "#f53d9f", // Notion Pink
-    "#8a3df5", // Notion Purple
-    "#0d9af2", // Notion Blue
-    "#47ebcd", // Notion Green
-    "#FFDC49", // Notion Yellow
-    "#FFA344", // Notion Orange
-    "#f5743d", // Notion Brown
-    "#979A9B", // Notion Grey
+    "#f53d3d", // Red
+    "#f53d9f", // Pink
+    "#8a3df5", // Purple
+    "#0d9af2", // Blue
+    "#47ebcd", // Green
+    "#FFDC49", // Yellow
+    "#FFA344", // Orange
+    "#f5743d", // Brown
+    "#979A9B", // Grey
 ];
 
 // Checkmark SVG

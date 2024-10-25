@@ -1,4 +1,4 @@
-import { Box, Button, ListItem, useTheme } from "@mui/material";
+import { Box, Button, ListItem, Skeleton, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomStatus from "../CustomStatus";
 import { useEffect, useState } from "react";
@@ -9,19 +9,42 @@ import { setCurrentTaskList } from "../../redux/actions/task.action";
 import { updateAndAddArray } from "../../utils/arrayUtil";
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 
-const CustomStatusPicker = ({ statusId, taskId }) => {
-    const statuses = useSelector((state) => state.status.currentStatusList);
-    const dispatch = useDispatch();
-    const tasks = useSelector((state) => state.task.currentTaskList);
+const CustomStatusPicker = ({ currentStatus, taskId }) => {
+    const [statuses, setStatuses] = useState();
+    const tasks = useSelector((state) => state.task.currentTaskList)
     const [status, setStatus] = useState(null);
-    useEffect(() => {
-        if (statuses && statusId != null) {
-            const foundStatus = statuses.find(status => status.id === statusId);
-            setStatus(foundStatus || null);
-        }
-    }, [statuses, statusId]);
+    const dispatch = useDispatch();
 
-    const saveTaskStatus = async (object) => {
+    useEffect(() => {
+        if (currentStatus != null) {
+            setStatus(currentStatus);
+        }
+    }, [currentStatus]);
+
+    useEffect(() => {
+        if (currentStatus != null)
+            listStatusFetch()
+    }, [currentStatus?.projectId])
+
+    const listStatusFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.statusAPI.getPageByProject(currentStatus?.projectId, data);
+            if (response?.data) {
+                setStatuses(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
+    const saveStatus = async (object) => {
         const data = {
             "statusId": object?.id,
         }
@@ -40,7 +63,7 @@ const CustomStatusPicker = ({ statusId, taskId }) => {
         }
     }
 
-    return status == null ? <>Loading</> : (
+    return (status == null || statuses == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
@@ -49,7 +72,7 @@ const CustomStatusPicker = ({ statusId, taskId }) => {
                 )}
                 selectedObject={status}
                 setSelectedObject={setStatus}
-                saveMethod={saveTaskStatus}
+                saveMethod={saveStatus}
                 ItemComponent={CustomStatusItemPicker}
                 objectsData={statuses}
                 isNotNull={true}

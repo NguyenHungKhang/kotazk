@@ -1,4 +1,4 @@
-import { Box, Button, ListItem, Typography, useTheme } from "@mui/material";
+import { Box, Button, ListItem, Skeleton, Typography, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,18 +9,36 @@ import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomMember from "../CustomMember";
 
-const CustomAssigneePicker = ({ memberId, taskId }) => {
-    const members = useSelector((state) => state.member.currentProjectMemberList)
+const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
+    const project = useSelector((state) => state.project.currentProject)
+    const [members, setMembers] = useState(null);
     const tasks = useSelector((state) => state.task.currentTaskList)
-    const [assignee, setAssignee] = useState(memberId ? members.find(member => member.id === memberId) : null);
+    const [assignee, setAssignee] = useState(currentAssignee ? currentAssignee : null);
     const dispatch = useDispatch();
 
-    // useEffect(() => {
-    //     if (members && memberId != null) {
-    //         const foundAssignee = members.find(member => member.id === memberId);
-    //         setAssignee(foundAssignee || null);
-    //     }
-    // }, [members, memberId]);
+    useEffect(() => {
+        if (project != null)
+            listMemberFetch()
+    }, [project])
+
+    const listMemberFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'user.lastName',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.memberAPI.getPageByProject(project.id, data);
+            if (response?.data) {
+                setMembers(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
 
     const saveAssignee = async (object) => {
         const data = {
@@ -41,7 +59,7 @@ const CustomAssigneePicker = ({ memberId, taskId }) => {
         }
     }
 
-    return (
+    return (members == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
@@ -109,7 +127,7 @@ const CustomAssigneeItemPicker = (props) => {
             onClick={() => props.onClick(props.object)}
             dense
         >
-            <CustomMember member={props.object} isShowName={true}  />
+            <CustomMember member={props.object} isShowName={true} />
         </ListItem>
     )
 }

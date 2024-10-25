@@ -1,4 +1,4 @@
-import { Box, Button, ListItem, useTheme } from "@mui/material";
+import { Box, Button, ListItem, Skeleton, useTheme } from "@mui/material";
 import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomTaskType from "../CustomTaskType";
 import { useEffect, useState } from "react";
@@ -9,18 +9,40 @@ import { updateAndAddArray } from "../../utils/arrayUtil";
 import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 
-const CustomTaskTypePicker = ({ taskTypeId, taskId }) => {
-    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
+const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
+    const [taskTypes, setTaskTypes] = useState();
     const tasks = useSelector((state) => state.task.currentTaskList)
     const [taskType, setTaskType] = useState(null);
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (taskTypes && taskTypeId != null) {
-            const foundTaskType = taskTypes.find(taskType => taskType.id === taskTypeId);
-            setTaskType(foundTaskType || null); 
+        if (currentTaskType != null) {
+            setTaskType(currentTaskType);
         }
-    }, [taskTypes, taskTypeId]);
+    }, [currentTaskType]);
+
+    useEffect(() => {
+        if (currentTaskType != null)
+            listTaskTypeFetch()
+    }, [currentTaskType?.projectId])
+
+    const listTaskTypeFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.taskTypeAPI.getPageByProject(currentTaskType?.projectId, data);
+            if (response?.data) {
+                setTaskTypes(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
 
     const saveTaskType = async (object) => {
         const data = {
@@ -41,7 +63,7 @@ const CustomTaskTypePicker = ({ taskTypeId, taskId }) => {
         }
     }
 
-    return taskType == null ? <>Loading...</> : (
+    return (taskType == null || taskTypes == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
@@ -73,10 +95,10 @@ const CustomTaskTypeOpenComponent = ({ onClick, taskType, isFocusing }) => {
                 '&:hover': {
                     bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
                 },
-                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null 
+                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
             }}
         >
-            <CustomTaskType taskType={taskType} changeable={false}/>
+            <CustomTaskType taskType={taskType} changeable={false} />
         </Box>
     )
 }
@@ -97,7 +119,7 @@ const CustomTaskTypeItemPicker = (props) => {
             onClick={() => props.onClick(props.object)}
             dense
         >
-            <CustomTaskType taskType={props.object} changeable={false}/>
+            <CustomTaskType taskType={props.object} changeable={false} />
         </ListItem>
     )
 }

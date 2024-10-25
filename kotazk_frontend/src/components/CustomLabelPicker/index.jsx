@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, ListItem, Stack, useTheme } from "@mui/material";
+import { Box, Button, IconButton, ListItem, Skeleton, Stack, useTheme } from "@mui/material";
 import CustomLabel from "../CustomLabel";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -10,18 +10,42 @@ import { setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomPickerMultiObjectDialog from "../CustomPickerMultiObjectDialog";
 import * as TablerIcon from '@tabler/icons-react'
 
-const CustomLabelPicker = ({ labelIds, taskId }) => {
-    const labels = useSelector((state) => state.label.currentLabelList)
+const CustomLabelPicker = ({ currentLabelList, taskId }) => {
+    const project = useSelector((state) => state.project.currentProject)
+    const [labels, setLabels] = useState(null);
     const tasks = useSelector((state) => state.task.currentTaskList)
     const [selectedLabels, setSelectedLabels] = useState([]);
     const dispatch = useDispatch();
 
+
     useEffect(() => {
-        if (labels && labelIds) {
-            const foundLabels = labels.filter(label => labelIds.includes(label.id));
-            setSelectedLabels(foundLabels);
+        if (project != null)
+            listLabelsFetch()
+    }, [project])
+
+    const listLabelsFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'name',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.labelAPI.getPageByProject(project.id, data);
+            if (response?.data) {
+                setLabels(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
         }
-    }, [labels, labelIds]);
+    }
+
+    useEffect(() => {
+        if (currentLabelList != null) {
+            setSelectedLabels(currentLabelList);
+        }
+    }, [currentLabelList]);
 
     const saveLabel = async (objects) => {
         const data = {
@@ -42,7 +66,7 @@ const CustomLabelPicker = ({ labelIds, taskId }) => {
         }
     }
 
-    return (
+    return (labels == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Stack direction='row' spacing={2} alignItems='center'>
             <CustomPickerMultiObjectDialog
 

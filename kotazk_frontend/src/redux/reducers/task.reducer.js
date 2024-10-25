@@ -1,5 +1,5 @@
 const initialState = {
-    currentTaskList: [],
+    currentTaskList: null,
 }
 
 const TaskReducer = (state = initialState, action) => {

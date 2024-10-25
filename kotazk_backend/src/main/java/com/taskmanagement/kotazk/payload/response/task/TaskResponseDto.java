@@ -1,6 +1,12 @@
 package com.taskmanagement.kotazk.payload.response.task;
 
 import com.taskmanagement.kotazk.entity.TaskType;
+import com.taskmanagement.kotazk.payload.response.label.LabelResponseDto;
+import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
+import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
+import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
+import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,19 +24,19 @@ public class TaskResponseDto {
     Long id;
     String name;
     String description;
-    Long projectId;
+    ProjectResponseDto project;
     Long creatorId;
-    Long assigneeId;
+    MemberResponseDto assignee;
     Long reporterId;
-    Long statusId;
-    Long priorityId;
+    StatusResponseDto status;
+    PriorityResponseDto priority;
     Long timeEstimate;
     Long timeTracking;
     Boolean isCompleted;
     Timestamp startAt;
     Timestamp endAt;
-    Long taskTypeId;
+    TaskTypeResponseDto taskType;
     Long position;
     Set<Long> collaboratorIds = new HashSet<>();
-    Set<TaskLabelResponseDto> labels = new HashSet<>();
+    Set<LabelResponseDto> labels = new HashSet<>();
 }

@@ -1,4 +1,4 @@
-import { Box, DialogActions, Divider, IconButton, Paper, Slide, Stack, Typography, useTheme } from '@mui/material';
+import { Box, DialogActions, Divider, IconButton, Paper, Skeleton, Slide, Stack, Typography, useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -196,100 +196,100 @@ const CustomTaskDialog = () => {
                 </Box>
                 <Box mt={6} ml={2}>
                     <Grid container spacing={1}>
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <TaskTypeIcon size={16} stroke={2} />
-                                    <Typography pt={0.5} variant='body2'>
-                                        Task type
-                                    </Typography>
-                                </Stack>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <TaskTypeIcon size={16} stroke={2} />
+                                <Typography pt={0.5} variant='body2'>
+                                    Task type
+                                </Typography>
+                            </Stack>
 
-                            </Grid>
-                            <Grid item xs={8}>
-                                <CustomTaskTypePicker taskTypeId={task?.taskTypeId} taskId={task?.id} />
-                            </Grid>
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <StatusIcon size={16} stroke={2} />
-                                    <Typography pt={0.5}>
-                                        Status
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
-                                <CustomStatusPicker statusId={task?.statusId} taskId={task?.id} />
-                            </Grid>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <CustomTaskTypePicker currentTaskType={task?.taskType} taskId={task?.id} />
+                        </Grid>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <StatusIcon size={16} stroke={2} />
+                                <Typography pt={0.5}>
+                                    Status
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <CustomStatusPicker currentStatus={task?.status} taskId={task?.id} />
+                        </Grid>
 
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <DateIcon size={16} stroke={2} />
-                                    <Typography pt={0.5}>
-                                        Date
-                                    </Typography>
-                                </Stack>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <DateIcon size={16} stroke={2} />
+                                <Typography pt={0.5}>
+                                    Date
+                                </Typography>
+                            </Stack>
 
-                            </Grid>
-                            <Grid item xs={8}>
-                                <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id} />
-                            </Grid>
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <TimeEstimateIcon size={16} stroke={2} />
-                                    <Typography pt={0.5}>
-                                        Time Estimate
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
-                                <TextField
-                                    required
-                                    inputProps={{ type: 'number' }}
-                                    size="small"
-                                    id="time_estimate"
-                                    name="time_estimate"
-                                    fullWidth
-                                    placeholder='Empty'
-                                    variant="outlined"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 2,
-                                            py: 0,  // Removes padding inside the root container
-                                            '& .MuiSelect-select': {
-                                                py: 1,
-                                                px: 1,  // Removes padding between value and border
-                                                minHeight: 'auto',  // Resets the default min height
-                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
-                                            },
-                                            '& fieldset': {
-                                                borderColor: 'transparent !important',
-                                            },
-                                            '&:hover fieldset': {
-                                                bgcolor: theme.palette.action.hover
-                                            },
-                                            '&:focus fieldset': {
-                                                bgcolor: theme.palette.action.focus
-                                            },
-                                            '& .MuiSelect-icon': {
-                                                display: 'none',  // Hides the arrow icon
-                                            },
+                        </Grid>
+                        <Grid item xs={8}>
+                            <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id} />
+                        </Grid>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <TimeEstimateIcon size={16} stroke={2} />
+                                <Typography pt={0.5}>
+                                    Time Estimate
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <TextField
+                                required
+                                inputProps={{ type: 'number' }}
+                                size="small"
+                                id="time_estimate"
+                                name="time_estimate"
+                                fullWidth
+                                placeholder='Empty'
+                                variant="outlined"
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        borderRadius: 2,
+                                        py: 0,  // Removes padding inside the root container
+                                        '& .MuiSelect-select': {
+                                            py: 1,
+                                            px: 1,  // Removes padding between value and border
+                                            minHeight: 'auto',  // Resets the default min height
+                                            lineHeight: 'normal',  // Adjusts line height to prevent extra space
                                         },
-                                    }}
+                                        '& fieldset': {
+                                            borderColor: 'transparent !important',
+                                        },
+                                        '&:hover fieldset': {
+                                            bgcolor: theme.palette.action.hover
+                                        },
+                                        '&:focus fieldset': {
+                                            bgcolor: theme.palette.action.focus
+                                        },
+                                        '& .MuiSelect-icon': {
+                                            display: 'none',  // Hides the arrow icon
+                                        },
+                                    },
+                                }}
 
-                                />
-                            </Grid>
+                            />
+                        </Grid>
 
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <AssigneeIcon size={16} stroke={2} />
-                                    <Typography variant='body2' pt={0.5}>
-                                        Assignee
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
-                                <CustomAssigneePicker memberId={task?.assigneeId} taskId={task?.id} />
-                            </Grid>
-                            {/* <Grid item xs={4}>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <AssigneeIcon size={16} stroke={2} />
+                                <Typography variant='body2' pt={0.5}>
+                                    Assignee
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid item xs={8}>
+                            <CustomAssigneePicker currentAssignee={task?.assignee} taskId={task?.id} />
+                        </Grid>
+                        {/* <Grid item xs={4}>
                                 <Stack direction='row' spacing={2} alignItems='center'>
                                     <ReporterIcon size={16} stroke={2} />
                                     <Typography variant='body2' pt={0.5}>
@@ -311,19 +311,19 @@ const CustomTaskDialog = () => {
                             <Grid item xs={8}>
                                 <AssigneesComponent />
                             </Grid> */}
-                            <Grid item xs={4} display='flex' alignItems='center'>
-                                <Stack direction='row' spacing={2} alignItems='center'>
-                                    <PriorityIcon size={16} stroke={2} />
-                                    <Typography variant='body2' pt={0.5}>
-                                        Priority
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
-                                {/* <PriorityComponent /> */}
-                                <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
-                            </Grid>
-                            {/* <Grid item xs={4}>
+                        <Grid item xs={4} display='flex' alignItems='center'>
+                            <Stack direction='row' spacing={2} alignItems='center'>
+                                <PriorityIcon size={16} stroke={2} />
+                                <Typography variant='body2' pt={0.5}>
+                                    Priority
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                        <Grid item xs={8}>
+                            {/* <PriorityComponent /> */}
+                            <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
+                        </Grid>
+                        {/* <Grid item xs={4}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
                                                 <LinkedTasksIcon size={16} stroke={2} />
                                                 <Typography variant='body2' pt={0.5}>
@@ -353,7 +353,7 @@ const CustomTaskDialog = () => {
                         </Grid>
                         <Grid item xs={10}>
                             {/* <LabelComponent /> */}
-                            <CustomLabelPicker labelIds={task?.labels.map(label => label.labelId)} taskId={task?.id} />
+                            <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
                         </Grid>
                     </Grid>
                 </Box>

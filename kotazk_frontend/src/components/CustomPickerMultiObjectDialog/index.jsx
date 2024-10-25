@@ -30,7 +30,7 @@ const CustomPickerMultiObjectDialog = ({ selectedObjects, setSelectedObjects, sa
     const handleSelectObject = (object, event) => {
         event.stopPropagation();
         let objectList;
-        if (selectedObjects.includes(object)) {
+        if (selectedObjects.includes(object) || selectedObjects.find(selectedObject => selectedObject.id === object.id)) {
             objectList = selectedObjects.filter((obj) => obj.id !== object.id);
         } else {
             objectList = [...selectedObjects, object];

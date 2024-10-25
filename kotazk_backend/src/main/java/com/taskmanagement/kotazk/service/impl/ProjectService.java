@@ -501,7 +501,6 @@ public class ProjectService implements IProjectService {
         );
     }
 
-
     // Utilities function
     private String generateUniqueKey() {
         String key;
