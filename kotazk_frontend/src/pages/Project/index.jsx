@@ -71,6 +71,7 @@ const Project = ({ children }) => {
 
     return (
         <Box p={4}
+            paddingBottom={"8px !important"}
             height={"100vh"}
             width={"100vw !important"}
             sx={{
@@ -81,12 +82,12 @@ const Project = ({ children }) => {
                 backgroundPosition: 'center',
             }}
         >
-            <Stack direction='row' spacing={4} alignItems="stretch" height={"calc(100% - 32px)"}>
+            <Stack direction='row' spacing={2} alignItems="stretch" height={"calc(100% - 12px)"}>
                 <SideBar open={open} setOpen={setOpen} />
                 <Stack
                     display="flex"
                     flexDirection="column"
-                    spacing={4}
+                    spacing={2}
                     ml={4}
                     flexGrow={1}
                 >
@@ -127,7 +128,7 @@ const Project = ({ children }) => {
                             //     var(--dot-color)
                             // `,
                             overflow: 'hidden',
-                            width: open ? '85vw' : '94vw',
+                            width: open ? '86vw' : '95vw',
                             transition: 'width 0.3s',
                             // transition: 'all 0.3s ease',  // Smooth transition when hover happens
                             // border: "2px solid",

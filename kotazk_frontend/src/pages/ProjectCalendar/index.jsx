@@ -4,7 +4,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 import FullCalendar from '@fullcalendar/react';
-import { Card, Skeleton, alpha, darken, useTheme } from '@mui/material';
+import { Card, Skeleton, Stack, alpha, darken, useTheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 
@@ -13,6 +13,7 @@ import * as apiService from '../../api/index';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
 import { setCurrentTaskList } from '../../redux/actions/task.action';
+import * as TablerIcons from '@tabler/icons-react'
 
 export const StyleWrapper = styled.div`
   .fc td {
@@ -54,6 +55,8 @@ const CalendarComponent = () => {
   const [tasksPagination, setTaskPagination] = useState(null);
   const dispatch = useDispatch();
 
+const TaskUncompleteIcon = TablerIcons["IconCircle"]
+
   useEffect(() => {
     if (project != null && startDayRange != null && endDayRange != null)
       initialFetch();
@@ -74,9 +77,9 @@ const CalendarComponent = () => {
           start: task?.startAt,
           end: task?.endAt,
           allDay: true,
-          backgroundColor: getColorFromInteger(task?.id),
-          borderColor: darken(getColorFromInteger(task?.id), 0.3),
-          textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
+          // backgroundColor: getColorFromInteger(task?.id),
+          // borderColor: darken(getColorFromInteger(task?.id), 0.3),
+          // textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
         }))
       );
     }
@@ -103,10 +106,7 @@ const CalendarComponent = () => {
   };
 
   const handleEventClick = (info) => {
-    console.log(info);
-    console.log(tasks);
     const clickedTask = tasks.find(t => t.id == info.event._def.publicId);
-    console.log(clickedTask);
     const taskDialogData = {
       task: clickedTask,
       open: true
@@ -130,6 +130,15 @@ const CalendarComponent = () => {
     saveEndDate(info.event._def.publicId, info.event._instance.range)
     console.log(info)
   };
+
+  const renderEventContent = (eventInfo) => (
+    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+      <TaskUncompleteIcon size={18} />
+      <strong>{eventInfo.timeText}</strong>
+      <div>{eventInfo.event.title}</div>
+      {/* <div style={{ fontSize: '0.8em', color: '#888' }}>{eventInfo.event.extendedProps.description}</div> */}
+    </Stack>
+  );
 
   return (
     <Card
@@ -174,7 +183,8 @@ const CalendarComponent = () => {
           padding: 1,
           fontSize: 12,
           fontWeight: 650,
-          borderRadius: 2
+          borderRadius: 2,
+          borderWidth: 2
         },
         '& .fc .fc-day-today': {
           bgcolor: `${alpha(theme.palette.primary.main, 0.1)} !important`
@@ -187,7 +197,8 @@ const CalendarComponent = () => {
         events={displayTasks}
         dateClick={handleDateClick}
         eventClick={handleEventClick}
-        eventBackgroundColor={theme.palette.primary.main}
+        eventBackgroundColor={darken(theme.palette.primary.main, 0.5)}
+        eventBorderColor={theme.palette.primary.main}
         eventResizableFromStart={true}
         eventResize={handleEventResize}
         eventDrop={handleEventChange}
@@ -196,6 +207,7 @@ const CalendarComponent = () => {
         selectable={true}
         height={'100%'}
         datesSet={handleDatesSet}
+        eventContent={renderEventContent}
         headerToolbar={{
           left: 'title',
           right: 'prev today next timeGridDay,dayGridWeek,dayGridMonth,multiMonthYear' // user can switch between the two
