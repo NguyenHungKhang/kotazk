@@ -21,29 +21,6 @@ const CustomStatusPicker = ({ currentStatus, taskId }) => {
         }
     }, [currentStatus]);
 
-    useEffect(() => {
-        if (currentStatus != null)
-            listStatusFetch()
-    }, [currentStatus?.projectId])
-
-    const listStatusFetch = async () => {
-        try {
-            const data = {
-                'sortBy': 'position',
-                'sortDirectionAsc': true,
-                'filters': [
-
-                ]
-            }
-            const response = await apiService.statusAPI.getPageByProject(currentStatus?.projectId, data);
-            if (response?.data) {
-                setStatuses(response?.data.content);
-            }
-        } catch (error) {
-            console.error('Failed to update task:', error);
-        }
-    }
-
     const saveStatus = async (object) => {
         const data = {
             "statusId": object?.id,
@@ -63,12 +40,12 @@ const CustomStatusPicker = ({ currentStatus, taskId }) => {
         }
     }
 
-    return (status == null || statuses == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
+    return (status == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomStatusOpenComponent {...props} status={status} />
+                    <CustomStatusOpenComponent {...props} status={status} setStatuses={setStatuses} projectId={currentStatus?.projectId} />
                 )}
                 selectedObject={status}
                 setSelectedObject={setStatus}
@@ -81,11 +58,35 @@ const CustomStatusPicker = ({ currentStatus, taskId }) => {
     );
 }
 
-const CustomStatusOpenComponent = ({ onClick, status, isFocusing }) => {
+const CustomStatusOpenComponent = ({ onClick, status, setStatuses, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
+
+    const handleFecthStatus = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.statusAPI.getPageByProject(projectId, data);
+            if (response?.data) {
+                setStatuses([...response?.data.content]);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
+
     return (
         <Box
-            onClick={onClick}
+            ref={setTarget}
+            onClick={() => {
+                handleFecthStatus();
+                onClick();
+            }}
             width='100%'
             sx={{
                 cursor: 'pointer',

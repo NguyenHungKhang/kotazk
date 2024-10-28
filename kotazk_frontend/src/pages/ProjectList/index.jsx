@@ -58,7 +58,9 @@ const columns = [
         header: 'Status',
         size: 150,
         cell: ({ row }) => (
-            <SelectableCell currentEntity={row.original.status} taskId={row.original.id} type="status" />
+            <Box>
+                <CustomStatusPicker currentStatus={row.original.status} taskId={row.original.id} />
+            </Box>
         ),
     },
     {
@@ -66,7 +68,9 @@ const columns = [
         header: 'Task Type',
         size: 150,
         cell: ({ row }) => (
-            <SelectableCell currentEntity={row.original.taskType} taskId={row.original.id} type="taskType" />
+            <Box>
+                <CustomTaskTypePicker currentTaskType={row.original.taskType} taskId={row.original.id} />
+            </Box>
         ),
     },
     {
@@ -510,7 +514,7 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
                     >
                         <TaskGrid tasks={tasks} columns={columns} droppableId={id} />
                     </Box>
-                    <Stack justifyContent={'center'} direction={'row'} width={'100%'} mt={2}>
+                    <Stack justifyContent={'center'} direction={'row'} width={'100%'} mt={1}>
                         <Pagination size='small' count={10} variant="outlined" shape="rounded" />
                     </Stack>
                 </Box>
@@ -519,66 +523,5 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
         </Card>
     );
 }
-
-
-const SelectableCell = ({ currentEntity, taskId, type }) => {
-    const theme = useTheme();
-    const [isEditing, setIsEditing] = useState(false);
-    const cellRef = useRef(null);
-
-    // Handle double-click to toggle editing mode
-    const handleDoubleClick = () => setIsEditing(true);
-
-    // Click outside handler
-    const handleClickOutside = (event) => {
-        if (cellRef.current && !cellRef.current.contains(event.target)) {
-            setIsEditing(false);
-        }
-    };
-
-    // Set up and clean up click outside listener
-    useEffect(() => {
-        if (isEditing) {
-            document.addEventListener('mousedown', handleClickOutside);
-        } else {
-            document.removeEventListener('mousedown', handleClickOutside);
-        }
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isEditing]);
-
-    return (
-
-        <Box 
-        ref={cellRef} 
-        onDoubleClick={handleDoubleClick}
-        >
-            <Tooltip title={isEditing ? "" : "Double click for editing" } placement="top">
-                {type === "status" &&
-                    (isEditing ? (
-                        <CustomStatusPicker
-                            currentStatus={currentEntity}
-                            taskId={taskId}
-                        // onSave={() => setIsEditing(false)}
-                        />
-                    ) : (
-                        <CustomStatus status={currentEntity} />
-                    ))
-                }
-
-                {type === "taskType" &&
-                    (isEditing ? (
-                        <CustomTaskTypePicker
-                            currentTaskType={currentEntity}
-                            taskId={taskId}
-                        // onSave={() => setIsEditing(false)}
-                        />
-                    ) : (
-                        <CustomTaskType taskType={currentEntity} />
-                    ))
-                }
-            </Tooltip>
-        </Box>
-    );
-};
 
 export default ProjectList;

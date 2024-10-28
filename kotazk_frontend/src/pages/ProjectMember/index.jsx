@@ -1,4 +1,4 @@
-import { Box, Card, Container, Divider, Grid, Paper, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
+import { Box, Card, Container, Divider, Grid, Grid2, Paper, Stack, Typography, alpha, darken, lighten, useTheme } from "@mui/material";
 import SideBar from "../../components/SideBar";
 import CustomHeader from "../../components/CustomHeader";
 import CustomBreadcrumb from "../../components/CustomBreadcumbs";
@@ -100,20 +100,20 @@ const ProjectMember = () => {
 
 
     return (
-        <Grid container spacing={2} height={'100% !important'}>
-            <Grid
+        <Grid2 container spacing={2} height={'100% !important'}>
+            <Grid2
                 item
-                xs={6}
+                size={6}
                 height={'100% !important'}
             >
             
                     {/* <ProjectMemberHeader /> */}
                     {(members?.length > 0 && memberRoles?.length > 0) && <MemberList members={members} memberRoles={memberRoles} />}
-            </Grid>
-            <Grid item xs={6}>
+            </Grid2>
+            <Grid2 item size={6}>
                 <Invitation />
-            </Grid>
-        </Grid>
+            </Grid2>
+        </Grid2>
 
     );
 }

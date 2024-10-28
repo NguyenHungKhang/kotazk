@@ -3,7 +3,7 @@ import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import Grid from '@mui/material/Grid';
+import Grid2 from '@mui/material/Grid2';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import * as TablerIcons from '@tabler/icons-react';
@@ -131,6 +131,8 @@ const CustomTaskDialog = () => {
                     handleClose();
                 },
                 sx: {
+                    bgcolor: `${theme.palette.background.default} !important`,
+                    boxShadow: 0,
                     position: 'fixed',
                     top: 0,
                     right: 0,
@@ -141,6 +143,7 @@ const CustomTaskDialog = () => {
                     padding: 0,  // Remove any padding
                     borderRadius: 0,  // Remove border-radius to make it flush with edges
                     transform: 'none',  // Prevent default MUI positioning transform
+                    borderLeft: '1px solid grey'
                 }
             }}
         >
@@ -149,7 +152,7 @@ const CustomTaskDialog = () => {
                     position: 'sticky',
                     top: 0,
                     p: 0,
-                    // backgroundColor: '#f5f5f5', // Optional background color
+                    bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
                     zIndex: 1, // Ensure it's on top of the content
                 }}
             >
@@ -173,7 +176,12 @@ const CustomTaskDialog = () => {
                 </Box>
             </DialogTitle>
             <Divider />
-            <DialogContent>
+            <DialogContent
+                sx={{
+                    bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
+                }}
+
+            >
 
                 <Box>
                     <CustomBasicTextField
@@ -194,53 +202,53 @@ const CustomTaskDialog = () => {
                         onBlur={() => saveName()}
                     />
                 </Box>
-                <Box mt={6} ml={2}>
-                    <Grid container spacing={1}>
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                <Box mt={2} ml={2}>
+                    <Grid2 container spacing={1}>
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <TaskTypeIcon size={16} stroke={2} />
-                                <Typography pt={0.5} variant='body2'>
+                                <TaskTypeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
                                     Task type
                                 </Typography>
                             </Stack>
 
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             <CustomTaskTypePicker currentTaskType={task?.taskType} taskId={task?.id} />
-                        </Grid>
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                        </Grid2>
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <StatusIcon size={16} stroke={2} />
-                                <Typography pt={0.5}>
+                                <StatusIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
                                     Status
                                 </Typography>
                             </Stack>
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             <CustomStatusPicker currentStatus={task?.status} taskId={task?.id} />
-                        </Grid>
+                        </Grid2>
 
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <DateIcon size={16} stroke={2} />
-                                <Typography pt={0.5}>
+                                <DateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
                                     Date
                                 </Typography>
                             </Stack>
 
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id} />
-                        </Grid>
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                        </Grid2>
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <TimeEstimateIcon size={16} stroke={2} />
-                                <Typography pt={0.5}>
+                                <TimeEstimateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
                                     Time Estimate
                                 </Typography>
                             </Stack>
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             <TextField
                                 required
                                 inputProps={{ type: 'number' }}
@@ -276,62 +284,62 @@ const CustomTaskDialog = () => {
                                 }}
 
                             />
-                        </Grid>
+                        </Grid2>
 
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <AssigneeIcon size={16} stroke={2} />
-                                <Typography variant='body2' pt={0.5}>
+                                <AssigneeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
                                     Assignee
                                 </Typography>
                             </Stack>
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             <CustomAssigneePicker currentAssignee={task?.assignee} taskId={task?.id} />
-                        </Grid>
-                        {/* <Grid item xs={4}>
+                        </Grid2>
+                        {/* <Grid2 item size={3}>
                                 <Stack direction='row' spacing={2} alignItems='center'>
-                                    <ReporterIcon size={16} stroke={2} />
+                                    <ReporterIcon size={16} stroke={2} color={theme.palette.text.secondary} />
                                     <Typography variant='body2' pt={0.5}>
                                         Reporter
                                     </Typography>
                                 </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
+                            </Grid2>
+                            <Grid2 item size={9}>
                                 <AssigneesComponent />
-                            </Grid>
-                            <Grid item xs={4}>
+                            </Grid2>
+                            <Grid2 item size={3}>
                                 <Stack direction='row' spacing={2} alignItems='center'>
-                                    <CollaboratorsIcon size={16} stroke={2} />
+                                    <CollaboratorsIcon size={16} stroke={2} color={theme.palette.text.secondary} />
                                     <Typography variant='body2' pt={0.5}>
                                         Collaborators
                                     </Typography>
                                 </Stack>
-                            </Grid>
-                            <Grid item xs={8}>
+                            </Grid2>
+                            <Grid2 item size={9}>
                                 <AssigneesComponent />
-                            </Grid> */}
-                        <Grid item xs={4} display='flex' alignItems='center'>
+                            </Grid2> */}
+                        <Grid2 item size={3} display='flex' alignItems='center'>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <PriorityIcon size={16} stroke={2} />
-                                <Typography variant='body2' pt={0.5}>
+                                <PriorityIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
                                     Priority
                                 </Typography>
                             </Stack>
-                        </Grid>
-                        <Grid item xs={8}>
+                        </Grid2>
+                        <Grid2 item size={9}>
                             {/* <PriorityComponent /> */}
                             <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
-                        </Grid>
-                        {/* <Grid item xs={4}>
+                        </Grid2>
+                        {/* <Grid2 item size={3}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
-                                                <LinkedTasksIcon size={16} stroke={2} />
+                                                <LinkedTasksIcon size={16} stroke={2} color={theme.palette.text.secondary} />
                                                 <Typography variant='body2' pt={0.5}>
                                                     Linked Tasks
                                                 </Typography>
                                             </Stack>
-                                        </Grid>
-                                        <Grid item xs={8}>
+                                        </Grid2>
+                                        <Grid2 item size={9}>
                                             <TextField
                                                 required
                                                 size="small"
@@ -340,22 +348,22 @@ const CustomTaskDialog = () => {
                                                 fullWidth
                                                 variant="outlined"
                                             />
-                                        </Grid> */}
-                    </Grid>
-                    <Grid container spacing={2} mt={2}>
-                        <Grid item xs={2}>
+                                        </Grid2> */}
+                    </Grid2>
+                    <Grid2 container spacing={2} mt={4}>
+                        <Grid2 item size={2}>
                             <Stack direction='row' spacing={2} alignItems='center'>
-                                <LabelsIcon size={16} stroke={2} />
-                                <Typography pt={0.5}>
+                                <LabelsIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
                                     Labels
                                 </Typography>
                             </Stack>
-                        </Grid>
-                        <Grid item xs={10}>
+                        </Grid2>
+                        <Grid2 item size={10}>
                             {/* <LabelComponent /> */}
                             <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
-                        </Grid>
-                    </Grid>
+                        </Grid2>
+                    </Grid2>
                 </Box>
                 <Box mt={6}>
                     <Typography
@@ -379,15 +387,15 @@ const CustomTaskDialog = () => {
                     </Box>
                 </Box>
 
-                <Box mt={6}>
+                {/* <Box mt={6}>
                     <Typography variant='h6' fontWeight={650}>
                         Custom Fields
                     </Typography>
-                    <Grid container mt={2}>
-                        <Grid
+                    <Grid2 container mt={2}>
+                        <Grid2
                             item
                             borderRadius={"8px 0 0 0 "}
-                            xs={4}
+                            size={3}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
                             p={2}
@@ -398,10 +406,10 @@ const CustomTaskDialog = () => {
                                 fullWidth
                                 placeholder='Name of field...'
                             />
-                        </Grid>
-                        <Grid
+                        </Grid2>
+                        <Grid2
                             item
-                            xs={8}
+                            size={9}
                             borderRadius={"0 8px 0 0"}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
@@ -409,22 +417,22 @@ const CustomTaskDialog = () => {
                             p={2}
                         >
                             Value
-                        </Grid>
+                        </Grid2>
 
-                        <Grid
+                        <Grid2
                             item
                             // borderRadius={"8px 0 0 0 "}
-                            xs={4}
+                            size={3}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
                             borderTop='none'
                             p={2}
                         >
                             Field 2
-                        </Grid>
-                        <Grid
+                        </Grid2>
+                        <Grid2
                             item
-                            xs={8}
+                            size={9}
                             // borderRadius={"0 8px 0 0"}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
@@ -433,22 +441,22 @@ const CustomTaskDialog = () => {
                             p={2}
                         >
                             Value 2
-                        </Grid>
+                        </Grid2>
 
-                        <Grid
+                        <Grid2
                             item
                             borderRadius={"0 0 0 8px "}
-                            xs={4}
+                            size={3}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
                             borderTop='none'
                             p={2}
                         >
                             Field 3
-                        </Grid>
-                        <Grid
+                        </Grid2>
+                        <Grid2
                             item
-                            xs={8}
+                            size={9}
                             borderRadius={"0 0 8px 0"}
                             border="1px solid"
                             borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
@@ -457,9 +465,9 @@ const CustomTaskDialog = () => {
                             p={2}
                         >
                             Value 3
-                        </Grid>
-                    </Grid>
-                </Box>
+                        </Grid2>
+                    </Grid2>
+                </Box> */}
 
                 <Box mt={6}>
                     <Typography variant='h6' fontWeight={650}>
@@ -497,7 +505,7 @@ const CustomTaskDialog = () => {
                     </Box>
                 </Box>
 
-                {/* <Grid item xs={5}>
+                {/* <Grid2 item size={5}>
                         <Box
                             bgcolor={getSecondBackgroundColor(theme)}
                             height='100%'
@@ -509,7 +517,7 @@ const CustomTaskDialog = () => {
                             </Typography>
                         </Box>
 
-                    </Grid> */}
+                    </Grid2> */}
 
 
 
@@ -526,7 +534,7 @@ const CustomTaskDialog = () => {
             >
                 <CommentAndActivitySection />
             </DialogActions> */}
-        </Dialog>
+        </Dialog >
     );
 }
 

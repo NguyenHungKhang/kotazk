@@ -2,10 +2,11 @@ import {
     Box,
     List,
     Popover,
+    Skeleton,
     TextField,
     useTheme
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 
 
 const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, saveMethod, objectsData, OpenComponent, ItemComponent, isNotNull = false }) => {
@@ -13,13 +14,20 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
     const [anchorEl, setAnchorEl] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [objects, setObjects] = useState(objectsData);
+    const [target, setTarget] = useState(null);
+    const [open, setOpen] = useState(false);
 
-    const handleOpenPopover = (event) => {
-        setAnchorEl(event.currentTarget);
+    useEffect(() => {
+        if (objectsData != null)
+            setObjects(objectsData);
+    }, [objectsData])
+
+    const handleOpenPopover = () => {
+        setOpen(true);
     };
 
     const handleClosePopover = () => {
-        setAnchorEl(null);
+        setOpen(false);
     };
 
     const openPopover = Boolean(anchorEl);
@@ -39,7 +47,7 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
         handleClosePopover();
     };
 
-    const filteredObjects = objects.filter((object) => {
+    const filteredObjects = objects?.filter((object) => {
         if (object?.name != null)
             return object.name.toLowerCase().includes(searchTerm.toLowerCase())
         else
@@ -47,11 +55,11 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
     });
 
     return (
-        <div>
-            <OpenComponent onClick={handleOpenPopover} isFocusing={openPopover} />
+        <Suspense fallback="Loading...">
+            <OpenComponent setTarget={setTarget} onClick={handleOpenPopover} isFocusing={openPopover} />
             <Popover
-                open={openPopover}
-                anchorEl={anchorEl}
+                open={open}
+                anchorEl={target}
                 onClose={handleClosePopover}
                 anchorOrigin={{
                     vertical: 'bottom',
@@ -83,14 +91,20 @@ const CustomPickerSingleObjectDialog = ({ selectedObject, setSelectedObject, sav
                         }}
                     >
                         <List dense>
-                            {filteredObjects.map((object) => (
-                                <ItemComponent key={object.id} object={object} onClick={handleSelectObject} />
-                            ))}
+                            {filteredObjects ?
+                                <>
+                                    {filteredObjects?.map((object) => (
+                                        <ItemComponent key={object.id} object={object} onClick={handleSelectObject} />
+                                    ))}
+                                </>
+                                :
+                                <Skeleton variant='rounded' height="100px" width='100%' />
+                            }
                         </List>
                     </Box>
                 </div>
             </Popover>
-        </div>
+        </Suspense>
     );
 };
 

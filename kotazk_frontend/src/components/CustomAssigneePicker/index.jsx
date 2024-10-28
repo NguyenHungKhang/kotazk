@@ -16,30 +16,6 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
     const [assignee, setAssignee] = useState(currentAssignee ? currentAssignee : null);
     const dispatch = useDispatch();
 
-    useEffect(() => {
-        if (project != null)
-            listMemberFetch()
-    }, [project])
-
-    const listMemberFetch = async () => {
-        try {
-            const data = {
-                'sortBy': 'user.lastName',
-                'sortDirectionAsc': true,
-                'filters': [
-
-                ]
-            }
-            const response = await apiService.memberAPI.getPageByProject(project.id, data);
-            if (response?.data) {
-                setMembers(response?.data.content);
-            }
-        } catch (error) {
-            console.error('Failed to update task:', error);
-        }
-    }
-
-
     const saveAssignee = async (object) => {
         const data = {
             "assigneeId": object ? object.id : 0,
@@ -59,12 +35,12 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
         }
     }
 
-    return (members == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
+    return (
         <Box>
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomAssigneeOpenComponent {...props} assignee={assignee} />
+                    <CustomAssigneeOpenComponent {...props} assignee={assignee} setMembers={setMembers} projectId={project?.id}/>
                 )}
                 selectedObject={assignee}
                 setSelectedObject={setAssignee}
@@ -77,11 +53,35 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
     );
 }
 
-const CustomAssigneeOpenComponent = ({ onClick, assignee, isFocusing }) => {
+const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
+
+
+    const listMemberFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'user.lastName',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.memberAPI.getPageByProject(projectId, data);
+            if (response?.data) {
+                setMembers(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
     return (
         <Box
-            onClick={onClick}
+            ref={setTarget}
+            onClick={() => {
+                listMemberFetch();
+                onClick();
+            }}
             width='100%'
             sx={{
                 cursor: 'pointer',

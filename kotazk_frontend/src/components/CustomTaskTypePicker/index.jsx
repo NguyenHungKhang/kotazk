@@ -21,29 +21,6 @@ const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
         }
     }, [currentTaskType]);
 
-    useEffect(() => {
-        if (currentTaskType != null)
-            listTaskTypeFetch()
-    }, [currentTaskType?.projectId])
-
-    const listTaskTypeFetch = async () => {
-        try {
-            const data = {
-                'sortBy': 'position',
-                'sortDirectionAsc': true,
-                'filters': [
-
-                ]
-            }
-            const response = await apiService.taskTypeAPI.getPageByProject(currentTaskType?.projectId, data);
-            if (response?.data) {
-                setTaskTypes(response?.data.content);
-            }
-        } catch (error) {
-            console.error('Failed to update task:', error);
-        }
-    }
-
     const saveTaskType = async (object) => {
         const data = {
             "taskTypeId": object?.id,
@@ -63,12 +40,12 @@ const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
         }
     }
 
-    return (taskType == null || taskTypes == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
+    return (taskType == null) ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Box>
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomTaskTypeOpenComponent {...props} taskType={taskType} />
+                    <CustomStatusOpenComponent {...props} taskType={taskType} setTaskTypes={setTaskTypes} projectId={currentTaskType?.projectId} />
                 )}
                 selectedObject={taskType}
                 setSelectedObject={setTaskType}
@@ -81,11 +58,35 @@ const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
     );
 }
 
-const CustomTaskTypeOpenComponent = ({ onClick, taskType, isFocusing }) => {
+const CustomStatusOpenComponent = ({ onClick, taskType, setTaskTypes, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
+
+    const listTaskTypeFetch = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.taskTypeAPI.getPageByProject(projectId, data);
+            if (response?.data) {
+                setTaskTypes(response?.data.content);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
+
     return (
         <Box
-            onClick={onClick}
+            ref={setTarget}
+            onClick={() => {
+                listTaskTypeFetch();
+                onClick();
+            }}
             width='100%'
             sx={{
                 cursor: 'pointer',
