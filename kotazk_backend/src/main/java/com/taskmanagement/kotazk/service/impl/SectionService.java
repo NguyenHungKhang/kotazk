@@ -73,7 +73,9 @@ public class SectionService implements ISectionService {
         Section newSection = Section.builder()
                 .name(sectionRequestDto.getName())
                 .project(project)
-                .position((long) project.getSections().size())
+                .position(RepositionUtil.calculateNewLastPosition(project.getSections().size()))
+                .systemInitial(false)
+                .systemRequired(false)
                 .type(sectionRequestDto.getType())
                 .build();
 

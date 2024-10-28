@@ -19,6 +19,7 @@ import { setCurrentLabelList } from "../../redux/actions/label.action";
 import { setCurrentProjectMemberList } from "../../redux/actions/member.action";
 import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
+import { setSectionList } from "../../redux/actions/section.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -63,6 +64,7 @@ const Project = ({ children }) => {
             dispatch(setCurrentLabelList(labels));
             dispatch(setCurrentProjectMemberList(members));
             dispatch(setCurrentWorkspace(workSpace));
+            dispatch(setSectionList(sections));
         } catch (err) {
             console.error('Error fetching project details:', err);
         }

@@ -28,10 +28,7 @@ const CardKanban = ({ task, isDragging }) => {
     const dispatch = useDispatch();
     const [displayLabels, setDisplayLabels] = useState(false);
     const showLabel = useSelector((state) => state.label.showLabel);
-    const statuses = useSelector((state) => state.status.currentStatusList);
-    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList);
     const priorities = useSelector((state) => state.priority.currentPriorityList);
-    const labels = useSelector((state) => state.label.currentLabelList)
     const members = useSelector((state) => state.member.currentProjectMemberList)
     const CalendarIcon = allIcons["IconCalendar"];
     const TimeIcon = allIcons["IconClock2"];
@@ -102,7 +99,7 @@ const CardKanban = ({ task, isDragging }) => {
                             }}
                         >
                             {task?.labels?.map((l) => (
-                                <CustomLabel key={l.id} label={labels.find(i => i.id === l.labelId)} />
+                                <CustomLabel key={l.id} label={l} />
                             ))}
 
                         </Stack>
@@ -126,7 +123,7 @@ const CardKanban = ({ task, isDragging }) => {
                             }
                         }}
                     >
-                        <CustomTaskType taskType={taskTypes.find(t => t.id === task?.taskTypeId)} changeable={false} displayTextOnHoverOnly={true} />
+                        <CustomTaskType taskType={task?.taskType} changeable={false} displayTextOnHoverOnly={true} />
                     </Box>
                     <Typography variant='body2' fontWeight='bold' noWrap flexGrow={1}>
                         {task?.name}
@@ -141,7 +138,7 @@ const CardKanban = ({ task, isDragging }) => {
                 </Typography> */}
                 <Divider sx={{ my: 2 }} />
 
-                <CustomStatus status={statuses.find(s => s.id === task?.statusId)} changeable={false} />
+                <CustomStatus status={task?.status} changeable={false} />
 
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
                     sx={{

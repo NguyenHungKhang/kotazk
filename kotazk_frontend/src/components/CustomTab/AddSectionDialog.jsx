@@ -12,39 +12,43 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import * as TablerIcons from '@tabler/icons-react'
 import { IconButton, Stack, TextField, Typography, useTheme } from '@mui/material';
 import CustomBasicTextField from '../CustomBasicTextField';
+import { useSelector } from 'react-redux';
+import * as apiService from '../../api/index'
+import { useDispatch } from 'react-redux';
+import { setSectionList } from '../../redux/actions/section.action';
 
 const ListIcon = TablerIcons["IconListDetails"];
-    const BoardIcon = TablerIcons["IconLayoutKanbanFilled"];
-    const CalendarIcon = TablerIcons["IconCalendarMonth"];
-    const TimelineIcon = TablerIcons["IconTimelineEvent"];
-    const FileIcon = TablerIcons["IconPaperclip"];
+const BoardIcon = TablerIcons["IconLayoutKanbanFilled"];
+const CalendarIcon = TablerIcons["IconCalendarMonth"];
+const TimelineIcon = TablerIcons["IconTimelineEvent"];
+const FileIcon = TablerIcons["IconPaperclip"];
 
 const SectionTypeMenu = [
     {
-        type: "BOARD",
+        type: "KANBAN",
         name: "Board",
         icon: <BoardIcon size={18} />
     },
     {
         type: "LIST",
         name: "List",
-        icon:  <ListIcon size={18}/>
+        icon: <ListIcon size={18} />
     },
     {
         type: "CALENDAR",
         name: "Calendar",
-        icon:  <CalendarIcon size={18}/>
+        icon: <CalendarIcon size={18} />
     },
-    {
-        type: "TIMELINE",
-        name: "Timeline",
-        icon:  <TimelineIcon size={18}/>
-    },
-    {
-        type: "FILE",
-        name: "File",
-        icon:  <FileIcon size={18}/>
-    },
+    // {
+    //     type: "TIMELINE",
+    //     name: "Timeline",
+    //     icon:  <TimelineIcon size={18}/>
+    // },
+    // {
+    //     type: "FILE",
+    //     name: "File",
+    //     icon:  <FileIcon size={18}/>
+    // },
 ];
 
 const StyledMenu = styled((props) => (
@@ -92,14 +96,17 @@ const StyledMenu = styled((props) => (
 
 export default function AddSectionDialog() {
     const [anchorEl, setAnchorEl] = React.useState(null);
+    const sections = useSelector((state) => state.section.currentSectionList)
     const theme = useTheme();
     const open = Boolean(anchorEl);
+    const project = useSelector((state) => state.project.currentProject)
     const [newSection, setNewSection] = React.useState({
         open: false,
-        type: "BOARD",
+        type: "KANBAN",
         name: "",
         icon: ""
     });
+    const dispatch = useDispatch();
 
     const AddIcon = TablerIcons["IconPlus"];
     const ArchiveIcon = TablerIcons["IconArchiveFilled"];
@@ -123,7 +130,17 @@ export default function AddSectionDialog() {
         setAnchorEl(null);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        const data = {
+            "name": newSection.name,
+            "type": newSection.type,
+            "projectId": project?.id
+        }
+
+        const response = await apiService.sectionAPI.add(data);
+        if (response?.data) {
+            dispatch(setSectionList([...sections, response?.data]))
+        }
         setNewSection({
             open: false,
             name: "",
@@ -143,6 +160,11 @@ export default function AddSectionDialog() {
                         size='small'
                         fullWidth
                         defaultValue={newSection.name}
+                        value={newSection.name}
+                        onChange={(e) => setNewSection({
+                            ...newSection,
+                            'name': e.target.value,
+                        })}
                         autoFocus
                         onBlur={() => handleSave()}
                         sx={{
@@ -179,14 +201,14 @@ export default function AddSectionDialog() {
                         {
                             SectionTypeMenu.map((section, index) => (
                                 <MenuItem key={index} onClick={() => handleChooseType(section)} disableRipple>
-                                <Stack direction={'row'} spacing={2}>
-                                    {section.icon}
-                                    <Typography>{section.name}</Typography>
-                                </Stack>
-                            </MenuItem>
+                                    <Stack direction={'row'} spacing={2}>
+                                        {section.icon}
+                                        <Typography>{section.name}</Typography>
+                                    </Stack>
+                                </MenuItem>
                             ))
                         }
-                
+
                         {/* <MenuItem onClick={handleClose} disableRipple>
                             <Stack direction={'row'} spacing={2}>
                                 <ListIcon size={18} />

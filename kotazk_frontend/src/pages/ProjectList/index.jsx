@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, ColumnResizeMode, getSortedRowModel } from '@tanstack/react-table';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import { Box, Button, Card, Divider, Grid, Grid2, IconButton, Pagination, Skeleton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Card, Divider, Grid, Grid2, IconButton, Pagination, Skeleton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import * as TablerIcons from '@tabler/icons-react'
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
@@ -16,6 +16,7 @@ import { setTaskDialog } from '../../redux/actions/dialog.action';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { BorderColor } from '@mui/icons-material';
+import { setCurrentGroupedTaskList } from '../../redux/actions/task.action';
 
 // Define task data and columns in the same file
 const initialTaskData = {
@@ -55,11 +56,9 @@ const columns = [
     {
         accessorKey: 'status',
         header: 'Status',
-        size: 150, // Set initial width
+        size: 150,
         cell: ({ row }) => (
-            <Box>
-                <CustomStatusPicker currentStatus={row.original.status} taskId={row.original.id} />
-            </Box>
+            <SelectableCell currentEntity={row.original.status} taskId={row.original.id} type="status" />
         ),
     },
     {
@@ -67,9 +66,7 @@ const columns = [
         header: 'Task Type',
         size: 150,
         cell: ({ row }) => (
-            <Box>
-                <CustomTaskTypePicker currentTaskType={row.original.taskType} taskId={row.original.id} />
-            </Box>
+            <SelectableCell currentEntity={row.original.taskType} taskId={row.original.id} type="taskType" />
         ),
     },
     {
@@ -120,7 +117,7 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
                     <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        // className="task-grid"
+                        className="task-grid"
                         style={{
                             // maxWidth: '100%' ,
                             overflowX: 'auto'
@@ -153,7 +150,7 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
                                 },
 
                                 '& td:nth-child(2), th:nth-child(2)': {
-                                    left:60,
+                                    left: 60,
                                 }
 
                             }}
@@ -225,7 +222,8 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
                             </thead>
                             <tbody>
                                 {table.getRowModel().rows.map((row, index) => (
-                                    <Draggable key={row.original.id} draggableId={row.original.id} index={index}>
+                                    <Draggable key={String(row.original.id)} draggableId={String(row.original.id)} index={index}>
+
                                         {(provided) => (
                                             <tr
                                                 ref={provided.innerRef}
@@ -296,15 +294,30 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
 
 // Main Component for managing multiple grids
 const ProjectList = () => {
-    const [tasks, setTasks] = useState(initialTaskData);
-    const [groupByEntity, setGroupByEntity] = useState("taskType");
+    const [tasks, setTasks] = useState(null);
+    // const [groupByEntity, setGroupByEntity] = useState("taskType");
+    const groupByEntity = useSelector((state) => state.groupBy.currentGroupByEntity)
     const [groupByEntityList, setGroupByEntityList] = useState(null);
-    const project = useSelector((state) => state.project.currentProject)
+    // const [groupedTasks, setGroupedTasks] = useState(null);
+    const groupedTasks = useSelector((state) => state.task.currentGroupedTaskList);
+    const project = useSelector((state) => state.project.currentProject);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        if (project != null)
+        if (project) {
             fetchGroupByEntityList();
-    }, [project, groupByEntity])
+            fetchTasks();
+        }
+    }, [project, groupByEntity]);
+
+    useEffect(() => {
+        if (tasks && groupByEntityList) {
+            groupTasks();
+        }
+    }, [tasks, groupByEntityList]);
+
+
+
 
     const fetchGroupByEntityList = async () => {
         const data = {
@@ -321,38 +334,98 @@ const ProjectList = () => {
             setGroupByEntityList(groupByEntityListResponse?.data.content)
     }
 
+    const fetchTasks = async () => {
+        const data = {
+            'sortBy': 'position',
+            'sortDirectionAsc': true,
+            'filters': []
+        }
+
+        const taskListResponse = await apiService.taskAPI.getPageByProject(project.id, data)
+
+        if (taskListResponse?.data) {
+            setTasks(taskListResponse?.data?.content)
+        }
+    }
+
+
+    const groupTasks = () => {
+        const grouped = groupByEntityList.reduce((acc, entity) => {
+            const key = entity.id; // Assuming entity.id matches task's groupByEntity value
+            const items = tasks?.filter(task => task[groupByEntity]?.id == key);
+            acc.push({
+                ...entity,
+                items: items || [],
+                droppableId: String(entity.id)
+            });
+            return acc;
+        }, []);
+        dispatch(setCurrentGroupedTaskList(
+            {
+                list: grouped,
+                groupedEntity: groupByEntity
+            }
+        ));
+        console.log(groupedTasks)
+    };
+
     const onDragEnd = (result) => {
         const { source, destination } = result;
 
-        // Drop outside the grid
+        // Do nothing if dropped outside the list
         if (!destination) return;
 
-        const sourceGrid = source.droppableId;
-        const destinationGrid = destination.droppableId;
+        const sourceGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(source.droppableId));
+        const destinationGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(destination.droppableId));
 
-        // If the task was dropped in the same grid
-        if (sourceGrid === destinationGrid) return;
+        console.log(123)
 
-        // Find the task being dragged
-        const taskToMove = tasks[sourceGrid][source.index];
+        if (sourceGroupIndex === -1 || destinationGroupIndex === -1 ||
+            (sourceGroupIndex === destinationGroupIndex && source.index === destination.index)) {
+            return;
+        }
 
-        // Update state
-        setTasks((prev) => {
-            const sourceTasks = Array.from(prev[sourceGrid]);
-            const destinationTasks = Array.from(prev[destinationGrid]);
+        console.log(456)
 
-            // Remove task from the source grid
-            sourceTasks.splice(source.index, 1);
-            // Add task to the destination grid
-            destinationTasks.splice(destination.index, 0, taskToMove);
+        const sourceItems = Array.from(groupedTasks[sourceGroupIndex].items);
+        const destinationItems = sourceGroupIndex === destinationGroupIndex ? sourceItems : Array.from(groupedTasks[destinationGroupIndex].items);
 
-            return {
-                ...prev,
-                [sourceGrid]: sourceTasks,
-                [destinationGrid]: destinationTasks,
-            };
-        });
+        const [movedTask] = sourceItems.splice(source.index, 1);
+        destinationItems.splice(destination.index, 0, movedTask);
+
+        // setGroupedTasks(prevGroupedTasks => {
+        //     const updatedGroups = [...prevGroupedTasks];
+        //     updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
+        //     if (sourceGroupIndex !== destinationGroupIndex) {
+        //         updatedGroups[destinationGroupIndex] = { ...updatedGroups[destinationGroupIndex], items: destinationItems };
+        //     }
+
+        //     console.log(updatedGroups)
+        //     return updatedGroups;
+        // });
+
+        dispatch(setCurrentGroupedTaskList({
+            list: (prevGroupedTasks => {
+                const updatedGroups = [...prevGroupedTasks];
+                updatedGroups[sourceGroupIndex] = {
+                    ...updatedGroups[sourceGroupIndex],
+                    items: sourceItems,
+                };
+                if (sourceGroupIndex !== destinationGroupIndex) {
+                    updatedGroups[destinationGroupIndex] = {
+                        ...updatedGroups[destinationGroupIndex],
+                        items: destinationItems,
+                    };
+                }
+                return updatedGroups;
+            })(groupedTasks),
+            groupedEntity: groupByEntity
+        }));
+
+
     };
+
+
 
     return (
         <Box
@@ -363,12 +436,14 @@ const ProjectList = () => {
         >
             <DragDropContext onDragEnd={onDragEnd}>
                 <Grid2 container spacing={2}>
-                    {groupByEntityList?.map((groupByEntityItem) => (
-                        <Grid2 key={groupByEntity.id} item size={12}>
-                            <GroupTask id={groupByEntityItem.id} name={groupByEntityItem.name} type={groupByEntity} projectId={project?.id} />
-                        </Grid2>
-                    ))}
-
+                    {
+                        groupedTasks != null &&
+                        groupByEntityList?.map((groupByEntityItem) => (
+                            <Grid2 key={groupByEntity.id} item size={12}>
+                                <GroupTask id={groupByEntityItem.id} name={groupByEntityItem.name} type={groupByEntity} projectId={project?.id} groupedTasks={groupedTasks?.find(gt => gt.id == groupByEntityItem.id)?.items} />
+                            </Grid2>
+                        ))
+                    }
                     {/* <Grid2 item size={12}>
                         <GroupTask name={"In Progress"} tasks={tasks.inProgress} />
                     </Grid2>
@@ -384,37 +459,38 @@ const ProjectList = () => {
 };
 
 
-const GroupTask = ({ id, name, type, projectId }) => {
+const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
     const [open, setOpen] = useState(true);
     const [tasks, setTasks] = useState(null)
     const CollapseIcon = TablerIcons["IconChevronRight"];
     const OpenIcon = TablerIcons["IconChevronDown"];
     const [pagination, setPagination] = useState();
     useEffect(() => {
-        if (id && type && projectId)
-            fetchTaskList()
-    }, [id, type, projectId])
+        if (groupedTasks)
+            setTasks(groupedTasks)
+    }, [groupedTasks])
 
-    const fetchTaskList = async () => {
-        const filters = {
-            'filters': [
-                {
-                    key: `${type}.id`,
-                    operation: "EQUAL",
-                    value: id,
-                    values: []
-                }
-            ]
-        }
-        const taskListResponse = await apiService.taskAPI.getPageByProject(projectId, filters)
-        if (taskListResponse?.data)
-            setTasks(taskListResponse?.data.content)
-    }
+    // const fetchTaskList = async () => {
+    //     const filters = {
+    //         'filters': [
+    //             {
+    //                 key: `${type}.id`,
+    //                 operation: "EQUAL",
+    //                 value: id,
+    //                 values: []
+    //             }
+    //         ]
+    //     }
+    //     const taskListResponse = await apiService.taskAPI.getPageByProject(projectId, filters)
+    //     if (taskListResponse?.data)
+    //         setTasks(taskListResponse?.data.content)
+    // }
     return (tasks == null) ? <Skeleton variant='rounded' width={'100%'} height={'100%'} /> : (
         <Card
             sx={{
                 p: 2,
-                width: '100%'
+                width: '100%',
+                boxShadow: 0
             }}
         >
             <Stack direction={'row'} spacing={2} alignItems={'center'}>
@@ -424,7 +500,7 @@ const GroupTask = ({ id, name, type, projectId }) => {
                 <Typography variant='body1'>{name}</Typography>
             </Stack>
             {open &&
-                <Box>
+                <Box mt={2}>
                     <Box
                         sx={{
                             overflowX: 'auto'
@@ -432,7 +508,7 @@ const GroupTask = ({ id, name, type, projectId }) => {
                     // overflow={'auto'}
                     // width={'5000px'}
                     >
-                        <TaskGrid tasks={tasks} columns={columns} droppableId="todo" />
+                        <TaskGrid tasks={tasks} columns={columns} droppableId={id} />
                     </Box>
                     <Stack justifyContent={'center'} direction={'row'} width={'100%'} mt={2}>
                         <Pagination size='small' count={10} variant="outlined" shape="rounded" />
@@ -443,5 +519,66 @@ const GroupTask = ({ id, name, type, projectId }) => {
         </Card>
     );
 }
+
+
+const SelectableCell = ({ currentEntity, taskId, type }) => {
+    const theme = useTheme();
+    const [isEditing, setIsEditing] = useState(false);
+    const cellRef = useRef(null);
+
+    // Handle double-click to toggle editing mode
+    const handleDoubleClick = () => setIsEditing(true);
+
+    // Click outside handler
+    const handleClickOutside = (event) => {
+        if (cellRef.current && !cellRef.current.contains(event.target)) {
+            setIsEditing(false);
+        }
+    };
+
+    // Set up and clean up click outside listener
+    useEffect(() => {
+        if (isEditing) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isEditing]);
+
+    return (
+
+        <Box 
+        ref={cellRef} 
+        onDoubleClick={handleDoubleClick}
+        >
+            <Tooltip title={isEditing ? "" : "Double click for editing" } placement="top">
+                {type === "status" &&
+                    (isEditing ? (
+                        <CustomStatusPicker
+                            currentStatus={currentEntity}
+                            taskId={taskId}
+                        // onSave={() => setIsEditing(false)}
+                        />
+                    ) : (
+                        <CustomStatus status={currentEntity} />
+                    ))
+                }
+
+                {type === "taskType" &&
+                    (isEditing ? (
+                        <CustomTaskTypePicker
+                            currentTaskType={currentEntity}
+                            taskId={taskId}
+                        // onSave={() => setIsEditing(false)}
+                        />
+                    ) : (
+                        <CustomTaskType taskType={currentEntity} />
+                    ))
+                }
+            </Tooltip>
+        </Box>
+    );
+};
 
 export default ProjectList;

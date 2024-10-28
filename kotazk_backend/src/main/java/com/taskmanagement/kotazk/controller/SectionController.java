@@ -1,9 +1,12 @@
 package com.taskmanagement.kotazk.controller;
 
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.section.SectionRequestDto;
+import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.section.SectionResponseDto;
+import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.service.ISectionService;
 import com.taskmanagement.kotazk.service.impl.SectionService;
 import jakarta.validation.Valid;
@@ -18,6 +21,12 @@ import static com.taskmanagement.kotazk.config.ConstantConfig.*;
 public class SectionController {
     @Autowired
     ISectionService sectionService = new SectionService();
+
+    @PostMapping("/")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SectionResponseDto create(@Valid @RequestBody SectionRequestDto sectionRequestDto) {
+        return sectionService.create(sectionRequestDto);
+    }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

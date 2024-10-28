@@ -10,7 +10,7 @@ import CardKanban from './CardKanban';
 import { useSelector } from 'react-redux';
 import * as apiService from "../../api/index"
 import { useDispatch } from 'react-redux';
-import { setCurrentKanbanTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
+import { setCurrentGroupedTaskList, setCurrentKanbanTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
 import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomStatus from '../../components/CustomStatus';
@@ -24,188 +24,144 @@ import { applyTaskFilters } from '../../utils/filterUtil';
 
 function KanbanDropNDrag() {
   const theme = useTheme();
-  const SettingIcon = TablerIcon["IconSettings"];
-  const [stores, setStores] = useState([]);
-  const tasks = useSelector((state) => state.task.currentTaskList);
-  const statuses = useSelector((state) => state.status.currentStatusList);
-  const dispatch = useDispatch();
+const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
+
+  const [tasks, setTasks] = useState(null);
+  // const [groupByEntity, setGroupByEntity] = useState("taskType");
+  const groupByEntity = useSelector((state) => state.groupBy.currentGroupByEntity)
+  const [groupByEntityList, setGroupByEntityList] = useState(null);
+  // const [groupedTasks, setGroupedTasks] = useState(null);
+  const groupedTasks = useSelector((state) => state.task.currentGroupedTaskList);
   const project = useSelector((state) => state.project.currentProject);
-  const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
-  const filters = useSelector((state) => state.filter.currentFilterList);
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    if (statuses != null && project != null)
-      initialFetch();
-  }, [project, statuses, filters]);
+    if (project) {
+      fetchGroupByEntityList();
+      fetchTasks();
+    }
+  }, [project, groupByEntity]);
 
   useEffect(() => {
-    if (tasks != null && statuses != null)
-      tasksMapping();
-  }, [statuses, tasks, filters])
-
-
-  const initialFetch = async () => {
-    try {
-      const allTasks = await Promise.all(
-        statuses.map(async (status) => {
-          // Define the filter for the current status
-          const statusFilter = {
-            key: "status.id",
-            operation: "EQUAL",
-            value: status.id,
-            values: []
-          };
-
-          // Prepare filters: if `filters` is null or undefined, use an empty array
-          const currentFilters = filters || [];
-
-          // Create the task data, merging the current filters with the status filter
-          const taskData = {
-            sortBy: "position",
-            sortDirectionAsc: true,
-            filters: [...currentFilters, statusFilter] // Combine filters
-          };
-
-          const taskRes = await apiService.taskAPI.getPageByProject(status.projectId, taskData);
-          return taskRes.data.content; // Return the task content
-        })
-      );
-
-      const combinedTasks = updateAndAddArray(tasks, allTasks.flat());
-      dispatch(setCurrentTaskList(combinedTasks));
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
+    if (tasks && groupByEntityList) {
+      groupTasks();
     }
-  };
+  }, [tasks, groupByEntityList]);
 
 
-  // Utility method for updating filters with a status filter
-  const updateFiltersWithStatus = (filters, statusId) => {
-    const statusFilter = {
-      key: "status.id",
-      operation: "EQUAL",
-      value: statusId,
-      values: []
-    };
 
-    // Check if filters is null, undefined, or an empty array
-    if (!filters || filters.length === 0) {
-      return [statusFilter];
+
+  const fetchGroupByEntityList = async () => {
+    const data = {
+      'sortBy': 'position',
+      'sortDirectionAsc': true,
+      'filters': []
+    }
+    let groupByEntityListResponse = null;
+    if (groupByEntity == 'status') groupByEntityListResponse = await apiService.statusAPI.getPageByProject(project.id, data)
+    else if (groupByEntity == 'taskType') groupByEntityListResponse = await apiService.taskTypeAPI.getPageByProject(project.id, data)
+    else if (groupByEntity == 'priority') groupByEntityListResponse = await apiService.priorityAPI.getPageByProject(project.id, data)
+
+    if (groupByEntityListResponse?.data)
+      setGroupByEntityList(groupByEntityListResponse?.data.content)
+  }
+
+  const fetchTasks = async () => {
+    const data = {
+      'sortBy': 'position',
+      'sortDirectionAsc': true,
+      'filters': []
     }
 
-    return [...filters, statusFilter];
-  };
+    const taskListResponse = await apiService.taskAPI.getPageByProject(project.id, data)
+
+    if (taskListResponse?.data) {
+      setTasks(taskListResponse?.data?.content)
+    }
+  }
 
 
-  const tasksMapping = () => {
-    console.log(filters);
-    const filteredTasks = applyTaskFilters(tasks, filters);
-    console.log(filteredTasks)
-    const groupedTasks = statuses.reduce((acc, status) => {
-      const tasksForStatus = filteredTasks.filter(task => task.statusId === status.id);
-
+  const groupTasks = () => {
+    const grouped = groupByEntityList.reduce((acc, entity) => {
+      const key = entity.id; // Assuming entity.id matches task's groupByEntity value
+      const items = tasks?.filter(task => task[groupByEntity]?.id == key);
       acc.push({
-        ...status,
-        items: tasksForStatus,
+        ...entity,
+        items: items || [],
+        droppableId: String(entity.id)
       });
-
       return acc;
     }, []);
-
-    setStores(groupedTasks);
+    dispatch(setCurrentGroupedTaskList(
+      {
+        list: grouped,
+        groupedEntity: groupByEntity
+      }
+    ));
+    console.log(groupedTasks)
   };
 
-  const updateItemAPI = async (itemId, previousItemId, nextItemId, statusId) => {
-    const data = {
-      rePositionReq: (nextItemId == null && previousItemId == null) ? null : {
-        currentItemId: itemId,
-        nextItemId: nextItemId,
-        previousItemId: previousItemId
-      },
-      statusId: statusId
-    };
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
 
-
-    const response = await apiService.taskAPI.update(itemId, data);
-    if (response?.data) {
-      const finalAr = updateAndAddArray(tasks, [response.data]);
-      dispatch(setCurrentTaskList(finalAr));
-      console.log(finalAr)
-    }
-  };
-
-  const handleDragAndDrop = async (results) => {
-    const { source, destination, type } = results;
-
+    // Do nothing if dropped outside the list
     if (!destination) return;
 
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) return;
+    const sourceGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(source.droppableId));
+    const destinationGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(destination.droppableId));
 
-    if (type === "group") {
-      const reorderedStores = [...stores];
+    console.log(123)
 
-      const storeSourceIndex = source.index;
-      const storeDestinatonIndex = destination.index;
-
-      const [removedStore] = reorderedStores.splice(storeSourceIndex, 1);
-      reorderedStores.splice(storeDestinatonIndex, 0, removedStore);
-
-      setStores(reorderedStores);
-      // Optionally call updateGroupAPI here if needed
+    if (sourceGroupIndex === -1 || destinationGroupIndex === -1 ||
+      (sourceGroupIndex === destinationGroupIndex && source.index === destination.index)) {
       return;
     }
 
-    const itemSourceIndex = source.index;
-    const itemDestinationIndex = destination.index;
+    console.log(456)
 
-    const storeSourceIndex = stores.findIndex(
-      (store) => store.id.toString() === source.droppableId
-    );
-    const storeDestinationIndex = stores.findIndex(
-      (store) => store.id.toString() === destination.droppableId
-    );
+    const sourceItems = Array.from(groupedTasks[sourceGroupIndex].items);
+    const destinationItems = sourceGroupIndex === destinationGroupIndex ? sourceItems : Array.from(groupedTasks[destinationGroupIndex].items);
 
-    const newSourceItems = [...stores[storeSourceIndex].items];
-    const newDestinationItems =
-      source.droppableId !== destination.droppableId
-        ? [...stores[storeDestinationIndex].items]
-        : newSourceItems;
+    const [movedTask] = sourceItems.splice(source.index, 1);
+    destinationItems.splice(destination.index, 0, movedTask);
 
-    const [deletedItem] = newSourceItems.splice(itemSourceIndex, 1);
-    newDestinationItems.splice(itemDestinationIndex, 0, deletedItem);
+    // setGroupedTasks(prevGroupedTasks => {
+    //     const updatedGroups = [...prevGroupedTasks];
+    //     updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
+    //     if (sourceGroupIndex !== destinationGroupIndex) {
+    //         updatedGroups[destinationGroupIndex] = { ...updatedGroups[destinationGroupIndex], items: destinationItems };
+    //     }
 
-    const newStores = [...stores];
+    //     console.log(updatedGroups)
+    //     return updatedGroups;
+    // });
 
-    newStores[storeSourceIndex] = {
-      ...stores[storeSourceIndex],
-      items: newSourceItems,
-    };
-    newStores[storeDestinationIndex] = {
-      ...stores[storeDestinationIndex],
-      items: newDestinationItems,
-    };
+    dispatch(setCurrentGroupedTaskList({
+      list: (prevGroupedTasks => {
+        const updatedGroups = [...prevGroupedTasks];
+        updatedGroups[sourceGroupIndex] = {
+          ...updatedGroups[sourceGroupIndex],
+          items: sourceItems,
+        };
+        if (sourceGroupIndex !== destinationGroupIndex) {
+          updatedGroups[destinationGroupIndex] = {
+            ...updatedGroups[destinationGroupIndex],
+            items: destinationItems,
+          };
+        }
+        return updatedGroups;
+      })(groupedTasks),
+      groupedEntity: groupByEntity
+    }));
 
-    setStores(newStores);
 
-    // Call API to update items with previous and next item IDs and group ID
-    const previousItemId = itemDestinationIndex > 0
-      ? newSourceItems[itemDestinationIndex - 1]?.id
-      : null;
-    const nextItemId = newDestinationItems[itemDestinationIndex + 1]?.id;
-    const statusId = stores[storeDestinationIndex]?.id; // Get the status ID from the destination store
-
-    await updateItemAPI(deletedItem.id, previousItemId, nextItemId, statusId);
   };
-
 
   return (
     <Box
       pr={2}
     >
-      <DragDropContext onDragEnd={handleDragAndDrop}>
+      <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="ROOT" type="group" direction="horizontal">
           {(provided) => (
             <Stack direction='row'
@@ -214,18 +170,18 @@ function KanbanDropNDrag() {
               ref={provided.innerRef}
               sx={{ overflowX: 'auto' }}
             >
-              {stores?.map((status, index) => (
+              {groupedTasks?.map((gt, index) => (
                 <Draggable
-                  draggableId={status.id.toString()}
+                  draggableId={gt.id.toString()}
                   index={index}
-                  key={status.id}>
+                  key={gt.id}>
                   {(provided) => (
                     <Box
                       {...provided.dragHandleProps}
                       {...provided.draggableProps}
                       ref={provided.innerRef}
                     >
-                      <StoreList {...status} status={status} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
+                      <StoreList {...gt} groupByEntity={gt} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
                     </Box>
                   )}
                 </Draggable>
@@ -244,7 +200,7 @@ function KanbanDropNDrag() {
                     color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
                     fullWidth
                     onClick={() => setOpenGroupByEntityDialog(true)}
-                    startIcon={<SettingIcon stroke={2} size={18} />}
+                    // startIcon={<SettingIcon stroke={2} size={18} />}
                     sx={{
                       height: '100%',
                       wordWrap: 'normal'
@@ -268,7 +224,7 @@ function KanbanDropNDrag() {
   );
 }
 
-function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status, setOpenGroupByEntityDialog }) {
+function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupByEntity, setOpenGroupByEntityDialog }) {
   const theme = useTheme();
   const [collapse, setCollapse] = useState(false);
   const EditIcon = TablerIcon["IconEditCircle"];
@@ -285,8 +241,8 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status,
               minHeight: 320,
               width: !collapse ? "auto" : 40,
               background: `linear-gradient(180deg, 
-              ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
-              ${alpha(status?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
+              ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
+              ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
             }}
           >
             <Box
@@ -311,7 +267,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, status,
                 maxWidth={320}
               >
                 <Box flexGrow={1}>
-                  <CustomStatus status={status} changeable={false} />
+                  {groupByEntity.name}
                 </Box>
                 {/* Action buttons */}
                 <IconButton size="small" onClick={() => setCollapse(!collapse)}>

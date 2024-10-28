@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Stack, darken, useTheme } from "@mui/material";
+import { Button, ButtonGroup, Skeleton, Stack, darken, useTheme } from "@mui/material";
 import LayersIcon from '@mui/icons-material/Layers';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -6,23 +6,18 @@ import * as allIcons from "@tabler/icons-react"
 import { useDispatch } from "react-redux";
 import { setAddTaskDialog } from "../../redux/actions/dialog.action";
 import CustomFilterDialog from "../CustomFilterDialog";
+import CustomGroupedByDialog from "../CustomGroupByDialog";
+import { useSelector } from "react-redux";
 
 const CustomFilterBar = () => {
     const theme = useTheme();
+const section = useSelector((state) => state.section.currentSection)
 
-    return (
+    return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Stack direction='row' spacing={2}>
             <CustomFilterDialog />
-            <Button
-                sx={{
-                    textTransform: 'none',
-                }}
-                color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                size="small"
-                startIcon={<LayersIcon fontSize="small" />}
-            >
-                Group By
-            </Button>
+           {(section?.type === "KANBAN" || section?.type === "LIST") && <CustomGroupedByDialog />}
+    
             <Button
                 sx={{
                     textTransform: 'none',

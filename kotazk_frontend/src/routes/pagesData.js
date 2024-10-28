@@ -23,6 +23,7 @@ import WorkspaceList from "../pages/WorkspaceList";
 import Gantt from "../pages/Gantt";
 import ProjectCalendar from "../pages/ProjectCalendar";
 import ProjectList from "../pages/ProjectList";
+import Section from "../pages/Section";
 
 const pagesData = [
   {
@@ -57,7 +58,7 @@ const pagesData = [
   },
   {
     path: "/project/:projectId/section/:sectionId",
-    element: <Project><Kanban /></Project>,
+    element: <Project><Section /></Project>,
     title: "playground"
   },
   {

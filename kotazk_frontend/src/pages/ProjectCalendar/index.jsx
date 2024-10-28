@@ -44,7 +44,7 @@ function getColorFromInteger(num) {
   return fullColorPalette[colorIndex];
 }
 
-const CalendarComponent = () => {
+const ProjectCalendar = () => {
 
   const theme = useTheme();
   const project = useSelector((state) => state.project.currentProject)
@@ -218,4 +218,4 @@ const TaskUncompleteIcon = TablerIcons["IconCircle"]
   );
 };
 
-export default CalendarComponent;
+export default ProjectCalendar;
