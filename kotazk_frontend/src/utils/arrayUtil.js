@@ -10,3 +10,19 @@ export const updateAndAddArray = (A, B) => {
 
   return combinedArray;
 };
+
+
+export const modifyTaskInGroupedTasks = (taskId, groupedTasks, newTaskData) => {
+  return groupedTasks.map(group => {
+    const taskIndex = group.items.findIndex(item => item.id === taskId);
+    if (taskIndex !== -1) {
+      return {
+        ...group,
+        items: group.items.map((item, index) =>
+          index === taskIndex ? { ...item, ...newTaskData } : item
+        )
+      };
+    }
+    return group;
+  });
+};

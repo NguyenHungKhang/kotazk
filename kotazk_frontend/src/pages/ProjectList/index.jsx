@@ -370,55 +370,75 @@ const ProjectList = () => {
                 groupedEntity: groupByEntity
             }
         ));
-        console.log(groupedTasks)
     };
 
-    const onDragEnd = (result) => {
+    const handleSaveDnD = async (dstGroupId, currentItemId, nextItemId, previousItemId) => {
+        const rePositionReq = (nextItemId || previousItemId) ? {
+            currentItemId,
+            nextItemId,
+            previousItemId
+        } : null;
+
+        const groupMappings = {
+            status: "statusId",
+            taskType: "taskTypeId",
+            priority: "priority"
+        };
+        const groupField = groupMappings[groupByEntity];
+        const groupValue = dstGroupId || null;
+
+        if (!groupValue && !rePositionReq) return null;
+
+        const data = {
+            [groupField]: groupValue,
+            rePositionReq
+        };
+
+        try {
+            const response = await apiService.taskAPI.update(currentItemId, data);
+            if (response?.data) {
+                return response?.data
+            }
+        } catch (error) {
+            console.error("Failed to update task:", error);
+            return null;
+        }
+    };
+
+    const onDragEnd = async (result) => {
         const { source, destination } = result;
 
-        // Do nothing if dropped outside the list
+        // Exit if dropped outside the list or no movement
         if (!destination) return;
 
         const sourceGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(source.droppableId));
         const destinationGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(destination.droppableId));
-
-        console.log(123)
 
         if (sourceGroupIndex === -1 || destinationGroupIndex === -1 ||
             (sourceGroupIndex === destinationGroupIndex && source.index === destination.index)) {
             return;
         }
 
-        console.log(456)
-
+        // Optimistically update the UI
         const sourceItems = Array.from(groupedTasks[sourceGroupIndex].items);
-        const destinationItems = sourceGroupIndex === destinationGroupIndex ? sourceItems : Array.from(groupedTasks[destinationGroupIndex].items);
+        const destinationItems = sourceGroupIndex === destinationGroupIndex
+            ? sourceItems
+            : Array.from(groupedTasks[destinationGroupIndex].items);
 
         const [movedTask] = sourceItems.splice(source.index, 1);
         destinationItems.splice(destination.index, 0, movedTask);
-
-        // setGroupedTasks(prevGroupedTasks => {
-        //     const updatedGroups = [...prevGroupedTasks];
-        //     updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
-        //     if (sourceGroupIndex !== destinationGroupIndex) {
-        //         updatedGroups[destinationGroupIndex] = { ...updatedGroups[destinationGroupIndex], items: destinationItems };
-        //     }
-
-        //     console.log(updatedGroups)
-        //     return updatedGroups;
-        // });
 
         dispatch(setCurrentGroupedTaskList({
             list: (prevGroupedTasks => {
                 const updatedGroups = [...prevGroupedTasks];
                 updatedGroups[sourceGroupIndex] = {
                     ...updatedGroups[sourceGroupIndex],
-                    items: sourceItems,
+                    items: sourceItems
                 };
                 if (sourceGroupIndex !== destinationGroupIndex) {
                     updatedGroups[destinationGroupIndex] = {
                         ...updatedGroups[destinationGroupIndex],
-                        items: destinationItems,
+                        items: destinationItems
                     };
                 }
                 return updatedGroups;
@@ -426,7 +446,33 @@ const ProjectList = () => {
             groupedEntity: groupByEntity
         }));
 
+        const dstGroupId = destination?.droppableId !== source?.droppableId ? destination?.droppableId : null;
+        const currentItemId = movedTask?.id;
+        const nextItemId = destination.index - 1 >= 0 ? destinationItems[destination.index - 1]?.id : null;
+        const previousItemId = destination.index + 1 < destinationItems.length ? destinationItems[destination.index + 1]?.id : null;
 
+        const response = await handleSaveDnD(dstGroupId, currentItemId, nextItemId, previousItemId);
+
+        if (response) {
+            dispatch(setCurrentGroupedTaskList({
+                list: (prevGroupedTasks => {
+                    const newDestinationItems = destinationItems.map(item =>
+                        item.id === response?.id ? response : item
+                    );
+
+                    const updatedGroups = [...prevGroupedTasks];
+                    updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
+                    if (sourceGroupIndex !== destinationGroupIndex) {
+                        updatedGroups[destinationGroupIndex] = {
+                            ...updatedGroups[destinationGroupIndex],
+                            items: newDestinationItems
+                        };
+                    }
+                    return updatedGroups;
+                })(groupedTasks),
+                groupedEntity: groupByEntity
+            }));
+        }
     };
 
 

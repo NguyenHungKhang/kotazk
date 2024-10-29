@@ -36,6 +36,8 @@ const CardKanban = ({ task, isDragging }) => {
     const CommentIcon = allIcons["IconMessageDots"];
     const PriorityIcon = allIcons["IconFlag"]
     const MoreIcon = allIcons["IconDots"]
+    const DashedOutlinedCheckCircleIcon = allIcons["IconCircleDashedCheck"];
+    const FilledCheckCircleIcon = allIcons["IconCircleCheckFilled"];
 
     const openTaskDialog = () => {
         const taskDialogData = {
@@ -65,23 +67,24 @@ const CardKanban = ({ task, isDragging }) => {
                 borderRadius: 2,
                 boxShadow: 0,
                 border: '1px solid',
-                borderColor: isDragging ? theme.palette.info.main : (theme.palette.mode === "light" ? theme.palette.grey[100] : theme.palette.grey[800]),
+                borderColor: isDragging ? theme.palette.primary.main : (theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]),
                 transform: isDragging ? 'rotate(2deg)' : null,
                 // borderColor: "transparent",
                 '&:hover': {
-                    borderColor: theme.palette.primary.main
+                    borderColor: theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]
                 }
             }}
         >
-            <CardContent
+
+
+            <Box
                 sx={{
+                    p: 2,
                     px: 4,
-                    py: 2
                 }}
             >
-
                 {task?.labels?.length > 0 &&
-                    <Stack direction='row' spacing={2} mb={2}>
+                    <Stack direction='row' spacing={2}>
                         <Stack
                             flexGrow={1}
                             direction='row'
@@ -108,6 +111,15 @@ const CardKanban = ({ task, isDragging }) => {
                 }
 
                 <Stack direction="row" spacing={2} alignItems='center'>
+                    {/* <IconButton size="small"> */}
+                    <Box
+                    sx={{
+                        cursor: 'pointer'
+                    }}
+                    >
+                        { task?.isCompleted ? <FilledCheckCircleIcon color={theme.palette.success.main}/> :  <DashedOutlinedCheckCircleIcon color={theme.palette.text.secondary} />}
+                    </Box>
+                    {/* </IconButton> */}
                     <Box
                         mb={1}
                         mt={2}
@@ -132,12 +144,20 @@ const CardKanban = ({ task, isDragging }) => {
                         <CardKanbanMenu task={task} />
                     }
                 </Stack>
+            </Box>
 
-                {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
+
+            {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
                     Test desciption a akjn al la a a las la va
                 </Typography> */}
-                <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 1 }} />
 
+            <Box
+                sx={{
+                    px: 4,
+                    py: 2,
+                }}
+            >
                 <CustomStatus status={task?.status} changeable={false} />
 
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
@@ -160,25 +180,22 @@ const CardKanban = ({ task, isDragging }) => {
                         </FieldBoxForKanbanCard>
 
                     }
-                    {task?.priorityId && (() => {
-                        const priority = priorities.find(p => p.id === task?.priorityId);
-                        return (
-                            <FieldBoxForKanbanCard px={2} py={0.5}
-                                sx={{
-                                    bgcolor: priority?.customization?.backgroundColor
-                                }}
-                            >
-                                <Tooltip title="Priority" placement="top">
-                                    <Stack direction='row' alignItems='center' spacing={1}>
-                                        <PriorityIcon color={theme.palette.getContrastText(priority?.customization?.backgroundColor)} size={16} />
-                                        <Typography color={theme.palette.getContrastText(priority?.customization?.backgroundColor)} variant='body2'>
-                                            {priority?.name}
-                                        </Typography>
-                                    </Stack>
-                                </Tooltip>
-                            </FieldBoxForKanbanCard>
-                        );
-                    })()}
+                    {task?.priority && (
+                        <FieldBoxForKanbanCard px={2} py={0.5}
+                            sx={{
+                                bgcolor: task?.priority?.customization?.backgroundColor
+                            }}
+                        >
+                            <Tooltip title="Priority" placement="top">
+                                <Stack direction='row' alignItems='center' spacing={1}>
+                                    <PriorityIcon color={theme.palette.getContrastText(task?.priority?.customization?.backgroundColor)} size={16} />
+                                    <Typography color={theme.palette.getContrastText(task?.priority?.customization?.backgroundColor)} variant='body2'>
+                                        {task?.priority?.name}
+                                    </Typography>
+                                </Stack>
+                            </Tooltip>
+                        </FieldBoxForKanbanCard>
+                    )}
 
                     {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />
@@ -193,11 +210,11 @@ const CardKanban = ({ task, isDragging }) => {
                         </Typography>
                     </Stack> */}
                     <Box sx={{ marginLeft: 'auto' }}>
-                        <Tooltip title={task?.assigneeId ? getAssignee(task.assigneeId) : "Unassigned"} placement="top">
-                            {task?.assigneeId ? (
+                        <Tooltip title={task?.assignee ? task?.assignee?.user?.lastName : "Unassigned"} placement="top">
+                            {task?.assignee ? (
                                 <Box>
                                     <CustomMember
-                                        member={members.find(m => m.id === task.assigneeId)}
+                                        member={task?.assignee}
                                         isShowName={false}
                                     />
                                 </Box>
@@ -216,7 +233,7 @@ const CardKanban = ({ task, isDragging }) => {
                     </Box>
 
                 </Stack>
-            </CardContent>
+            </Box>
         </Card >
     );
 }

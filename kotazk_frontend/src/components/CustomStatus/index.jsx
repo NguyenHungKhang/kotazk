@@ -1,11 +1,14 @@
 import { Box, Stack, Typography, useTheme } from "@mui/material"
 import { statusIconsList } from "../../utils/iconsListUtil"
 import CustomColorIconPicker from "../CustomColorIconPicker"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const CustomStatus = ({ status, changeable }) => {
     const theme = useTheme();
     const [customization, setCustomization] = useState({});
+    // useEffect(() => {
+    //     console.log(status)
+    // }, [status])
     return (
         <Box>
             <Stack direction='row' spacing={2} alignItems='center' pr={2}>

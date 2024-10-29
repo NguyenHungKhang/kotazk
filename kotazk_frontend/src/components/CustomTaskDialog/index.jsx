@@ -1,4 +1,4 @@
-import { Box, DialogActions, Divider, IconButton, Paper, Skeleton, Slide, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Card, DialogActions, Divider, IconButton, Paper, Skeleton, Slide, Stack, Typography, useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
@@ -62,7 +62,10 @@ const CustomTaskDialog = () => {
     const CollaboratorsIcon = TablerIcons["IconUsers"];
     const PriorityIcon = TablerIcons["IconFlag"]
     const LinkedTasksIcon = TablerIcons["IconHierarchy"];
-    const TaskTypeIcon = TablerIcons["IconBoxModel2"]
+    const TaskTypeIcon = TablerIcons["IconBoxModel2"];
+    const DashedOutlinedCheckCircleIcon = TablerIcons["IconCircleDashedCheck"];
+    const FilledCheckCircleIcon = TablerIcons["IconCircleCheckFilled"];
+
 
     const handleClose = () => {
         const taskDialogData = {
@@ -163,7 +166,10 @@ const CustomTaskDialog = () => {
                 >
                     <Stack direction='row' spacing={2} alignItems='center'>
                         <Box flexGrow={1}>
-                            <Button color='success' variant='outlined' size='small'>
+                            <Button color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'} variant='outlined' size='small'
+
+                                startIcon={task?.isCompleted ? <FilledCheckCircleIcon /> : <DashedOutlinedCheckCircleIcon />}
+                            >
                                 Complete task
                             </Button>
                         </Box>
@@ -202,102 +208,157 @@ const CustomTaskDialog = () => {
                         onBlur={() => saveName()}
                     />
                 </Box>
-                <Box mt={2} ml={2}>
-                    <Grid2 container spacing={1}>
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <TaskTypeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
-                                    Task type
-                                </Typography>
-                            </Stack>
+                <Stack direction={'column'} spacing={1} mt={2} p={2} borderRadius={2} bgcolor={getSecondBackgroundColor(theme)}>
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <TaskTypeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                        Task type
+                                    </Typography>
+                                </Stack>
 
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                <CustomTaskTypePicker currentTaskType={task?.taskType} taskId={task?.id} />
+                            </Grid2>
                         </Grid2>
-                        <Grid2 item size={9}>
-                            <CustomTaskTypePicker currentTaskType={task?.taskType} taskId={task?.id} />
-                        </Grid2>
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <StatusIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
-                                    Status
-                                </Typography>
-                            </Stack>
-                        </Grid2>
-                        <Grid2 item size={9}>
-                            <CustomStatusPicker currentStatus={task?.status} taskId={task?.id} />
-                        </Grid2>
+                    </Card>
 
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <DateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
-                                    Date
-                                </Typography>
-                            </Stack>
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <StatusIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                        Status
+                                    </Typography>
+                                </Stack>
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                <CustomStatusPicker currentStatus={task?.status} taskId={task?.id} />
+                            </Grid2>
+                        </Grid2>
+                    </Card>
 
-                        </Grid2>
-                        <Grid2 item size={9}>
-                            <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id} />
-                        </Grid2>
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <TimeEstimateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
-                                    Time Estimate
-                                </Typography>
-                            </Stack>
-                        </Grid2>
-                        <Grid2 item size={9}>
-                            <TextField
-                                required
-                                inputProps={{ type: 'number' }}
-                                size="small"
-                                id="time_estimate"
-                                name="time_estimate"
-                                fullWidth
-                                placeholder='Empty'
-                                variant="outlined"
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        borderRadius: 2,
-                                        py: 0,  // Removes padding inside the root container
-                                        '& .MuiSelect-select': {
-                                            py: 1,
-                                            px: 1,  // Removes padding between value and border
-                                            minHeight: 'auto',  // Resets the default min height
-                                            lineHeight: 'normal',  // Adjusts line height to prevent extra space
-                                        },
-                                        '& fieldset': {
-                                            borderColor: 'transparent !important',
-                                        },
-                                        '&:hover fieldset': {
-                                            bgcolor: theme.palette.action.hover
-                                        },
-                                        '&:focus fieldset': {
-                                            bgcolor: theme.palette.action.focus
-                                        },
-                                        '& .MuiSelect-icon': {
-                                            display: 'none',  // Hides the arrow icon
-                                        },
-                                    },
-                                }}
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <DateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                        Date
+                                    </Typography>
+                                </Stack>
 
-                            />
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                <CustomDueTimePicker startAt={task?.startAt} endAt={task?.endAt} taskId={task?.id} />
+                            </Grid2>
                         </Grid2>
+                    </Card>
 
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <AssigneeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
-                                    Assignee
-                                </Typography>
-                            </Stack>
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <TimeEstimateIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                        Time Estimate
+                                    </Typography>
+                                </Stack>
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                <TextField
+                                    required
+                                    inputProps={{ type: 'number' }}
+                                    size="small"
+                                    id="time_estimate"
+                                    name="time_estimate"
+                                    fullWidth
+                                    placeholder='Empty'
+                                    variant="outlined"
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 2,
+                                            py: 0,  // Removes padding inside the root container
+                                            '& .MuiSelect-select': {
+                                                py: 1,
+                                                px: 1,  // Removes padding between value and border
+                                                minHeight: 'auto',  // Resets the default min height
+                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
+                                            },
+                                            '& fieldset': {
+                                                borderColor: 'transparent !important',
+                                            },
+                                            '&:hover fieldset': {
+                                                bgcolor: theme.palette.action.hover
+                                            },
+                                            '&:focus fieldset': {
+                                                bgcolor: theme.palette.action.focus
+                                            },
+                                            '& .MuiSelect-icon': {
+                                                display: 'none',  // Hides the arrow icon
+                                            },
+                                        },
+                                    }}
+
+                                />
+                            </Grid2>
                         </Grid2>
-                        <Grid2 item size={9}>
-                            <CustomAssigneePicker currentAssignee={task?.assignee} taskId={task?.id} />
+                    </Card>
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <AssigneeIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
+                                        Assignee
+                                    </Typography>
+                                </Stack>
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                <CustomAssigneePicker currentAssignee={task?.assignee} taskId={task?.id} />
+                            </Grid2>
                         </Grid2>
-                        {/* <Grid2 item size={3}>
+                    </Card>
+                    {/* <Grid2 item size={3}>
                                 <Stack direction='row' spacing={2} alignItems='center'>
                                     <ReporterIcon size={16} stroke={2} color={theme.palette.text.secondary} />
                                     <Typography variant='body2' pt={0.5}>
@@ -319,19 +380,29 @@ const CustomTaskDialog = () => {
                             <Grid2 item size={9}>
                                 <AssigneesComponent />
                             </Grid2> */}
-                        <Grid2 item size={3} display='flex' alignItems='center'>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <PriorityIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
-                                    Priority
-                                </Typography>
-                            </Stack>
-                        </Grid2>
-                        <Grid2 item size={9}>
-                            {/* <PriorityComponent /> */}
-                            <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
-                        </Grid2>
-                        {/* <Grid2 item size={3}>
+                    <Card
+                        sx={{
+                            px: 2,
+                            py: 1,
+                            my: 0.5,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Grid2 container spacing={1}>
+                            <Grid2 item size={3} display='flex' alignItems='center'>
+                                <Stack direction='row' spacing={2} alignItems='center'>
+                                    <PriorityIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                                    <Typography variant='body2' pt={0.5} color={theme.palette.text.secondary}>
+                                        Priority
+                                    </Typography>
+                                </Stack>
+                            </Grid2>
+                            <Grid2 item size={9}>
+                                {/* <PriorityComponent /> */}
+                                <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
+                            </Grid2>
+
+                            {/* <Grid2 item size={3}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
                                                 <LinkedTasksIcon size={16} stroke={2} color={theme.palette.text.secondary} />
                                                 <Typography variant='body2' pt={0.5}>
@@ -349,7 +420,8 @@ const CustomTaskDialog = () => {
                                                 variant="outlined"
                                             />
                                         </Grid2> */}
-                    </Grid2>
+                        </Grid2>
+                    </Card>
                     <Grid2 container spacing={2} mt={4}>
                         <Grid2 item size={2}>
                             <Stack direction='row' spacing={2} alignItems='center'>
@@ -364,7 +436,7 @@ const CustomTaskDialog = () => {
                             <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
                         </Grid2>
                     </Grid2>
-                </Box>
+                </Stack>
                 <Box mt={6}>
                     <Typography
                         variant='h6'
@@ -521,7 +593,7 @@ const CustomTaskDialog = () => {
 
 
 
-            </DialogContent>
+            </DialogContent >
             <Divider />
             {/* <DialogActions
                 sx={{

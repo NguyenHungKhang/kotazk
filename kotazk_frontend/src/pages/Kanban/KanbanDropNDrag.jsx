@@ -14,7 +14,7 @@ import { setCurrentGroupedTaskList, setCurrentKanbanTaskList, setCurrentTaskList
 import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
 import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomStatus from '../../components/CustomStatus';
-import { updateAndAddArray } from '../../utils/arrayUtil';
+import { modifyTaskInGroupedTasks, updateAndAddArray } from '../../utils/arrayUtil';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import CustomDialogForManage from '../../components/CustomDialogForManage';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
@@ -24,7 +24,7 @@ import { applyTaskFilters } from '../../utils/filterUtil';
 
 function KanbanDropNDrag() {
   const theme = useTheme();
-const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
+  const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
 
   const [tasks, setTasks] = useState(null);
   // const [groupByEntity, setGroupByEntity] = useState("taskType");
@@ -101,52 +101,74 @@ const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
     console.log(groupedTasks)
   };
 
-  const onDragEnd = (result) => {
+
+  const handleSaveDnD = async (dstGroupId, currentItemId, nextItemId, previousItemId) => {
+    const rePositionReq = (nextItemId || previousItemId) ? {
+      currentItemId,
+      nextItemId,
+      previousItemId
+    } : null;
+
+    const groupMappings = {
+      status: "statusId",
+      taskType: "taskTypeId",
+      priority: "priority"
+    };
+    const groupField = groupMappings[groupByEntity];
+    const groupValue = dstGroupId || null;
+
+    if (!groupValue && !rePositionReq) return null;
+
+    const data = {
+      [groupField]: groupValue,
+      rePositionReq
+    };
+
+    try {
+      const response = await apiService.taskAPI.update(currentItemId, data);
+      if (response?.data) {
+        return response?.data
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      return null;
+    }
+  };
+
+  const onDragEnd = async (result) => {
     const { source, destination } = result;
 
-    // Do nothing if dropped outside the list
+    // Exit if dropped outside the list or no movement
     if (!destination) return;
 
     const sourceGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(source.droppableId));
     const destinationGroupIndex = groupedTasks.findIndex(group => String(group.id) === String(destination.droppableId));
-
-    console.log(123)
 
     if (sourceGroupIndex === -1 || destinationGroupIndex === -1 ||
       (sourceGroupIndex === destinationGroupIndex && source.index === destination.index)) {
       return;
     }
 
-    console.log(456)
-
+    // Optimistically update the UI
     const sourceItems = Array.from(groupedTasks[sourceGroupIndex].items);
-    const destinationItems = sourceGroupIndex === destinationGroupIndex ? sourceItems : Array.from(groupedTasks[destinationGroupIndex].items);
+    const destinationItems = sourceGroupIndex === destinationGroupIndex
+      ? sourceItems
+      : Array.from(groupedTasks[destinationGroupIndex].items);
 
     const [movedTask] = sourceItems.splice(source.index, 1);
     destinationItems.splice(destination.index, 0, movedTask);
-
-    // setGroupedTasks(prevGroupedTasks => {
-    //     const updatedGroups = [...prevGroupedTasks];
-    //     updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
-    //     if (sourceGroupIndex !== destinationGroupIndex) {
-    //         updatedGroups[destinationGroupIndex] = { ...updatedGroups[destinationGroupIndex], items: destinationItems };
-    //     }
-
-    //     console.log(updatedGroups)
-    //     return updatedGroups;
-    // });
 
     dispatch(setCurrentGroupedTaskList({
       list: (prevGroupedTasks => {
         const updatedGroups = [...prevGroupedTasks];
         updatedGroups[sourceGroupIndex] = {
           ...updatedGroups[sourceGroupIndex],
-          items: sourceItems,
+          items: sourceItems
         };
         if (sourceGroupIndex !== destinationGroupIndex) {
           updatedGroups[destinationGroupIndex] = {
             ...updatedGroups[destinationGroupIndex],
-            items: destinationItems,
+            items: destinationItems
           };
         }
         return updatedGroups;
@@ -154,8 +176,35 @@ const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
       groupedEntity: groupByEntity
     }));
 
+    const dstGroupId = destination?.droppableId !== source?.droppableId ? destination?.droppableId : null;
+    const currentItemId = movedTask?.id;
+    const nextItemId = destination.index - 1 >= 0 ? destinationItems[destination.index - 1]?.id : null;
+    const previousItemId = destination.index + 1 < destinationItems.length ? destinationItems[destination.index + 1]?.id : null;
 
+    const response = await handleSaveDnD(dstGroupId, currentItemId, nextItemId, previousItemId);
+
+    if (response) {
+      dispatch(setCurrentGroupedTaskList({
+        list: (prevGroupedTasks => {
+          const newDestinationItems = destinationItems.map(item =>
+            item.id === response?.id ? response : item
+          );
+
+          const updatedGroups = [...prevGroupedTasks];
+          updatedGroups[sourceGroupIndex] = { ...updatedGroups[sourceGroupIndex], items: sourceItems };
+          if (sourceGroupIndex !== destinationGroupIndex) {
+            updatedGroups[destinationGroupIndex] = {
+              ...updatedGroups[destinationGroupIndex],
+              items: newDestinationItems
+            };
+          }
+          return updatedGroups;
+        })(groupedTasks),
+        groupedEntity: groupByEntity
+      }));
+    }
   };
+
 
   return (
     <Box
@@ -217,8 +266,6 @@ const [openGroupByEntityDialog, setOpenGroupByEntityDialog] = useState(false);
           )}
         </Droppable>
       </DragDropContext>
-
-      <CustomDialogForManage children={<CustomManageStatus />} open={openGroupByEntityDialog} setOpen={setOpenGroupByEntityDialog} />
       <CustomTaskDialog />
     </Box>
   );
@@ -229,6 +276,8 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
   const [collapse, setCollapse] = useState(false);
   const EditIcon = TablerIcon["IconEditCircle"];
   const CollapseIcon = TablerIcon["IconLayoutSidebarLeftCollapseFilled"];
+  const ManageSettingIcon = TablerIcon["IconSettings"]
+  const ColorIcon = TablerIcon["IconSquareRoundedFilled"]
   return (
     <Droppable droppableId={id.toString()}>
       {(provided, snapshot) => (
@@ -240,24 +289,28 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               position: 'relative',
               minHeight: 320,
               width: !collapse ? "auto" : 40,
-              background: `linear-gradient(180deg, 
-              ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.6 : 0.3)} 0%,  
-              ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.1)} 100%)`
+              border: '1px solid',
+              borderColor: snapshot.isDraggingOver ? theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600] : 'transparent'
+              // background: `linear-gradient(180deg, 
+              // ${alpha(theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.25)} 0%,  
+              // ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.1 : 0.05)} 100%)`
             }}
           >
-            <Box
-              mb={1}
-              p={2}
-              width={320}
-              // boxShadow={1}
-              borderRadius={2}
-              bgcolor={theme.palette.mode === "light" ? "#F6F7FA" : lighten(theme.palette.background.default, 0.2)}
+            <Card
+              // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
               sx={{
+                boxShadow: 0,
+                borderRadius: 2,
+                width: 320,
+                mb: 1,
+                p: 2,
                 transform: collapse ? 'rotate(90deg) translateY(-100%)' : 'none',
                 transformOrigin: '0 0',
                 position: collapse ? 'absolute' : 'relative', // Apply absolute positioning when collapsed
                 top: 0,
                 left: 0,
+                border: '1px solid',
+                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
               }}
             >
               <Stack
@@ -266,6 +319,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                 spacing={2}
                 maxWidth={320}
               >
+                <ColorIcon size={12} color={groupByEntity?.customization?.backgroundColor} />
                 <Box flexGrow={1}>
                   {groupByEntity.name}
                 </Box>
@@ -274,10 +328,10 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                   <CollapseIcon fontSize='inherit' stroke={2} size={18} />
                 </IconButton>
                 <IconButton size="small" onClick={() => setOpenGroupByEntityDialog(true)}>
-                  <EditIcon fontSize='inherit' stroke={2} size={18} />
+                  <ManageSettingIcon fontSize='inherit' stroke={2} size={18} />
                 </IconButton>
               </Stack>
-            </Box>
+            </Card>
 
 
             {!collapse && <Box height='calc(100vh - 268px)'
@@ -300,7 +354,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                 }
               }}
             >
-              <Stack spacing={0.5}>
+              <Stack spacing={1}>
                 {items?.map((task, index) => (
                   <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
                     {(provided, snapshot) => (
