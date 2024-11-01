@@ -1,6 +1,5 @@
 package com.taskmanagement.kotazk.payload.response.task;
 
-import com.taskmanagement.kotazk.entity.TaskType;
 import com.taskmanagement.kotazk.payload.response.label.LabelResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
@@ -25,6 +24,7 @@ public class TaskResponseDto {
     String name;
     String description;
     ProjectResponseDto project;
+    Long parentTaskId;
     Long creatorId;
     MemberResponseDto assignee;
     Long reporterId;
@@ -39,4 +39,6 @@ public class TaskResponseDto {
     Long position;
     Set<Long> collaboratorIds = new HashSet<>();
     Set<LabelResponseDto> labels = new HashSet<>();
+    Set<TaskResponseDto> childTasks = new HashSet<>();
+
 }

@@ -1,35 +1,27 @@
-import React, { useEffect, useState } from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogActions,
-    DialogContent,
-    Button,
-    Popover,
-    TextField,
-    Stack,
     Box,
-    Typography,
-    useTheme,
     IconButton,
+    Popover,
+    Stack,
+    TextField,
     Tooltip,
+    Typography,
+    useTheme
 } from '@mui/material';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import * as TablerIcon from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { DateTimeField } from '@mui/x-date-pickers';
-import * as apiService from '../../api/index'
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { setCurrentTaskList } from '../../redux/actions/task.action';
-import { updateAndAddArray } from '../../utils/arrayUtil';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import * as apiService from '../../api/index';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
-import * as TablerIcon from '@tabler/icons-react'
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from "../../redux/actions/task.action";
 
 function CustomDueTimePicker({ startAt, endAt, taskId }) {
     const theme = useTheme();
-    const tasks = useSelector((state) => state.task.currentTaskList);
+    const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const dispatch = useDispatch();
     const [openDialog, setOpenDialog] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
@@ -37,6 +29,11 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
     const [endDate, setEndDate] = useState(endAt ? dayjs(endAt) : null);
 
     const ClearIcon = TablerIcon["IconWashDrycleanOff"];
+
+    useEffect(() => {
+        setStartDate(startAt);
+        setEndDate(endAt);
+    }, [startAt, endAt, taskId])
 
     const saveStartDate = async (newValue) => {
         setStartDate(newValue)
@@ -47,7 +44,11 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
         try {
             const response = await apiService.taskAPI.update(taskId, data);
             if (response?.data) {
-                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
                 const taskDialogData = {
                     task: response.data
                 };
@@ -68,7 +69,11 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
         try {
             const response = await apiService.taskAPI.update(taskId, data);
             if (response?.data) {
-                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
                 const taskDialogData = {
                     task: response.data
                 };

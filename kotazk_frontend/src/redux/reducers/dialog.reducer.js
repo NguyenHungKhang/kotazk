@@ -3,6 +3,7 @@ import { fas } from "@fortawesome/free-solid-svg-icons";
 const initialState = {
     taskDialog: {
         task: null,
+        parentTask: null,
         open: false
     },
     addTaskDialog: {
@@ -24,6 +25,7 @@ const DialogReducer = (state = initialState, action) => {
                 ...state,
                 taskDialog: {
                     task: action.payload.task != null ? action.payload.task : state.taskDialog.task,
+                    parentTask: action.payload.parentTask != null ? action.payload.parentTask : state.taskDialog.parentTask,
                     open: action.payload.open != null ? action.payload.open : state.taskDialog.open,
                 }
             };

@@ -29,6 +29,10 @@ public class Task {
     private Project project;
 
     @ManyToOne
+    @JoinColumn(name = "parent_task_id")
+    private Task parentTask;
+
+    @ManyToOne
     @JoinColumn(name = "creator_id", nullable = false)
     private Member creator;
 
@@ -59,7 +63,7 @@ public class Task {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "LONGTEXT")
     private String description;
 
     @Column(name = "position", nullable = false)
@@ -100,6 +104,9 @@ public class Task {
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Folder> folders;
+
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Task> childTasks;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;

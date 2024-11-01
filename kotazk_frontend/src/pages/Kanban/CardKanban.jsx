@@ -1,4 +1,4 @@
-import { Avatar, Box, Card, CardContent, Chip, Divider, IconButton, Stack, Tooltip, Typography, lighten, styled, useTheme } from "@mui/material";
+import { Avatar, Badge, Box, Card, CardContent, Chip, Divider, IconButton, Stack, Tooltip, Typography, lighten, styled, useTheme } from "@mui/material";
 import * as allIcons from "@tabler/icons-react"
 import { useState } from "react";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
@@ -38,6 +38,8 @@ const CardKanban = ({ task, isDragging }) => {
     const MoreIcon = allIcons["IconDots"]
     const DashedOutlinedCheckCircleIcon = allIcons["IconCircleDashedCheck"];
     const FilledCheckCircleIcon = allIcons["IconCircleCheckFilled"];
+    const DescIcon = allIcons["IconFileText"];
+    const SubtaskIcon = allIcons["IconSubtask"];
 
     const openTaskDialog = () => {
         const taskDialogData = {
@@ -113,11 +115,11 @@ const CardKanban = ({ task, isDragging }) => {
                 <Stack direction="row" spacing={2} alignItems='center'>
                     {/* <IconButton size="small"> */}
                     <Box
-                    sx={{
-                        cursor: 'pointer'
-                    }}
+                        sx={{
+                            cursor: 'pointer'
+                        }}
                     >
-                        { task?.isCompleted ? <FilledCheckCircleIcon color={theme.palette.success.main}/> :  <DashedOutlinedCheckCircleIcon color={theme.palette.text.secondary} />}
+                        {task?.isCompleted ? <FilledCheckCircleIcon color={theme.palette.success.main} /> : <DashedOutlinedCheckCircleIcon color={theme.palette.text.secondary} />}
                     </Box>
                     {/* </IconButton> */}
                     <Box
@@ -195,6 +197,18 @@ const CardKanban = ({ task, isDragging }) => {
                                 </Stack>
                             </Tooltip>
                         </FieldBoxForKanbanCard>
+                    )}
+
+                    {task?.description && (
+                        <Tooltip title={"Description"} placement="top">
+                            <DescIcon stroke={2} size={20} color={theme.palette.text.secondary} />
+                        </Tooltip>
+                    )}
+
+                    {task?.childTasks?.length > 0 && (
+                        <Tooltip title={`${task?.childTasks?.length} subtask${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
+                            <SubtaskIcon stroke={2} size={20} color={theme.palette.text.secondary} />
+                        </Tooltip>
                     )}
 
                     {/* <Stack direction='row' alignItems='center' spacing={1}>

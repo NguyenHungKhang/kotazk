@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setCurrentTaskList } from "../../redux/actions/task.action";
-import { updateAndAddArray } from "../../utils/arrayUtil";
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from "../../redux/actions/task.action";
 import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomMember from "../CustomMember";
@@ -12,9 +12,13 @@ import CustomMember from "../CustomMember";
 const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
     const project = useSelector((state) => state.project.currentProject)
     const [members, setMembers] = useState(null);
-    const tasks = useSelector((state) => state.task.currentTaskList)
+    const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const [assignee, setAssignee] = useState(currentAssignee ? currentAssignee : null);
     const dispatch = useDispatch();
+
+    useEffect(() => {
+        setAssignee(currentAssignee);
+    }, [currentAssignee, taskId])
 
     const saveAssignee = async (object) => {
         const data = {
@@ -24,7 +28,11 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
         try {
             const response = await apiService.taskAPI.update(taskId, data);
             if (response?.data) {
-                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
                 const taskDialogData = {
                     task: response.data
                 };
@@ -40,7 +48,7 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomAssigneeOpenComponent {...props} assignee={assignee} setMembers={setMembers} projectId={project?.id}/>
+                    <CustomAssigneeOpenComponent {...props} assignee={assignee} setMembers={setMembers} projectId={project?.id} />
                 )}
                 selectedObject={assignee}
                 setSelectedObject={setAssignee}

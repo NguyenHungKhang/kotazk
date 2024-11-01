@@ -30,6 +30,7 @@ public class TaskRequestDto {
     String startAt;
     String endAt;
     Long taskTypeId;
+    Long parentTaskId;
     RePositionRequestDto rePositionReq;
     Set<Long> collaboratorIds = new HashSet<>();
     Set<Long> labelIds;

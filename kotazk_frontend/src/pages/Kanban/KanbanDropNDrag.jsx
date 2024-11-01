@@ -14,7 +14,7 @@ import { setCurrentGroupedTaskList, setCurrentKanbanTaskList, setCurrentTaskList
 import CustomStatusColorIconPicker from '../../components/CustomStatusColorIconPicker';
 import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomStatus from '../../components/CustomStatus';
-import { modifyTaskInGroupedTasks, updateAndAddArray } from '../../utils/arrayUtil';
+import { updateAndAddArray } from '../../utils/arrayUtil';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import CustomDialogForManage from '../../components/CustomDialogForManage';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
@@ -236,32 +236,6 @@ function KanbanDropNDrag() {
                 </Draggable>
               ))}
               {provided.placeholder}
-              <Box>
-                <Paper
-                  sx={{
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.background.paper, 0.5),
-                    height: '100%'
-                  }}
-                >
-                  <Button
-                    variant='outlined'
-                    color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
-                    fullWidth
-                    onClick={() => setOpenGroupByEntityDialog(true)}
-                    // startIcon={<SettingIcon stroke={2} size={18} />}
-                    sx={{
-                      height: '100%',
-                      wordWrap: 'normal'
-                    }}
-                  >
-                    <Typography noWrap>
-                      Manage Status
-                    </Typography>
-                  </Button>
-                </Paper>
-              </Box>
-
             </Stack>
           )}
         </Droppable>

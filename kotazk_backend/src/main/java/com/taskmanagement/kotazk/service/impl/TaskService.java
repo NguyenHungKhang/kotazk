@@ -77,6 +77,9 @@ public class TaskService implements ITaskService {
         Priority priority = checkPriority(project, taskRequestDto.getPriorityId());
         Long timeEstimate = taskRequestDto.getTimeEstimate();
         Boolean isCompleted = taskRequestDto.getIsCompleted();
+        Task parentTask = checkParentTask(project, taskRequestDto.getParentTaskId());
+
+        System.out.println(parentTask);
 
         List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));
         Timestamp startAt = startAndEndTime.get(0);
@@ -102,6 +105,7 @@ public class TaskService implements ITaskService {
                 .taskType(taskType)
                 .isCompleted(isCompleted)
                 .position(RepositionUtil.calculateNewLastPosition(project.getTasks().size()))
+                .parentTask(parentTask)
                 .build();
 
         Task savedTask = taskRepository.save(newTask);
@@ -164,7 +168,7 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getIsCompleted())
                 .ifPresent(currentTask::setIsCompleted);
 
-        if(taskRequestDto.getStartAt() != null && taskRequestDto.getEndAt() != null) {
+        if (taskRequestDto.getStartAt() != null && taskRequestDto.getEndAt() != null) {
             List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));
             currentTask.setStartAt(startAndEndTime.get(0));
             currentTask.setEndAt(startAndEndTime.get(1));
@@ -430,6 +434,17 @@ public class TaskService implements ITaskService {
                         .findFirst()
                         .orElseThrow(() -> new ResourceNotFoundException("Label", "id", labelId)))
                 .collect(Collectors.toSet());
+    }
+
+    private Task checkParentTask(Project project, Long taskId) {
+        if (taskId == null) {
+            return null;
+        }
+
+        return project.getTasks().stream()
+                .filter(task -> Objects.equals(task.getId(), taskId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Task", "id", taskId));
     }
 
     public Long calculateNewPositionForTask(RePositionRequestDto rePositionReq, Project project, Task currentTask) {

@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class TaskLabelResponseDto {
-    Long taskId;
-    Long labelId;
+public class TaskSummaryResponseDto {
+    Long id;
+    String name;
+    Boolean isCompleted;
 }

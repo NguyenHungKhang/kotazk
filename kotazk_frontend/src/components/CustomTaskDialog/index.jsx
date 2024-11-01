@@ -1,34 +1,29 @@
-import { Box, Card, DialogActions, Divider, IconButton, Paper, Skeleton, Slide, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Breadcrumbs, Card, Divider, IconButton, Link, Slide, Stack, Typography, useTheme } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Grid2 from '@mui/material/Grid2';
-import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import * as TablerIcons from '@tabler/icons-react';
 import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as apiService from '../../api/index';
-import { setCurrentProjectList } from '../../redux/actions/project.action';
-import CustomFileUploader from '../CustomFileUploader';
-import CustomLongTextEditor from '../CustomLongTextEditor';
-import CustomStatusColorIconPicker from '../CustomStatusColorIconPicker';
-import CustomTaskTypePicker from '../CustomTaskTypePicker';
-import AssigneesComponent from './AssigneesComponent';
-import LabelComponent from './LabelComponent';
-import CustomStatusPicker from '../CustomStatusPicker';
-import CustomTextField from '../CustomBasicTextField';
-import CustomBasicTextField from '../CustomBasicTextField';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
-import { setCurrentTaskList } from '../../redux/actions/task.action';
+import { setCurrentProjectList } from '../../redux/actions/project.action';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
-import CustomPriorityPicker from '../CustomPrirorityPicker';
-import CustomDueTimePicker from '../CustomDueTimePicker';
-import CustomLabelPicker from '../CustomLabelPicker';
-import CustomAssigneePicker from '../CustomAssigneePicker';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
-import CommentAndActivitySection from './CommentAndActivitySection';
+import CustomAssigneePicker from '../CustomAssigneePicker';
+import CustomBasicTextField from '../CustomBasicTextField';
+import CustomDueTimePicker from '../CustomDueTimePicker';
+import CustomFileUploader from '../CustomFileUploader';
+import CustomLabelPicker from '../CustomLabelPicker';
+import CustomPriorityPicker from '../CustomPrirorityPicker';
+import CustomStatusPicker from '../CustomStatusPicker';
+import CustomTaskTypePicker from '../CustomTaskTypePicker';
+import { CustomLongTextEditor } from '../CustomLongTextEditor';
+import SubtaskComponent from './SubtaskComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -39,9 +34,9 @@ const CustomTaskDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const [visibility, setVisibility] = React.useState('PUBLIC');
-    const { task, open } = useSelector((state) => state.dialog.taskDialog);
-    const tasks = useSelector((state) => state.task.currentTaskList)
+    const { task, parentTask, open } = useSelector((state) => state.dialog.taskDialog);
 
 
     const AddIcon = TablerIcons['IconSquarePlus'];
@@ -50,8 +45,8 @@ const CustomTaskDialog = () => {
 
 
     const [selectedIcon, setSelectedIcon] = React.useState('IconHome');  // Default icon
-    const [name, setName] = React.useState("");
-    const [description, setDescription] = React.useState("");
+    const [editDescription, setEditDescription] = React.useState(false);
+    const [parentTaskComponent, setParentTaskComponent] = React.useState(null);
 
     const StatusIcon = TablerIcons["IconPlaystationCircle"];
     const DateIcon = TablerIcons["IconCalendarDue"];
@@ -65,7 +60,14 @@ const CustomTaskDialog = () => {
     const TaskTypeIcon = TablerIcons["IconBoxModel2"];
     const DashedOutlinedCheckCircleIcon = TablerIcons["IconCircleDashedCheck"];
     const FilledCheckCircleIcon = TablerIcons["IconCircleCheckFilled"];
+    const SaveIcon = TablerIcons["IconDeviceFloppy"];
+    const EditIcon = TablerIcons["IconEdit"];
 
+
+    React.useEffect(() => {
+        setParentTaskComponent(parentTask)
+        console.log(parentTask)
+    }, [parentTask])
 
     const handleClose = () => {
         const taskDialogData = {
@@ -75,29 +77,31 @@ const CustomTaskDialog = () => {
         dispatch(setTaskDialog(taskDialogData));
     };
 
-    const saveProject = async () => {
+    const saveDesc = async (description) => {
         const data = {
-            "name": name,
-            "description": description,
-            "visibility": visibility,
-            "workspaceId": workspace.id
+            "description": description?.trim() != "" ? description : null,
         }
-        console.log(data);
-        await apiService.projectAPI.create(data)
-            .then(async (workspaceRes) => {
-                const data = {
-                    'filters': [
 
-                    ]
+        try {
+            const response = await apiService.taskAPI.update(task.id, data);
+            if (response?.data) {
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
+                const taskDialogData = {
+                    task: response.data
                 };
-                await apiService.projectAPI.getPageByWorkspace(workspace.id, data)
-                    .then(projectListRes => { console.log(projectListRes); dispatch(setCurrentProjectList(projectListRes.data)); })
-                    .catch(projectListErr => console.log(projectListErr))
-            })
-            .catch(workspaceErr => console.error(workspaceErr));
+                setEditDescription(false);
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
     }
 
-    const saveName = async () => {
+    const saveName = async (name) => {
         const data = {
             "name": name,
         }
@@ -105,7 +109,43 @@ const CustomTaskDialog = () => {
         try {
             const response = await apiService.taskAPI.update(task.id, data);
             if (response?.data) {
-                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [response.data])));
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
+                const taskDialogData = {
+                    task: response.data
+                };
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+
+    const handleAccessParentTask = () => {
+        const data = {
+            task: parentTask,
+            open: true
+        }
+        dispatch(setTaskDialog(data));
+    }
+
+
+    const handleCompleteTask = async () => {
+        const data = {
+            "isCompleted": !task?.isCompleted,
+        }
+
+        try {
+            const response = await apiService.taskAPI.update(task.id, data);
+            if (response?.data) {
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
                 const taskDialogData = {
                     task: response.data
                 };
@@ -130,7 +170,6 @@ const CustomTaskDialog = () => {
                 component: 'form',
                 onSubmit: async (event) => {
                     event.preventDefault();
-                    await saveProject();
                     handleClose();
                 },
                 sx: {
@@ -166,11 +205,13 @@ const CustomTaskDialog = () => {
                 >
                     <Stack direction='row' spacing={2} alignItems='center'>
                         <Box flexGrow={1}>
-                            <Button color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'} variant='outlined' size='small'
-
+                            <Button
+                                color={task?.isCompleted ? 'success' : (theme.palette.mode == 'light' ? 'customBlack' : 'customWhite')}
+                                variant={'outlined'} size='small'
+                                onClick={() => handleCompleteTask()}
                                 startIcon={task?.isCompleted ? <FilledCheckCircleIcon /> : <DashedOutlinedCheckCircleIcon />}
                             >
-                                Complete task
+                                {task?.isCompleted ? 'Completed task' : 'Complete task'}
                             </Button>
                         </Box>
                         <Stack direction='row' spacing={1} alignItems='center' justifyContent='flex-end'>
@@ -189,25 +230,29 @@ const CustomTaskDialog = () => {
 
             >
 
-                <Box>
-                    <CustomBasicTextField
-                        required
-                        defaultValue={task?.name}
-                        size="small"
-                        id="name"
-                        name="name"
-                        fullWidth
-                        placeholder='Name of task...'
-                        InputProps={{
-                            sx: {
-                                fontSize: 20,
-                                fontWeight: 650
-                            }
-                        }}
-                        onChange={(e) => setName(e.target.value)}
-                        onBlur={() => saveName()}
-                    />
+                <Box bgcolor={getSecondBackgroundColor(theme)} py={1} px={2} borderRadius={2} width={'fit-content'} mb={2}>
+
+                    <Breadcrumbs separator="›">
+                        {
+                            task?.parentTaskId && parentTask && (
+                                <Link
+                                    component="button"
+                                    underline="hover"
+                                    fontWeight={650}
+                                    onClick={() => handleAccessParentTask()}
+                                >
+                                    {parentTask?.name}
+                                </Link>
+                            )
+                        }
+                        <Typography fontWeight={650}>
+                            {task?.name}
+                        </Typography>
+                    </Breadcrumbs>
                 </Box>
+
+                <NameInput currentName={task?.name} onBlur={saveName} />
+
                 <Stack direction={'column'} spacing={1} mt={2} p={2} borderRadius={2} bgcolor={getSecondBackgroundColor(theme)}>
                     <Card
                         sx={{
@@ -399,7 +444,7 @@ const CustomTaskDialog = () => {
                             </Grid2>
                             <Grid2 item size={9}>
                                 {/* <PriorityComponent /> */}
-                                <CustomPriorityPicker priorityId={task?.priorityId} taskId={task?.id} />
+                                <CustomPriorityPicker currentPriority={task?.priority} taskId={task?.id} />
                             </Grid2>
 
                             {/* <Grid2 item size={3}>
@@ -422,40 +467,38 @@ const CustomTaskDialog = () => {
                                         </Grid2> */}
                         </Grid2>
                     </Card>
-                    <Grid2 container spacing={2} mt={4}>
-                        <Grid2 item size={2}>
-                            <Stack direction='row' spacing={2} alignItems='center'>
-                                <LabelsIcon size={16} stroke={2} color={theme.palette.text.secondary} />
-                                <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
-                                    Labels
-                                </Typography>
-                            </Stack>
-                        </Grid2>
-                        <Grid2 item size={10}>
-                            {/* <LabelComponent /> */}
-                            <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
-                        </Grid2>
-                    </Grid2>
                 </Stack>
+
+                <Grid2 container spacing={2} mt={4}>
+                    <Grid2 item size={2}>
+                        <Stack direction='row' spacing={2} alignItems='center'>
+                            <LabelsIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                            <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                Labels
+                            </Typography>
+                        </Stack>
+                    </Grid2>
+                    <Grid2 item size={10}>
+                        {/* <LabelComponent /> */}
+                        <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
+                    </Grid2>
+                </Grid2>
+
                 <Box mt={6}>
-                    <Typography
-                        variant='h6'
-                        fontWeight={650}
-                        sx={{
-                            mb: 1
-                        }}
-                    >
-                        Description
-                    </Typography>
+                    <Stack direction={'row'} spacing={2}>
+                        <Box>
+                            <Typography
+                                variant='h6'
+                                fontWeight={650}
+                            >
+                                Description
+                            </Typography>
+                        </Box>
+                    </Stack>
                     <Box
-                        mt={2}
-                        bgcolor={theme.palette.mode === "light" ? "#fff" : '#1F1F1F'}
-                        border="1px solid"
-                        borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                        minHeight={100}
                         borderRadius={2}
                     >
-                        {/* <CustomLongTextEditor /> */}
+                        <DescComponent currentDescription={task?.description} saveDesc={saveDesc} />
                     </Box>
                 </Box>
 
@@ -541,31 +584,13 @@ const CustomTaskDialog = () => {
                     </Grid2>
                 </Box> */}
 
+
+
                 <Box mt={6}>
                     <Typography variant='h6' fontWeight={650}>
                         Subtasks
                     </Typography>
-                    <Stack mt={2}>
-                        <Box
-                            flexGrow={1}
-                            borderRadius={"8px 8px 0 0"}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            p={2}
-                        >
-                            Test 1
-                        </Box>
-                        <Box
-                            flexGrow={1}
-                            borderRadius={"0 0 8px 8px"}
-                            border="1px solid"
-                            borderTop="none"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            p={2}
-                        >
-                            Test 2
-                        </Box>
-                    </Stack>
+                    <SubtaskComponent subtasks={task?.childTasks} projectId={task?.project?.id} parentTask={task} />
                 </Box>
 
                 <Box mt={6}>
@@ -607,6 +632,51 @@ const CustomTaskDialog = () => {
                 <CommentAndActivitySection />
             </DialogActions> */}
         </Dialog >
+    );
+}
+
+const NameInput = ({ currentName, onBlur }) => {
+    const [name, setName] = React.useState();
+
+    React.useEffect(() => {
+        setName(currentName);
+    }, [currentName])
+    return (
+        <CustomBasicTextField
+            required
+            value={name}
+            size="small"
+            id="name"
+            name="name"
+            fullWidth
+            placeholder='Name of task...'
+            InputProps={{
+                sx: {
+                    fontSize: 20,
+                    fontWeight: 650
+                }
+            }}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => onBlur(name)}
+
+        />
+    );
+}
+
+const DescComponent = ({ currentDescription, saveDesc }) => {
+    const [description, setDescription] = React.useState();
+
+    React.useEffect(() => {
+        setDescription(currentDescription);
+    }, [currentDescription])
+
+
+    const handleSaveDesc = () => {
+        saveDesc(description)
+    }
+
+    return (
+        <CustomLongTextEditor content={currentDescription} setContent={setDescription} saveContent={handleSaveDesc} />
     );
 }
 

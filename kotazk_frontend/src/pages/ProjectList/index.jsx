@@ -17,6 +17,7 @@ import CustomTaskDialog from '../../components/CustomTaskDialog';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { BorderColor } from '@mui/icons-material';
 import { setCurrentGroupedTaskList } from '../../redux/actions/task.action';
+import CustomPriorityPicker from '../../components/CustomPrirorityPicker';
 
 // Define task data and columns in the same file
 const initialTaskData = {
@@ -79,7 +80,7 @@ const columns = [
         size: 150,
         cell: ({ row }) => (
             <Box>
-                {row?.original?.priority ? <CustomPriority priority={row.original.priority} /> : 'Empty'}
+                <CustomPriorityPicker currentPriority={row.original.priority} taskId={row.original.id} />
             </Box>
         ),
     },
