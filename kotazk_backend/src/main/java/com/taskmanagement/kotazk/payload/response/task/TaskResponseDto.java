@@ -12,7 +12,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @NoArgsConstructor
@@ -39,6 +41,6 @@ public class TaskResponseDto {
     Long position;
     Set<Long> collaboratorIds = new HashSet<>();
     Set<LabelResponseDto> labels = new HashSet<>();
-    Set<TaskResponseDto> childTasks = new HashSet<>();
+    List<TaskResponseDto> childTasks = new ArrayList<>();
 
 }

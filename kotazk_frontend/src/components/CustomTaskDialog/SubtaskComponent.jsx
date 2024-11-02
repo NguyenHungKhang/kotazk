@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Card, IconButton, Stack, Typography, useTheme } from "@mui/material"
+import { Avatar, Box, Button, Card, IconButton, LinearProgress, Stack, Typography, useTheme } from "@mui/material"
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import * as TablerIcons from '@tabler/icons-react'
 import CustomBasicTextField from "../CustomBasicTextField";
@@ -8,44 +8,90 @@ import { useDispatch } from "react-redux";
 import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from "../../redux/actions/task.action";
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 import { useSelector } from "react-redux";
+import SubtaskMenu from "./SubtaskMenu";
 
 const SubtaskComponent = ({ subtasks, parentTask, projectId }) => {
     const theme = useTheme();
     const [addNewTask, setAddNewTask] = useState(false);
 
+    const calcProgessValue = () => {
+        const completedTasks = parentTask?.childTasks?.filter(t => t.isCompleted == true).length;
+        const totalTasks = parentTask?.childTasks?.length
+        return 100 * (completedTasks / totalTasks);
+    }
+
+    const completedTasks = () => {
+        const completedTasks = parentTask?.childTasks?.filter(t => t.isCompleted == true).length;
+        const totalTasks = parentTask?.childTasks?.length
+        return completedTasks + `/` + totalTasks;
+    }
+
     return (
-        <Box
-            bgcolor={getSecondBackgroundColor(theme)}
-            borderRadius={2}
-            p={2}
-        >
-            <Stack direction={'column'} spacing={1}>
-                {subtasks?.map((subtask, index) => (
-                    <SubtaskItem key={index} subtask={subtask} parentTask={parentTask} />
-                ))}
-
-                {addNewTask ?
-                    <AddSubtaskItem setIsNewSubtask={setAddNewTask} parentTaskId={parentTask?.id} projectId={projectId} />
-                    :
-                    <Button
-                        onClick={() => setAddNewTask(true)}
-                        variant='text'
-                        size="small"
-                        color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
+        <>
+            {
+                subtasks.length > 0 && (
+                    <Box
+                        mb={2}
+                        bgcolor={getSecondBackgroundColor(theme)}
+                        borderRadius={2}
+                        p={2}
                     >
-                        Add subtask
-                    </Button>
-                }
+                        <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                            <Box>
+                                <Typography>
+                                    {completedTasks()} - {calcProgessValue().toFixed(2) + '%'}
+                                </Typography>
+                            </Box>
+                            <Box flexGrow={1}>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={calcProgessValue()}
+                                    sx={{
+                                        height: 10,
+                                        borderRadius: 2
+                                    }}
+                                />
+                            </Box>
+                        </Stack>
+                    </Box>
+                )
+            }
 
-            </Stack>
-        </Box>
+            <Box
+                bgcolor={getSecondBackgroundColor(theme)}
+                borderRadius={2}
+                p={2}
+            >
+
+
+                <Stack direction={'column'} spacing={1}>
+                    {subtasks?.map((subtask, index) => (
+                        <SubtaskItem key={index} subtask={subtask} parentTask={parentTask} />
+                    ))}
+
+                    {addNewTask ?
+                        <AddSubtaskItem setIsNewSubtask={setAddNewTask} parentTask={parentTask} projectId={projectId} />
+                        :
+                        <Button
+                            onClick={() => setAddNewTask(true)}
+                            variant='text'
+                            size="small"
+                            color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
+                        >
+                            Add subtask
+                        </Button>
+                    }
+
+                </Stack>
+            </Box>
+        </>
     )
 }
 
 
 
 
-const AddSubtaskItem = ({ setIsNewSubtask, parentTaskId, projectId }) => {
+const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
     const theme = useTheme();
     const [name, setName] = useState(null);
     const dispatch = useDispatch();
@@ -56,29 +102,39 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTaskId, projectId }) => {
     const FilledCheckCircleIcon = TablerIcons["IconCircleCheckFilled"];
 
     const handleSave = async () => {
-        const data = {
-            'name': name,
-            'parentTaskId': parentTaskId,
-            'projectId': projectId
-        }
-        try {
-            const response = await apiService.taskAPI.create(data);
-            if (response?.data) {
-                if (isGroupedList)
-                    dispatch(addAndUpdateGroupedTaskList(response?.data))
-                else
-                    dispatch(addAndUpdateTaskList(response?.data));
-
-                const taskDialogData = {
-                    task: response.data.parent
-                };
-                dispatch(setTaskDialog(taskDialogData));
-                setIsNewSubtask(false);
+        if (name == null || name.trim() == "") {
+            setIsNewSubtask(false)
+        } else {
+            const data = {
+                'name': name,
+                'parentTaskId': parentTask?.id,
+                'projectId': projectId
             }
-        } catch (error) {
-            console.error('Failed to update task:', error);
+            try {
+                const response = await apiService.taskAPI.create(data);
+                if (response?.data) {
+                    const updatedParentTask = {
+                        ...parentTask,
+                        childTasks: [...parentTask.childTasks, response?.data]
+                    }
+
+                    if (isGroupedList)
+                        dispatch(addAndUpdateGroupedTaskList(updatedParentTask))
+                    else
+                        dispatch(addAndUpdateTaskList(updatedParentTask));
+
+                    const taskDialogData = {
+                        task: updatedParentTask
+                    };
+                    dispatch(setTaskDialog(taskDialogData));
+                    setIsNewSubtask(false);
+                }
+            } catch (error) {
+                console.error('Failed to update task:', error);
+            }
         }
     }
+
 
     return (
         <Card
@@ -88,24 +144,31 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTaskId, projectId }) => {
             }}
         >
             <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
-                <DragIcon size={18} />
+                {/* <DragIcon size={18} />
                 <IconButton size="small">
                     <DashedOutlinedCheckCircleIcon size={18} />
-                </IconButton>
+                </IconButton> */}
+                <Box>
+                    <Typography>
+                        New subtask:
+                    </Typography>
+                </Box>
                 <Box flexGrow={1}>
                     <CustomBasicTextField
                         size="small"
-                        focused
+                        autoFocus
                         placeholder="Name of task..."
                         onChange={(e) => setName(e.target.value)}
+                        onBlur={() => handleSave()}
                         sx={{
                             '& .MuiInputBase-input': {
                                 py: `4px !important`,
                             }
                         }}
+                        fullWidth
                     />
                 </Box>
-                <Button onClick={() => handleSave()}>
+                {/* <Button onClick={() => handleSave()}>
                     Save task
                 </Button>
                 <Avatar
@@ -117,7 +180,7 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTaskId, projectId }) => {
                         border: "2px dotted",
                         borderColor: theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[400],
                     }}
-                />
+                /> */}
             </Stack>
         </Card>
     )
@@ -149,12 +212,13 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
             'name': name,
         }
         try {
-            const response = await apiService.taskAPI.update(parentTask?.id, data);
+            const response = await apiService.taskAPI.update(subtask?.id, data);
             if (response?.data) {
                 const updatedParentTask = {
                     ...parentTask,
                     childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
                 }
+
                 if (isGroupedList)
                     dispatch(addAndUpdateGroupedTaskList(updatedParentTask))
                 else
@@ -175,12 +239,13 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
             'isCompleted': !subtask?.isCompleted,
         }
         try {
-            const response = await apiService.taskAPI.update(parentTask?.id, data);
+            const response = await apiService.taskAPI.update(subtask?.id, data);
             if (response?.data) {
                 const updatedParentTask = {
                     ...parentTask,
                     childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
                 }
+
                 if (isGroupedList)
                     dispatch(addAndUpdateGroupedTaskList(updatedParentTask))
                 else
@@ -260,9 +325,9 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
                         fullWidth
                     />
                 </Box>
-                <IconButton size="small">
-                    <MoreIcon size={18} />
-                </IconButton>
+                <Box>
+                    <SubtaskMenu parentTask={parentTask} task={subtask} />
+                </Box>
             </Stack>
         </Card>
     )

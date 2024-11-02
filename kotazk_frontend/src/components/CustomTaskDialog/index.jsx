@@ -38,11 +38,9 @@ const CustomTaskDialog = () => {
     const [visibility, setVisibility] = React.useState('PUBLIC');
     const { task, parentTask, open } = useSelector((state) => state.dialog.taskDialog);
 
-
     const AddIcon = TablerIcons['IconSquarePlus'];
     const ProjectIcon = TablerIcons['IconTableFilled'];
     const CloseDialogIcon = TablerIcons['IconArrowBarRight'];
-
 
     const [selectedIcon, setSelectedIcon] = React.useState('IconHome');  // Default icon
     const [editDescription, setEditDescription] = React.useState(false);
