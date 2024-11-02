@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.response.task;
 
+import com.taskmanagement.kotazk.payload.response.attachment.AttachmentResponseDto;
 import com.taskmanagement.kotazk.payload.response.label.LabelResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
@@ -42,5 +43,5 @@ public class TaskResponseDto {
     Set<Long> collaboratorIds = new HashSet<>();
     Set<LabelResponseDto> labels = new HashSet<>();
     List<TaskResponseDto> childTasks = new ArrayList<>();
-
+    List<AttachmentResponseDto> attachments = new ArrayList<>();
 }

@@ -28,7 +28,7 @@ public class Attachment {
     private Task task;
 
     @ManyToOne
-    @JoinColumn(name = "task_comment_id", nullable = false)
+    @JoinColumn(name = "task_comment_id")
     private TaskComment taskComment;
 
     @ManyToOne
