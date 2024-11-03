@@ -53,6 +53,7 @@
         "react-calendar": "^5.0.0",
         "react-colorful": "^5.6.1",
         "react-dom": "^18.3.1",
+        "react-drag-drop-files": "^2.4.0",
         "react-editor-js": "^2.1.0",
         "react-filepond": "^7.1.2",
         "react-pro-sidebar": "^1.1.0",

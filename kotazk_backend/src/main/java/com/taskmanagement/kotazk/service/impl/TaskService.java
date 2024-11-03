@@ -76,7 +76,7 @@ public class TaskService implements ITaskService {
         Status status = checkStatus(project, taskRequestDto.getStatusId());
         Priority priority = checkPriority(project, taskRequestDto.getPriorityId());
         Long timeEstimate = taskRequestDto.getTimeEstimate();
-        Boolean isCompleted = taskRequestDto.getIsCompleted();
+        Boolean isCompleted = taskRequestDto.getIsCompleted() != null;
         Task parentTask = checkParentTask(project, taskRequestDto.getParentTaskId());
 
         System.out.println(parentTask);
@@ -165,8 +165,8 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getTimeEstimate())
                 .ifPresent(currentTask::setTimeEstimate);
 
-        Optional.ofNullable(taskRequestDto.getIsCompleted())
-                .ifPresent(currentTask::setIsCompleted);
+        if(taskRequestDto.getIsCompleted() != null)
+            currentTask.setIsCompleted(taskRequestDto.getIsCompleted());
 
         if (taskRequestDto.getStartAt() != null && taskRequestDto.getEndAt() != null) {
             List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));

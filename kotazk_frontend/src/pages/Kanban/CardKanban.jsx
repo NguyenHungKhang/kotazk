@@ -211,6 +211,12 @@ const CardKanban = ({ task, isDragging }) => {
                         </Tooltip>
                     )}
 
+                    {task?.attachments?.length > 0 && (
+                        <Tooltip title={`${task?.attachments?.length} attachment${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
+                            <AttachmentIcon stroke={2} size={20} color={theme.palette.text.secondary} />
+                        </Tooltip>
+                    )}
+
                     {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />
                         <Typography color={theme.palette.text.secondary} variant='body2'>

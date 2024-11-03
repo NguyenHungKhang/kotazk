@@ -53,6 +53,10 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_LABEL" && deleteProps != null) {
             const labelId = deleteProps.labelId;
             await handleDeleteLabel(labelId);
+        } else if (deleteType == "DELETE_TASK_ATTACHMENT" && deleteProps != null) {
+            const attachmentId = deleteProps.attachmentId;
+            const task = deleteProps.task;
+            await handleDeleteAttachment(attachmentId, task)
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -200,6 +204,31 @@ export default function CustomDeleteDialog({ deleteAction }) {
             console.error('Failed to delete label:', error);
         }
     };
+
+    const handleDeleteAttachment = async (attachmentId, task) => {
+        try {
+            const response = await apiService.attachmentAPI.remove(attachmentId); // Use taskId for deletion
+            if (response?.data) {
+                const updatedTask = {
+                    ...task,
+                    attachments: task?.attachments?.filter(t => t.id != attachmentId)
+                }
+
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(updatedTask))
+                else
+                    dispatch(addAndUpdateTaskList(updatedTask));
+
+                const taskDialogData = {
+                    task: updatedTask
+                };
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch {
+            console.error('Failed to delete file');
+        }
+    };
+
 
 
     return (

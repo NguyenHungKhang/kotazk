@@ -26,7 +26,7 @@ public class TaskRequestDto {
     Long priorityId;
     Long timeEstimate;
     Long timeTracking;
-    Boolean isCompleted = false;
+    Boolean isCompleted;
     String startAt;
     String endAt;
     Long taskTypeId;

@@ -596,7 +596,7 @@ const CustomTaskDialog = () => {
                         Attachments
                     </Typography>
                     <Box>
-                        <CustomFileUploader />
+                        <CustomFileUploader currentFiles={task?.attachments} task={task} />
                     </Box>
                 </Box>
 

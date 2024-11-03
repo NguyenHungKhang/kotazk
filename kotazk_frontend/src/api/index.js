@@ -9,6 +9,7 @@ import * as priorityAPI from './priority.api.js'
 import * as labelAPI from './label.api.js'
 import * as memberAPI from './member.api.js'
 import * as memberRoleAPI from './memberRole.api.js'
+import * as attachmentAPI from './attachment.api.js'
 export {
     authAPI,
     projectAPI,
@@ -20,5 +21,6 @@ export {
     priorityAPI,
     labelAPI,
     memberAPI,
-    memberRoleAPI
+    memberRoleAPI,
+    attachmentAPI
 };
