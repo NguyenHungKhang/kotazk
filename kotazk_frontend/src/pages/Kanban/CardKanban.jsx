@@ -13,6 +13,9 @@ import CustomLabel from "../../components/CustomLabel";
 import { setShowLabel } from "../../redux/actions/label.action";
 import CustomMember from "../../components/CustomMember";
 import CardKanbanMenu from "./CardKanbanMenu";
+import { getSecondBackgroundColor } from "../../utils/themeUtil";
+import * as apiService from '../../api/index';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from "../../redux/actions/task.action";
 
 const FieldBoxForKanbanCard = styled((props) => <Stack {...props} />)(
     ({ theme }) => ({
@@ -26,6 +29,7 @@ const FieldBoxForKanbanCard = styled((props) => <Stack {...props} />)(
 const CardKanban = ({ task, isDragging }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
+    const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const [displayLabels, setDisplayLabels] = useState(false);
     const showLabel = useSelector((state) => state.label.showLabel);
     const priorities = useSelector((state) => state.priority.currentPriorityList);
@@ -59,6 +63,29 @@ const CardKanban = ({ task, isDragging }) => {
         return member ? `${member.user.firstName} ${member.user.lastName}` : "Unassigned";
     };
 
+
+    const handleCompleteTask = async () => {
+        const data = {
+            "isCompleted": !task?.isCompleted,
+        }
+
+        try {
+            const response = await apiService.taskAPI.update(task.id, data);
+            if (response?.data) {
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(response?.data))
+                else
+                    dispatch(addAndUpdateTaskList(response?.data));
+
+                const taskDialogData = {
+                    task: response.data
+                };
+                dispatch(setTaskDialog(taskDialogData));
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
 
     return (
         <Card
@@ -113,32 +140,22 @@ const CardKanban = ({ task, isDragging }) => {
                 }
 
                 <Stack direction="row" spacing={2} alignItems='center'>
-                    {/* <IconButton size="small"> */}
-                    <Box
-                        sx={{
-                            cursor: 'pointer'
-                        }}
-                    >
-                        {task?.isCompleted ? <FilledCheckCircleIcon color={theme.palette.success.main} /> : <DashedOutlinedCheckCircleIcon color={theme.palette.text.secondary} />}
+                    <Box>
+                        <IconButton
+                            size="small"
+                            color={task?.isCompleted ? 'success' : theme.palette.text.secondary}
+                            sx={{
+                                p: 0
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleCompleteTask();
+                            }}
+                        >
+                            {task?.isCompleted ? <FilledCheckCircleIcon color={theme.palette.success.main} /> : <DashedOutlinedCheckCircleIcon color={theme.palette.text.secondary} />}
+                        </IconButton>
                     </Box>
-                    {/* </IconButton> */}
-                    <Box
-                        mb={1}
-                        mt={2}
-                        borderRadius={2}
-                        py={1}
-                        sx={{
-                            "&:hover": {
-                                px: 1,
-                                bgcolor: theme.palette.mode === 'light'
-                                    ? theme.palette.grey[200]
-                                    : theme.palette.grey[800],
-                                transition: 'all 0.2s ease'
-                            }
-                        }}
-                    >
-                        <CustomTaskType taskType={task?.taskType} changeable={false} displayTextOnHoverOnly={true} />
-                    </Box>
+
                     <Typography variant='body2' fontWeight='bold' noWrap flexGrow={1}>
                         {task?.name}
                     </Typography>
@@ -146,21 +163,53 @@ const CardKanban = ({ task, isDragging }) => {
                         <CardKanbanMenu task={task} />
                     }
                 </Stack>
-            </Box>
+                {task?.description && (
+                    <Box mt={1} mb={4} bgcolor={getSecondBackgroundColor(theme)} py={1} px={2} borderRadius={1}>
+                        <Typography
+                            sx={{
+                                display: '-webkit-box',
+                                overflow: 'hidden',
+                                WebkitBoxOrient: 'vertical',
+                                WebkitLineClamp: 3,
+
+                            }}
+                            fontSize={12}
+                            variant="body2"
+                            color={theme.palette.text.secondary}
+                        >
+                            <div dangerouslySetInnerHTML={{ __html: task?.description }} />
+
+                        </Typography>
+                    </Box>
+                )}
+
+                {/* <Box
+                    mb={1}
+                    mt={2}
+                    borderRadius={2}
+                    py={1}
+                    sx={{
+                        "&:hover": {
+                            px: 1,
+                            bgcolor: theme.palette.mode === 'light'
+                                ? theme.palette.grey[200]
+                                : theme.palette.grey[800],
+                            transition: 'all 0.2s ease'
+                        }
+                    }}
+                >
+
+                </Box> */}
+                <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
+                    sx={{
+                        mt: 2
+                    }}
+                >
+                    <CustomTaskType taskType={task?.taskType} changeable={false} displayTextOnHoverOnly={false} />
+                    <CustomStatus status={task?.status} changeable={false} />
+                </Stack>
 
 
-            {/* <Typography variant='body2' color={theme.palette.text.secondary} noWrap>
-                    Test desciption a akjn al la a a las la va
-                </Typography> */}
-            <Divider sx={{ my: 1 }} />
-
-            <Box
-                sx={{
-                    px: 4,
-                    py: 2,
-                }}
-            >
-                <CustomStatus status={task?.status} changeable={false} />
 
                 <Stack direction='row' spacing={2} alignItems='center' flexWrap='wrap' useFlexGap
                     sx={{
@@ -199,13 +248,7 @@ const CardKanban = ({ task, isDragging }) => {
                         </FieldBoxForKanbanCard>
                     )}
 
-                    {task?.description && (
-                        <Tooltip title={"Description"} placement="top">
-                            <DescIcon stroke={2} size={20} color={theme.palette.text.secondary} />
-                        </Tooltip>
-                    )}
-
-                    {task?.childTasks?.length > 0 && (
+                    {/* {task?.childTasks?.length > 0 && (
                         <Tooltip title={`${task?.childTasks?.length} subtask${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
                             <SubtaskIcon stroke={2} size={20} color={theme.palette.text.secondary} />
                         </Tooltip>
@@ -215,7 +258,7 @@ const CardKanban = ({ task, isDragging }) => {
                         <Tooltip title={`${task?.attachments?.length} attachment${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
                             <AttachmentIcon stroke={2} size={20} color={theme.palette.text.secondary} />
                         </Tooltip>
-                    )}
+                    )} */}
 
                     {/* <Stack direction='row' alignItems='center' spacing={1}>
                         <AttachmentIcon color={theme.palette.text.secondary} size={16} />
@@ -229,6 +272,31 @@ const CardKanban = ({ task, isDragging }) => {
                             2
                         </Typography>
                     </Stack> */}
+
+                </Stack>
+            </Box>
+            <Divider />
+            <Box
+                sx={{
+                    py: 2,
+                    px: 4,
+                }}
+            >
+
+                <Stack direction={'row'} spacing={2} mt={1}>
+                    <Stack flexGrow={1} direction={'row'} spacing={1}>
+                        {task?.childTasks?.length > 0 && (
+                            <Tooltip title={`${task?.childTasks?.length} subtask${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
+                                <SubtaskIcon stroke={2} size={20} color={theme.palette.text.secondary} />
+                            </Tooltip>
+                        )}
+
+                        {task?.attachments?.length > 0 && (
+                            <Tooltip title={`${task?.attachments?.length} attachment${task?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
+                                <AttachmentIcon stroke={2} size={20} color={theme.palette.text.secondary} />
+                            </Tooltip>
+                        )}
+                    </Stack>
                     <Box sx={{ marginLeft: 'auto' }}>
                         <Tooltip title={task?.assignee ? task?.assignee?.user?.lastName : "Unassigned"} placement="top">
                             {task?.assignee ? (

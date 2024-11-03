@@ -214,7 +214,7 @@ function KanbanDropNDrag() {
         <Droppable droppableId="ROOT" type="group" direction="horizontal">
           {(provided) => (
             <Stack direction='row'
-              spacing={2}
+              spacing={1}
               {...provided.droppableProps}
               ref={provided.innerRef}
               sx={{ overflowX: 'auto' }}
