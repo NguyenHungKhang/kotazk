@@ -11,6 +11,9 @@ import {
     Stack,
     Typography,
     Chip,
+    TextField,
+    Grid2,
+    Autocomplete,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -73,7 +76,7 @@ const CustomFilterDialog = () => {
             i === index ? { ...row, [field]: value } : row
         );
         setFilterRows(updatedRows);
-        console.log(updatedRows);
+
         const validRows = updatedRows.filter(row =>
             row.key && row.operation && row.value.length > 0
         );
@@ -120,15 +123,17 @@ const CustomFilterDialog = () => {
                 anchorEl={anchorEl}
                 onClose={handleClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                slotProps={{ paper:{
-                    sx: { maxHeight: 700, width: 500, overflow: 'auto',   bgcolor: `${theme.palette.background.default} !important`, }
-                } }} // Enable scroll for popover
+                slotProps={{
+                    paper: {
+                        sx: { maxHeight: 700, width: 500, overflow: 'auto', bgcolor: `${theme.palette.background.default} !important`, }
+                    }
+                }}
             >
                 <Box padding={4}>
                     {/* Clear All Button */}
                     <Stack direction="row" alignItems='center'>
                         <Box flexGrow={1}>
-                            <Typography variant='h6'>
+                            <Typography variant='body1'>
                                 Filter
                             </Typography>
                         </Box>
@@ -136,49 +141,94 @@ const CustomFilterDialog = () => {
                             Clear
                         </Button>
                     </Stack>
-                    <Box bgcolor={getSecondBackgroundColor(theme)}
-                        borderRadius={2}
-                    >
+                    <Box>
                         {filterRows.map((row, index) => (
-                            <Stack direction={'row'} alignItems="center" key={index}>
+                            <Stack direction={'row'} alignItems="center" key={index} spacing={1}>
                                 {/* Key Select */}
-                                <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
-                                    <Select
-                                        size='small'
-                                        value={row.key}
-                                        onChange={(e) => handleFilterChange(index, 'key', e.target.value)}
-                                    >
-                                        {Object.keys(keyLabelMap).map((key, i) => (
-                                            <MenuItem key={i} value={key}>
-                                                {keyLabelMap[key]}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                <Grid2 container spacing={2} alignItems={'center'} width={'100%'}>
+                                    <Grid2 size={4}>
+                                        <TextField
+                                            select
+                                            size='small'
+                                            slotProps={{
+                                                select: {
+                                                    value: row.key,
+                                                    onChange: (e) => handleFilterChange(index, 'key', e.target.value),
+                                                }
+                                            }}
+                                            sx={{ '& legend': { display: 'none' }, '& fieldset': { top: 0 }, }}
+                                            fullWidth
+                                        >
+                                            {Object.keys(keyLabelMap).map((key, i) => (
+                                                <MenuItem key={i} value={key}>
+                                                    {keyLabelMap[key]}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField>
 
-                                {/* Value Select */}
-                                <FormControl size='small' fullWidth margin="normal">
-                                    <Select
-                                        size='small'
-                                        value={row.value}
-                                        multiple
-                                        onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
-                                        disabled={!row.key}
-                                        renderValue={(selected) => (
-                                            selected.map((value) => (
-                                                <Chip size='small' key={value} label={getValueOptions(row.key).find(v => value == v.value).label} sx={{mr: 1}} />
-                                            ))
-                                        )}
-                                    >
-                                        {getValueOptions(row.key).map((option, i) => (
-                                            <MenuItem key={i} value={option.value}>
-                                                {option.label}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                    </Grid2>
+                                    <Grid2 size={8}>
+                                        <Autocomplete
+                                            size='small'
+                                            multiple
+                                            options={getValueOptions(row.key)}
+                                            getOptionLabel={(option) => option.label}
+                                            onChange={(e, newValue) => {
+                                                console.log(newValue);
+                                                handleFilterChange(index, 'value', newValue.map(v => v.value));
+                                            }}
+                                            renderInput={(params) => (
+                                                <TextField
+                                                    {...params}
+                                                    size='small'
+                                                    variant="outlined"
+                                                    sx={{
+                                                        "& .MuiInputBase-input": {
+                                                          overflow: "hidden",
+                                                          textOverflow: "ellipsis"
+                                                        }
+                                                      }}
+                                                //   onKeyDown={(e) => {
+                                                //     if (
+                                                //       e.key === "Enter" &&
+                                                //       options.findIndex((o) => o.title === inputValue) === -1
+                                                //     ) {
+                                                //       setOptions((o) => o.concat({ title: inputValue }));
+                                                //     }
+                                                //   }}
+                                                />
+                                            )}
+                                        />
+                                        {/* <TextField
+                                            select
+                                            size='small'
+                                            slotProps={{
+                                                select: {
+                                                    multiple: true,
+                                                    value: row.value,
+                                                    onChange: (e) => handleFilterChange(index, 'value', e.target.value),
+                                                    renderValue: (selected) => (
+                                                        selected.map((value) => (
+                                                            <Chip size='small' key={value} label={getValueOptions(row.key).find(v => value == v.value).label} sx={{ mr: 1 }} />
+                                                        ))
+                                                    )
+                                                }
+                                            }}
+                                            // value={row.value}
+                                            // onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
+                                            disabled={!row.key}
+                                            sx={{ '& legend': { display: 'none' }, '& fieldset': { top: 0 }, }}
+                                            fullWidth
+                                        >
+                                            {getValueOptions(row.key).map((option, i) => (
+                                                <MenuItem key={i} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))}
+                                        </TextField> */}
+                                    </Grid2>
+                                </Grid2>
 
-                                {/* Delete Button */}
                                 <Box>
                                     <IconButton size='small' onClick={() => deleteFilterRow(index)} sx={{ ml: 1 }}>
                                         <CancleIcon size={16} />
