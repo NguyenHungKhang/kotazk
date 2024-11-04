@@ -33,14 +33,20 @@ function KanbanDropNDrag() {
   // const [groupedTasks, setGroupedTasks] = useState(null);
   const groupedTasks = useSelector((state) => state.task.currentGroupedTaskList);
   const project = useSelector((state) => state.project.currentProject);
+  const currentFilterList = useSelector((state) => state.filter.currentFilterList)
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (project) {
       fetchGroupByEntityList();
-      fetchTasks();
     }
   }, [project, groupByEntity]);
+
+  useEffect(() => {
+    if (project) {
+      fetchTasks();
+    }
+  }, [project, groupByEntity, currentFilterList]);
 
   useEffect(() => {
     if (tasks && groupByEntityList) {
@@ -67,10 +73,18 @@ function KanbanDropNDrag() {
   }
 
   const fetchTasks = async () => {
+    console.log(currentFilterList);
+
+    const filterData = currentFilterList?.map(f => ({
+      key: f.key,
+      operation: f.operation,
+      values: f.value,
+    }));
+
     const data = {
       'sortBy': 'position',
       'sortDirectionAsc': true,
-      'filters': []
+      'filters': filterData || []
     }
 
     const taskListResponse = await apiService.taskAPI.getPageByProject(project.id, data)
@@ -264,7 +278,8 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               minHeight: 320,
               width: !collapse ? "auto" : 40,
               border: '1px solid',
-              borderColor: snapshot.isDraggingOver ? theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600] : 'transparent'
+              borderColor: snapshot.isDraggingOver ? theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600] : 'transparent',
+              bgcolor: theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)
               // background: `linear-gradient(180deg, 
               // ${alpha(theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.25)} 0%,  
               // ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.1 : 0.05)} 100%)`

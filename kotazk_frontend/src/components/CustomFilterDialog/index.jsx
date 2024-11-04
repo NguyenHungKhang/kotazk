@@ -10,6 +10,7 @@ import {
     Box,
     Stack,
     Typography,
+    Chip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -24,7 +25,7 @@ const CustomFilterDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [filterRows, setFilterRows] = useState([{ key: '', operation: '', value: '' }]);
+    const [filterRows, setFilterRows] = useState([{ key: '', operation: "IN", value: [] }]);
 
     const CancleIcon = TablerIcons["IconX"];
 
@@ -38,9 +39,6 @@ const CustomFilterDialog = () => {
         'priority.id': 'Priority',
         'assignee.id': 'Assignee',
     };
-
-    // Operators for the filter
-    const operations = ['EQUAL', 'NOT EQUALS'];
 
     // Get value options dynamically based on selected key
     const getValueOptions = (key) => {
@@ -75,17 +73,16 @@ const CustomFilterDialog = () => {
             i === index ? { ...row, [field]: value } : row
         );
         setFilterRows(updatedRows);
-
-        // Dispatch valid rows (when all fields are filled)
+        console.log(updatedRows);
         const validRows = updatedRows.filter(row =>
-            row.key && row.operation && row.value
+            row.key && row.operation && row.value.length > 0
         );
         dispatch(setCurrentFilterList(validRows));
     };
 
     // Add a new row
     const addFilterRow = () => {
-        setFilterRows([...filterRows, { key: '', operation: '', value: '' }]);
+        setFilterRows([...filterRows, { key: '', operation: 'IN', value: [] }]);
     };
 
     // Delete a row and dispatch
@@ -123,7 +120,9 @@ const CustomFilterDialog = () => {
                 anchorEl={anchorEl}
                 onClose={handleClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                PaperProps={{ style: { maxHeight: 700, width: 500, overflow: 'auto', bgcolor: theme.palette.background.default } }} // Enable scroll for popover
+                slotProps={{ paper:{
+                    sx: { maxHeight: 700, width: 500, overflow: 'auto',   bgcolor: `${theme.palette.background.default} !important`, }
+                } }} // Enable scroll for popover
             >
                 <Box padding={4}>
                     {/* Clear All Button */}
@@ -138,15 +137,12 @@ const CustomFilterDialog = () => {
                         </Button>
                     </Stack>
                     <Box bgcolor={getSecondBackgroundColor(theme)}
-                        p={4}
                         borderRadius={2}
-                        my={2}
                     >
                         {filterRows.map((row, index) => (
                             <Stack direction={'row'} alignItems="center" key={index}>
                                 {/* Key Select */}
                                 <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
-                                    <InputLabel>Key</InputLabel>
                                     <Select
                                         size='small'
                                         value={row.key}
@@ -160,31 +156,19 @@ const CustomFilterDialog = () => {
                                     </Select>
                                 </FormControl>
 
-                                {/* Operator Select */}
-                                <FormControl size='small' fullWidth margin="normal" sx={{ mr: 1 }}>
-                                    <InputLabel>Operator</InputLabel>
-                                    <Select
-                                        size='small'
-                                        value={row.operation}
-                                        onChange={(e) => handleFilterChange(index, 'operation', e.target.value)}
-                                        disabled={!row.key} // Disable until key is selected
-                                    >
-                                        {operations.map((operation, i) => (
-                                            <MenuItem key={i} value={operation}>
-                                                {operation}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
                                 {/* Value Select */}
                                 <FormControl size='small' fullWidth margin="normal">
-                                    <InputLabel>Value</InputLabel>
                                     <Select
                                         size='small'
                                         value={row.value}
+                                        multiple
                                         onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
-                                        disabled={!row.key} // Disable until key is selected
+                                        disabled={!row.key}
+                                        renderValue={(selected) => (
+                                            selected.map((value) => (
+                                                <Chip size='small' key={value} label={getValueOptions(row.key).find(v => value == v.value).label} sx={{mr: 1}} />
+                                            ))
+                                        )}
                                     >
                                         {getValueOptions(row.key).map((option, i) => (
                                             <MenuItem key={i} value={option.value}>
