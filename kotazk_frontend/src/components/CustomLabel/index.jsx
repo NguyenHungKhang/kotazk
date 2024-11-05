@@ -24,6 +24,7 @@ const CustomLabel = ({ label, alwaysShowLabel = false }) => {
                         mx: 2
                     }}
                     color={theme.palette.getContrastText(label?.customization?.backgroundColor || "#0d9af2")}
+                    noWrap
                 >
                     {label?.name}
                 </Typography>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Button,
     Popover,
@@ -23,12 +23,35 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentFilterList } from '../../redux/actions/filter.action';
 import * as TablerIcons from '@tabler/icons-react'
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import * as apiService from '../../api/index'
+
+const keys = [
+    {
+        "field": "status",
+        "type": "system",
+        "mapKey": "status.id",
+        "label": "Status"
+    },
+    {
+        "field": "priority",
+        "type": "system",
+        "mapKey": "priority.id",
+        "label": "Priority"
+    },
+    {
+        "field": "taskType",
+        "type": "system",
+        "mapKey": "taskType.id",
+        "label": "Task Type"
+    },
+]
 
 const CustomFilterDialog = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [filterRows, setFilterRows] = useState([{ key: '', operation: "IN", value: [] }]);
+    const [filterRows, setFilterRows] = useState([]);
+    const project = useSelector((state) => state.project.currentProject)
 
     const CancleIcon = TablerIcons["IconX"];
 
@@ -36,14 +59,12 @@ const CustomFilterDialog = () => {
     const priorities = useSelector((state) => state.priority.currentPriorityList);
     const projectMembers = useSelector((state) => state.member.currentProjectMemberList);
 
-    // Mapping keys to labels for UI display
     const keyLabelMap = {
         'status.id': 'Status',
         'priority.id': 'Priority',
         'assignee.id': 'Assignee',
     };
 
-    // Get value options dynamically based on selected key
     const getValueOptions = (key) => {
         switch (key) {
             case 'status.id':
@@ -57,12 +78,10 @@ const CustomFilterDialog = () => {
         }
     };
 
-    // Open the popover
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
     };
 
-    // Close the popover
     const handleClose = () => {
         setAnchorEl(null);
     };
@@ -70,7 +89,26 @@ const CustomFilterDialog = () => {
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
 
-    // Handle changes for key, operation, and value select inputs
+
+    const handleUpdateChange = (updateRow) => {
+        let rowExists = false;
+        const updatedRows = filterRows.map((row, i) => {
+            if (row.key === updateRow.key) {
+                rowExists = true;
+                return { ...row, value: updateRow.value };
+            }
+            return row;
+        });
+        if (!rowExists) {
+            updatedRows.push(updateRow);
+        }
+        setFilterRows(updatedRows);
+        const validRows = updatedRows.filter(row =>
+            row.key && row.operation && row.value.length > 0
+        );
+        dispatch(setCurrentFilterList(validRows));
+    };
+
     const handleFilterChange = (index, field, value) => {
         const updatedRows = filterRows.map((row, i) =>
             i === index ? { ...row, [field]: value } : row
@@ -83,27 +121,22 @@ const CustomFilterDialog = () => {
         dispatch(setCurrentFilterList(validRows));
     };
 
-    // Add a new row
     const addFilterRow = () => {
         setFilterRows([...filterRows, { key: '', operation: 'IN', value: [] }]);
     };
-
-    // Delete a row and dispatch
     const deleteFilterRow = (index) => {
         const updatedRows = filterRows.filter((_, i) => i !== index);
         setFilterRows(updatedRows);
 
-        // Dispatch updated rows after deletion
         const validRows = updatedRows.filter(row =>
             row.key && row.operation && row.value
         );
         dispatch(setCurrentFilterList(validRows));
     };
 
-    // Clear all rows and dispatch an empty list
     const clearAll = () => {
-        setFilterRows([{ key: '', operation: '', value: '' }]); // Keep one empty row
-        dispatch(setCurrentFilterList([])); // Dispatch empty filter list
+        setFilterRows([]);
+        dispatch(setCurrentFilterList([]));
     };
 
     return (
@@ -150,10 +183,13 @@ const CustomFilterDialog = () => {
                                         <TextField
                                             select
                                             size='small'
+                                            autoFocus
                                             slotProps={{
                                                 select: {
                                                     value: row.key,
-                                                    onChange: (e) => handleFilterChange(index, 'key', e.target.value),
+                                                    onChange: (e) => {
+                                                        handleFilterChange(index, 'key', e.target.value)
+                                                    }
                                                 }
                                             }}
                                             sx={{ '& legend': { display: 'none' }, '& fieldset': { top: 0 }, }}
@@ -184,48 +220,13 @@ const CustomFilterDialog = () => {
                                                     variant="outlined"
                                                     sx={{
                                                         "& .MuiInputBase-input": {
-                                                          overflow: "hidden",
-                                                          textOverflow: "ellipsis"
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis"
                                                         }
-                                                      }}
-                                                //   onKeyDown={(e) => {
-                                                //     if (
-                                                //       e.key === "Enter" &&
-                                                //       options.findIndex((o) => o.title === inputValue) === -1
-                                                //     ) {
-                                                //       setOptions((o) => o.concat({ title: inputValue }));
-                                                //     }
-                                                //   }}
+                                                    }}
                                                 />
                                             )}
                                         />
-                                        {/* <TextField
-                                            select
-                                            size='small'
-                                            slotProps={{
-                                                select: {
-                                                    multiple: true,
-                                                    value: row.value,
-                                                    onChange: (e) => handleFilterChange(index, 'value', e.target.value),
-                                                    renderValue: (selected) => (
-                                                        selected.map((value) => (
-                                                            <Chip size='small' key={value} label={getValueOptions(row.key).find(v => value == v.value).label} sx={{ mr: 1 }} />
-                                                        ))
-                                                    )
-                                                }
-                                            }}
-                                            // value={row.value}
-                                            // onChange={(e) => handleFilterChange(index, 'value', e.target.value)}
-                                            disabled={!row.key}
-                                            sx={{ '& legend': { display: 'none' }, '& fieldset': { top: 0 }, }}
-                                            fullWidth
-                                        >
-                                            {getValueOptions(row.key).map((option, i) => (
-                                                <MenuItem key={i} value={option.value}>
-                                                    {option.label}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField> */}
                                     </Grid2>
                                 </Grid2>
 
@@ -237,7 +238,6 @@ const CustomFilterDialog = () => {
                             </Stack>
                         ))}
                     </Box>
-                    {/* Add Row Button */}
                     <Button
                         variant="text"
                         size='small'
@@ -252,5 +252,107 @@ const CustomFilterDialog = () => {
         </div>
     );
 };
+
+
+// const FilterRow = ({ currentKeys, projectId, handleUpdateChange }) => {
+//     const [key, setKey] = useState(null);
+//     const [keys, setKeys] = useState([]);
+//     const [options, setOptions] = useState([]);
+//     const [values, setValues] = useState(null);
+
+//     useEffect(() => {
+//         setKeys(currentKeys);
+//     }, [currentKeys])
+
+//     useEffect(() => {
+//         if (key != null)
+//             fetchOptions();
+//     }, [key])
+
+//     const fetchOptions = async () => {
+//         const data = {
+//             'sortBy': 'position',
+//             'sortDirectionAsc': true,
+//             'filters': []
+//         }
+
+//         let optionsResponse = [];
+//         if (key.field == "status")
+//             optionsResponse = await apiService.statusAPI.getPageByProject(projectId, data)
+//         else if (key.field == "taskType")
+//             optionsResponse = await apiService.taskTypeAPI.getPageByProject(projectId, data)
+//         else if (key.field == "priority")
+//             optionsResponse = await apiService.priorityAPI.getPageByProject(projectId, data)
+
+//         if (optionsResponse?.data) {
+//             setOptions(optionsResponse?.data?.content)
+//             setValues([]);
+//         }
+//     }
+
+//     const handleSelectKey = (selectedKey) => {
+//         setKey(selectedKey);
+//     }
+
+//     const handleSaveValue = (newValues) => {
+//         setValues(newValues);
+//         if (key != null && newValues?.length > 0) {
+//             let row = {
+//                 'key': key?.mapKey,
+//                 'operation': 'IN',
+//                 'value': newValues.map(nv => nv.id)
+//             }
+//             handleUpdateChange(row);
+//         }
+//     }
+
+
+//     return (
+//         <>
+//             <TextField
+//                 select
+//                 size='small'
+//                 autoFocus
+//                 slotProps={{
+//                     select: {
+//                         value: key,
+//                         onChange: (e) => handleSelectKey(e.target.value)
+//                     }
+//                 }}
+//                 sx={{ '& legend': { display: 'none' }, '& fieldset': { top: 0 }, }}
+//                 fullWidth
+//             >
+//                 {keys?.map((k, i) => (
+//                     <MenuItem key={i} value={k}>
+//                         {k.label}
+//                     </MenuItem>
+//                 ))}
+//             </TextField>
+//             <Autocomplete
+//                 size='small'
+//                 value={values}
+//                 multiple
+//                 options={options}
+//                 getOptionLabel={(option) => option.name}
+//                 onChange={(e, newValue) => {
+//                     handleSaveValue(newValue);
+//                 }}
+//                 renderInput={(params) => (
+//                     <TextField
+//                         {...params}
+//                         size='small'
+//                         variant="outlined"
+//                         sx={{
+//                             "& .MuiInputBase-input": {
+//                                 overflow: "hidden",
+//                                 textOverflow: "ellipsis"
+//                             }
+//                         }}
+//                     />
+//                 )}
+//             />
+//         </>
+//     );
+// }
 
 export default CustomFilterDialog;

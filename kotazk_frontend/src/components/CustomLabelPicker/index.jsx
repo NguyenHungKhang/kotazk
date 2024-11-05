@@ -87,8 +87,6 @@ const CustomLabelPicker = ({ currentLabelList, taskId }) => {
                     cursor: 'pointer',
                     borderRadius: 2,
                     py: 1,
-                    px: 2,
-
                 }}
             >
 
@@ -111,8 +109,11 @@ const CustomLabelOpenComponent = () => {
     return (
         <IconButton
             size="small"
+            sx={{
+                p: 1
+            }}
         >
-            <AddIcon stroke={2} size={20} />
+            <AddIcon stroke={2} size={18} />
         </IconButton>
     )
 }

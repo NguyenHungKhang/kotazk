@@ -31,8 +31,8 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
     const ClearIcon = TablerIcon["IconWashDrycleanOff"];
 
     useEffect(() => {
-        setStartDate(startAt);
-        setEndDate(endAt);
+        setStartDate(startAt ? dayjs(startAt) : null);
+        setEndDate(endAt ? dayjs(endAt) : null);
     }, [startAt, endAt, taskId])
 
     const saveStartDate = async (newValue) => {
