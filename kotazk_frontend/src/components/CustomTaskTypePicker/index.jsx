@@ -11,7 +11,6 @@ import { setTaskDialog } from "../../redux/actions/dialog.action";
 
 const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
     const [taskTypes, setTaskTypes] = useState();
-    const tasks = useSelector((state) => state.task.currentTaskList)
     const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const [taskType, setTaskType] = useState(null);
     const dispatch = useDispatch();

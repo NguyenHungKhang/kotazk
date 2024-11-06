@@ -1,19 +1,19 @@
 import styled from "@emotion/styled";
 import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 import FullCalendar from '@fullcalendar/react';
-import { Card, Skeleton, Stack, alpha, darken, useTheme } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import { Box, Button, Card, Divider, Grid2, IconButton, Skeleton, Stack, ToggleButton, ToggleButtonGroup, Typography, alpha, darken, useTheme } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
-
 import { useDispatch, useSelector } from 'react-redux';
 import * as apiService from '../../api/index';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import { setTaskDialog } from '../../redux/actions/dialog.action';
-import { setCurrentTaskList } from '../../redux/actions/task.action';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import * as TablerIcons from '@tabler/icons-react'
+import Tab from '@mui/material/Tab';
 
 export const StyleWrapper = styled.div`
   .fc td {
@@ -47,20 +47,37 @@ function getColorFromInteger(num) {
 const ProjectCalendar = () => {
 
   const theme = useTheme();
+  const calendarRef = useRef(null);
   const project = useSelector((state) => state.project.currentProject)
-  const tasks = useSelector((state) => state.task.currentTaskList)
+  const tasks = useSelector((state) => state.task.currentTaskList);
+  const isGroupedList = useSelector((state) => state.task.isGroupedList);
+  const [listTaskView, setListTaskView] = useState("unscheduled")
+  const [unScheduledTasks, setUnscheduledTasks] = useState([]);
+  const [scheduledTasks, setScheduledTasks] = useState([]);
   const [displayTasks, setDisplayTasks] = useState(null);
   const [startDayRange, setStartDateRange] = useState(null);
   const [endDayRange, setEndDateRange] = useState(null);
   const [tasksPagination, setTaskPagination] = useState(null);
+  const [calendarTitle, setCalendarTitle] = useState('');
+  const [showWeekends, setShowWeekends] = useState(true);
   const dispatch = useDispatch();
 
-const TaskUncompleteIcon = TablerIcons["IconCircle"]
+  const GoToNextIcon = TablerIcons["IconChevronRight"]
+  const GoToPrevIcon = TablerIcons["IconChevronLeft"]
+
+  const TaskUncompleteIcon = TablerIcons["IconCircle"]
 
   useEffect(() => {
-    if (project != null && startDayRange != null && endDayRange != null)
+    if (project != null)
       initialFetch();
-  }, [project, startDayRange, endDayRange])
+  }, [project])
+
+  useEffect(() => {
+    if (tasks != null) {
+      setUnscheduledTasks(tasks.filter(ut => ut.startAt == null || ut.endAt == null));
+      setScheduledTasks(tasks.filter(ut => ut.startAt != null && ut.endAt != null))
+    }
+  }, [tasks])
 
   const initialFetch = async () => {
     const filter = {
@@ -77,13 +94,75 @@ const TaskUncompleteIcon = TablerIcons["IconCircle"]
           start: task?.startAt,
           end: task?.endAt,
           allDay: true,
-          // backgroundColor: getColorFromInteger(task?.id),
-          // borderColor: darken(getColorFromInteger(task?.id), 0.3),
-          // textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
+          backgroundColor: getColorFromInteger(task?.id),
+          textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
         }))
       );
     }
   };
+
+
+  const goToTask = (taskId) => {
+    const calendarApi = calendarRef.current?.getApi();
+    if (!calendarApi) {
+      console.warn("Calendar API not available");
+      return;
+    }
+
+    const event = calendarApi.getEventById(taskId);
+    if (event) {
+      calendarApi.gotoDate(event.start);
+      event.setProp('borderColor', theme.palette.text.primary);
+      setTimeout(() => {
+        event.setProp('borderColor', "transparent");
+      }, 500);
+    } else {
+      console.warn("Event not found:", taskId);
+    }
+  };
+
+  const goToNext = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.next();
+  };
+
+  const goToPrev = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.prev();
+  };
+
+  const goToToday = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.today();
+  };
+
+  const changeToMonthView = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.changeView('dayGridMonth');
+  };
+
+  const changeToWeekWithTimeView = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.changeView('timeGridWeek');
+  };
+
+
+  const changeToWeekView = () => {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.changeView('dayGridWeek');
+  };
+
+  const handleTitleSet = () => {
+    const calendarApi = calendarRef?.current?.getApi();
+    const viewTitle = calendarApi?.view?.title;
+    if (viewTitle) {
+      setCalendarTitle(viewTitle);
+    }
+  };
+
+  useEffect(() => {
+    handleTitleSet();
+  }, []);
 
   const saveEndDate = async (taskId, range) => {
     const data = {
@@ -91,18 +170,22 @@ const TaskUncompleteIcon = TablerIcons["IconCircle"]
       "endAt": range.end
     }
 
+    console.log(123);
     try {
       const response = await apiService.taskAPI.update(taskId, data);
       if (response?.data) {
+        if (isGroupedList)
+          dispatch(addAndUpdateGroupedTaskList(response?.data))
+        else
+          dispatch(addAndUpdateTaskList(response?.data));
       }
     } catch (error) {
       console.error('Failed to update task:', error);
     }
   }
 
-  // Handle date click
   const handleDateClick = (info) => {
-    alert(`Clicked on: ${info.dateStr}`);
+
   };
 
   const handleEventClick = (info) => {
@@ -115,9 +198,8 @@ const TaskUncompleteIcon = TablerIcons["IconCircle"]
   };
 
   const handleEventChange = (info) => {
-    console.log(info.event._instance.range)
-    saveEndDate(info.event._def.publicId, info.event._instance.range)
-    alert(`Change on event`);
+    console.log(info)
+    saveEndDate(info.event._def.publicId, info.event._instance.range);
   };
 
   const handleDatesSet = (dateInfo) => {
@@ -128,93 +210,251 @@ const TaskUncompleteIcon = TablerIcons["IconCircle"]
 
   const handleEventResize = (info) => {
     saveEndDate(info.event._def.publicId, info.event._instance.range)
-    console.log(info)
   };
 
+  function handleEventReceive(info) {
+    saveEndDate(info.event._def.extendedProps.publicId, info.event._instance.range)
+    setUnscheduledTasks(unScheduledTasks.filter(ut => ut.id != info.event._def.extendedProps.publicId))
+  }
+
+
+  function handleEventDragStop(info) {
+    console.log(info)
+  }
+
+
   const renderEventContent = (eventInfo) => (
-    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+    <Stack direction={'row'} alignItems={'center'} spacing={1} flexWrap='wrap' useFlexGap>
       <TaskUncompleteIcon size={18} />
-      <strong>{eventInfo.timeText}</strong>
       <div>{eventInfo.event.title}</div>
-      {/* <div style={{ fontSize: '0.8em', color: '#888' }}>{eventInfo.event.extendedProps.description}</div> */}
+      <strong>{eventInfo.timeText}</strong>
     </Stack>
   );
 
-  return (
-    <Card
-      sx={{
-        // borderRadius: 2,
-        boxShadow: 0,
-        height: '100%',
-        display: 'flex', flexDirection: 'column',
-        '& .fc .fc-scrollgrid-section-body': {
-          bgcolor: theme.palette.mode == "light" ? theme.palette.grey[100] : theme.palette.grey[900]
-        },
-        '& .fc thead': {
-          bgcolor: theme.palette.mode == "light" ? theme.palette.background.paper : 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))'
-        },
-        '& .fc .fc-day': {
-          bgcolor: theme.palette.mode == "light" ? theme.palette.background.default : "#1E1E1E"
-        },
-        '& .fc th, td': {
-          borderColor: theme.palette.mode == "light" ? theme.palette.grey[300] : theme.palette.grey[700],
-        },
-        '& .fc th': {
-          borderLeft: 'none !important',
-          borderRight: 'none !important'
-        },
-        '& .fc table': {
-          border: 'none !important'
-        },
-        '& .fc .fc-col-header-cell': {
-          py: 3,
-          fontSize: 16
-        },
-        '& .fc .fc-toolbar': {
-          px: 4,
-          py: 2,
-          m: 0
-        },
-        '& .fc .fc-toolbar h2': {
-          fontSize: 18,
-          fontWeight: 650
-        },
-        '& .fc .fc-event': {
-          padding: 1,
-          fontSize: 12,
-          fontWeight: 650,
-          borderRadius: 2,
-          borderWidth: 2
-        },
-        '& .fc .fc-day-today': {
-          bgcolor: `${alpha(theme.palette.primary.main, 0.1)} !important`
+  useEffect(() => {
+    if (listTaskView == "unscheduled") {
+      const containerEl = document.querySelector("#outside-events");
+      new Draggable(containerEl, {
+        itemSelector: ".outside-event",
+        eventData: (eventEl) => {
+          return {
+            title: eventEl.innerText,
+            publicId: eventEl.getAttribute('publicId'),
+          };
         }
-      }}
+      });
+    }
+  }, [listTaskView]);
+
+  return (
+    <Box
+      height={'100%'}
     >
-      <FullCalendar
-        plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin]}
-        initialView="dayGridWeek"
-        events={displayTasks}
-        dateClick={handleDateClick}
-        eventClick={handleEventClick}
-        eventBackgroundColor={darken(theme.palette.primary.main, 0.5)}
-        eventBorderColor={theme.palette.primary.main}
-        eventResizableFromStart={true}
-        eventResize={handleEventResize}
-        eventDrop={handleEventChange}
-        nowIndicator={true}
-        editable={true}
-        selectable={true}
+      <Grid2
+        container
+        spacing={2}
         height={'100%'}
-        datesSet={handleDatesSet}
-        eventContent={renderEventContent}
-        headerToolbar={{
-          left: 'title',
-          right: 'prev today next timeGridDay,dayGridWeek,dayGridMonth,multiMonthYear' // user can switch between the two
-        }}
-      />
-      <CustomTaskDialog />
-    </Card>
+      >
+        <Grid2 item size={2}>
+          <Card
+            sx={{
+              p: 2,
+              height: '100%',
+              boxShadow: 0
+            }}
+          >
+            <ToggleButtonGroup
+              value={listTaskView}
+              exclusive
+              onChange={(event, newValue) => setListTaskView(newValue)}
+              aria-label="List task view"
+              size="small"
+              fullWidth
+            >
+              <ToggleButton value="unscheduled" aria-label="unscheduled" sx={{ textTransform: 'none' }}>
+                Unscheduled
+              </ToggleButton>
+              <ToggleButton value="scheduled" aria-label="scheduled" sx={{ textTransform: 'none' }}>
+                Scheduled
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {listTaskView == "unscheduled" && (
+              <Box>
+                <Typography textAlign={'center'} fontWeight={500} my={2}>
+                  Unscheduled tasks
+                </Typography>
+
+                <Stack component={"ul"} spacing={1} id="outside-events">
+                  {unScheduledTasks?.map((t, index) => (
+                    <li key={t?.id} publicId={t.id} className="outside-event">
+                      <Stack
+                        bgcolor={getSecondBackgroundColor(theme)}
+                        borderRadius={2}
+                        direction={'row'}
+                        spacing={2}
+                        p={2}
+                      >
+                        <Typography>
+                          {t.name}
+                        </Typography>
+                      </Stack>
+                    </li>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+            {listTaskView == "scheduled" && (
+              <Box>
+                <Typography textAlign={'center'} fontWeight={500} my={2}>
+                  Scheduled tasks
+                </Typography>
+
+                <Stack component={"ul"} spacing={1} id="events">
+                  {scheduledTasks?.map((t, index) => (
+                    <li key={t?.id} publicId={t.id}>
+                      <Stack
+                        onClick={() => goToTask(t?.id)}
+                        bgcolor={getSecondBackgroundColor(theme)}
+                        borderRadius={2}
+                        direction={'row'}
+                        spacing={2}
+                        p={2}
+                      >
+                        <Typography>
+                          {t.name}
+                        </Typography>
+                      </Stack>
+                    </li>
+                  ))}
+                </Stack>
+              </Box>
+            )}
+
+
+
+          </Card>
+        </Grid2>
+        <Grid2 item size={10}>
+          <Card
+            sx={{
+              p: 2,
+              width: '100%',
+              boxShadow: 0,
+              mb: 2
+            }}
+          >
+            <Stack direction={'row'} spacing={1} alignItems={'center'}>
+              <Stack direction={'row'} spacing={1} alignItems={'center'} flexGrow={1}>
+                <Box>
+                  <Typography variant="h6" fontWeight={650}>
+                    {calendarTitle}
+                  </Typography>
+                </Box>
+                <IconButton size="small" onClick={goToPrev}>
+                  <GoToPrevIcon size={16} />
+                </IconButton>
+                <Button size="small" onClick={goToToday} color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}>
+                  Today
+                </Button>
+                <IconButton size="small" onClick={goToNext}>
+                  <GoToNextIcon size={16} />
+                </IconButton>
+              </Stack>
+              <Button size="small" variant="contained" onClick={changeToWeekWithTimeView} color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}>
+                Week with time
+              </Button>
+              <Button size="small" variant="contained" onClick={changeToWeekView} color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}>
+                Week
+              </Button>
+              <Button size="small" variant="contained" onClick={changeToMonthView} color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}>
+                Month
+              </Button>
+              <Divider orientation="vertical" flexItem />
+              <Button size="small" variant={showWeekends ? 'contained' : 'outlined'} onClick={() => setShowWeekends(!showWeekends)} color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}>
+                {showWeekends ? 'Not show weekends' : 'Show weekends'}
+              </Button>
+            </Stack>
+          </Card>
+          <Card
+            sx={{
+              // borderRadius: 2,
+              pb: 15,
+              boxShadow: 0,
+              height: '100%',
+              display: 'flex', flexDirection: 'column',
+              '& .fc .fc-scrollgrid-section-body': {
+                bgcolor: theme.palette.mode == "light" ? theme.palette.grey[100] : theme.palette.grey[900],
+              },
+              '& .fc thead': {
+                bgcolor: theme.palette.mode == "light" ? theme.palette.background.paper : 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))'
+              },
+              '& .fc .fc-day': {
+                bgcolor: theme.palette.mode == "light" ? theme.palette.background.default : "#1E1E1E"
+              },
+              '& .fc th, td': {
+                borderColor: theme.palette.mode == "light" ? theme.palette.grey[300] : theme.palette.grey[700],
+              },
+              '& .fc th': {
+                borderLeft: 'none !important',
+                borderRight: 'none !important',
+                borderBottom: 'none !important'
+              },
+              '& .fc table, tr': {
+                border: 'none !important'
+              },
+              '& .fc .fc-col-header-cell': {
+                py: 2,
+                fontSize: 14
+              },
+              '& .fc .fc-toolbar': {
+                px: 4,
+                py: 2,
+                m: 0
+              },
+              '& .fc .fc-toolbar h2': {
+                fontSize: 18,
+                fontWeight: 650
+              },
+              '& .fc .fc-event': {
+                padding: 1,
+                fontSize: 14,
+                fontWeight: 650,
+                borderRadius: 1,
+                border: '2px solid transparent',
+              },
+              '& .fc .fc-day-today': {
+                bgcolor: `${alpha(theme.palette.info.main, 0.2)} !important`,
+              }
+            }}
+          >
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, multiMonthPlugin]}
+              initialView="dayGridWeek"
+              events={displayTasks}
+              dateClick={handleDateClick}
+              eventClick={handleEventClick}
+              eventBackgroundColor={darken(theme.palette.primary.main, 0.5)}
+              eventResizableFromStart={true}
+              eventResize={handleEventResize}
+              eventDrop={handleEventChange}
+              eventReceive={handleEventReceive}
+              nowIndicator={true}
+              editable={true}
+              selectable={true}
+              height={'100%'}
+              datesSet={handleTitleSet}
+              eventContent={renderEventContent}
+              headerToolbar={false}
+              weekends={showWeekends}
+              droppable
+            />
+            <CustomTaskDialog />
+          </Card>
+        </Grid2>
+      </Grid2>
+    </Box>
   );
 };
 
