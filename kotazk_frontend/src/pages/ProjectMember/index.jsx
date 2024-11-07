@@ -103,14 +103,14 @@ const ProjectMember = () => {
         <Grid2 container spacing={2} height={'100% !important'}>
             <Grid2
                 item
-                size={6}
+                size={8}
                 height={'100% !important'}
             >
             
                     {/* <ProjectMemberHeader /> */}
                     {(members?.length > 0 && memberRoles?.length > 0) && <MemberList members={members} memberRoles={memberRoles} />}
             </Grid2>
-            <Grid2 item size={6}>
+            <Grid2 item size={4}>
                 <Invitation />
             </Grid2>
         </Grid2>

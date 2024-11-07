@@ -323,7 +323,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
             </Card>
 
 
-            {!collapse && <Box height='calc(100vh - 268px)'
+            {!collapse && <Box height='calc(100vh - 230px)'
               sx={{
                 pb: 1,
                 overflowY: 'auto',

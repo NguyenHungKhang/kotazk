@@ -13,10 +13,13 @@ import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
 import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
+import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
 import com.taskmanagement.kotazk.repository.IUserRepository;
 import com.taskmanagement.kotazk.security.JwtToken;
 import com.taskmanagement.kotazk.service.IUserService;
+import com.taskmanagement.kotazk.util.ModelMapperUtil;
 import com.taskmanagement.kotazk.util.RandomStringGeneratorUtil;
+import com.taskmanagement.kotazk.util.SecurityUtil;
 import com.taskmanagement.kotazk.util.TimeUtil;
 import io.jsonwebtoken.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,6 +115,14 @@ public class UserService implements IUserService {
         }
         Optional<User> updatedUser = userRepository.findByEmail(user.getEmail());
         return jwtToken.generateToken(updatedUser.get());
+    }
+
+    @Override
+    public UserResponseDto getOneByEmail(String email) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+        return ModelMapperUtil.mapOne(user, UserResponseDto.class);
     }
 
     @Override

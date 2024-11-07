@@ -80,7 +80,7 @@ public class MemberService implements IMemberService {
                 project = projectRepository.findById(memberRequestDto.getProjectId())
                         .orElseThrow(() -> new ResourceNotFoundException("Project", "id", memberRequestDto.getProjectId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
-                        Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
+                        !Objects.equals(memberRole.getProject().getId(), project.getId()))
                     throw new CustomException("This member's role is not suitable with this project!");
                 checkProjectMember(
                         currentUser.getId(),
@@ -107,10 +107,12 @@ public class MemberService implements IMemberService {
         Member newMember = Member.builder()
                 .user(user)
                 .memberFor(memberRequestDto.getMemberFor())
-                .status(MemberStatus.ACTIVE)
+                .status(MemberStatus.INVITED)
                 .role(memberRole)
                 .workSpace(workSpace)
                 .project(project)
+                .systemInitial(false)
+                .systemRequired(false)
                 .build();
 
         Member savedMember = memberRepository.save(newMember);

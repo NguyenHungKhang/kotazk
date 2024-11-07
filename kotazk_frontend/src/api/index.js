@@ -10,6 +10,7 @@ import * as labelAPI from './label.api.js'
 import * as memberAPI from './member.api.js'
 import * as memberRoleAPI from './memberRole.api.js'
 import * as attachmentAPI from './attachment.api.js'
+import * as userAPI from './user.api.js'
 export {
     authAPI,
     projectAPI,
@@ -22,5 +23,6 @@ export {
     labelAPI,
     memberAPI,
     memberRoleAPI,
-    attachmentAPI
+    attachmentAPI,
+    userAPI
 };

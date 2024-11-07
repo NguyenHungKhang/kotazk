@@ -76,22 +76,30 @@ const MemberList = () => {
 
     const findUser = async () => {
         try {
-            const userFilter = {
-                filters: [
-                    {
-                        key: "user.email",
-                        operation: "EQUAL",
-                        value: searchUser,
-                        values: []
-                    }
-                ],
-            };
+            const response = await apiService.userAPI.getOneByEmail(searchUser)
 
+            if (response?.data) {
+                setFoundedUser(response?.data);
+            }
 
-            const response = await apiService.memberAPI.getPageByProject(project?.id, userFilter)
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            // Optionally handle the error, e.g., show a notification or fallback state
+        }
+    };
 
-            if (response?.data?.content && response?.data?.content?.length == 1) {
-                setFoundedUser(response?.data?.content);
+    const createMember = async () => {
+        try {
+            const data = {
+                projectId: project?.id,
+                userId: foundedUser?.id,
+                memberFor: "PROJECT",
+                memberRoleId: memberRoles[0].id,
+            }
+            const response = await apiService.memberAPI.create(data)
+
+            if (response?.data) {
+                setMembers([response?.data, ...members]);
             }
 
         } catch (error) {
@@ -104,39 +112,13 @@ const MemberList = () => {
     const SaveIcon = TablerIcons["IconDeviceFloppy"]
     const InviteIcon = TablerIcons["IconUserPlus"]
 
-    // const handleSelect = (id) => {
-    //     setSelectedMembers((prevSelected) =>
-    //         prevSelected.includes(id)
-    //             ? prevSelected.filter((memberId) => memberId !== id)
-    //             : [...prevSelected, id]
-    //     );
-    // };
-
-    // const handleSelectAll = () => {
-    //     if (selectedMembers.length === members.length) {
-    //         setSelectedMembers([]);
-    //     } else {
-    //         const allIds = members.map((member) => member.id);
-    //         setSelectedMembers(allIds);
-    //     }
-    // };
-
-    // const isSelected = (id) => selectedMembers.includes(id);
-
-    // const handleRoleChange = (id, newRole) => {
-    //     setRoles((prevRoles) => ({
-    //         ...prevRoles,
-    //         [id]: newRole,
-    //     }));
-    // };
 
     return (
         <Card
             sx={{
                 height: '100% !important',
                 p: 4,
-                boxShadow: 0,
-                borderRadius: 4
+                boxShadow: 0
             }}
         >
             <Stack direction={'column'} height={'100%'} >
@@ -205,8 +187,8 @@ const MemberList = () => {
                                                         <Avatar />
                                                     </ListItemAvatar>
                                                     <ListItemText
-                                                        primary={'Temp User Name'}
-                                                        secondary={'Temp Email'}
+                                                        primary={foundedUser.firstName + " " + foundedUser.lastName}
+                                                        secondary={foundedUser.email}
                                                     />
                                                 </Stack>
                                             </Box>
@@ -214,6 +196,7 @@ const MemberList = () => {
                                         </Stack>
                                     </ListItem>
                                     <Button
+                                        onClick={() => createMember()}
                                         variant='contained'
                                         sx={{ whiteSpace: 'nowrap', px: 6 }}
                                         color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
@@ -239,63 +222,11 @@ const MemberList = () => {
                     <Typography fontWeight={650} variant='h6'>
                         Members (1/1)
                     </Typography>
-                    <List dense>
+                    <Stack spacing={1}>
                         {members?.map((member) => (
-                            <ListItem key={member.id}
-                                secondaryAction={
-                                    <Stack direction='row' spacing={2} alignItems="center">
-                                        <Box>
-                                            <Select
-                                                value={member.role.id}
-                                                // onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                                size='small'
-                                                variant="standard"
-                                            >
-                                                {
-                                                    memberRoles?.map((mr) => (
-                                                        <MenuItem value={mr.id} >{mr.name}</MenuItem>
-                                                    ))
-                                                }
-                                            </Select>
-                                        </Box>
-                                        <Box>
-                                            <Stack direction="row" spacing={1}>
-                                                <IconButton size='small' color="success">
-                                                    <SaveIcon />
-                                                </IconButton>
-                                                <IconButton size='small' color="secondary">
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            </Stack>
-                                        </Box>
-                                    </Stack>
-                                }
-                            >
-                                <Stack direction='row' spacing={2} alignItems="center"
-                                >
-                                    <Checkbox
-                                        edge="start"
-                                    // onChange={() => handleSelect(member.id)}
-                                    // checked={isSelected(member.id)}
-                                    />
-
-                                    <Box width={'100%'} flexGrow={1}>
-                                        <Stack direction='row' spacing={2} alignItems='center'>
-                                            <ListItemAvatar>
-                                                <Avatar src={member.avatarUrl} />
-                                            </ListItemAvatar>
-                                            <ListItemText
-                                                primary={member.user.firstName + ' ' + member.user.lastName}
-                                                secondary={member.user.email}
-                                            />
-                                        </Stack>
-                                    </Box>
-
-                                </Stack>
-                            </ListItem>
+                            <MemberItem key={member.id} member={member} memberRoles={memberRoles} />
                         ))}
-                    </List>
-
+                    </Stack>
                 </Box>
                 <Box display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
                     <Pagination count={10} variant="outlined" shape="rounded" />
@@ -304,5 +235,56 @@ const MemberList = () => {
         </Card>
     );
 };
+
+const MemberItem = ({ member, memberRoles }) => {
+    const theme = useTheme();
+    return (
+        <Box key={member.id}
+            sx={{
+                bgcolor: getSecondBackgroundColor(theme),
+                p: 2,
+                borderRadius: 2
+            }}
+        >
+            <Stack direction='row' spacing={2} alignItems="center"
+            >
+
+                <Box width={'100%'} flexGrow={1}>
+                    <Stack direction='row' spacing={2} alignItems='center'>
+                        <ListItemAvatar>
+                            <Avatar src={member.avatarUrl} />
+                        </ListItemAvatar>
+                        <ListItemText
+                            primary={member.user.firstName + ' ' + member.user.lastName}
+                            secondary={member.user.email}
+                        />
+                    </Stack>
+                </Box>
+                <Stack direction='row' spacing={2} alignItems="center">
+                    <Box>
+                        <Select
+                            value={member.role.id}
+                            size='small'
+                            variant="standard"
+                        >
+                            {
+                                memberRoles?.map((mr) => (
+                                    <MenuItem value={mr.id} >{mr.name}</MenuItem>
+                                ))
+                            }
+                        </Select>
+                    </Box>
+                    <Box>
+                        <Stack direction="row" spacing={1}>
+                            <IconButton size='small' color="secondary">
+                                <DeleteIcon />
+                            </IconButton>
+                        </Stack>
+                    </Box>
+                </Stack>
+            </Stack>
+        </Box>
+    );
+}
 
 export default MemberList;
