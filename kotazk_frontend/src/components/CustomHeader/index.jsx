@@ -10,6 +10,8 @@ import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
 import CustomColorIconPicker from "../CustomProjectColorIconPicker";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import * as apiService from "../../api/index"
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -17,6 +19,31 @@ const CustomHeader = () => {
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
     const project = useSelector((state) => state.project.currentProject);
+    const [members, setMembers] = useState([]);
+    useEffect(() => {
+        membersFetch();
+    }, [project]);
+
+    const membersFetch = async () => {
+        const memberFilter = {
+            sortBy: 'user.lastName',
+            sortDirectionAsc: true,
+            filters: [
+                {
+                    key: "status",
+                    operation: "EQUAL",
+                    value: "ACTIVE",
+                    values: []
+                }
+            ],
+        };
+
+        const response = await apiService.memberAPI.getPageByProject(project?.id, memberFilter)
+        if (response?.data)
+            setMembers(response?.data?.content);
+
+    }
+
     return (
         <Box>
             <Stack direction='row' spacing={3} alignItems="center">
@@ -39,12 +66,23 @@ const CustomHeader = () => {
                             '& .MuiAvatar-root': {
                                 width: 30,
                                 height: 30,
-                                fontSize: 12
+                                fontSize: 14
                             },
                         }}
                     >
-
-                        <Avatar
+                        {members?.map((member) => (
+                            <Avatar
+                                sx={{
+                                    width: 30,
+                                    height: 30,
+                                }}
+                                alt={member?.user?.lastName}
+                                src={member?.user?.avatarUrl}
+                            >
+                                {member?.user?.lastName.substring(0, 1)}
+                            </Avatar>
+                        ))}
+                        {/* <Avatar
                             sx={{
                                 width: 30,
                                 height: 30,
@@ -88,9 +126,11 @@ const CustomHeader = () => {
                             height: 30,
                         }}>
                             1
-                        </Avatar>
+                        </Avatar> */}
                     </AvatarGroup>
                     <Button
+                        component={Link}
+                        to={`/project/${project?.id}/member`}
                         sx={{
                             textTransform: 'none',
                             borderRadius: 5
@@ -105,33 +145,6 @@ const CustomHeader = () => {
                     </Button>
                 </Stack>
                 <Stack direction='row' spacing={2}>
-                    {/* <Box>
-                <TextField
-                    variant="filled"
-                    size="small"
-                    hiddenLabel
-                    placeholder="Search..."
-                    InputProps={{
-                        disableUnderline: true,
-                        sx: {
-                            borderColor: "12px solid black",
-                            borderRadius: 50
-                        },
-                        startAdornment:
-                            <InputAdornment position="start">
-                                <SearchIcon fontSize="small" />
-                            </InputAdornment>
-                        ,
-                        endAdornment:
-                            <InputAdornment position="end">
-                                <IconButton size="small">
-                                    <MicIcon fontSize="small" />
-                                </IconButton>
-                            </InputAdornment>
-                        ,
-                    }}
-                />
-            </Box> */}
                     <Box>
                         <Button
                             size='small'

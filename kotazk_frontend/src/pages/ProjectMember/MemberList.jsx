@@ -6,20 +6,22 @@ import * as TablerIcons from '@tabler/icons-react'
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { setDeleteDialog } from '../../redux/actions/dialog.action';
 
 
-const MemberList = () => {
+const MemberList = ({ members, setMembers }) => {
     const theme = useTheme();
     // const [selectedMembers, setSelectedMembers] = useState([]);
     // const [roles, setRoles] = useState(memberRoles);
 
-    const [members, setMembers] = useState(null);
     const [memberRoles, setMemberRoles] = useState(null);
     const [foundedUser, setFoundedUser] = useState(null);
     const [searchUser, setSearchUser] = useState(null);
     const project = useSelector((state) => state.project.currentProject)
     const workSpace = useSelector((state) => state.workspace.currentWorkspace)
     const [searchText, setSearchText] = useState("");
+    const RefreshIcon = TablerIcons["IconRefresh"];
 
     useEffect(() => {
         if (project != null && workSpace != null)
@@ -34,6 +36,12 @@ const MemberList = () => {
                         key: "user.email",
                         operation: "LIKE",
                         value: searchText,
+                        values: []
+                    },
+                    {
+                        key: "status",
+                        operation: "EQUAL",
+                        value: "ACTIVE",
                         values: []
                     }
                 ],
@@ -84,7 +92,6 @@ const MemberList = () => {
 
         } catch (error) {
             console.error("Error fetching data:", error);
-            // Optionally handle the error, e.g., show a notification or fallback state
         }
     };
 
@@ -97,21 +104,13 @@ const MemberList = () => {
                 memberRoleId: memberRoles[0].id,
             }
             const response = await apiService.memberAPI.create(data)
-
-            if (response?.data) {
-                setMembers([response?.data, ...members]);
-            }
-
         } catch (error) {
             console.error("Error fetching data:", error);
-            // Optionally handle the error, e.g., show a notification or fallback state
         }
     };
 
-
     const SaveIcon = TablerIcons["IconDeviceFloppy"]
     const InviteIcon = TablerIcons["IconUserPlus"]
-
 
     return (
         <Card
@@ -219,9 +218,15 @@ const MemberList = () => {
                     />
                 </Box>
                 <Box p={2} flexGrow={1} height={'100%'}>
-                    <Typography fontWeight={650} variant='h6'>
-                        Members (1/1)
-                    </Typography>
+                    <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
+                        <Typography fontWeight={650} variant='h6'>
+                            Members
+                        </Typography>
+                        {/* <IconButton size='small'>
+                            <RefreshIcon size={20}/>
+                        </IconButton> */}
+                    </Stack>
+
                     <Stack spacing={1}>
                         {members?.map((member) => (
                             <MemberItem key={member.id} member={member} memberRoles={memberRoles} />
@@ -238,6 +243,22 @@ const MemberList = () => {
 
 const MemberItem = ({ member, memberRoles }) => {
     const theme = useTheme();
+    const dispatch = useDispatch();
+
+    const handleOpenDeleteDialog = (event) => {
+        event.stopPropagation();
+        dispatch(setDeleteDialog({
+            title: `Delete member "${member?.user?.firstName} ${member?.user?.lastName}"?`,
+            content:
+                `You're about to permanently delete this nember and their comments.`,
+            open: true,
+            deleteType: "DELETE_MEMBER",
+            deleteProps: {
+                memberId: member?.id
+            }
+        }));
+    };
+
     return (
         <Box key={member.id}
             sx={{
@@ -276,7 +297,11 @@ const MemberItem = ({ member, memberRoles }) => {
                     </Box>
                     <Box>
                         <Stack direction="row" spacing={1}>
-                            <IconButton size='small' color="secondary">
+                            <IconButton
+                                onClick={(e) => handleOpenDeleteDialog(e)}
+                                size='small'
+                                color="secondary"
+                            >
                                 <DeleteIcon />
                             </IconButton>
                         </Stack>

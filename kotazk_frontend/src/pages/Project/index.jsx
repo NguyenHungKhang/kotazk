@@ -77,9 +77,9 @@ const Project = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
+                backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
                 // backgroundImage: `url('https://i.pinimg.com/564x/b0/94/c5/b094c5ceba9148e06fca396ac12367d6.jpg')`,
-                background: theme.palette.mode == "light" ? "#EFEFEF" : "#121212",
+                // background: theme.palette.mode == "light" ? "#EFEFEF" : "#121212",
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
@@ -99,7 +99,7 @@ const Project = ({ children }) => {
                             px: 4,
                             pt: 4,
                             pb: 2,
-                            borderRadius: 4,
+                            borderRadius: 2,
                             boxShadow: 0
                         }}
                     >

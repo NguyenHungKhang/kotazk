@@ -42,62 +42,7 @@ const dummyRoleData = [
 
 const ProjectMember = () => {
     const theme = useTheme();
-    const [members, setMembers] = useState(dummyMemberData);
-    const [memberRoles, setMemberRoles] = useState(dummyRoleData);
-    const project = useSelector((state) => state.project.currentProject)
-    const workSpace = useSelector((state) => state.workspace.currentWorkspace)
-
-    useEffect(() => {
-        if (project != null && workSpace != null)
-            initialFetch();
-    }, [project, workSpace]);
-
-    const initialFetch = async () => {
-        try {
-            const memberFilter = {
-                filters: [
-                    // {
-                    //     key: "project.id",
-                    //     operation: "EQUAL",
-                    //     value: project?.id,
-                    //     values: []
-                    // }
-                ],
-            };
-
-            const memberRoleFilter = {
-                filters: [
-                    // {
-                    //     key: "project.id",
-                    //     operation: "EQUAL",
-                    //     value: project?.id,
-                    //     values: []
-                    // }
-                ],
-            };
-
-            // Run both API calls concurrently
-            const [memberResponse, memberRoleResponse] = await Promise.all([
-                apiService.memberAPI.getPageByProject(memberFilter, project?.id),
-                apiService.memberRoleAPI.getPageByProject(memberRoleFilter, project?.id)
-            ]);
-
-            // Handle member response
-            if (memberResponse?.data?.content) {
-                setMembers(memberResponse.data.content);
-            }
-
-            // Handle member role response
-            if (memberRoleResponse?.data?.content) {
-                setMemberRoles(memberRoleResponse.data.content);
-            }
-
-        } catch (error) {
-            console.error("Error fetching data:", error);
-            // Optionally handle the error, e.g., show a notification or fallback state
-        }
-    };
-
+    const [activeMembers, setActiveMembers] = useState([])
 
     return (
         <Grid2 container spacing={2} height={'100% !important'}>
@@ -106,12 +51,10 @@ const ProjectMember = () => {
                 size={8}
                 height={'100% !important'}
             >
-            
-                    {/* <ProjectMemberHeader /> */}
-                    {(members?.length > 0 && memberRoles?.length > 0) && <MemberList members={members} memberRoles={memberRoles} />}
+                   <MemberList members={activeMembers} setMembers={setActiveMembers} />
             </Grid2>
             <Grid2 item size={4}>
-                <Invitation />
+                <Invitation activeMembers={activeMembers} setActiveMembers={setActiveMembers}/>
             </Grid2>
         </Grid2>
 

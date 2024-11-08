@@ -57,6 +57,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
             const attachmentId = deleteProps.attachmentId;
             const task = deleteProps.task;
             await handleDeleteAttachment(attachmentId, task)
+        } else if (deleteType == "DELETE_MEMBER" && deleteProps != null) {
+            const memberId = deleteProps.memberId;
+            await handleDeleteMmber(memberId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -229,6 +232,21 @@ export default function CustomDeleteDialog({ deleteAction }) {
         }
     };
 
+
+    const handleDeleteMmber = async (memberId) => {
+        try {
+            const response = await apiService.memberAPI.remove(memberId);
+            if (response?.data) {
+
+                dispatch(setSnackbar({
+                    content: "Member deleted successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete member:', error);
+        }
+    };
 
 
     return (

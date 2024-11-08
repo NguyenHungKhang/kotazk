@@ -279,7 +279,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               width: !collapse ? "auto" : 40,
               border: '1px solid',
               borderColor: snapshot.isDraggingOver ? theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600] : 'transparent',
-              bgcolor: theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)
+              bgcolor: alpha((theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)), 0.8)
               // background: `linear-gradient(180deg, 
               // ${alpha(theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.25)} 0%,  
               // ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.1 : 0.05)} 100%)`

@@ -4,7 +4,7 @@ import interactionPlugin, { Draggable } from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 import FullCalendar from '@fullcalendar/react';
-import { Box, Button, Card, Divider, Grid2, IconButton, Skeleton, Stack, ToggleButton, ToggleButtonGroup, Typography, alpha, darken, useTheme } from '@mui/material';
+import { Box, Button, Card, Divider, Grid2, IconButton, Skeleton, Stack, ToggleButton, ToggleButtonGroup, Typography, alpha, darken, lighten, useTheme } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { useDispatch, useSelector } from 'react-redux';
@@ -93,7 +93,7 @@ const ProjectCalendar = () => {
           title: task?.name,
           start: task?.startAt,
           end: task?.endAt,
-          allDay: true,
+          allDay: false,
           backgroundColor: getColorFromInteger(task?.id),
           textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
         }))
@@ -249,6 +249,11 @@ const ProjectCalendar = () => {
   return (
     <Box
       height={'100%'}
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        bgcolor: alpha((theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)), 0.8)
+      }}
     >
       <Grid2
         container
@@ -271,10 +276,24 @@ const ProjectCalendar = () => {
               size="small"
               fullWidth
             >
-              <ToggleButton value="unscheduled" aria-label="unscheduled" sx={{ textTransform: 'none' }}>
+              <ToggleButton
+                value="unscheduled"
+                aria-label="unscheduled"
+                sx={{
+                  textTransform: 'none',
+                  p: 1
+                }}
+              >
                 Unscheduled
               </ToggleButton>
-              <ToggleButton value="scheduled" aria-label="scheduled" sx={{ textTransform: 'none' }}>
+              <ToggleButton
+                value="scheduled"
+                aria-label="unscheduled"
+                sx={{
+                  textTransform: 'none',
+                  p: 1
+                }}
+              >
                 Scheduled
               </ToggleButton>
             </ToggleButtonGroup>
@@ -378,11 +397,9 @@ const ProjectCalendar = () => {
           </Card>
           <Card
             sx={{
-              // borderRadius: 2,
-              pb: 15,
               boxShadow: 0,
-              height: '100%',
-              display: 'flex', flexDirection: 'column',
+              height: `calc(100% - ${theme.spacing(13.5)})`,
+              // display: 'flex', flexDirection: 'column',
               '& .fc .fc-scrollgrid-section-body': {
                 bgcolor: theme.palette.mode == "light" ? theme.palette.grey[100] : theme.palette.grey[900],
               },

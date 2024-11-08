@@ -71,7 +71,12 @@ const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId,
                 'sortBy': 'user.lastName',
                 'sortDirectionAsc': true,
                 'filters': [
-
+                    {
+                        key: "status",
+                        operation: "EQUAL",
+                        value: "ACTIVE",
+                        values: []
+                    }
                 ]
             }
             const response = await apiService.memberAPI.getPageByProject(projectId, data);

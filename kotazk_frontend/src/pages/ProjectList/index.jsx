@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useReactTable, getCoreRowModel, flexRender, ColumnResizeMode, getSortedRowModel } from '@tanstack/react-table';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import { Box, Button, Card, Divider, Grid, Grid2, IconButton, Pagination, Skeleton, Stack, Tooltip, Typography, darken, lighten, useTheme } from '@mui/material';
+import { Box, Button, Card, Divider, Grid, Grid2, IconButton, Pagination, Skeleton, Stack, Tooltip, Typography, alpha, darken, lighten, useTheme } from '@mui/material';
 import * as TablerIcons from '@tabler/icons-react'
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
@@ -76,12 +76,12 @@ const basicColumns = (theme) => [
                     {row.original?.attachments?.length > 0 && (
                         <Tooltip title={`${row.original?.attachments?.length} attachment${row.original?.childTasks?.length > 1 ? 's' : ''}`} placement="top">
                             <Stack direction={'row'} spacing={0.5} p={0.5} bgcolor={getSecondBackgroundColor(theme)} borderRadius={1}>
-                               <AttachmentIcon stroke={2} size={18} color={theme.palette.text.secondary}/>
+                                <AttachmentIcon stroke={2} size={18} color={theme.palette.text.secondary} />
                                 <Typography color={theme.palette.text.secondary}>
                                     {row.original?.attachments?.length}
                                 </Typography>
                             </Stack>
-                            
+
                         </Tooltip>
                     )}
                 </Stack>
@@ -689,7 +689,7 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
             sx={{
                 borderRadius: 2,
                 p: 2,
-                bgcolor: theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)
+                bgcolor: alpha((theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)), 0.8)
             }}
         >
             <Card

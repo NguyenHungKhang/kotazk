@@ -121,6 +121,38 @@ public class MemberService implements IMemberService {
     }
 
     @Override
+    public MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id) {
+        User currentUser = SecurityUtil.getCurrentUser();
+
+        Member currentMember = memberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
+
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.CHANGE_MEMBER_STATUS),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.CHANGE_MEMBER_STATUS),
+                    true
+            );
+
+        currentMember.setStatus(memberRequestDto.getStatus());
+
+        Member savedMember = memberRepository.save(currentMember);
+
+        return ModelMapperUtil.mapOne(savedMember, MemberResponseDto.class);
+    }
+
+    @Override
     public MemberResponseDto revoke(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
 

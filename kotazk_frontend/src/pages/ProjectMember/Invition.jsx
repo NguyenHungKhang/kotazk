@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Card, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Stack, Select, MenuItem, IconButton, Button, Pagination, TextField } from '@mui/material';
 import Tab from '@mui/material/Tab';
 import TabContext from '@mui/lab/TabContext';
@@ -8,6 +8,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useTheme } from '@mui/material/styles';
 import * as TablerIcons from '@tabler/icons-react';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import { useSelector } from 'react-redux';
+import * as apiService from '../../api/index';
+import { setDeleteDialog } from '../../redux/actions/dialog.action';
+import { useDispatch } from 'react-redux';
 
 const members = [
     {
@@ -31,7 +35,9 @@ const memberRoles = [
     { id: 3, name: 'Viewer' }
 ];
 
-const Invitation = () => {
+const Invitation = ({ activeMembers, setActiveMembers }) => {
+
+
     return (
         <Card
             sx={{
@@ -50,7 +56,7 @@ const Invitation = () => {
                     </Typography>
                 </Box>
                 <Box flexGrow={1}>
-                    <JoinRequestTab />
+                    <JoinRequestTab activeMembers={activeMembers} setActiveMembers={setActiveMembers}/>
                 </Box>
                 <Box p={6} display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
                     <Pagination count={10} variant="outlined" shape="rounded" />
@@ -60,44 +66,85 @@ const Invitation = () => {
     );
 }
 
-function JoinRequestTab() {
-    const [value, setValue] = React.useState('1');
+function JoinRequestTab({ activeMembers, setActiveMembers }) {
+    const [value, setValue] = React.useState("AWAITING_ACCEPTANCE");
     const theme = useTheme();
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [roles, setRoles] = useState(memberRoles);
+    const dispatch = useDispatch();
 
     const SaveIcon = TablerIcons["IconDeviceFloppy"]
     const InviteIcon = TablerIcons["IconUserPlus"]
     const ApproveIcon = TablerIcons["IconCheck"];
 
-    const handleSelect = (id) => {
-        setSelectedMembers((prevSelected) =>
-            prevSelected.includes(id)
-                ? prevSelected.filter((memberId) => memberId !== id)
-                : [...prevSelected, id]
-        );
-    };
+    const [members, setMembers] = useState([]);
+    const project = useSelector((state) => state.project.currentProject)
+    const workSpace = useSelector((state) => state.workspace.currentWorkspace)
+    const [searchText, setSearchText] = useState("");
 
-    const handleSelectAll = () => {
-        if (selectedMembers.length === members.length) {
-            setSelectedMembers([]);
-        } else {
-            const allIds = members.map((member) => member.id);
-            setSelectedMembers(allIds);
+    useEffect(() => {
+        if (project != null && workSpace != null && value != null)
+            initialFetch();
+    }, [project, workSpace, searchText, value]);
+    const initialFetch = async () => {
+        try {
+            const memberFilter = {
+                filters: [
+                    {
+                        key: "user.email",
+                        operation: "LIKE",
+                        value: searchText,
+                        values: []
+                    },
+                    {
+                        key: "status",
+                        operation: "EQUAL",
+                        value: value,
+                        values: []
+                    }
+                ],
+            };
+
+            const [memberResponse] = await Promise.all([
+                apiService.memberAPI.getPageByProject(project?.id, memberFilter),
+            ]);
+
+            if (memberResponse?.data?.content) {
+                setMembers(memberResponse?.data?.content);
+            }
+
+        } catch (error) {
+            console.error("Error fetching data:", error);
         }
-    };
-
-    const isSelected = (id) => selectedMembers.includes(id);
-
-    const handleRoleChange = (id, newRole) => {
-        setRoles((prevRoles) => ({
-            ...prevRoles,
-            [id]: newRole,
-        }));
     };
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
+    };
+
+    const approveUser = async (member) => {
+        const data = {
+            "status": "ACTIVE"
+        }
+        const response = await apiService.memberAPI.updateStatus(member?.id, data)
+        if (response?.data) {
+            setActiveMembers([...activeMembers, response?.data])
+            setMembers(members?.filter(m => m.id != member.id));
+        }
+    }
+
+    const handleOpenDeleteDialog = (event, member) => {
+        event.stopPropagation();
+        dispatch(setDeleteDialog({
+            title: `Delete member "${member?.user?.firstName} ${member?.user?.lastName} - ${member?.user?.email}"?`,
+            content:
+                `You're about to permanently delete this nember and their comments.`,
+            open: true,
+            deleteType: "DELETE_MEMBER",
+            deleteProps: {
+                memberId: member?.id
+            }
+        }));
     };
 
     return (
@@ -105,12 +152,11 @@ function JoinRequestTab() {
             <TabContext value={value}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <TabList onChange={handleChange} aria-label="lab API tabs example" textColor="success">
-                        <Tab label="Pending" value="1" />
-                        <Tab label="Waiting" value="2" />
-                        {/* <Tab label="Banned" value="3" /> */}
+                        <Tab label="Pending" value="AWAITING_ACCEPTANCE" />
+                        <Tab label="Waiting" value="INVITED" />
                     </TabList>
                 </Box>
-                <TabPanel value="1">
+                <TabPanel value="AWAITING_ACCEPTANCE">
                     <TextField
                         size='small'
                         placeholder='Typing name or email for searching...'
@@ -125,28 +171,25 @@ function JoinRequestTab() {
                                 secondaryAction={
                                     <Stack direction='row' spacing={2} alignItems="center">
                                         <Box bgcolor={getSecondBackgroundColor(theme)} px={4} py={1} borderRadius={10}>
-                                            {/* <Select
-                                                value={member.role.id}
-                                                onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                                size='small'
-                                                variant="standard"
-                                            >
-                                                {
-                                                    memberRoles?.map((mr) => (
-                                                        <MenuItem value={mr.id} >{mr.name}</MenuItem>
-                                                    ))
-                                                }
-                                            </Select> */}
                                             <Typography variant='body2'>
                                                 {member.role.name}
                                             </Typography>
                                         </Box>
                                         <Box>
                                             <Stack direction="row" spacing={1}>
-                                                <IconButton size='small' color="secondary">
+                                                <IconButton
+                                                    onClick={(e) => handleOpenDeleteDialog(e, member)}
+                                                    size='small'
+                                                    color="secondary"
+                                                >
                                                     <DeleteIcon />
                                                 </IconButton>
-                                                <Button size={'small'} variant='contained' startIcon={<ApproveIcon />}>
+                                                <Button
+                                                    onClick={() => approveUser(member)}
+                                                    size={'small'}
+                                                    variant='contained'
+                                                    startIcon={<ApproveIcon />}
+                                                >
                                                     Approve
                                                 </Button>
                                             </Stack>
@@ -156,11 +199,6 @@ function JoinRequestTab() {
                             >
                                 <Stack direction='row' spacing={2} alignItems="center"
                                 >
-                                    <Checkbox
-                                        edge="start"
-                                        onChange={() => handleSelect(member.id)}
-                                        checked={isSelected(member.id)}
-                                    />
 
                                     <Box width={'100%'} flexGrow={1}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
@@ -181,8 +219,8 @@ function JoinRequestTab() {
 
 
                 </TabPanel>
-                <TabPanel value="2">
-                <TextField
+                <TabPanel value="INVITED">
+                    <TextField
                         size='small'
                         placeholder='Typing name or email for searching...'
                         fullWidth
@@ -196,43 +234,25 @@ function JoinRequestTab() {
                                 secondaryAction={
                                     <Stack direction='row' spacing={2} alignItems="center">
                                         <Box bgcolor={getSecondBackgroundColor(theme)} px={4} py={1} borderRadius={10}>
-                                            {/* <Select
-                                                value={member.role.id}
-                                                onChange={(e) => handleRoleChange(member.id, e.target.value)}
-                                                size='small'
-                                                variant="standard"
-                                            >
-                                                {
-                                                    memberRoles?.map((mr) => (
-                                                        <MenuItem value={mr.id} >{mr.name}</MenuItem>
-                                                    ))
-                                                }
-                                            </Select> */}
                                             <Typography variant='body2'>
                                                 {member.role.name}
                                             </Typography>
                                         </Box>
                                         <Box>
                                             <Stack direction="row" spacing={1}>
-                                                <IconButton size='small' color="secondary">
+                                                <IconButton
+                                                    onClick={(e) => handleOpenDeleteDialog(e, member)}
+                                                    size='small'
+                                                    color="secondary"
+                                                >
                                                     <DeleteIcon />
                                                 </IconButton>
-                                                {/* <Button size={'small'} variant='contained' startIcon={<ApproveIcon />}>
-                                                    Approve
-                                                </Button> */}
                                             </Stack>
                                         </Box>
                                     </Stack>
                                 }
                             >
-                                <Stack direction='row' spacing={2} alignItems="center"
-                                >
-                                    <Checkbox
-                                        edge="start"
-                                        onChange={() => handleSelect(member.id)}
-                                        checked={isSelected(member.id)}
-                                    />
-
+                                <Stack direction='row' spacing={2} alignItems="center">
                                     <Box width={'100%'} flexGrow={1}>
                                         <Stack direction='row' spacing={2} alignItems='center'>
                                             <ListItemAvatar>
@@ -252,7 +272,6 @@ function JoinRequestTab() {
 
 
                 </TabPanel>
-                {/* <TabPanel value="3">Item Three</TabPanel> */}
             </TabContext>
         </Box>
     );
