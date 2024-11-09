@@ -83,7 +83,7 @@ public class Task {
     private Priority priority;
 
     @Column(name = "time_estimate")
-    private Long timeEstimate; // count as minute;
+    private Float timeEstimate; // count as minute;
 
     @Column(name = "time_tracking")
     private Long timeTracking; // count as minute;

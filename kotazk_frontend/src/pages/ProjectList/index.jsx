@@ -21,6 +21,7 @@ import CustomPriorityPicker from '../../components/CustomPrirorityPicker';
 import CustomAssigneePicker from '../../components/CustomAssigneePicker';
 import CustomDueTimePicker from '../../components/CustomDueTimePicker';
 import CustomLabelPicker from '../../components/CustomLabelPicker';
+import CustomTimeEstimateTextField from '../../components/CustomTimeEstimateTextField';
 
 
 const basicColumns = (theme) => [
@@ -114,6 +115,23 @@ const basicColumns = (theme) => [
         cell: ({ row }) => (
             <Box>
                 <CustomDueTimePicker startAt={row.original.startAt} endAt={row.original.endAt} taskId={row.original.id} />
+            </Box>
+        ),
+        sortingFn: (rowA, rowB, columnId) => {
+            const nameA = rowA.original.assignee?.name || '';
+            const nameB = rowB.original.assignee?.name || '';
+
+            return nameA.localeCompare(nameB);
+        },
+    },
+    {
+        accessorKey: 'timeEstimate',
+        header: 'Time estimate',
+        minSize: 150,
+        size: 150,
+        cell: ({ row }) => (
+            <Box>
+                <CustomTimeEstimateTextField currentTimeEstimate={row.original.timeEstimate} taskId={row.original.id} />
             </Box>
         ),
         sortingFn: (rowA, rowB, columnId) => {

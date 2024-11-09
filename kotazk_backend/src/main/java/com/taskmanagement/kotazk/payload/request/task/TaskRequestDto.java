@@ -24,7 +24,7 @@ public class TaskRequestDto {
     Long reporterId;
     Long statusId;
     Long priorityId;
-    Long timeEstimate;
+    Float timeEstimate;
     Long timeTracking;
     Boolean isCompleted;
     String startAt;

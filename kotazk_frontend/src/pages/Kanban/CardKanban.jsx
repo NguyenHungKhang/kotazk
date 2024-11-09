@@ -44,6 +44,7 @@ const CardKanban = ({ task, isDragging }) => {
     const FilledCheckCircleIcon = allIcons["IconCircleCheckFilled"];
     const DescIcon = allIcons["IconFileText"];
     const SubtaskIcon = allIcons["IconSubtask"];
+    const TimeEstimateIcon = allIcons["IconHourglass"];
 
     const openTaskDialog = () => {
         const taskDialogData = {
@@ -84,6 +85,15 @@ const CardKanban = ({ task, isDragging }) => {
             }
         } catch (error) {
             console.error('Failed to update task:', error);
+        }
+    }
+
+    const convertEstimate = (currentTimeEstimate) => {
+        if (currentTimeEstimate) {
+            const totalMinutes = parseFloat(currentTimeEstimate) * 60;
+            const currentHours = Math.floor(totalMinutes / 60);
+            const currentMinutes = Math.round(totalMinutes % 60);
+            return `${currentHours}h ${currentMinutes}m`
         }
     }
 
@@ -216,6 +226,21 @@ const CardKanban = ({ task, isDragging }) => {
                         mt: 2
                     }}
                 >
+                      {
+                        task?.timeEstimate &&
+
+                        <FieldBoxForKanbanCard px={2} py={1}>
+                            <Tooltip title="Time estimate" placement="top">
+                                <Stack direction='row' alignItems='center' spacing={1}>
+                                    <TimeEstimateIcon color={theme.palette.text.secondary} size={16} />
+                                    <Typography color={theme.palette.text.secondary} variant='body2'>
+                                        {convertEstimate(task.timeEstimate)}
+                                    </Typography>
+                                </Stack>
+                            </Tooltip>
+                        </FieldBoxForKanbanCard>
+
+                    }
                     {
                         task?.endAt &&
 

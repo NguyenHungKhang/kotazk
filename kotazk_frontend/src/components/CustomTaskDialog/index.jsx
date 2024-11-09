@@ -24,6 +24,7 @@ import CustomStatusPicker from '../CustomStatusPicker';
 import CustomTaskTypePicker from '../CustomTaskTypePicker';
 import { CustomLongTextEditor } from '../CustomLongTextEditor';
 import SubtaskComponent from './SubtaskComponent';
+import CustomTimeEstimateTextField from '../CustomTimeEstimateTextField';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -341,41 +342,7 @@ const CustomTaskDialog = () => {
                                 </Stack>
                             </Grid2>
                             <Grid2 item size={9}>
-                                <TextField
-                                    required
-                                    inputProps={{ type: 'number' }}
-                                    size="small"
-                                    id="time_estimate"
-                                    name="time_estimate"
-                                    fullWidth
-                                    placeholder='Empty'
-                                    variant="outlined"
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 2,
-                                            py: 0,  // Removes padding inside the root container
-                                            '& .MuiSelect-select': {
-                                                py: 1,
-                                                px: 1,  // Removes padding between value and border
-                                                minHeight: 'auto',  // Resets the default min height
-                                                lineHeight: 'normal',  // Adjusts line height to prevent extra space
-                                            },
-                                            '& fieldset': {
-                                                borderColor: 'transparent !important',
-                                            },
-                                            '&:hover fieldset': {
-                                                bgcolor: theme.palette.action.hover
-                                            },
-                                            '&:focus fieldset': {
-                                                bgcolor: theme.palette.action.focus
-                                            },
-                                            '& .MuiSelect-icon': {
-                                                display: 'none',  // Hides the arrow icon
-                                            },
-                                        },
-                                    }}
-
-                                />
+                                <CustomTimeEstimateTextField currentTimeEstimate={task?.timeEstimate} taskId={task?.id} />
                             </Grid2>
                         </Grid2>
                     </Card>

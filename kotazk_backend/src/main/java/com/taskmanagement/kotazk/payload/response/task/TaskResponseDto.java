@@ -33,7 +33,7 @@ public class TaskResponseDto {
     Long reporterId;
     StatusResponseDto status;
     PriorityResponseDto priority;
-    Long timeEstimate;
+    Float timeEstimate;
     Long timeTracking;
     Boolean isCompleted;
     Timestamp startAt;

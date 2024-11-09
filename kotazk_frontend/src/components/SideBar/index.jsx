@@ -146,10 +146,12 @@ const SideBar = ({ open, setOpen }) => {
                             <ListItem
                                 key={index}
                                 sx={{
+                                    py: 0.5,
+                                    mt: 1,
                                     borderRadius: 1,
-                                    bgcolor: projectId == project.id ? alpha(theme.palette.primary.main, 0.5) : 'transparent',
+                                    bgcolor: projectId == project.id ? theme.palette.primary.main : 'transparent',
                                     '&:hover': {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                        bgcolor: alpha(theme.palette.primary.main, 0.5),
                                     }
                                 }}
                                 component={Link}
@@ -161,7 +163,7 @@ const SideBar = ({ open, setOpen }) => {
                                 {open && (
                                     <ListItemText
                                         primary={
-                                            <Typography noWrap>
+                                            <Typography noWrap color={projectId == project.id ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
                                                 {project.name}
                                             </Typography>
                                         }

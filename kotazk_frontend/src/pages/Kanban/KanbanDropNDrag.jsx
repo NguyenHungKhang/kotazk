@@ -227,34 +227,17 @@ function KanbanDropNDrag() {
       pr={2}
     >
       <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="ROOT" type="group" direction="horizontal">
-          {(provided) => (
-            <Stack direction='row'
-              spacing={1}
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-              sx={{ overflowX: 'auto' }}
-            >
-              {groupedTasks?.map((gt, index) => (
-                <Draggable
-                  draggableId={gt.id.toString()}
-                  index={index}
-                  key={gt.id}>
-                  {(provided) => (
-                    <Box
-                      {...provided.dragHandleProps}
-                      {...provided.draggableProps}
-                      ref={provided.innerRef}
-                    >
-                      <StoreList {...gt} groupByEntity={gt} groupBy={groupByEntity} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
-                    </Box>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </Stack>
-          )}
-        </Droppable>
+        <Stack
+          direction='row'
+          spacing={1}
+          sx={{ overflowX: 'auto' }}
+        >
+          {groupedTasks?.map((gt, index) => (
+            <Box key={index}>
+              <StoreList {...gt} groupByEntity={gt} groupBy={groupByEntity} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
+            </Box>
+          ))}
+        </Stack>
       </DragDropContext>
       <CustomTaskDialog />
     </Box>
@@ -333,9 +316,6 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                 {/* Action buttons */}
                 <IconButton size="small" onClick={() => setCollapse(!collapse)}>
                   <CollapseIcon fontSize='inherit' stroke={2} size={18} />
-                </IconButton>
-                <IconButton size="small" onClick={() => setOpenGroupByEntityDialog(true)}>
-                  <ManageSettingIcon fontSize='inherit' stroke={2} size={18} />
                 </IconButton>
               </Stack>
             </Card>

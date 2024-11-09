@@ -1,33 +1,23 @@
-import * as React from 'react';
+import { DialogTitle, Slide, Stack, useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import Switch from '@mui/material/Switch';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
-import { setAddTaskDialog } from '../../redux/actions/dialog.action';
-import CustomBasicTextField from '../CustomBasicTextField';
-import CustomNewTaskStatusPicker from '../CustomNewTaskStatusPicker';
+import * as React from 'react';
 import { useState } from 'react';
-import { Slide, Stack, useTheme } from '@mui/material';
-import CustomNewTaskPriorityPicker from '../CustomNewTaskPriorityPicker';
-import CustomNewTaskTaskTypePicker from '../CustomNewTaskTaskTypePicker';
-import CustomNewTaskDueDateTimePicker from '../CustomNewTaskDueDateTimePicker';
-import CustomNewTaskAssigneePicker from '../CustomNewTaskAssigneePicker';
-import * as apiService from '../../api/index'
-import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
-import { updateAndAddArray } from '../../utils/arrayUtil';
+import { useDispatch, useSelector } from 'react-redux';
+import * as apiService from '../../api/index';
+import { setAddTaskDialog } from '../../redux/actions/dialog.action';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from '../../redux/actions/task.action';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import CustomBasicTextField from '../CustomBasicTextField';
+import CustomNewTaskAssigneePicker from '../CustomNewTaskAssigneePicker';
+import CustomNewTaskDueDateTimePicker from '../CustomNewTaskDueDateTimePicker';
+import CustomNewTaskPriorityPicker from '../CustomNewTaskPriorityPicker';
+import CustomNewTaskStatusPicker from '../CustomNewTaskStatusPicker';
+import CustomNewTaskTaskTypePicker from '../CustomNewTaskTaskTypePicker';
 import { NewTaskDescriptionComponent } from './NewTaskDescriptionComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -112,7 +102,7 @@ export default function CustomAddTaskDialog() {
                 }
             }}
         >
-            {/* <DialogTitle>Optional sizes</DialogTitle> */}
+            <DialogTitle>Add new task</DialogTitle>
             <DialogContent
                 sx={{
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
@@ -153,56 +143,14 @@ export default function CustomAddTaskDialog() {
                     <CustomNewTaskDueDateTimePicker setNewTaskStartAt={setStartAt} setNewTaskEndAt={setEndAt} />
                     <CustomNewTaskAssigneePicker setNewTaskAssigneePicker={setAssignee} />
                 </Stack>
-
-                {/* <DialogContentText>
-                    You can set my maximum width and whether to adapt or not.
-                </DialogContentText>
-                <Box
-                    noValidate
-                    component="form"
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        m: 'auto',
-                        width: 'fit-content',
-                    }}
-                >
-                    <FormControl sx={{ mt: 2, minWidth: 120 }}>
-                        <InputLabel htmlFor="max-width">maxWidth</InputLabel>
-                        <Select
-                            autoFocus
-                            value={maxWidth}
-                            onChange={handleMaxWidthChange}
-                            label="maxWidth"
-                            inputProps={{
-                                name: 'max-width',
-                                id: 'max-width',
-                            }}
-                        >
-                            <MenuItem value={false}>false</MenuItem>
-                            <MenuItem value="xs">xs</MenuItem>
-                            <MenuItem value="sm">sm</MenuItem>
-                            <MenuItem value="md">md</MenuItem>
-                            <MenuItem value="lg">lg</MenuItem>
-                            <MenuItem value="xl">xl</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControlLabel
-                        sx={{ mt: 1 }}
-                        control={
-                            <Switch checked={fullWidth} onChange={handleFullWidthChange} />
-                        }
-                        label="Full width"
-                    />
-                </Box> */}
             </DialogContent>
             <DialogActions
                 sx={{
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
                 }}
             >
-                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button>
-                <Button onClick={handleClose} size='small'>Close</Button>
+                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button> 
+                <Button onClick={handleClose} color="error" variant='contained' size='small'>Cancle</Button>
             </DialogActions>
         </Dialog>
     );
