@@ -18,7 +18,7 @@ import { setAddTaskDialog } from '../../redux/actions/dialog.action';
 import CustomBasicTextField from '../CustomBasicTextField';
 import CustomNewTaskStatusPicker from '../CustomNewTaskStatusPicker';
 import { useState } from 'react';
-import { Stack } from '@mui/material';
+import { Slide, Stack, useTheme } from '@mui/material';
 import CustomNewTaskPriorityPicker from '../CustomNewTaskPriorityPicker';
 import CustomNewTaskTaskTypePicker from '../CustomNewTaskTaskTypePicker';
 import CustomNewTaskDueDateTimePicker from '../CustomNewTaskDueDateTimePicker';
@@ -28,10 +28,15 @@ import { setCurrentTaskList } from '../../redux/actions/task.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+    return <Slide direction="down" ref={ref} {...props} />;
+});
+
 export default function CustomAddTaskDialog() {
+    const theme = useTheme();
     const [fullWidth, setFullWidth] = React.useState(true);
     const [maxWidth, setMaxWidth] = React.useState('md');
-    const { open } = useSelector((state) => state.dialog.addTaskDialog);
+    const { open, props } = useSelector((state) => state.dialog.addTaskDialog);
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject);
     const tasks = useSelector((state) => state.task.currentTaskList);
@@ -82,10 +87,29 @@ export default function CustomAddTaskDialog() {
             maxWidth={maxWidth}
             open={open}
             onClose={handleClose}
+            // hideBackdrop={true}
+            TransitionComponent={Transition}
+            PaperProps={{
+                sx: {
+                    bgcolor: `${theme.palette.background.default} !important`,
+                    position: 'fixed',
+                    top: 100,
+                    margin: 0,  // Remove any margin
+                    maxWidth: 800,
+                    padding: 0,  // Remove any padding
+                    borderRadius: 0,  // Remove border-radius to make it flush with edges
+                    transform: 'none',  // Prevent default MUI positioning transform
+                    borderRadius: 2
+                }
+            }}
         >
             {/* <DialogTitle>Optional sizes</DialogTitle> */}
-            <DialogContent>
-                <Box>
+            <DialogContent
+                sx={{
+                    bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
+                }}
+            >
+                <Box mb={2}>
                     <CustomBasicTextField
                         required
                         // defaultValue={task?.name}
@@ -93,6 +117,7 @@ export default function CustomAddTaskDialog() {
                         id="name"
                         name="name"
                         fullWidth
+                        autoFocus
                         placeholder='Name of task...'
                         InputProps={{
                             sx: {
@@ -105,8 +130,8 @@ export default function CustomAddTaskDialog() {
                     />
                 </Box>
                 <Stack direction='row' spacing={2}>
-                    <CustomNewTaskStatusPicker setStatusForNewTask={setStatus} />
-                    <CustomNewTaskTaskTypePicker setNewTaskTaskTypePicker={setTaskType} />
+                    <CustomNewTaskStatusPicker currentStatus={props?.groupBy == "status" ? props.groupByEntity : null} setStatusForNewTask={setStatus} />
+                    <CustomNewTaskTaskTypePicker currentTaskType={props?.groupBy == "taskType" ? props.groupByEntity : null} setNewTaskTaskTypePicker={setTaskType} />
                     <CustomNewTaskPriorityPicker setNewTaskPriority={setPriority} />
                     <CustomNewTaskDueDateTimePicker setNewTaskStartAt={setStartAt} setNewTaskEndAt={setEndAt} />
                     <CustomNewTaskAssigneePicker setNewTaskAssigneePicker={setAssignee} />
@@ -154,7 +179,11 @@ export default function CustomAddTaskDialog() {
                     />
                 </Box> */}
             </DialogContent>
-            <DialogActions>
+            <DialogActions
+                sx={{
+                    bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
+                }}
+            >
                 <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button>
                 <Button onClick={handleClose} size='small'>Close</Button>
             </DialogActions>

@@ -58,11 +58,11 @@ const Project = ({ children }) => {
             } = res.data;
 
             dispatch(setCurrentProject(projectBasicInfoRes));
-            dispatch(setCurrentStatusList(statuses));
-            dispatch(setCurrentTaskTypeList(taskTypes));
-            dispatch(setCurrentPriorityList(priorities));
-            dispatch(setCurrentLabelList(labels));
-            dispatch(setCurrentProjectMemberList(members));
+            // dispatch(setCurrentStatusList(statuses));
+            // dispatch(setCurrentTaskTypeList(taskTypes));
+            // dispatch(setCurrentPriorityList(priorities));
+            // dispatch(setCurrentLabelList(labels));
+            // dispatch(setCurrentProjectMemberList(members));
             dispatch(setCurrentWorkspace(workSpace));
             dispatch(setSectionList(sections));
         } catch (err) {

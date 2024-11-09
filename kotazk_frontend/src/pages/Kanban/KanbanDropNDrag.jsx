@@ -21,6 +21,7 @@ import CustomManageStatus from '../../components/CustomManageStatusDialog';
 import * as TablerIcon from "@tabler/icons-react"
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { applyTaskFilters } from '../../utils/filterUtil';
+import { setAddTaskDialog } from '../../redux/actions/dialog.action';
 
 function KanbanDropNDrag() {
   const theme = useTheme();
@@ -244,7 +245,7 @@ function KanbanDropNDrag() {
                       {...provided.draggableProps}
                       ref={provided.innerRef}
                     >
-                      <StoreList {...gt} groupByEntity={gt} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
+                      <StoreList {...gt} groupByEntity={gt} groupBy={groupByEntity} setOpenGroupByEntityDialog={setOpenGroupByEntityDialog} />
                     </Box>
                   )}
                 </Draggable>
@@ -259,13 +260,32 @@ function KanbanDropNDrag() {
   );
 }
 
-function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupByEntity, setOpenGroupByEntityDialog }) {
+function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupByEntity, groupBy, setOpenGroupByEntityDialog }) {
   const theme = useTheme();
   const [collapse, setCollapse] = useState(false);
   const EditIcon = TablerIcon["IconEditCircle"];
   const CollapseIcon = TablerIcon["IconLayoutSidebarLeftCollapseFilled"];
   const ManageSettingIcon = TablerIcon["IconSettings"]
-  const ColorIcon = TablerIcon["IconSquareRoundedFilled"]
+  const ColorIcon = TablerIcon["IconSquareRoundedFilled"];
+  const dispatch = useDispatch();
+
+  const addTask = () => {
+    console.log({
+      open: true,
+      props: {
+        groupBy: groupBy,
+        groupByEntity: groupByEntity
+      }
+    })
+    dispatch(setAddTaskDialog({
+      open: true,
+      props: {
+        groupBy: groupBy,
+        groupByEntity: groupByEntity
+      }
+    }))
+  }
+
   return (
     <Droppable droppableId={id.toString()}>
       {(provided, snapshot) => (
@@ -280,9 +300,6 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               border: '1px solid',
               borderColor: snapshot.isDraggingOver ? theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600] : 'transparent',
               bgcolor: alpha((theme.palette.mode === "light" ? theme.palette.grey[300] : lighten(theme.palette.grey[900], 0.05)), 0.8)
-              // background: `linear-gradient(180deg, 
-              // ${alpha(theme.palette.background.default, snapshot.isDraggingOver ? 0.3 : 0.25)} 0%,  
-              // ${alpha(groupByEntity?.customization?.backgroundColor || theme.palette.background.default, snapshot.isDraggingOver ? 0.1 : 0.05)} 100%)`
             }}
           >
             <Card
@@ -320,6 +337,31 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                   <ManageSettingIcon fontSize='inherit' stroke={2} size={18} />
                 </IconButton>
               </Stack>
+            </Card>
+
+
+            <Card
+              // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
+              sx={{
+                boxShadow: 0,
+                borderRadius: 2,
+                width: 320,
+                mb: 1,
+                border: '1px solid',
+                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
+              }}
+            >
+              <IconButton
+                onClick={() => addTask()}
+                size='small'
+                sx={{
+                  p: 2,
+                  width: '100%',
+                  borderRadius: 2
+                }}
+              >
+                <AddIcon fontSize='small' />
+              </IconButton>
             </Card>
 
 

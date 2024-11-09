@@ -21,7 +21,8 @@ const CustomHeader = () => {
     const project = useSelector((state) => state.project.currentProject);
     const [members, setMembers] = useState([]);
     useEffect(() => {
-        membersFetch();
+        if (project)
+            membersFetch();
     }, [project]);
 
     const membersFetch = async () => {

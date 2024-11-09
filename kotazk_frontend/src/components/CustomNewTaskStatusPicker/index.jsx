@@ -3,20 +3,52 @@ import CustomPickerSingleObjectDialog from "../CustomPickerSingleObjectDialog";
 import CustomStatus from "../CustomStatus";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import * as apiService from "../../api/index"
 
-const CustomNewTaskStatusPicker = ({ setStatusForNewTask }) => {
-    const statuses = useSelector((state) => state.status.currentStatusList);
+const CustomNewTaskStatusPicker = ({ currentStatus , setStatusForNewTask }) => {
+    // const statuses = useSelector((state) => state.status.currentStatusList);
+    const project = useSelector((state) => state.project.currentProject);
+    const [statuses, setStatuses] = useState(null);
     const [status, setStatus] = useState(null);
+
     useEffect(() => {
-        if (statuses) {
-            const foundStatus = statuses.find(status => status.isFromStart) || statuses.find(status => status.isFromAny);
-            setStatus(foundStatus || null);
+        console.log(currentStatus)
+        if (currentStatus) {
+            setStatus(currentStatus);
+            setStatusForNewTask(currentStatus?.id);
+        } else if (currentStatus == null && statuses?.length > 0) {
+            const foundStatus = statuses.find(s => s.isFromStart == true)
+            setStatus(foundStatus);
             setStatusForNewTask(foundStatus?.id);
         }
-    }, [statuses]);
+    }, [currentStatus, statuses]);
 
     const saveTaskStatus = async (object) => {
         setStatusForNewTask(object?.id);
+    }
+
+    useEffect(() => {
+        if (project) {
+            fecthStatus();
+        }
+    }, [project]);
+
+    const fecthStatus = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.statusAPI.getPageByProject(project?.id, data);
+            if (response?.data) {
+                setStatuses([...response?.data.content]);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
     }
 
     return status == null ? <>Loading</> : (
@@ -24,7 +56,7 @@ const CustomNewTaskStatusPicker = ({ setStatusForNewTask }) => {
             <CustomPickerSingleObjectDialog
 
                 OpenComponent={(props) => (
-                    <CustomStatusOpenComponent {...props} status={status} />
+                    <CustomStatusOpenComponent {...props} status={status}  />
                 )}
                 selectedObject={status}
                 setSelectedObject={setStatus}
@@ -37,11 +69,15 @@ const CustomNewTaskStatusPicker = ({ setStatusForNewTask }) => {
     );
 }
 
-const CustomStatusOpenComponent = ({ onClick, status, isFocusing }) => {
+const CustomStatusOpenComponent = ({ onClick, status, setTarget, isFocusing }) => {
     const theme = useTheme();
+
     return (
         <Box
-            onClick={onClick}
+            ref={setTarget}
+            onClick={() => {
+                onClick();
+            }}
             width='100%'
             sx={{
                 cursor: 'pointer',
