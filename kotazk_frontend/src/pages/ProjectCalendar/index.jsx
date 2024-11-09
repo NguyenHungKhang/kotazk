@@ -81,6 +81,7 @@ const ProjectCalendar = () => {
 
   const initialFetch = async () => {
     const filter = {
+      'pageSize': 50,
       filters: [],
     };
 

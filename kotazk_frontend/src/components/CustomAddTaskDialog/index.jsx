@@ -24,9 +24,11 @@ import CustomNewTaskTaskTypePicker from '../CustomNewTaskTaskTypePicker';
 import CustomNewTaskDueDateTimePicker from '../CustomNewTaskDueDateTimePicker';
 import CustomNewTaskAssigneePicker from '../CustomNewTaskAssigneePicker';
 import * as apiService from '../../api/index'
-import { setCurrentTaskList } from '../../redux/actions/task.action';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
+import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import { NewTaskDescriptionComponent } from './NewTaskDescriptionComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="down" ref={ref} {...props} />;
@@ -39,8 +41,9 @@ export default function CustomAddTaskDialog() {
     const { open, props } = useSelector((state) => state.dialog.addTaskDialog);
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject);
-    const tasks = useSelector((state) => state.task.currentTaskList);
+    const isGroupedList = useSelector((state) => state.task.isGroupedList);
     const [name, setName] = useState(null);
+    const [desc, setDesc] = useState(null);
     const [status, setStatus] = useState(null);
     const [priority, setPriority] = useState(null);
     const [taskType, setTaskType] = useState(null);
@@ -53,10 +56,12 @@ export default function CustomAddTaskDialog() {
     };
 
     const handleAddNewTask = async () => {
+        if (name == null || name.trim() == "")
+            return;
         const data = {
             "name": name,
             "projectId": project?.id,
-            "description": null,
+            "description": desc?.trim() != "" ? desc : null,
             "statusId": status,
             "priorityId": priority,
             "taskTypeId": taskType,
@@ -69,8 +74,12 @@ export default function CustomAddTaskDialog() {
 
             const newTaskResponse = await apiService.taskAPI.create(data);
             if (newTaskResponse?.data) {
-                dispatch(setCurrentTaskList(updateAndAddArray(tasks, [newTaskResponse.data])));
-                dispatch(setAddTaskDialog({ open: false }));
+                if (isGroupedList)
+                    dispatch(addAndUpdateGroupedTaskList(newTaskResponse?.data))
+                else
+                    dispatch(addAndUpdateTaskList(newTaskResponse?.data));
+
+                dispatch(setAddTaskDialog({ open: false, props: null }));
                 dispatch(setSnackbar({
                     content: "Task created successful!",
                     open: true
@@ -109,7 +118,12 @@ export default function CustomAddTaskDialog() {
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
                 }}
             >
-                <Box mb={2}>
+                <Box
+                    mb={2}
+                    bgcolor={getSecondBackgroundColor(theme)}
+                    alignItems={'center'}
+                    borderRadius={2}
+                >
                     <CustomBasicTextField
                         required
                         // defaultValue={task?.name}
@@ -121,15 +135,18 @@ export default function CustomAddTaskDialog() {
                         placeholder='Name of task...'
                         InputProps={{
                             sx: {
-                                fontSize: 16,
-                                fontWeight: 650
+                                fontSize: 14,
+                                fontWeight: 650,
                             }
                         }}
                         onChange={(e) => setName(e.target.value)}
                     // onBlur={() => saveName()}
                     />
                 </Box>
-                <Stack direction='row' spacing={2}>
+                <Box mb={2}>
+                    <NewTaskDescriptionComponent content={desc} setContent={setDesc} />
+                </Box>
+                <Stack direction='row' spacing={2} p={2} bgcolor={getSecondBackgroundColor(theme)} alignItems={'center'} borderRadius={2}>
                     <CustomNewTaskStatusPicker currentStatus={props?.groupBy == "status" ? props.groupByEntity : null} setStatusForNewTask={setStatus} />
                     <CustomNewTaskTaskTypePicker currentTaskType={props?.groupBy == "taskType" ? props.groupByEntity : null} setNewTaskTaskTypePicker={setTaskType} />
                     <CustomNewTaskPriorityPicker setNewTaskPriority={setPriority} />

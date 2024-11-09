@@ -33,8 +33,8 @@ const Workspace = () => {
             <SideBar />
             <div className="flex-1 p-7">
                 <Stack direction='column' height='100%' spacing={2}>
-                    <CustomHeader />
-                    <CustomBreadcrumb />
+                    {/* <CustomHeader />
+                    <CustomBreadcrumb /> */}
                     <Divider
                         sx={{
                             my: 2

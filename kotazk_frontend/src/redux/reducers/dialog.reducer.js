@@ -35,7 +35,7 @@ const DialogReducer = (state = initialState, action) => {
                 ...state,
                 addTaskDialog: {
                     open: action.payload.open != null ? action.payload.open : state.addTaskDialog.open,
-                    props:  action.payload.props != null ? action.payload.props : state.addTaskDialog.props,
+                    props:  action.payload.props
                 }
             };
         case 'SET_DELETE_DIALOG':

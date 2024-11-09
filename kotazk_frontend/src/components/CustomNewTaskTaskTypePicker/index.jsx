@@ -9,7 +9,7 @@ import { updateAndAddArray } from "../../utils/arrayUtil";
 import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 
-const CustomNewTaskTaskTypePicker = ({ currentTaskType = null, setNewTaskTaskTypePicker }) => {
+const CustomNewTaskTaskTypePicker = ({ currentTaskType, setNewTaskTaskTypePicker }) => {
     const project = useSelector((state) => state.project.currentProject);
     const [taskTypes, setTaskTypes] = useState(null);
     const [taskType, setTaskType] = useState(null);

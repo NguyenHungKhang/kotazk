@@ -1,4 +1,4 @@
-import { updateAndAddArray, updateOrAddGroupedTasks } from "../../utils/arrayUtil";
+import { removeGroupedItemById, removeItemById, updateAndAddArray, updateOrAddGroupedTasks } from "../../utils/arrayUtil";
 
 const initialState = {
     currentTaskList: null,
@@ -29,7 +29,7 @@ const TaskReducer = (state = initialState, action) => {
         case 'ADD_OR_UPDATE_TASK_OF_GROUPED_TASK_LIST':
             return {
                 ...state,
-                currentGroupedTaskList: updateOrAddGroupedTasks(state.currentGroupedTaskList, action.payload),
+                currentGroupedTaskList: updateOrAddGroupedTasks(state.currentGroupedTaskList, state.currentGroupedEntity, action.payload),
             };
 
         case 'ADD_OR_UPDATE_TASK_OF_TASK_LIST':
@@ -37,6 +37,17 @@ const TaskReducer = (state = initialState, action) => {
                 ...state,
                 currentTaskList: updateAndAddArray(state.currentTaskList, [action.payload]),
             };
+            case 'REMOVE_TASK_OF_GROUPED_TASK_LIST':
+                return {
+                    ...state,
+                    currentGroupedTaskList: removeGroupedItemById(state.currentGroupedTaskList, action.payload),
+                };
+    
+            case 'REMOVE_TASK_OF_TASK_LIST':
+                return {
+                    ...state,
+                    currentTaskList: removeItemById(state.currentTaskList, action.payload),
+                };
         default:
             return state;
     }

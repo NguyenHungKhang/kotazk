@@ -85,6 +85,7 @@ function KanbanDropNDrag() {
     const data = {
       'sortBy': 'position',
       'sortDirectionAsc': true,
+      'pageSize': 50,
       'filters': filterData || []
     }
 
@@ -338,34 +339,34 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                 </IconButton>
               </Stack>
             </Card>
+            {!collapse &&
 
-
-            <Card
-              // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
-              sx={{
-                boxShadow: 0,
-                borderRadius: 2,
-                width: 320,
-                mb: 1,
-                border: '1px solid',
-                borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
-              }}
-            >
-              <IconButton
-                onClick={() => addTask()}
-                size='small'
+              <Card
+                // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
                 sx={{
-                  p: 2,
-                  width: '100%',
-                  borderRadius: 2
+                  boxShadow: 0,
+                  borderRadius: 2,
+                  width: 320,
+                  mb: 1,
+                  border: '1px solid',
+                  borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
                 }}
               >
-                <AddIcon fontSize='small' />
-              </IconButton>
-            </Card>
+                <IconButton
+                  onClick={() => addTask()}
+                  size='small'
+                  sx={{
+                    p: 2,
+                    width: '100%',
+                    borderRadius: 2
+                  }}
+                >
+                  <AddIcon fontSize='small' />
+                </IconButton>
+              </Card>
+            }
 
-
-            {!collapse && <Box height='calc(100vh - 230px)'
+            {!collapse && <Box height={`calc(100vh - ${theme.spacing(69)})`}
               sx={{
                 pb: 1,
                 overflowY: 'auto',

@@ -12,7 +12,7 @@ import CustomStatusPicker from '../../components/CustomStatusPicker';
 import CustomTaskTypePicker from '../../components/CustomTaskTypePicker';
 import CustomBasicTextField from '../../components/CustomBasicTextField';
 import { useDispatch } from 'react-redux';
-import { setTaskDialog } from '../../redux/actions/dialog.action';
+import { setAddTaskDialog, setTaskDialog } from '../../redux/actions/dialog.action';
 import CustomTaskDialog from '../../components/CustomTaskDialog';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { BorderColor } from '@mui/icons-material';
@@ -21,21 +21,6 @@ import CustomPriorityPicker from '../../components/CustomPrirorityPicker';
 import CustomAssigneePicker from '../../components/CustomAssigneePicker';
 import CustomDueTimePicker from '../../components/CustomDueTimePicker';
 import CustomLabelPicker from '../../components/CustomLabelPicker';
-
-// Define task data and columns in the same file
-const initialTaskData = {
-    todo: [
-        { id: '1', name: 'Task 1', priority: 'High' },
-        { id: '2', name: 'Task 2', priority: 'Medium' },
-    ],
-    inProgress: [
-        { id: '3', name: 'Task 3', priority: 'Low' },
-    ],
-    done: [
-        { id: '4', name: 'Task 4', priority: 'High' },
-    ],
-};
-
 
 
 const basicColumns = (theme) => [
@@ -195,7 +180,6 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
     const DragIcon = TablerIcons["IconGripVertical"]
     const AddFieldIcon = TablerIcons["IconCirclePlus"]
     const MoreIcon = TablerIcons["IconDots"]
-    const PlusTaskIcon = TablerIcons["IconPlus"]
     const DragHeaderIcon = TablerIcons["IconArrowsLeftRight"]
     const ExpandIcon = TablerIcons["IconArrowsMaximize"]
     const SortAscIcon = TablerIcons["IconSortAscending2"];
@@ -435,14 +419,6 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
                     </div>
                 )}
             </Droppable>
-            <Button
-                size={'small'}
-                color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}
-                startIcon={<PlusTaskIcon stroke={2} size={18} />}
-                fullWidth
-            >
-                Add task
-            </Button>
         </Box>
     );
 };
@@ -508,6 +484,7 @@ const ProjectList = () => {
         const data = {
             'sortBy': 'position',
             'sortDirectionAsc': true,
+            'pageSize': 50,
             'filters': filterData || []
         }
 
@@ -673,7 +650,9 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
     const [tasks, setTasks] = useState(null)
     const CollapseIcon = TablerIcons["IconChevronRight"];
     const OpenIcon = TablerIcons["IconChevronDown"];
-    const ColorIcon = TablerIcons["IconSquareRoundedFilled"]
+    const ColorIcon = TablerIcons["IconSquareRoundedFilled"];
+    const PlusTaskIcon = TablerIcons["IconPlus"];
+    const dispatch = useDispatch();
     const [pagination, setPagination] = useState();
     useEffect(() => {
         if (groupedTasks) {
@@ -682,6 +661,16 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
     }, [groupedTasks])
 
     const columns = basicColumns(theme);
+
+    const addTaskDialog = () => {
+        dispatch(setAddTaskDialog({
+            open: true,
+            props: {
+                groupBy: type,
+                groupByEntity: groupedTasks
+            }
+        }))
+    }
 
     return (tasks == null) ? <Skeleton variant='rounded' width={'100%'} height={'100%'} /> : (
         <Box
@@ -716,10 +705,20 @@ const GroupTask = ({ id, name, type, projectId, groupedTasks }) => {
                             overflowX: 'auto',
                             border: '1px solid',
                             borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800],
-                            borderRadius: 2
+                            borderRadius: 2,
+                            bgcolor: `${theme.palette.mode == 'light' ? 'white' : '#1e1e1e'}`
                         }}
                     >
                         <TaskGrid tasks={tasks} columns={columns} droppableId={id} />
+                        <Button
+                            onClick={() => addTaskDialog()}
+                            size={'small'}
+                            color={theme.palette.mode == "light" ? "customBlack" : "customWhite"}
+                            startIcon={<PlusTaskIcon stroke={2} size={18} />}
+                            fullWidth
+                        >
+                            Add task
+                        </Button>
                     </Box>
                 </Box>
             }

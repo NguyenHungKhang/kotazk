@@ -12,32 +12,74 @@ export const updateAndAddArray = (A, B) => {
 };
 
 
-export const updateOrAddGroupedTasks = (groupedTasks, task) => {
+export const updateOrAddGroupedTasks = (groupedTasks, currentGroupedEntity, task) => {
   let taskFound = false;
+  let previousGroupId = null;
 
-  // Iterate through each group in groupedTasks
-  const updatedGroups = groupedTasks.map(group => {
-    const taskIndex = group.items.findIndex(item => item.id === task.id);
+  // Helper function to update or remove a task from its group
+  const updateGroupItems = (group) => {
+    const foundedTask = group.items.find(item => item.id === task.id);
+    if (foundedTask) {
+      const propertyId = task[currentGroupedEntity]?.id;
+      const foundedPropertyId = foundedTask[currentGroupedEntity]?.id;
 
-    if (taskIndex !== -1) {
-      // Update the task if found
-      taskFound = true;
-      return {
-        ...group,
-        items: group.items.map(item => (item.id === task.id ? { ...item, ...task } : item))
-      };
+      if (propertyId && propertyId !== foundedPropertyId) {
+        previousGroupId = group.id; // Record the current group to move the task
+        return {
+          ...group,
+          items: group.items.filter(item => item.id !== task.id) // Remove task
+        };
+      } else {
+        taskFound = true;
+        return {
+          ...group,
+          items: group.items.map(item => (item.id === task.id ? { ...item, ...task } : item))
+        };
+      }
     }
-
     return group;
-  });
+  };
 
-  // If task wasn't found, add it to the first group (or any other rule you define)
-  if (!taskFound && updatedGroups.length > 0) {
-    updatedGroups[0] = {
-      ...updatedGroups[0],
-      items: [...updatedGroups[0].items, task]
-    };
+  // Update groups by processing each group
+  let updatedGroups = groupedTasks.map(updateGroupItems);
+
+  // Add the task to the new group if it was moved
+  if (previousGroupId !== null) {
+    const targetGroup = updatedGroups.find(group => group.id === task[currentGroupedEntity]?.id);
+    if (targetGroup) {
+      updatedGroups = updatedGroups.map(group =>
+        group.id === task[currentGroupedEntity].id
+          ? { ...group, items: [...group.items, task] }
+          : group
+      );
+    } else {
+      console.warn(`Group with id ${task[currentGroupedEntity]?.id} not found.`);
+    }
+  } else if (!taskFound) {
+    // Add the task to the correct group based on the currentGroupedEntity
+    const targetGroup = updatedGroups.find(group => group.id === task[currentGroupedEntity]?.id);
+    if (targetGroup) {
+      updatedGroups = updatedGroups.map(group =>
+        group.id === task[currentGroupedEntity].id
+          ? { ...group, items: [...group.items, task] }
+          : group
+      );
+    } else {
+      console.warn(`Group with id ${task[currentGroupedEntity]?.id} not found. Task was not added.`);
+    }
   }
 
   return updatedGroups;
+};
+
+
+export const removeGroupedItemById = (groupedTasks, itemId) => {
+  return groupedTasks.map(group => ({
+    ...group,
+    items: group.items.filter(item => item.id !== itemId)
+  }));
+};
+
+export const removeItemById = (itemsList, itemId) => {
+  return itemsList.filter(item => item.id !== itemId);
 };

@@ -9,7 +9,7 @@ import { useDispatch } from 'react-redux';
 import { useSelector } from 'react-redux';
 import { setDeleteDialog, setTaskDialog } from '../../redux/actions/dialog.action';
 import * as apiService from '../../api/index'
-import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
+import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, removeItemGroupedTaskList, removeItemTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
 import { setCurrentStatusList } from '../../redux/actions/status.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
@@ -69,14 +69,18 @@ export default function CustomDeleteDialog({ deleteAction }) {
         try {
             const response = await apiService.taskAPI.remove(taskId)
             if (response?.data) {
-                dispatch(setCurrentTaskList(tasks.filter(t => t.id != taskId)));
+                if (isGroupedList)
+                    dispatch(removeItemGroupedTaskList(taskId))
+                else
+                    dispatch(removeItemTaskList(taskId));
+
                 dispatch(setSnackbar({
                     content: "Task deleted successful!",
                     open: true
                 }))
             }
         } catch (error) {
-            console.error('Failed to update task:', error);
+            console.error('Failed to delete task:', error);
         }
 
     }

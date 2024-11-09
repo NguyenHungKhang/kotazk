@@ -12,6 +12,7 @@ import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
@@ -489,6 +490,72 @@ public class ProjectService implements IProjectService {
 
         Page<Project> page = projectRepository.findAll(specification, pageable);
         List<ProjectResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), ProjectResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
+    public PageResponse<ProjectSummaryResponseDto> getSummaryPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", workSpaceId));
+
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST),
+                false
+        );
+
+        Specification<Project> permissionSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Predicate publicProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PUBLIC);
+            Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
+
+            if (currentWorkSpaceMember != null &&
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST)) {
+                privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+            } else {
+                Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);
+                Predicate privateMemberPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+                Predicate userMemberPredicate = criteriaBuilder.equal(projectMemberJoin.get("user").get("id"), userId);
+                Predicate statusPredicate = criteriaBuilder.equal(projectMemberJoin.get("status"), MemberStatus.ACTIVE);
+                privateProjectsPredicate = criteriaBuilder.and(privateMemberPredicate, userMemberPredicate, statusPredicate);
+            }
+
+            return criteriaBuilder.or(publicProjectsPredicate, privateProjectsPredicate);
+        };
+
+        Specification<Project> workSpaceSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Project, WorkSpace> workSpaceJoin = root.join("workSpace");
+            return criteriaBuilder.equal(workSpaceJoin.get("id"), workSpace.getId());
+        };
+
+        Specification<Project> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
+
+        Specification<Project> specification = Specification.where(workSpaceSpecification)
+                .and(permissionSpecification)
+                .and(filterSpecification);
+
+        Page<Project> page = projectRepository.findAll(specification, pageable);
+        List<ProjectSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), ProjectSummaryResponseDto.class);
 
         return new PageResponse<>(
                 dtoList,

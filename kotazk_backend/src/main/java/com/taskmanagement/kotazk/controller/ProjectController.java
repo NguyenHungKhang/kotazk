@@ -8,6 +8,7 @@ import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectSummaryResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.service.IProjectService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
@@ -90,5 +91,11 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<ProjectResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long id) {
         return projectService.getPageByWorkSpace(searchParam, id);
+    }
+
+    @PostMapping("/page/summary-by-work-space/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<ProjectSummaryResponseDto> getSummaryPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long id) {
+        return projectService.getSummaryPageByWorkSpace(searchParam, id);
     }
 }

@@ -7,6 +7,7 @@ import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectSummaryResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 
@@ -25,4 +26,5 @@ public interface IProjectService {
     ProjectResponseDto getOne(Long id);
     ProjectDetailsResponseDto getDetailsOne(Long id);
     PageResponse<ProjectResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId);
+    PageResponse<ProjectSummaryResponseDto> getSummaryPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId);
 }
