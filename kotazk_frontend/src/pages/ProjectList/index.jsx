@@ -228,7 +228,7 @@ const TaskGrid = ({ tasks, columns, droppableId }) => {
         dispatch(setTaskDialog(taskDialogData));
     }
 
-    return (
+    return (tasks == null) ? <Skeleton variant='rounded' width={'100%'} height={'100%'} /> : (
         <Box
             sx={{
                 bgcolor: `${theme.palette.mode == 'light' ? 'white' : '#1e1e1e'}`
@@ -637,7 +637,7 @@ const ProjectList = () => {
         }
     };
 
-    return (
+    return (groupByEntityList == null) ? <Skeleton variant='rounded' width={'100%'} height={'100%'} /> : (
         <Box
             sx={{
                 height: '100%',
