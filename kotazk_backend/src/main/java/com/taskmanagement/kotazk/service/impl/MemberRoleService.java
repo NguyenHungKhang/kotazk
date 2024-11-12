@@ -95,6 +95,8 @@ public class MemberRoleService implements IMemberRoleService {
         } else
             throw new CustomException("Invalid Input!");
 
+        System.out.println(postion);
+
         MemberRole newMemberRole = MemberRole.builder()
                 .workSpace(workSpace)
                 .project(project)
@@ -103,6 +105,8 @@ public class MemberRoleService implements IMemberRoleService {
                 .description(memberRole.getDescription())
                 .projectPermissions(memberRole.getProjectPermissions())
                 .workSpacePermissions(memberRole.getWorkSpacePermissions())
+                .systemInitial(false)
+                .systemRequired(false)
                 .position(postion)
                 .build();
 
