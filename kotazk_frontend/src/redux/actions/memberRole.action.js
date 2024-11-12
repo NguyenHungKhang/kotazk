@@ -1,0 +1,2 @@
+export const setCurrentMemberRoleList = (memberRoleList) => ({type: 'SET_CURRENT_MEMBER_ROLE_LIST', payload: memberRoleList});
+export const delteMemberRole = (memberRoleId) => ({type: 'DELETE_MEMBER_ROLE', payload: memberRoleId});

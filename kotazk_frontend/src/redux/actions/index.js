@@ -11,5 +11,6 @@ import * as SnackbarActions from './snackbar.action'
 import * as FilterActions from './filter.action'
 import * as GrouoByActions from './groupBy.action'
 import * as SectionActions from './section.action'
+import * as MemberRoleActions from './memberRole.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions }
+export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions, MemberRoleActions }

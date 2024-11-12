@@ -1,41 +1,43 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Card, Checkbox, Grid2, IconButton, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Card, Table, TableContainer, useTheme } from '@mui/material';
 import { projectPermissionList } from './projectPermissonList';
-import { getSecondBackgroundColor } from '../../utils/themeUtil';
-import * as apiService from '../../api/index';
-import * as TablerIcon from '@tabler/icons-react'
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
-import AddRoleDialog from './AddRoleDialog';
+import { setCurrentMemberRoleList } from '../../redux/actions/memberRole.action';
+import { setDeleteDialog } from '../../redux/actions/dialog.action';
+import * as apiService from '../../api/index';
+import RoleTableHeader from './RoleTableHeader';
+import RoleTableBody from './RoleTableBody';
 
 const permissions = projectPermissionList;
 
 const ProjectRole = () => {
     const theme = useTheme();
-    const [roles, setRoles] = useState([]);
+    const roles = useSelector(state => state.memberRole.currentMemberRoleList);
+    const project = useSelector(state => state.project.currentProject);
+    const dispatch = useDispatch();
+    const [permissionsState, setPermissionsState] = useState({});
     const [editedFlag, setEditedFlag] = useState([]);
     const [name, setName] = useState(null);
-    const project = useSelector((state) => state.project.currentProject);
-    const SaveIcon = TablerIcon["IconDeviceFloppy"]
-    const RemoveIcon = TablerIcon["IconTrash"];
-    const dispatch = useDispatch();
 
     useEffect(() => {
         if (project) fetchRoles();
     }, [project]);
 
     const fetchRoles = async () => {
-        const response = await apiService.memberRoleAPI.getPageByProject({ filters: [] }, project?.id);
+        const response = await apiService.memberRoleAPI.getPageByProject({
+            filters: [],
+            sortBy: 'position',
+            sortDirectionAsc: true
+        }, project?.id);
+
         if (response?.data?.content) {
-            setRoles(response.data.content);
+            dispatch(setCurrentMemberRoleList(response.data.content));
         }
     };
 
-    const [permissionsState, setPermissionsState] = useState({});
-
     useEffect(() => {
-        if (roles.length > 0) {
+        if (roles != null && roles.length > 0) {
             const initialState = roles.reduce((acc, role) => {
                 acc[role.id] = {};
                 permissions.forEach(({ items }) => {
@@ -60,191 +62,67 @@ const ProjectRole = () => {
         setEditedFlag(prev => ([
             ...prev,
             roleId
-        ]))
-    };
-
-    const handleSaveName = async () => {
-        const data = {
-            "name": name,
-            "projectId": project?.id,
-            "roleFor": "PROJECT"
-        }
-        const response = await apiService.memberRoleAPI.create(data);
-        if (response?.data) {
-            setRoles([...roles, response.data]);
-            dispatch(setSnackbar({
-                content: "Role create successful!",
-                open: true
-            }))
-        }
+        ]));
     };
 
     const handleSavePermissionList = async (role) => {
-        const permissionList = permissionsState[role?.id]
+        const permissionList = permissionsState[role?.id];
         const permissionKeyList = Object.keys(permissionList).filter(k => permissionList[k]);
-        const data = {
-            "projectPermissions": permissionKeyList
-        }
-        const response = await apiService.memberRoleAPI.update(role?.id, data);
+        const response = await apiService.memberRoleAPI.update(role?.id, { "projectPermissions": permissionKeyList });
         if (response?.data) {
             setEditedFlag(prevEditedFlag => prevEditedFlag.filter(ef => ef !== role?.id));
-            setRoles(prevRoles =>
-                prevRoles.map(existingRole =>
-                    existingRole.id === role.id ? response.data : existingRole
-                )
-            );
-            dispatch(setSnackbar({
-                content: "Role update successful!",
-                open: true
-            }))
+            dispatch(setCurrentMemberRoleList(roles.map(existingRole => existingRole.id === role.id ? response.data : existingRole)));
+            dispatch(setSnackbar({ content: "Role update successful!", open: true }));
         }
     };
 
+    const handleSaveName = async () => {
+        const response = await apiService.memberRoleAPI.create({
+            "name": name,
+            "projectId": project?.id,
+            "roleFor": "PROJECT"
+        });
+        if (response?.data) {
+            dispatch(setCurrentMemberRoleList([...roles, response.data]));
+            dispatch(setSnackbar({ content: "Role create successful!", open: true }));
+        }
+    };
 
-    return (
-        <Box
-            sx={{
-                height: '100%'
-            }}
-        >
-            <Card sx={{ height: '100%', overflowY: 'hidden', overflowX: 'auto', p: 2 }}>
+    const handleOpenDeleteDialog = (role) => {
+        dispatch(setDeleteDialog({
+            title: `Delete role "${role?.name}"?`,
+            content: `You're about to permanently delete this role.<br/><br/>Are you sure you want to delete it?`,
+            open: true,
+            deleteType: "DELETE_ROLE",
+            deleteProps: { roleId: role?.id }
+        }));
+    };
+
+    return roles == null ? <>Loading...</> : (
+        <Box sx={{ height: '100%' }}>
+            <Card sx={{ height: '100%', overflowY: 'hidden', overflowX: 'auto'}}>
                 <TableContainer maxHeight={'100%'} component={Box}>
                     <Table stickyHeader size="small" sx={{ tableLayout: 'fixed' }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell
-                                    sx={{
-                                        width: 600,
-                                        position: 'sticky',
-                                        left: 0,
-                                        zIndex: 3,
-                                        backgroundColor: theme.palette.background.paper,
-                                        borderRight: '1px solid grey'
-                                    }}
-                                >
-                                    Permission
-                                </TableCell>
-                                {roles.map(role => (
-                                    <TableCell key={role.id} sx={{ width: 200, borderRight: '1px solid grey' }}>
-                                        <Grid2 container alignItems={'center'}>
-                                            <Grid2 item size={4}>
-                                                <Stack direction={'row'} spacing={1} justifyContent={'flex-start'}>
-                                                    {(!role.systemRequired && editedFlag?.includes(role?.id)) && (
-                                                        <Box>
-                                                            <Button
-                                                                size='small'
-                                                                color={'success'}
-                                                                variant='contained'
-                                                                onClick={() => handleSavePermissionList(role)}
-                                                                sx={{
-                                                                    p: 1,
-                                                                    minWidth: 0
-                                                                }}
-                                                            ><SaveIcon size={18} /></Button>
-                                                        </Box>
-                                                    )}
-                                                </Stack>
-                                            </Grid2>
-                                            <Grid2 item size={4}>
-                                                <Stack direction={'row'} spacing={1} justifyContent={'center'}>
-                                                    <Typography>{role.name}</Typography>
-                                                    {role.systemRequired && (<Typography color='error' noWrap>*</Typography>)}
-                                                </Stack>
-
-                                            </Grid2>
-                                            <Grid2 item size={4}>
-                                                <Stack direction={'row'} spacing={1} justifyContent={'flex-end'}>
-                                                    {!role.systemRequired && (
-                                                        <Box>
-                                                            <Button
-                                                                size='small'
-                                                                color={'error'}
-                                                                variant='contained'
-                                                                sx={{
-                                                                    p: 1,
-                                                                    minWidth: 0
-                                                                }}
-                                                            ><RemoveIcon size={18} /></Button>
-                                                        </Box>
-                                                    )}
-                                                </Stack>
-                                            </Grid2>
-                                        </Grid2>
-                                    </TableCell>
-                                ))}
-                                <TableCell width={100}>
-                                    <AddRoleDialog saveMethod={handleSaveName} name={name} setName={setName} />
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {permissions.map(({ group, items }) => (
-                                <React.Fragment key={group}>
-                                    <TableRow>
-                                        <TableCell
-                                            sx={{
-                                                position: 'sticky',
-                                                left: 0,
-                                                zIndex: 1,
-                                                fontWeight: 'bold',
-                                                backgroundColor: getSecondBackgroundColor(theme)
-                                            }}
-                                        >
-                                            {group}
-                                        </TableCell>
-                                        <TableCell
-                                            colSpan={roles.length + 1}
-                                            sx={{
-                                                backgroundColor: getSecondBackgroundColor(theme)
-                                            }}
-                                        >
-                                        </TableCell>
-                                    </TableRow>
-                                    {items.map(({ key, title, description }) => (
-                                        <TableRow key={key}>
-                                            <TableCell
-                                                sx={{
-                                                    position: 'sticky',
-                                                    left: 0,
-                                                    zIndex: 1,
-                                                    bgcolor: theme.palette.background.paper,
-                                                    borderRight: '1px solid grey'
-                                                }}
-                                            >
-                                                <Typography fontWeight={650}>{title}</Typography>
-                                                <Typography>{description}</Typography>
-                                            </TableCell>
-                                            {roles.map(role => (
-                                                <TableCell key={`${role.id}-${key}`} sx={{ borderRight: '1px solid grey' }}>
-                                                    <Stack alignItems={'center'} justifyContent={'center'}>
-                                                        <Checkbox
-                                                            size='small'
-                                                            disableRipple={role.systemRequired}
-                                                            readOnly={role.systemRequired}
-                                                            checked={permissionsState[role.id]?.[key] || false}
-                                                            onChange={() => !role.systemRequired && handleCheckboxChange(role.id, key)}
-                                                            color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
-                                                            sx={{
-                                                                cursor: role.systemRequired && "not-allowed"
-                                                            }}
-                                                        />
-                                                    </Stack>
-                                                </TableCell>
-                                            ))}
-                                            <TableCell>
-                                                <Stack alignItems={'center'} justifyContent={'center'}>
-                                                    -
-                                                </Stack>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </React.Fragment>
-                            ))}
-                        </TableBody>
+                        <RoleTableHeader
+                            roles={roles}
+                            editedFlag={editedFlag}
+                            handleSavePermissionList={handleSavePermissionList}
+                            handleOpenDeleteDialog={handleOpenDeleteDialog}
+                            handleSaveName={handleSaveName}
+                            name={name}
+                            setName={setName}
+                        />
+                        <RoleTableBody
+                            permissions={permissions}
+                            roles={roles}
+                            permissionsState={permissionsState}
+                            handleCheckboxChange={handleCheckboxChange}
+                            theme={theme}
+                        />
                     </Table>
                 </TableContainer>
             </Card>
-        </Box >
+        </Box>
     );
 };
 

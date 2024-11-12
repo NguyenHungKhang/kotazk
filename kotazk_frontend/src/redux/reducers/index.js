@@ -11,6 +11,7 @@ import SnackbarReducer from "./snackbar.reducer";
 import FilterReducer from "./filter.reducer";
 import GroupByReducer from "./groupBy.reducer";
 import SectionReducer from "./section.reducer";
+import MemberRoleReducer from "./memberRole.reducer";
 import { combineReducers } from 'redux'
 
 const allReducers = {
@@ -26,7 +27,8 @@ const allReducers = {
     snackbar: SnackbarReducer,
     filter: FilterReducer,
     groupBy: GroupByReducer,
-    section: SectionReducer
+    section: SectionReducer,
+    memberRole: MemberRoleReducer
 }
 
 const rootReducer = combineReducers(allReducers);

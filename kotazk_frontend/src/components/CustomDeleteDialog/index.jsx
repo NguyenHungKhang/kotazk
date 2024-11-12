@@ -16,6 +16,7 @@ import { updateAndAddArray } from '../../utils/arrayUtil';
 import { setCurrentTaskTypeList } from '../../redux/actions/taskType.action';
 import { setCurrentPriorityList } from '../../redux/actions/priority.action';
 import { setCurrentLabelList } from '../../redux/actions/label.action';
+import { delteMemberRole } from '../../redux/actions/memberRole.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -60,6 +61,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_MEMBER" && deleteProps != null) {
             const memberId = deleteProps.memberId;
             await handleDeleteMmber(memberId);
+        } else if (deleteType == "DELETE_ROLE" && deleteProps != null) {
+            const roleId = deleteProps.roleId;
+            await handleDeleteMemberRole(roleId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -249,6 +253,21 @@ export default function CustomDeleteDialog({ deleteAction }) {
             }
         } catch (error) {
             console.error('Failed to delete member:', error);
+        }
+    };
+
+    const handleDeleteMemberRole = async (roleId) => {
+        try {
+            const response = await apiService.memberRoleAPI.remove(roleId);
+            if (response?.data) {
+                dispatch(delteMemberRole(roleId));
+                dispatch(setSnackbar({
+                    content: "Member role delete successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete member role:', error);
         }
     };
 
