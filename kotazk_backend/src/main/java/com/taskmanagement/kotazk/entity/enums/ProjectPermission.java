@@ -39,4 +39,5 @@ public enum ProjectPermission {
     ARCHIVE_TASK_FOR_PROJECT, // ADMIN
     RESTORE_TASK_FOR_PROJECT, // ADMIN
     BROWSE_ARCHIVE, // ADMIN
+    MANAGE_REPORT
 }

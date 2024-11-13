@@ -95,7 +95,6 @@ public class Project {
     @OrderBy("name")
     private List<Label> labels;
 
-
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;

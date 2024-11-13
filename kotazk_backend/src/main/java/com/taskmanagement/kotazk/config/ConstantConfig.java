@@ -73,7 +73,8 @@ public class ConstantConfig {
             ProjectPermission.DELETE_OWN_ATTACHMENTS,
             ProjectPermission.ARCHIVE_TASK_FOR_PROJECT,
             ProjectPermission.RESTORE_TASK_FOR_PROJECT,
-            ProjectPermission.BROWSE_ARCHIVE
+            ProjectPermission.BROWSE_ARCHIVE,
+            ProjectPermission.MANAGE_REPORT
     );
 
     public static final EnumSet<ProjectPermission> DEFAULT_PROJECT_EDITOR_PERMISSIONS = EnumSet.of(
