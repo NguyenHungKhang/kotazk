@@ -25,6 +25,7 @@ import ProjectCalendar from "../pages/ProjectCalendar";
 import ProjectList from "../pages/ProjectList";
 import Section from "../pages/Section";
 import ProjectRole from "../pages/ProjectRole";
+import ProjectReport from "../pages/ProjectReport";
 
 const pagesData = [
   {
@@ -51,6 +52,11 @@ const pagesData = [
     path: "/project/:projectId",
     element: <Project><ProjectDashBoard /></Project>,
     title: "project"
+  },
+  {
+    path: "/project/:projectId/report",
+    element: <Project><ProjectReport /></Project>,
+    title: "Report"
   },
   {
     path: "/project/:projectId/member",

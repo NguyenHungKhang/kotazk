@@ -188,7 +188,7 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
-    public RePositionResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId) {
+    public MemberRoleResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
@@ -213,6 +213,13 @@ public class MemberRoleService implements IMemberRoleService {
                 .map(MemberRole::getPosition)
                 .orElse(null);
 
+        if (nextProjectPosition == null && previousProjectPosition == null) {
+            throw new CustomException("Cannot reposition role");
+        }
+
+        nextProjectPosition = (nextProjectPosition != null) ? nextProjectPosition : 0L;
+        previousProjectPosition = (previousProjectPosition != null) ? previousProjectPosition : (long) project.getMemberRoles().size();
+
         MemberRole currentMemberRole = project.getMemberRoles().stream()
                 .filter(memberRole -> memberRole.getId().equals(rePositionRequestDto.getCurrentItemId()))
                 .findFirst()
@@ -222,10 +229,7 @@ public class MemberRoleService implements IMemberRoleService {
 
         MemberRole savedMemberRole = memberRoleRepository.save(currentMemberRole);
 
-        return RePositionResponseDto.builder()
-                .id(savedMemberRole.getId())
-                .newPosition(savedMemberRole.getPosition())
-                .build();
+        return ModelMapperUtil.mapOne(currentMemberRole, MemberRoleResponseDto.class);
     }
 
     @Override

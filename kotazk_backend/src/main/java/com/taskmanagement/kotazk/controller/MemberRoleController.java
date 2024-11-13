@@ -70,7 +70,7 @@ public class MemberRoleController {
 
     @PostMapping("/re-position/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public RePositionResponseDto rePositionByProject(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long projectId) {
+    public MemberRoleResponseDto rePositionByProject(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long projectId) {
         return memberRoleService.rePositionByProject(rePositionRequestDto, projectId);
     }
 

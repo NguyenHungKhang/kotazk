@@ -9,3 +9,5 @@ export const update = async (memberId, data) => await axiosInstance.put(`${ORIGI
 export const remove = async (memberId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${memberId}`);
 
 export const getPageByProject = async (data, projectId) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
+
+export const reposition = async (data, projectId) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/re-position/by-project/${projectId}`, data);
