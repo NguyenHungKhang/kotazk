@@ -5,14 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class ProjectReportItemResponseDto {
+public class ProjectReportItemNameAndColorResponseDto {
     String name;
-    Map<String, String> additionalFields = new HashMap<>();
+    String color;
 }

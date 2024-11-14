@@ -10,6 +10,7 @@ import com.taskmanagement.kotazk.payload.request.projectReport.ProjectReportRequ
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
+import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemNameAndColorResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportResponseDto;
 import com.taskmanagement.kotazk.repository.*;
@@ -123,8 +124,7 @@ public class ProjectReportService implements IProjectReportService {
         Member currentMember = null;
         if (!isAdmin) memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
         ProjectReportResponseDto projectReportResponseDto = ModelMapperUtil.mapOne(currentProjectReport, ProjectReportResponseDto.class);
-        List<ProjectReportItemResponseDto> projectReportItems = getProjectReportItems(projectReportResponseDto, project);
-        projectReportResponseDto.setItems(projectReportItems);
+        getProjectReportItems(projectReportResponseDto, project);
         return projectReportResponseDto;
     }
 
@@ -135,21 +135,45 @@ public class ProjectReportService implements IProjectReportService {
 
     // Utility func
 
-    private List<ProjectReportItemResponseDto> getProjectReportItems(ProjectReportResponseDto projectReportResponseDto, Project project) {
+    private void getProjectReportItems(ProjectReportResponseDto projectReportResponseDto, Project project) {
         List<ProjectReportItemResponseDto> result = new ArrayList<>();
+        List<ProjectReportItemNameAndColorResponseDto> colorsAndNames = new ArrayList<>();
+        Boolean completedGroupedColorsAndNames = false;
 
         if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.STATUS)) {
             List<Status> xObject = project.getStatuses();
             for (Status s : xObject) {
-                List<Task> taskObject = project.getTasks()
+                List<Task> tasks = project.getTasks()
                         .stream()
                         .filter(t -> Objects.equals(t.getStatus().getId(), s.getId()))
                         .toList();
-                String yObject = calculateYObject(projectReportResponseDto, taskObject);
-
                 ProjectReportItemResponseDto newProjectReportItemResponseDto = new ProjectReportItemResponseDto();
+                String yObject;
+                List<?> groupedByObjects = projectReportResponseDto.getGroupedBy() != null ? getGroupedByList(project, projectReportResponseDto.getGroupedBy()) : null;
+
+                if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
+                    if(!completedGroupedColorsAndNames && projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+                        colorsAndNames = getGroupFieldNamesAndColors(projectReportResponseDto, groupedByObjects);
+                        completedGroupedColorsAndNames = true;
+                    }
+
+                    for (Object o : groupedByObjects) {
+                        Map<String, Object> groupedData = handleGroupedTasks(projectReportResponseDto, project, tasks, o);
+                        groupedData.forEach((key, value) -> {
+                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value.toString());
+                        });
+                    }
+                } else {
+                    yObject = calculateYObject(projectReportResponseDto, tasks);
+                    newProjectReportItemResponseDto.getAdditionalFields().put(s.getName(), yObject);
+                    ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
+                    colorAndName.setName(s.getName());
+                    if(projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR))
+                        colorAndName.setColor(s.getCustomization().getBackgroundColor());
+                    colorsAndNames.add(colorAndName);
+                }
+
                 newProjectReportItemResponseDto.setName(s.getName());
-                newProjectReportItemResponseDto.getAdditionalFields().put("status", yObject);
                 result.add(newProjectReportItemResponseDto);
             }
         } else if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.PRIORITY)) {
@@ -165,15 +189,23 @@ public class ProjectReportService implements IProjectReportService {
                 List<?> groupedByObjects = projectReportResponseDto.getGroupedBy() != null ? getGroupedByList(project, projectReportResponseDto.getGroupedBy()) : null;
 
                 if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
+                    if(!completedGroupedColorsAndNames && projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+                        colorsAndNames = getGroupFieldNamesAndColors(projectReportResponseDto, groupedByObjects);
+                        completedGroupedColorsAndNames = true;
+                    }
                     for (Object o : groupedByObjects) {
                         Map<String, Object> groupedData = handleGroupedTasks(projectReportResponseDto, project, tasks, o);
                         groupedData.forEach((key, value) -> {
-                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value);
+                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value.toString());
                         });
                     }
                 } else {
                     yObject = calculateYObject(projectReportResponseDto, tasks);
-                    newProjectReportItemResponseDto.getAdditionalFields().put("priority", yObject);
+                    newProjectReportItemResponseDto.getAdditionalFields().put(p.getName(), yObject);
+                    ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
+                    if(projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR))
+                        colorAndName.setColor(p.getCustomization().getBackgroundColor());
+                    colorsAndNames.add(colorAndName);
                 }
 
                 newProjectReportItemResponseDto.setName(p.getName());
@@ -182,8 +214,8 @@ public class ProjectReportService implements IProjectReportService {
         }
 
         // More conditions for other group types (ASSIGNEE, TASK_TYPE, etc.) can go here...
-
-        return result;
+        projectReportResponseDto.setColorsAndNames(colorsAndNames);
+        projectReportResponseDto.setItems(result);
     }
 
     private Map<String, Object> handleGroupedTasks(ProjectReportResponseDto projectReportResponseDto, Project project, List<Task> tasks, Object o) {
@@ -218,6 +250,51 @@ public class ProjectReportService implements IProjectReportService {
         }
 
         return groupedData;
+    }
+
+    private List<ProjectReportItemNameAndColorResponseDto> getGroupFieldNamesAndColors(ProjectReportResponseDto projectReportResponseDto, List<?> groupedByObjects) {
+        List<ProjectReportItemNameAndColorResponseDto> result = new ArrayList<>();
+
+        if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.STATUS)) {
+            for(Object o : groupedByObjects) {
+                Status s = (Status) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor(s.getCustomization().getBackgroundColor());
+                current.setName(s.getName());
+                result.add(current);
+            }
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.TASK_TYPE)) {
+            for(Object o : groupedByObjects) {
+                TaskType t = (TaskType) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor(t.getCustomization().getBackgroundColor());
+                current.setName(t.getName());
+                result.add(current);
+            }
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.PRIORITY)) {
+            for(Object o : groupedByObjects) {
+                Priority p = (Priority) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor(p.getCustomization().getBackgroundColor());
+                current.setName(p.getName());
+                result.add(current);
+            }
+            }
+//        else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.ASSIGNEE)) {
+//            groupedByTasks = tasks.stream().filter(t -> t.getAssignee() != null && Objects.equals(t.getAssignee().getId(), ((Member) o).getId())).collect(Collectors.toList());
+//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+//            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
+//        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.CREATOR)) {
+//            groupedByTasks = tasks.stream().filter(t -> t.getCreator() != null && Objects.equals(t.getCreator().getId(), ((Member) o).getId())).collect(Collectors.toList());
+//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+//            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
+//        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.IS_COMPLETED)) {
+//            groupedByTasks = tasks.stream().filter(t -> Objects.equals(t.getIsCompleted(), ((Boolean) o))).collect(Collectors.toList());
+//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+//            groupedData.put(((Boolean) o) ? "Completed" : "Not complete", yObject);
+//        }
+
+        return result;
     }
 
 

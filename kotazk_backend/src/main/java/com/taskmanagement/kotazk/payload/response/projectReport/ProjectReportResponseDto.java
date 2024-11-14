@@ -34,4 +34,5 @@ public class ProjectReportResponseDto {
     Timestamp deletedAt;
 
     List<ProjectReportItemResponseDto> items = new ArrayList<>();
+    List<ProjectReportItemNameAndColorResponseDto> colorsAndNames = new ArrayList<>();
 }
