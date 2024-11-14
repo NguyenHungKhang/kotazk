@@ -28,6 +28,13 @@ public class ProjectReport {
     @JoinColumn(name = "project_id")
     private Project project;
 
+    @ManyToOne
+    @JoinColumn(name = "section_id")
+    private Section section;
+
+    @Column(name = "position")
+    private Long position;
+
     @Column(name = "name", nullable = false)
     private String name;
 

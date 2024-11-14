@@ -19,6 +19,7 @@ import java.sql.Timestamp;
 public class ProjectReportRequestDto {
     Long workspaceId;
     Long projectId;
+    Long sectionId;
     String name;
     ProjectColorModeReport colorMode;
     ProjectReportType type;

@@ -18,5 +18,5 @@ public interface IProjectReportService {
     Boolean softDelete(Long id);
     RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
     ProjectReportResponseDto getOne(Long id);
-    PageResponse<ProjectReportResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<ProjectReportResponseDto> getPageBySection(SearchParamRequestDto searchParam, Long sectionId);
 }

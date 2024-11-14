@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,6 +18,8 @@ public class ProjectReportResponseDto {
     Long id;
     Long workspaceId;
     Long projectId;
+    Long sectionId;
+    Long position;
     String name;
     ProjectColorModeReport colorMode;
     ProjectReportType type;
@@ -28,4 +32,6 @@ public class ProjectReportResponseDto {
     Timestamp createdAt;
     Timestamp updatedAt;
     Timestamp deletedAt;
+
+    List<ProjectReportItemResponseDto> items = new ArrayList<>();
 }

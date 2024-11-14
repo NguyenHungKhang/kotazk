@@ -10,11 +10,9 @@ import com.taskmanagement.kotazk.payload.request.projectReport.ProjectReportRequ
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
+import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportResponseDto;
-import com.taskmanagement.kotazk.repository.IPriorityRepository;
-import com.taskmanagement.kotazk.repository.IProjectReportRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.ITaskRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IPriorityService;
@@ -24,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectReportService implements IProjectReportService {
@@ -31,6 +30,8 @@ public class ProjectReportService implements IProjectReportService {
     private IProjectRepository projectRepository;
     @Autowired
     private IProjectReportRepository projectReportRepository;
+    @Autowired
+    private ISectionRepository sectionRepository;
     @Autowired
     private ITaskRepository taskRepository;
     @Autowired
@@ -50,19 +51,21 @@ public class ProjectReportService implements IProjectReportService {
         System.out.println(projectReportRequestDto);
         User currentUser = SecurityUtil.getCurrentUser();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
-        Project project = projectRepository.findById(projectReportRequestDto.getProjectId())
-                .filter(p -> isAdmin || p.getDeletedAt() == null)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectReportRequestDto.getProjectId()));
+        Section section = sectionRepository.findById(projectReportRequestDto.getSectionId())
+                .filter(s -> (isAdmin || s.getDeletedAt() == null) && s.getType().equals(SectionType.REPORT))
+                .orElseThrow(() -> new ResourceNotFoundException("Section", "id", projectReportRequestDto.getSectionId()));
+        Project project = section.getProject();
         WorkSpace workSpace = project.getWorkSpace();
 
         Member currentMember = checkManageReport(currentUser, project);
 
         ProjectReportRequestDto validatedprojectReportRequestDto = checkReportValid(projectReportRequestDto);
 
-        if(validatedprojectReportRequestDto == null)
+        if (validatedprojectReportRequestDto == null)
             throw new CustomException("Invalid input");
 
         ProjectReport newProjectReport = ProjectReport.builder()
+                .section(section)
                 .project(project)
                 .workspace(workSpace)
                 .name(validatedprojectReportRequestDto.getName())
@@ -75,6 +78,7 @@ public class ProjectReportService implements IProjectReportService {
                 .toWhen(validatedprojectReportRequestDto.getToWhen())
                 .between(validatedprojectReportRequestDto.getBetween())
                 .type(validatedprojectReportRequestDto.getType())
+                .position(RepositionUtil.calculateNewLastPosition(section.getProjectReports().size()))
                 .build();
 
         ProjectReport savedProjectReport = projectReportRepository.save(newProjectReport);
@@ -118,16 +122,135 @@ public class ProjectReportService implements IProjectReportService {
 
         Member currentMember = null;
         if (!isAdmin) memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
-
-        return ModelMapperUtil.mapOne(currentProjectReport, ProjectReportResponseDto.class);
+        ProjectReportResponseDto projectReportResponseDto = ModelMapperUtil.mapOne(currentProjectReport, ProjectReportResponseDto.class);
+        List<ProjectReportItemResponseDto> projectReportItems = getProjectReportItems(projectReportResponseDto, project);
+        projectReportResponseDto.setItems(projectReportItems);
+        return projectReportResponseDto;
     }
 
     @Override
-    public PageResponse<ProjectReportResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId) {
+    public PageResponse<ProjectReportResponseDto> getPageBySection(SearchParamRequestDto searchParam, Long sectionId) {
         return null;
     }
 
     // Utility func
+
+    private List<ProjectReportItemResponseDto> getProjectReportItems(ProjectReportResponseDto projectReportResponseDto, Project project) {
+        List<ProjectReportItemResponseDto> result = new ArrayList<>();
+
+        if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.STATUS)) {
+            List<Status> xObject = project.getStatuses();
+            for (Status s : xObject) {
+                List<Task> taskObject = project.getTasks()
+                        .stream()
+                        .filter(t -> Objects.equals(t.getStatus().getId(), s.getId()))
+                        .toList();
+                String yObject = calculateYObject(projectReportResponseDto, taskObject);
+
+                ProjectReportItemResponseDto newProjectReportItemResponseDto = new ProjectReportItemResponseDto();
+                newProjectReportItemResponseDto.setName(s.getName());
+                newProjectReportItemResponseDto.getAdditionalFields().put("status", yObject);
+                result.add(newProjectReportItemResponseDto);
+            }
+        } else if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.PRIORITY)) {
+            List<Priority> xObject = project.getPriorities();
+            for (Priority p : xObject) {
+                List<Task> tasks = project.getTasks()
+                        .stream()
+                        .filter(t -> t.getPriority() != null && Objects.equals(t.getPriority().getId(), p.getId()))
+                        .toList();
+
+                ProjectReportItemResponseDto newProjectReportItemResponseDto = new ProjectReportItemResponseDto();
+                String yObject;
+                List<?> groupedByObjects = projectReportResponseDto.getGroupedBy() != null ? getGroupedByList(project, projectReportResponseDto.getGroupedBy()) : null;
+
+                if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
+                    for (Object o : groupedByObjects) {
+                        Map<String, Object> groupedData = handleGroupedTasks(projectReportResponseDto, project, tasks, o);
+                        groupedData.forEach((key, value) -> {
+                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value);
+                        });
+                    }
+                } else {
+                    yObject = calculateYObject(projectReportResponseDto, tasks);
+                    newProjectReportItemResponseDto.getAdditionalFields().put("priority", yObject);
+                }
+
+                newProjectReportItemResponseDto.setName(p.getName());
+                result.add(newProjectReportItemResponseDto);
+            }
+        }
+
+        // More conditions for other group types (ASSIGNEE, TASK_TYPE, etc.) can go here...
+
+        return result;
+    }
+
+    private Map<String, Object> handleGroupedTasks(ProjectReportResponseDto projectReportResponseDto, Project project, List<Task> tasks, Object o) {
+        Map<String, Object> groupedData = new HashMap<>();
+        List<Task> groupedByTasks = tasks;
+        String yObject;
+
+        if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.STATUS)) {
+            groupedByTasks = tasks.stream().filter(t -> Objects.equals(t.getStatus().getId(), ((Status) o).getId())).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((Status) o).getName(), yObject);
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.TASK_TYPE)) {
+            groupedByTasks = tasks.stream().filter(t -> Objects.equals(t.getTaskType().getId(), ((TaskType) o).getId())).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((TaskType) o).getName(), yObject);
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.PRIORITY)) {
+            groupedByTasks = tasks.stream().filter(t -> t.getPriority() != null && Objects.equals(t.getPriority().getId(), ((Priority) o).getId())).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((Priority) o).getName(), yObject);
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.ASSIGNEE)) {
+            groupedByTasks = tasks.stream().filter(t -> t.getAssignee() != null && Objects.equals(t.getAssignee().getId(), ((Member) o).getId())).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.CREATOR)) {
+            groupedByTasks = tasks.stream().filter(t -> t.getCreator() != null && Objects.equals(t.getCreator().getId(), ((Member) o).getId())).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.IS_COMPLETED)) {
+            groupedByTasks = tasks.stream().filter(t -> Objects.equals(t.getIsCompleted(), ((Boolean) o))).collect(Collectors.toList());
+            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
+            groupedData.put(((Boolean) o) ? "Completed" : "Not complete", yObject);
+        }
+
+        return groupedData;
+    }
+
+
+    private String calculateYObject(ProjectReportResponseDto projectReportResponseDto, List<Task> groupedByTasks) {
+        if (projectReportResponseDto.getYType().equals(ProjectYTypeReport.TASK_COUNT)) {
+            return String.valueOf(groupedByTasks.size());
+        } else {
+            double sum = groupedByTasks.stream()
+                    .filter(task -> task.getTimeEstimate() != null)
+                    .mapToDouble(Task::getTimeEstimate)
+                    .sum();
+            return String.valueOf(sum);
+        }
+    }
+
+    private List<?> getGroupedByList(Project project, ProjectGroupByReport projectGroupByReport) {
+        switch (projectGroupByReport) {
+            case STATUS:
+                return project.getStatuses();
+            case PRIORITY:
+                return project.getPriorities();
+            case TASK_TYPE:
+                return project.getTaskTypes();
+            case ASSIGNEE:
+                return project.getMembers();
+            case CREATOR:
+                return project.getMembers();
+            case IS_COMPLETED:
+                return new ArrayList<>(List.of("Completed", "Not completed"));
+            default:
+                return Collections.emptyList();
+        }
+    }
 
     private Member checkManageReport(User currentUser, Project project) {
         Member currentMember = null;
@@ -175,12 +298,12 @@ public class ProjectReportService implements IProjectReportService {
                                 ProjectXTypeReport.YEAR)
                         .contains(projectReportRequestDto.getXType()))
                     return null;
-                if(projectReportRequestDto.getSubXType() == ProjectSubXTypeReport.BETWEEN && projectReportRequestDto.getBetween() != null) {
+                if (projectReportRequestDto.getSubXType() == ProjectSubXTypeReport.BETWEEN && projectReportRequestDto.getBetween() != null) {
                     projectReportRequestDto.setFromWhen(null);
                     projectReportRequestDto.setToWhen(null);
                     return projectReportRequestDto;
-                } else if(projectReportRequestDto.getSubXType() == ProjectSubXTypeReport.FROM_TO && projectReportRequestDto.getFromWhen() != null && projectReportRequestDto.getToWhen() != null) {
-                    if(projectReportRequestDto.getFromWhen().before(projectReportRequestDto.getToWhen()))
+                } else if (projectReportRequestDto.getSubXType() == ProjectSubXTypeReport.FROM_TO && projectReportRequestDto.getFromWhen() != null && projectReportRequestDto.getToWhen() != null) {
+                    if (projectReportRequestDto.getFromWhen().before(projectReportRequestDto.getToWhen()))
                         return null;
                     projectReportRequestDto.setBetween(null);
                     return projectReportRequestDto;
