@@ -218,12 +218,12 @@ public class ProjectReportService implements IProjectReportService {
                 }
                 for (Object groupObj : groupedByObjects) {
                     handleGroupedTasks(reportDto, project, tasks, groupObj)
-                            .forEach((key, value) -> itemDto.getAdditionalFields().put(key, value.toString()));
+                            .forEach((key, value) -> itemDto.getAdditionalFields().put(key, Double.valueOf(value.toString())));
                 }
             } else {
                 String yObject = calculateYObject(reportDto, tasks);
                 String name = getNameFromXObject(xObject);
-                itemDto.getAdditionalFields().put(reportDto.getXType().toString(), yObject);
+                itemDto.getAdditionalFields().put(reportDto.getXType().toString(), Double.valueOf(yObject));
                 addColorAndName(colorsAndNames, xObject, reportDto);
             }
 

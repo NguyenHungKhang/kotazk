@@ -26,6 +26,7 @@ import ProjectList from "../pages/ProjectList";
 import Section from "../pages/Section";
 import ProjectRole from "../pages/ProjectRole";
 import ProjectReport from "../pages/ProjectReport";
+import DnDGrid from "../playgrounds/components/DndGrid";
 
 const pagesData = [
   {
@@ -106,6 +107,11 @@ const pagesData = [
   {
     path: "/playground/gantt",
     element: <TestGantt />,
+    title: "playground"
+  },
+  {
+    path: "/playground/dnd-grid",
+    element: <DnDGrid />,
     title: "playground"
   },
   {

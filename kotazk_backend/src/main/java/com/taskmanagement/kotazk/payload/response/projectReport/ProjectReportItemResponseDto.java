@@ -14,5 +14,5 @@ import java.util.Map;
 @Builder
 public class ProjectReportItemResponseDto {
     String name;
-    Map<String, String> additionalFields = new HashMap<>();
+    Map<String, Double> additionalFields = new HashMap<>();
 }
