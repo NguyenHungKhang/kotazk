@@ -11,7 +11,7 @@ import * as TablerIcons from '@tabler/icons-react'
 import { useSelector, useDispatch } from 'react-redux';
 import * as apiService from '../../api/index'
 import { useState } from 'react';
-import { Link, useParams, useNavigate  } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import AddSectionDialog from './AddSectionDialog';
 import { setSection } from '../../redux/actions/section.action';
 
@@ -20,6 +20,7 @@ const BoardIcon = TablerIcons["IconLayoutKanbanFilled"];
 const CalendarIcon = TablerIcons["IconCalendarMonth"];
 const TimelineIcon = TablerIcons["IconTimelineEvent"];
 const FileIcon = TablerIcons["IconPaperclip"];
+const ReportIcon = TablerIcons["IconChartInfographic"];
 
 
 const AntTabs = styled(Tabs)(({ theme }) => ({
@@ -106,11 +107,13 @@ export default function CustomTab() {
             case "KANBAN":
                 return (<BoardIcon size={18} />)
             case "LIST":
-                return (<ListIcon size={18}  />)
+                return (<ListIcon size={18} />)
             case "CALENDAR":
-                return (<CalendarIcon size={18}  />)
+                return (<CalendarIcon size={18} />)
             case "FILE":
-                return (<FileIcon size={18}  />)
+                return (<FileIcon size={18} />)
+            case "REPORT":
+                return (<ReportIcon size={18} />)
         }
     }
 

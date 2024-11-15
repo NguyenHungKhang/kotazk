@@ -5,6 +5,7 @@ import Kanban from "../Kanban";
 import ProjectList from "../ProjectList";
 import ProjectCalendar from "../ProjectCalendar";
 import { useParams } from "react-router-dom";
+import ProjectReport from "../ProjectReport";
 
 const Section = () => {
     const { sectionId } = useParams();
@@ -23,6 +24,7 @@ const Section = () => {
             {section?.type == "KANBAN" && <Kanban />}
             {section?.type == "LIST" && <ProjectList />}
             {section?.type == "CALENDAR" && <ProjectCalendar />}
+            {section?.type == "REPORT" && <ProjectReport />}
         </>
     );
 }

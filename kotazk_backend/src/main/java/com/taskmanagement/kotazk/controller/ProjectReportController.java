@@ -1,7 +1,10 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.projectReport.ProjectReportRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
+import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.service.IProjectReportService;
@@ -30,5 +33,12 @@ public class ProjectReportController {
     @ResponseStatus(HttpStatus.OK)
     public ProjectReportResponseDto getOne(@PathVariable Long id) {
         return projectReportService.getOne(id);
+    }
+
+
+    @PostMapping("/page/by-section/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<ProjectReportResponseDto> getPageByProject(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long id) {
+        return projectReportService.getPageBySection(searchParam, id);
     }
 }

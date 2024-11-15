@@ -53,11 +53,11 @@ const pagesData = [
     element: <Project><ProjectDashBoard /></Project>,
     title: "project"
   },
-  {
-    path: "/project/:projectId/report",
-    element: <Project><ProjectReport /></Project>,
-    title: "Report"
-  },
+  // {
+  //   path: "/project/:projectId/report",
+  //   element: <Project><ProjectReport /></Project>,
+  //   title: "Report"
+  // },
   {
     path: "/project/:projectId/member",
     element: <Project><ProjectMember /></Project>,

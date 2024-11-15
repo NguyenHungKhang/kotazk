@@ -22,6 +22,7 @@ const BoardIcon = TablerIcons["IconLayoutKanbanFilled"];
 const CalendarIcon = TablerIcons["IconCalendarMonth"];
 const TimelineIcon = TablerIcons["IconTimelineEvent"];
 const FileIcon = TablerIcons["IconPaperclip"];
+const ReportIcon = TablerIcons["IconChartInfographic"];
 
 const SectionTypeMenu = [
     {
@@ -38,6 +39,11 @@ const SectionTypeMenu = [
         type: "CALENDAR",
         name: "Calendar",
         icon: <CalendarIcon size={18} />
+    },
+    {
+        type: "REPORT",
+        name: "Report",
+        icon: <ReportIcon size={18} />
     },
     // {
     //     type: "TIMELINE",

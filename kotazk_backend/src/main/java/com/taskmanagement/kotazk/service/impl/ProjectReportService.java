@@ -13,13 +13,23 @@ import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemNameAndColorResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportResponseDto;
+import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IPriorityService;
 import com.taskmanagement.kotazk.service.IProjectReportService;
 import com.taskmanagement.kotazk.util.*;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -38,7 +48,7 @@ public class ProjectReportService implements IProjectReportService {
     @Autowired
     private IMemberService memberService = new MemberService();
     @Autowired
-    private final BasicSpecificationUtil<Priority> specificationUtil = new BasicSpecificationUtil<>();
+    private final BasicSpecificationUtil<ProjectReport> specificationUtil = new BasicSpecificationUtil<>();
     @Autowired
     private TimeUtil timeUtil;
 
@@ -130,93 +140,134 @@ public class ProjectReportService implements IProjectReportService {
 
     @Override
     public PageResponse<ProjectReportResponseDto> getPageBySection(SearchParamRequestDto searchParam, Long sectionId) {
-        return null;
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Section section = sectionRepository.findById(sectionId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Section", "id", sectionId));
+        Project project = Optional.of(section.getProject())
+                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", section.getProject().getId()));
+        WorkSpace workSpace = Optional.of(project.getWorkSpace())
+                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
+
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
+
+        Specification<ProjectReport> projectSpecification = (Root<ProjectReport> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<ProjectReport, Section> projectJoin = root.join("section");
+            return criteriaBuilder.equal(projectJoin.get("id"), section.getId());
+        };
+
+        Specification<ProjectReport> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<ProjectReport> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
+
+        Page<ProjectReport> page = projectReportRepository.findAll(specification, pageable);
+        List<ProjectReportResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), ProjectReportResponseDto.class);
+        dtoList = dtoList.stream()
+                .map(dtoItem -> {
+                    getProjectReportItems(dtoItem, project);
+                    return dtoItem;
+                }).toList();
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
     }
 
     // Utility func
 
-    private void getProjectReportItems(ProjectReportResponseDto projectReportResponseDto, Project project) {
-        List<ProjectReportItemResponseDto> result = new ArrayList<>();
+    private void getProjectReportItems(ProjectReportResponseDto reportDto, Project project) {
+        List<ProjectReportItemResponseDto> reportItems = new ArrayList<>();
         List<ProjectReportItemNameAndColorResponseDto> colorsAndNames = new ArrayList<>();
-        Boolean completedGroupedColorsAndNames = false;
+        boolean colorsGenerated = false;
 
-        if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.STATUS)) {
-            List<Status> xObject = project.getStatuses();
-            for (Status s : xObject) {
-                List<Task> tasks = project.getTasks()
-                        .stream()
-                        .filter(t -> Objects.equals(t.getStatus().getId(), s.getId()))
-                        .toList();
-                ProjectReportItemResponseDto newProjectReportItemResponseDto = new ProjectReportItemResponseDto();
-                String yObject;
-                List<?> groupedByObjects = projectReportResponseDto.getGroupedBy() != null ? getGroupedByList(project, projectReportResponseDto.getGroupedBy()) : null;
+        List<?> xObjects = switch (reportDto.getXType()) {
+            case STATUS -> project.getStatuses();
+            case PRIORITY -> project.getPriorities();
+            case TASK_TYPE -> project.getTaskTypes();
+            default -> throw new IllegalArgumentException("Unsupported XType");
+        };
 
-                if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
-                    if(!completedGroupedColorsAndNames && projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
-                        colorsAndNames = getGroupFieldNamesAndColors(projectReportResponseDto, groupedByObjects);
-                        completedGroupedColorsAndNames = true;
-                    }
+        for (Object xObject : xObjects) {
+            List<Task> tasks = filterTasksByXType(project, xObject, reportDto.getXType());
+            ProjectReportItemResponseDto itemDto = new ProjectReportItemResponseDto();
+            List<?> groupedByObjects = reportDto.getGroupedBy() != null ? getGroupedByList(project, reportDto.getGroupedBy()) : null;
 
-                    for (Object o : groupedByObjects) {
-                        Map<String, Object> groupedData = handleGroupedTasks(projectReportResponseDto, project, tasks, o);
-                        groupedData.forEach((key, value) -> {
-                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value.toString());
-                        });
-                    }
-                } else {
-                    yObject = calculateYObject(projectReportResponseDto, tasks);
-                    newProjectReportItemResponseDto.getAdditionalFields().put(s.getName(), yObject);
-                    ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
-                    colorAndName.setName(s.getName());
-                    if(projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR))
-                        colorAndName.setColor(s.getCustomization().getBackgroundColor());
-                    colorsAndNames.add(colorAndName);
+            if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
+                if (!colorsGenerated && reportDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+                    colorsAndNames = getGroupFieldNamesAndColors(reportDto, groupedByObjects);
+                    colorsGenerated = true;
                 }
-
-                newProjectReportItemResponseDto.setName(s.getName());
-                result.add(newProjectReportItemResponseDto);
-            }
-        } else if (projectReportResponseDto.getXType().equals(ProjectXTypeReport.PRIORITY)) {
-            List<Priority> xObject = project.getPriorities();
-            for (Priority p : xObject) {
-                List<Task> tasks = project.getTasks()
-                        .stream()
-                        .filter(t -> t.getPriority() != null && Objects.equals(t.getPriority().getId(), p.getId()))
-                        .toList();
-
-                ProjectReportItemResponseDto newProjectReportItemResponseDto = new ProjectReportItemResponseDto();
-                String yObject;
-                List<?> groupedByObjects = projectReportResponseDto.getGroupedBy() != null ? getGroupedByList(project, projectReportResponseDto.getGroupedBy()) : null;
-
-                if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
-                    if(!completedGroupedColorsAndNames && projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
-                        colorsAndNames = getGroupFieldNamesAndColors(projectReportResponseDto, groupedByObjects);
-                        completedGroupedColorsAndNames = true;
-                    }
-                    for (Object o : groupedByObjects) {
-                        Map<String, Object> groupedData = handleGroupedTasks(projectReportResponseDto, project, tasks, o);
-                        groupedData.forEach((key, value) -> {
-                            newProjectReportItemResponseDto.getAdditionalFields().put(key, value.toString());
-                        });
-                    }
-                } else {
-                    yObject = calculateYObject(projectReportResponseDto, tasks);
-                    newProjectReportItemResponseDto.getAdditionalFields().put(p.getName(), yObject);
-                    ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
-                    if(projectReportResponseDto.getColorMode().equals(ProjectColorModeReport.X_COLOR))
-                        colorAndName.setColor(p.getCustomization().getBackgroundColor());
-                    colorsAndNames.add(colorAndName);
+                for (Object groupObj : groupedByObjects) {
+                    handleGroupedTasks(reportDto, project, tasks, groupObj)
+                            .forEach((key, value) -> itemDto.getAdditionalFields().put(key, value.toString()));
                 }
-
-                newProjectReportItemResponseDto.setName(p.getName());
-                result.add(newProjectReportItemResponseDto);
+            } else {
+                String yObject = calculateYObject(reportDto, tasks);
+                String name = getNameFromXObject(xObject);
+                itemDto.getAdditionalFields().put(reportDto.getXType().toString(), yObject);
+                addColorAndName(colorsAndNames, xObject, reportDto);
             }
+
+            itemDto.setName(getNameFromXObject(xObject));
+            reportItems.add(itemDto);
         }
 
-        // More conditions for other group types (ASSIGNEE, TASK_TYPE, etc.) can go here...
-        projectReportResponseDto.setColorsAndNames(colorsAndNames);
-        projectReportResponseDto.setItems(result);
+        reportDto.setColorsAndNames(colorsAndNames);
+        reportDto.setItems(reportItems);
     }
+
+    private List<Task> filterTasksByXType(Project project, Object xObject, ProjectXTypeReport xType) {
+        return project.getTasks().stream()
+                .filter(task -> switch (xType) {
+                    case STATUS -> task.getStatus() != null && task.getStatus().equals(xObject);
+                    case PRIORITY -> task.getPriority() != null && task.getPriority().equals(xObject);
+                    case TASK_TYPE -> task.getTaskType() != null && task.getTaskType().equals(xObject);
+                    default -> false;
+                }).toList();
+    }
+
+    private String getNameFromXObject(Object xObject) {
+        if (xObject instanceof Status s) return s.getName();
+        if (xObject instanceof Priority p) return p.getName();
+        if (xObject instanceof TaskType t) return t.getName();
+        throw new IllegalArgumentException("Unsupported XObject type");
+    }
+
+    private void addColorAndName(List<ProjectReportItemNameAndColorResponseDto> colorsAndNames, Object xObject, ProjectReportResponseDto reportDto) {
+        if (reportDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+            ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
+            colorAndName.setName(getNameFromXObject(xObject));
+            colorAndName.setColor(getColorFromXObject(xObject));
+            colorsAndNames.add(colorAndName);
+        }
+    }
+
+    private String getColorFromXObject(Object xObject) {
+        if (xObject instanceof Status s) return s.getCustomization().getBackgroundColor();
+        if (xObject instanceof Priority p) return p.getCustomization().getBackgroundColor();
+        if (xObject instanceof TaskType t) return t.getCustomization().getBackgroundColor();
+        throw new IllegalArgumentException("Unsupported XObject type for color");
+    }
+
 
     private Map<String, Object> handleGroupedTasks(ProjectReportResponseDto projectReportResponseDto, Project project, List<Task> tasks, Object o) {
         Map<String, Object> groupedData = new HashMap<>();
