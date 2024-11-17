@@ -17,6 +17,7 @@ import { setCurrentTaskTypeList } from '../../redux/actions/taskType.action';
 import { setCurrentPriorityList } from '../../redux/actions/priority.action';
 import { setCurrentLabelList } from '../../redux/actions/label.action';
 import { delteMemberRole } from '../../redux/actions/memberRole.action';
+import { deleteProjectReport } from '../../redux/actions/projectReport.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -64,6 +65,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_ROLE" && deleteProps != null) {
             const roleId = deleteProps.roleId;
             await handleDeleteMemberRole(roleId);
+        } else if (deleteType == "DELETE_PROJECT_REPORT" && deleteProps != null) {
+            const projectReportId = deleteProps.projectReportId;
+            await handleDeleteProjectReport(projectReportId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -271,6 +275,20 @@ export default function CustomDeleteDialog({ deleteAction }) {
         }
     };
 
+    const handleDeleteProjectReport = async (projectReportId) => {
+        try {
+            const response = await apiService.projectReport.remove(projectReportId);
+            if (response?.data) {
+                dispatch(deleteProjectReport(projectReportId));
+                dispatch(setSnackbar({
+                    content: "Project report role delete successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete project report:', error);
+        }
+    };
 
     return (
         <Dialog

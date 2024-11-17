@@ -21,15 +21,15 @@ const CustomPiechart = ({ chartData, chartNamesAndColors, xType, yType }) => {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={800} height={400}>
+            <PieChart>
 
                 <Legend align='right' layout={'vertical'} verticalAlign='middle' />
                 <Pie
                     label
                     data={data}
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
+                    // innerRadius={60}
+                    // outerRadius={100}
+                    paddingAngle={1}
                     name={yType == "TASK_COUNT" ? "Tasks" : "Time estimate"}
                     dataKey={`additionalFields.${xType}`}
                 >

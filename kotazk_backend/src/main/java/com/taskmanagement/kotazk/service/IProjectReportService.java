@@ -19,4 +19,5 @@ public interface IProjectReportService {
     RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
     ProjectReportResponseDto getOne(Long id);
     PageResponse<ProjectReportResponseDto> getPageBySection(SearchParamRequestDto searchParam, Long sectionId);
+    ProjectReportResponseDto previewChart(ProjectReportRequestDto projectReportRequestDto);
 }

@@ -59,7 +59,6 @@ public class ProjectReportService implements IProjectReportService {
 
     @Override
     public ProjectReportResponseDto create(ProjectReportRequestDto projectReportRequestDto) {
-        System.out.println(projectReportRequestDto);
         User currentUser = SecurityUtil.getCurrentUser();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
         Section section = sectionRepository.findById(projectReportRequestDto.getSectionId())
@@ -94,7 +93,10 @@ public class ProjectReportService implements IProjectReportService {
 
         ProjectReport savedProjectReport = projectReportRepository.save(newProjectReport);
 
-        return ModelMapperUtil.mapOne(savedProjectReport, ProjectReportResponseDto.class);
+        ProjectReportResponseDto projectReportResponseDto = ModelMapperUtil.mapOne(savedProjectReport, ProjectReportResponseDto.class);
+        getProjectReportItems(projectReportResponseDto, project);
+
+        return projectReportResponseDto;
     }
 
     @Override
@@ -104,7 +106,19 @@ public class ProjectReportService implements IProjectReportService {
 
     @Override
     public Boolean delete(Long id) {
-        return null;
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        ProjectReport projectReport = projectReportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project report", "id", id));
+        Section section = projectReport.getSection();
+        Project project = section.getProject();
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = checkManageReport(currentUser, project);
+
+        projectReportRepository.deleteById(projectReport.getId());
+
+        return true;
     }
 
     @Override
@@ -192,6 +206,29 @@ public class ProjectReportService implements IProjectReportService {
         );
     }
 
+    @Override
+    public ProjectReportResponseDto previewChart(ProjectReportRequestDto projectReportRequestDto) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Section section = sectionRepository.findById(projectReportRequestDto.getSectionId())
+                .filter(s -> (isAdmin || s.getDeletedAt() == null) && s.getType().equals(SectionType.REPORT))
+                .orElseThrow(() -> new ResourceNotFoundException("Section", "id", projectReportRequestDto.getSectionId()));
+        Project project = section.getProject();
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = checkManageReport(currentUser, project);
+
+        ProjectReportRequestDto validatedprojectReportRequestDto = checkReportValid(projectReportRequestDto);
+
+        if (validatedprojectReportRequestDto == null)
+            throw new CustomException("Invalid input");
+
+        ProjectReportResponseDto projectReportResponseDto = ModelMapperUtil.mapOne(projectReportRequestDto, ProjectReportResponseDto.class);
+        getProjectReportItems(projectReportResponseDto, project);
+
+        return projectReportResponseDto;
+    }
+
     // Utility func
 
     private void getProjectReportItems(ProjectReportResponseDto reportDto, Project project) {
@@ -212,7 +249,7 @@ public class ProjectReportService implements IProjectReportService {
             List<?> groupedByObjects = reportDto.getGroupedBy() != null ? getGroupedByList(project, reportDto.getGroupedBy()) : null;
 
             if (groupedByObjects != null && !groupedByObjects.isEmpty()) {
-                if (!colorsGenerated && reportDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+                if (!colorsGenerated) {
                     colorsAndNames = getGroupFieldNamesAndColors(reportDto, groupedByObjects);
                     colorsGenerated = true;
                 }
@@ -253,12 +290,12 @@ public class ProjectReportService implements IProjectReportService {
     }
 
     private void addColorAndName(List<ProjectReportItemNameAndColorResponseDto> colorsAndNames, Object xObject, ProjectReportResponseDto reportDto) {
-        if (reportDto.getColorMode().equals(ProjectColorModeReport.X_COLOR)) {
+
             ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
             colorAndName.setName(getNameFromXObject(xObject));
             colorAndName.setColor(getColorFromXObject(xObject));
             colorsAndNames.add(colorAndName);
-        }
+
     }
 
     private String getColorFromXObject(Object xObject) {

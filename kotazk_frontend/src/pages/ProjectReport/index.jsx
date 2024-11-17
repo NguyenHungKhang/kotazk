@@ -9,12 +9,19 @@ import CustomStackedBar from './CustomStackedBar';
 import CustomGroupeddBar from './CustomGroupedBar';
 import CustomPiechart from './CustomPiechart';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import CustomAddChartDialog from './CustomAddChartDialog';
+import CustomFullChartDialog from './CustomFullChartDialog';
+import { setDeleteDialog, setFullReportDialog } from '../../redux/actions/dialog.action';
+import { useDispatch } from 'react-redux';
+import { setProjectReports } from '../../redux/actions/projectReport.action';
 
 const ProjectReport = () => {
 
-    const [projectReports, setProjectReports] = useState([]);
+    // const [projectReports, setProjectReports] = useState([]);
+    const projectReports = useSelector((state) => state.projectReport.currentProjecReportList);
     const section = useSelector((state) => state.section.currentSection);
     const theme = useTheme();
+    const dispatch = useDispatch();
 
     const ExpandIcon = TablerIcons["IconArrowsMaximize"];
     const EditIcon = TablerIcons["IconPencil"];
@@ -35,17 +42,57 @@ const ProjectReport = () => {
 
         const response = await apiService.projectReport.getPageBySection(section?.id, data)
         if (response?.data)
-            setProjectReports(response?.data?.content);
+            dispatch(setProjectReports(response?.data?.content))
     }
 
-    return (
+    const handleExpand = (pr) => {
+        const data = {
+            open: true,
+            props: {
+                name: pr.name,
+                type: pr.type,
+                chartData: pr.items,
+                chartNamesAndColors: pr.colorsAndNames,
+                xType: pr.xtype,
+                yType: pr.ytype,
+            }
+        }
+
+        dispatch(setFullReportDialog(data));
+    };
+
+    const handleOpenDeleteDialog = (pr) => {
+        dispatch(setDeleteDialog({
+            title: `Delete project report "${pr?.name}"?`,
+            content:
+                `You're about to permanently delete this project report`,
+            open: true,
+            deleteType: "DELETE_PROJECT_REPORT",
+            deleteProps: {
+                projectReportId: pr?.id
+            }
+            // deleteAction: () => handleDelete(),
+        }));
+    }
+
+
+    return projectReports == null ? <>Loading...</> : (
         <Box
             height={'100%'}
             width={'100%'}
             overflow={'auto'}
         >
+            <Card
+                sx={{
+                    mb: 2,
+                    p: 2
+                }}
+            >
+                <CustomAddChartDialog />
+            </Card>
+
             <Grid2 container spacing={2} width={'100%'} height={"100%"}>
-                {projectReports.map((pr, index) => (
+                {projectReports?.map((pr, index) => (
                     <Grid2 key={index} item size={4}>
                         <Card
                             sx={{
@@ -63,14 +110,21 @@ const ProjectReport = () => {
                                         </Typography>
                                     </Box>
                                     <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                                        <IconButton size='small'>
-                                            <ExpandIcon size={18}/>
+                                        <IconButton
+                                            size='small'
+                                            onClick={() => handleExpand(pr)}
+                                        >
+                                            <ExpandIcon size={18} />
                                         </IconButton>
                                         <IconButton size='small'>
-                                            <EditIcon size={18}/>
+                                            <EditIcon size={18} />
                                         </IconButton>
-                                        <IconButton color='error' size='small'>
-                                            <RemoveIcon size={18}/>
+                                        <IconButton
+                                            color='error'
+                                            size='small'
+                                            onClick={() => handleOpenDeleteDialog(pr)}
+                                        >
+                                            <RemoveIcon size={18} />
                                         </IconButton>
                                     </Stack>
                                 </Stack>
@@ -102,43 +156,8 @@ const ProjectReport = () => {
                         </Card>
                     </Grid2>
                 ))}
-
-
-
-                {/* <Grid2 item size={3}>
-                <Card
-                    sx={{
-                        width: '100%',
-                        aspectRatio: '1.615/1',
-                        height: 'auto',
-                    }}
-                >
-                    <CustomLinechart />
-                </Card>
             </Grid2>
-            <Grid2 item size={6}>
-                <Card
-                    sx={{
-                        width: '100%',
-                        aspectRatio: '1.615/1',
-                        height: 'auto',
-                    }}
-                >
-                    <CustomLinechart />
-                </Card>
-            </Grid2>
-            <Grid2 item size={3}>
-                <Card
-                    sx={{
-                        width: '100%',
-                        aspectRatio: '1.615/1',
-                        height: 'auto',
-                    }}
-                >
-                    <CustomLinechart />
-                </Card>
-            </Grid2> */}
-            </Grid2>
+            <CustomFullChartDialog />
         </Box>
     );
 };

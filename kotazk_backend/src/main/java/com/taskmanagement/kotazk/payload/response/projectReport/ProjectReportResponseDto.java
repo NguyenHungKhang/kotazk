@@ -21,7 +21,7 @@ public class ProjectReportResponseDto {
     Long sectionId;
     Long position;
     String name;
-    ProjectColorModeReport colorMode;
+    ProjectColorModeReport colorMode = ProjectColorModeReport.X_COLOR;
     ProjectReportType type;
     ProjectXTypeReport xType;
     ProjectSubXTypeReport subXType;

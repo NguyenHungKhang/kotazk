@@ -12,6 +12,7 @@ import FilterReducer from "./filter.reducer";
 import GroupByReducer from "./groupBy.reducer";
 import SectionReducer from "./section.reducer";
 import MemberRoleReducer from "./memberRole.reducer";
+import ProjectReportReducer from "./projectReport.reducer";
 import { combineReducers } from 'redux'
 
 const allReducers = {
@@ -28,7 +29,8 @@ const allReducers = {
     filter: FilterReducer,
     groupBy: GroupByReducer,
     section: SectionReducer,
-    memberRole: MemberRoleReducer
+    memberRole: MemberRoleReducer,
+    projectReport: ProjectReportReducer
 }
 
 const rootReducer = combineReducers(allReducers);

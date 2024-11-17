@@ -10,6 +10,10 @@ const initialState = {
         open: false,
         props: null,
     },
+    fullReportDialog: {
+        open: false,
+        props: null,
+    },
     deleteDialog: {
         open: false,
         content: null,
@@ -35,7 +39,15 @@ const DialogReducer = (state = initialState, action) => {
                 ...state,
                 addTaskDialog: {
                     open: action.payload.open != null ? action.payload.open : state.addTaskDialog.open,
-                    props:  action.payload.props
+                    props: action.payload.props
+                }
+            };
+        case 'SET_FULL_REPORT_DIALOG':
+            return {
+                ...state,
+                fullReportDialog: {
+                    open: action.payload.open != null ? action.payload.open : state.fullReportDialog.open,
+                    props: action.payload.props
                 }
             };
         case 'SET_DELETE_DIALOG':

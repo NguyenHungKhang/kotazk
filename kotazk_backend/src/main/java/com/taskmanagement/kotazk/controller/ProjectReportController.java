@@ -25,14 +25,25 @@ public class ProjectReportController {
     @PostMapping("/")
     @ResponseStatus(HttpStatus.CREATED)
     public ProjectReportResponseDto create(@RequestBody ProjectReportRequestDto projectReportRequestDto) {
-        System.out.println(projectReportRequestDto);
         return projectReportService.create(projectReportRequestDto);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean create(@PathVariable Long id) {
+        return projectReportService.delete(id);
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ProjectReportResponseDto getOne(@PathVariable Long id) {
         return projectReportService.getOne(id);
+    }
+
+    @PostMapping("/preview")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectReportResponseDto preview(@RequestBody ProjectReportRequestDto projectReportRequestDto) {
+        return projectReportService.previewChart(projectReportRequestDto);
     }
 
 
