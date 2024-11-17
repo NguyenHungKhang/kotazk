@@ -14,6 +14,10 @@ const initialState = {
         open: false,
         props: null,
     },
+    projectReportDialog: {
+        open: false,
+        props: null,
+    },
     deleteDialog: {
         open: false,
         content: null,
@@ -47,6 +51,14 @@ const DialogReducer = (state = initialState, action) => {
                 ...state,
                 fullReportDialog: {
                     open: action.payload.open != null ? action.payload.open : state.fullReportDialog.open,
+                    props: action.payload.props
+                }
+            };
+        case 'SET_ADD_AND_UPDATE_PROJECT_REPORT':
+            return {
+                ...state,
+                projectReportDialog: {
+                    open: action.payload.open != null ? action.payload.open : state.projectReportDialog.open,
                     props: action.payload.props
                 }
             };

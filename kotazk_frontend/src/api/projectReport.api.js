@@ -4,7 +4,7 @@ const ORIGINAL_BASE_URL = `${process.env.REACT_APP_SECURE_PART_URL}/project-repo
 
 export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/`, data);
 
-// export const update = async (statusId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${statusId}`, data);
+export const update = async (projectReportId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${projectReportId}`, data);
 
 export const remove = async (projectReportId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${projectReportId}`);
 

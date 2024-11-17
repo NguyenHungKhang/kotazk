@@ -18,6 +18,7 @@ import CustomGroupeddBar from './CustomGroupedBar';
 import CustomLinechart from './CustomLinechart';
 import CustomPiechart from './CustomPiechart';
 import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/themeUtil';
+import { setAddAndUpdateReportDialog } from '../../redux/actions/dialog.action';
 
 const chartTypeData1 = [
     { label: "Bar chart", id: "BAR_CHART" },
@@ -45,7 +46,7 @@ const groupTypeData1 = [
 ]
 
 export default function CustomAddChartDialog() {
-    const [open, setOpen] = React.useState(false);
+    // const [open, setOpen] = React.useState(false);
     const [xTypeData, setXTypeData] = React.useState([]);
     const [yTypeData, setYTypeData] = React.useState([]);
     const [groupTypeData, setGroupTypeData] = React.useState([]);
@@ -55,11 +56,16 @@ export default function CustomAddChartDialog() {
     const [groupType, setGroupType] = React.useState(null);
     const [name, setName] = React.useState(null);
     const [previewChart, setPreviewChart] = React.useState(null);
+    const { open, props } = useSelector((state) => state.dialog.projectReportDialog);
     const section = useSelector((state) => state.section.currentSection);
     const dispatch = useDispatch();
     const theme = useTheme();
     const NoPreviewIcon = TablerIcons["IconGraphOff"];
 
+    React.useEffect(() => {
+        if (props)
+            setToEdit();
+    }, [props])
 
     React.useEffect(() => {
         setChartDetail();
@@ -68,6 +74,14 @@ export default function CustomAddChartDialog() {
     React.useEffect(() => {
         handlePreview();
     }, [type, xType, yType, groupType])
+
+    const setToEdit = () => {
+        setName(props.name);
+        setType(chartTypeData1.find(t => t.id == props.type));
+        setXType(xTypeData1.find(x => x.id == props.xType));
+        setGroupType(groupTypeData1.find(g => g.id == props.groupType));
+        setYType(yTypeData1.find(y => y.id == props.yType));
+    }
 
     const setChartDetail = () => {
         if (type == null) {
@@ -171,16 +185,26 @@ export default function CustomAddChartDialog() {
             "groupedBy": groupType?.id
         }
 
-        const response = await apiService.projectReport.create(data);
-        if (response?.data) {
-            dispatch(updateProjectReport(response?.data))
-            dispatch(setSnackbar({
-                content: "Project report create successful!",
-                open: true
-            }))
+        if (props) {
+            const response = await apiService.projectReport.update(props.id, data);
+            if (response?.data) {
+                dispatch(updateProjectReport(response?.data))
+                dispatch(setSnackbar({
+                    content: "Project report update successful!",
+                    open: true
+                }))
+            }
+        } else {
+            const response = await apiService.projectReport.create(data);
+            if (response?.data) {
+                dispatch(updateProjectReport(response?.data))
+                dispatch(setSnackbar({
+                    content: "Project report create successful!",
+                    open: true
+                }))
+            }
         }
-        setOpen(false);
-
+        handleClose();
     }
 
     const handlePreview = async () => {
@@ -218,182 +242,187 @@ export default function CustomAddChartDialog() {
     }
 
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
     const handleClose = () => {
-        setOpen(false);
+        dispatch(setAddAndUpdateReportDialog({
+            open: false,
+            props: null
+        }));
+        setName(null);
+        setType(null);
+        setXType(null);
+        setGroupType(null);
+        setYType(null);
+        setPreviewChart(null);
+
     };
 
     return (
-        <React.Fragment>
-            <Button size='small' variant="contained" onClick={handleClickOpen}>
-                Add report
-            </Button>
-            <Dialog
-                open={open}
-                onClose={handleClose}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        maxWidth: 1300
-                    }
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    maxWidth: 1300
+                }
+            }}
+        >
+            <DialogTitle id="alert-dialog-title"
+                sx={{
+                    bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e")
                 }}
             >
-                <DialogTitle id="alert-dialog-title"
-                    sx={{
-                        bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e")
-                    }}
-                >
-                    Add New Report
-                </DialogTitle>
-                <DialogContent
-                    sx={{
-                        bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e")
-                    }}
-                >
-                    <Grid2 container spacing={2}>
-                        <Grid2 item size={8}>
+                {props ? "Edit Report" : "Add New Report"}
+            </DialogTitle>
+            <DialogContent
+                sx={{
+                    bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e")
+                }}
+            >
+                <Grid2 container spacing={2}>
+                    <Grid2 item size={8}>
+                        <Box
+                            p={2}
+                            borderRadius={2}
+                            bgcolor={getSecondBackgroundColor(theme)}
+                            width={800}
+                            height={600}
+                        >
                             <Box
-                                p={2}
-                                borderRadius={2}
-                                bgcolor={getSecondBackgroundColor(theme)}
-                                width={800}
-                                height={600}
+                                width={'100%'}
+                                height={'100%'}
+                                // borderColor={}
+                                bgcolor={getCustomTwoModeColor(theme, "#fff", "#1e1e1e")}
                             >
-                                <Box
-                                    width={'100%'}
-                                    height={'100%'}
-                                    // borderColor={}
-                                    bgcolor={getCustomTwoModeColor(theme, "#fff", "#1e1e1e")}
-                                >
-                                    {previewChart?.type == "BAR_CHART" && (
-                                        <CustomBarchart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
-                                    )}
-                                    {previewChart?.type == "STACKED_BAR" && (
-                                        <CustomStackedBar chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
-                                    )}
-                                    {previewChart?.type == "LINE" && (
-                                        <CustomLinechart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
-                                    )}
-                                    {previewChart?.type == "GROUPED_BAR" && (
-                                        <CustomGroupeddBar chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
-                                    )}
-                                    {previewChart?.type == "PIE" && (
-                                        <CustomPiechart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
-                                    )}
-                                    {previewChart == null && (
-                                        <Box width={'100%'}
-                                            height={'100%'}
-                                            display='flex'
-                                            justifyContent={'center'}
-                                            alignItems={'center'}
-                                        >
-                                            <NoPreviewIcon size={300} stroke={1} color={getSecondBackgroundColor(theme)} />
-                                        </Box>
-                                    )}
-                                </Box>
+                                {previewChart?.type == "BAR_CHART" && (
+                                    <CustomBarchart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
+                                )}
+                                {previewChart?.type == "STACKED_BAR" && (
+                                    <CustomStackedBar chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
+                                )}
+                                {previewChart?.type == "LINE" && (
+                                    <CustomLinechart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
+                                )}
+                                {previewChart?.type == "GROUPED_BAR" && (
+                                    <CustomGroupeddBar chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
+                                )}
+                                {previewChart?.type == "PIE" && (
+                                    <CustomPiechart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
+                                )}
+                                {previewChart == null && (
+                                    <Box width={'100%'}
+                                        height={'100%'}
+                                        display='flex'
+                                        justifyContent={'center'}
+                                        alignItems={'center'}
+                                    >
+                                        <NoPreviewIcon size={300} stroke={1} color={getSecondBackgroundColor(theme)} />
+                                    </Box>
+                                )}
                             </Box>
-                        </Grid2>
+                        </Box>
+                    </Grid2>
 
-                        <Grid2 item size={4}>
-                            <Stack spacing={2}>
-                                <Box>
-                                    <Typography>Chart name</Typography>
-                                    <TextField
-                                        size='small'
-                                        placeholder='Enter report name'
-                                        fullWidth
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </Box>
+                    <Grid2 item size={4}>
+                        <Stack spacing={2}>
+                            <Box>
+                                <Typography>Chart name</Typography>
+                                <TextField
+                                    size='small'
+                                    placeholder='Enter report name'
+                                    fullWidth
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </Box>
 
+                            <Box>
+                                <Typography>Chart type</Typography>
+                                <Autocomplete
+                                    value={type}
+                                    onChange={(event, newValue) => {
+                                        setType(newValue);
+                                    }}
+                                    size='small'
+                                    disablePortal
+                                    options={chartTypeData1}
+                                    renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
+                                />
+                            </Box>
+
+                            <Divider flexItem
+                                sx={{
+                                    my: 2
+                                }}
+                            />
+
+                            {xTypeData.length > 0 && (
                                 <Box>
-                                    <Typography>Chart type</Typography>
+                                    <Typography>X Axis</Typography>
                                     <Autocomplete
-                                        value={type}
+                                        value={xType}
+                                        fullWidth
                                         onChange={(event, newValue) => {
-                                            setType(newValue);
+                                            setXType(newValue);
                                         }}
                                         size='small'
                                         disablePortal
-                                        options={chartTypeData1}
+                                        options={xTypeData}
                                         renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
                                     />
                                 </Box>
+                            )}
 
-                                <Divider flexItem
-                                    sx={{
-                                        my: 2
-                                    }}
-                                />
+                            {groupTypeData.length > 0 && (
+                                <Box>
+                                    <Typography>Grouped By</Typography>
+                                    <Autocomplete
+                                        value={groupType}
+                                        fullWidth
+                                        onChange={(event, newValue) => {
+                                            setGroupType(newValue);
+                                        }}
+                                        size='small'
+                                        disablePortal
+                                        options={groupTypeData}
+                                        renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
+                                    />
+                                </Box>
+                            )}
 
-                                {xTypeData.length > 0 && (
-                                    <Box>
-                                        <Typography>X Axis</Typography>
-                                        <Autocomplete
-                                            value={xType}
-                                            fullWidth
-                                            onChange={(event, newValue) => {
-                                                setXType(newValue);
-                                            }}
-                                            size='small'
-                                            disablePortal
-                                            options={xTypeData}
-                                            renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
-                                        />
-                                    </Box>
-                                )}
-
-                                {groupTypeData.length > 0 && (
-                                    <Box>
-                                        <Typography>Grouped By</Typography>
-                                        <Autocomplete
-                                            value={groupType}
-                                            fullWidth
-                                            onChange={(event, newValue) => {
-                                                setGroupType(newValue);
-                                            }}
-                                            size='small'
-                                            disablePortal
-                                            options={groupTypeData}
-                                            renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
-                                        />
-                                    </Box>
-                                )}
-
-                                {yTypeData.length > 0 && (
-                                    <Box>
-                                        <Typography>Y Axis</Typography>
-                                        <Autocomplete
-                                            value={yType}
-                                            fullWidth
-                                            onChange={(event, newValue) => {
-                                                setYType(newValue);
-                                            }}
-                                            size='small'
-                                            disablePortal
-                                            options={yTypeData}
-                                            renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
-                                        />
-                                    </Box>
-                                )}
-                            </Stack>
-                        </Grid2>
+                            {yTypeData.length > 0 && (
+                                <Box>
+                                    <Typography>Y Axis</Typography>
+                                    <Autocomplete
+                                        value={yType}
+                                        fullWidth
+                                        onChange={(event, newValue) => {
+                                            setYType(newValue);
+                                        }}
+                                        size='small'
+                                        disablePortal
+                                        options={yTypeData}
+                                        renderInput={(params) => <TextField {...params} size='small' placeholder='Select chart type' />}
+                                    />
+                                </Box>
+                            )}
+                        </Stack>
                     </Grid2>
+                </Grid2>
 
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleClose}>Disagree</Button>
-                    <Button onClick={handleSave} autoFocus>
-                        Agree
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </React.Fragment>
+            </DialogContent>
+            <DialogActions
+                sx={{
+                    bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e")
+                }}
+            >
+                <Button onClick={handleClose} variant='text' color='error' >Close</Button>
+                <Button onClick={handleSave} variant='contained' color='success' autoFocus>
+                    Save
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

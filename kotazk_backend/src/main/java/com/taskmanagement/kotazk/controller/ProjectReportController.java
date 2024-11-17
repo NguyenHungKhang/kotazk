@@ -28,6 +28,12 @@ public class ProjectReportController {
         return projectReportService.create(projectReportRequestDto);
     }
 
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectReportResponseDto update(@RequestBody ProjectReportRequestDto projectReportRequestDto, @PathVariable Long id) {
+        return projectReportService.update(id, projectReportRequestDto);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Boolean create(@PathVariable Long id) {

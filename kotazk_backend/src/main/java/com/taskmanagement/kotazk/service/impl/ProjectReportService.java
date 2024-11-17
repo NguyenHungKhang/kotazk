@@ -101,7 +101,45 @@ public class ProjectReportService implements IProjectReportService {
 
     @Override
     public ProjectReportResponseDto update(Long id, ProjectReportRequestDto projectReportRequestDto) {
-        return null;
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        ProjectReport projectReport = projectReportRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project report", "id", id));
+        Section section = projectReport.getSection();
+        Project project = section.getProject();
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = checkManageReport(currentUser, project);
+
+        ProjectReportRequestDto validatedprojectReportRequestDto = checkReportValid(projectReportRequestDto);
+
+        if (validatedprojectReportRequestDto == null)
+            throw new CustomException("Invalid input");
+
+        ProjectReport editedCurrentProject = ProjectReport.builder()
+                .id(projectReport.getId())
+                .section(section)
+                .project(project)
+                .workspace(workSpace)
+                .name(validatedprojectReportRequestDto.getName())
+                .colorMode(validatedprojectReportRequestDto.getColorMode())
+                .xType(validatedprojectReportRequestDto.getXType())
+                .subXType(validatedprojectReportRequestDto.getSubXType())
+                .groupedBy(validatedprojectReportRequestDto.getGroupedBy())
+                .yType(validatedprojectReportRequestDto.getYType())
+                .fromWhen(validatedprojectReportRequestDto.getFromWhen())
+                .toWhen(validatedprojectReportRequestDto.getToWhen())
+                .between(validatedprojectReportRequestDto.getBetween())
+                .type(validatedprojectReportRequestDto.getType())
+                .position(projectReport.getPosition())
+                .build();
+
+        ProjectReport savedProjectReport = projectReportRepository.save(editedCurrentProject);
+
+        ProjectReportResponseDto projectReportResponseDto = ModelMapperUtil.mapOne(savedProjectReport, ProjectReportResponseDto.class);
+        getProjectReportItems(projectReportResponseDto, project);
+
+        return projectReportResponseDto;
     }
 
     @Override

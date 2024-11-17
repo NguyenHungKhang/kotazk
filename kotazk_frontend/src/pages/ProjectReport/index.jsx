@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Grid2, IconButton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Card, Divider, Grid2, IconButton, Stack, Typography, useTheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import CustomLinechart from './CustomLinechart';
 import * as apiService from '../../api/index'
@@ -11,7 +11,7 @@ import CustomPiechart from './CustomPiechart';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import CustomAddChartDialog from './CustomAddChartDialog';
 import CustomFullChartDialog from './CustomFullChartDialog';
-import { setDeleteDialog, setFullReportDialog } from '../../redux/actions/dialog.action';
+import { setAddAndUpdateReportDialog, setDeleteDialog, setFullReportDialog } from '../../redux/actions/dialog.action';
 import { useDispatch } from 'react-redux';
 import { setProjectReports } from '../../redux/actions/projectReport.action';
 
@@ -75,6 +75,21 @@ const ProjectReport = () => {
         }));
     }
 
+    const handleOpenAddAndEditDialog = (pr = null) => {
+        dispatch(setAddAndUpdateReportDialog({
+            open: true,
+            props: pr ? {
+                id: pr.id,
+                name: pr.name,
+                type: pr.type,
+                xType: pr.xtype,
+                yType: pr.ytype,
+                groupType: pr.groupedBy
+            } : null
+        }));
+    }
+
+
 
     return projectReports == null ? <>Loading...</> : (
         <Box
@@ -88,7 +103,9 @@ const ProjectReport = () => {
                     p: 2
                 }}
             >
-                <CustomAddChartDialog />
+                <Button onClick={() => handleOpenAddAndEditDialog(null)}>
+                    Add report
+                </Button>
             </Card>
 
             <Grid2 container spacing={2} width={'100%'} height={"100%"}>
@@ -116,7 +133,10 @@ const ProjectReport = () => {
                                         >
                                             <ExpandIcon size={18} />
                                         </IconButton>
-                                        <IconButton size='small'>
+                                        <IconButton
+                                            size='small'
+                                            onClick={() => handleOpenAddAndEditDialog(pr)}
+                                        >
                                             <EditIcon size={18} />
                                         </IconButton>
                                         <IconButton
@@ -158,6 +178,7 @@ const ProjectReport = () => {
                 ))}
             </Grid2>
             <CustomFullChartDialog />
+            <CustomAddChartDialog />
         </Box>
     );
 };

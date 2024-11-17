@@ -29,7 +29,7 @@ const CustomPiechart = ({ chartData, chartNamesAndColors, xType, yType }) => {
                     data={data}
                     // innerRadius={60}
                     // outerRadius={100}
-                    paddingAngle={1}
+                    // paddingAngle={1}
                     name={yType == "TASK_COUNT" ? "Tasks" : "Time estimate"}
                     dataKey={`additionalFields.${xType}`}
                 >
