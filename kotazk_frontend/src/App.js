@@ -1,5 +1,5 @@
 // App.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { alpha } from '@mui/material';
@@ -33,6 +33,37 @@ const App = () => {
   const [primaryColor, setPrimaryColor] = useState('#2863E5'); // Màu chủ đạo mặc định
   const [darkMode, setDarkMode] = useState(false); // Chế độ mặc định là Light Mode
   const lightBackgroundColor = useState(alpha(primaryColor, 0.2));
+
+  // Bắt cài đặt mặc định của hệ thống hoặc từ localStorage
+  useEffect(() => {
+    // Kiểm tra nếu người dùng đã chọn chế độ trước đó trong localStorage
+    const savedMode = localStorage.getItem('darkMode');
+
+    if (savedMode !== null) {
+      // Nếu có giá trị trong localStorage, dùng giá trị đó
+      setDarkMode(JSON.parse(savedMode));
+    } else {
+      // Nếu không, dùng cài đặt mặc định của hệ thống
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setDarkMode(systemPrefersDark);
+    }
+
+    // Lắng nghe thay đổi cài đặt hệ thống
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      if (localStorage.getItem('darkMode') === null) {
+        // Nếu người dùng chưa chỉnh sửa, tiếp tục lắng nghe cài đặt hệ thống
+        setDarkMode(e.matches);
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Dọn dẹp sự kiện khi component unmount
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   const theme = createTheme({
     spacing: factor => `${4 * factor}px`,
@@ -169,8 +200,14 @@ const App = () => {
   //   setPrimaryColor(color);
   // };
 
+  // Toggle chế độ dark mode
   const handleDarkModeChange = () => {
-    setDarkMode(prevMode => !prevMode); // Toggle dark mode
+    setDarkMode(prevMode => {
+      const newMode = !prevMode;
+      // Lưu lựa chọn của người dùng vào localStorage
+      localStorage.setItem('darkMode', JSON.stringify(newMode));
+      return newMode;
+    });
   };
 
   return (
@@ -183,7 +220,7 @@ const App = () => {
             position: 'fixed',
             bottom: 16,
             right: 16,
-            zIndex: 1000, // Ensures the button stays on top
+            zIndex: 1000, // Đảm bảo nút luôn hiển thị trên cùng
           }}
         >
           <IconButton onClick={handleDarkModeChange}>
