@@ -79,8 +79,6 @@ public class TaskService implements ITaskService {
         Boolean isCompleted = taskRequestDto.getIsCompleted() != null;
         Task parentTask = checkParentTask(project, taskRequestDto.getParentTaskId());
 
-        System.out.println(parentTask);
-
         List<Timestamp> startAndEndTime = checkStartAndEndTime(currentMember, TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getStartAt()), TimeUtil.convertSpecificStringToTimestamp(taskRequestDto.getEndAt()));
         Timestamp startAt = startAndEndTime.get(0);
         Timestamp endAt = startAndEndTime.get(1);

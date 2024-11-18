@@ -1,18 +1,18 @@
 package com.taskmanagement.kotazk.entity;
 
 import com.taskmanagement.kotazk.entity.enums.GroupByField;
-import com.taskmanagement.kotazk.entity.enums.MemberStatus;
+import com.taskmanagement.kotazk.entity.enums.SortField;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "group_by_setting")
+@Table(name = "sort_setting")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class GroupBySetting {
+public class SortSetting {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,5 +23,8 @@ public class GroupBySetting {
 
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "field", nullable = false)
-    private GroupByField field;
+    private SortField field;
+
+    @Column(name = "asc", nullable = false)
+    private Boolean asc;
 }

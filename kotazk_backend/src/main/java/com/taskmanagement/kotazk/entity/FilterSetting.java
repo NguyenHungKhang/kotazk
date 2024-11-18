@@ -1,8 +1,11 @@
 package com.taskmanagement.kotazk.entity;
 
+import com.taskmanagement.kotazk.entity.enums.FilterField;
 import com.taskmanagement.kotazk.entity.enums.FilterOperator;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Table(name = "filter_setting")
@@ -20,15 +23,14 @@ public class FilterSetting {
     @JoinColumn(name = "section_id", nullable = false)
     private Section section;
 
-    @ManyToOne
-    @JoinColumn(name = "field_id", nullable = false)
-    private Field field;
+    @Enumerated(EnumType.STRING)
+    @JoinColumn(name = "field_name", nullable = false)
+    private FilterField field;
 
-    @Column(name = "first_value", nullable = false)
-    private String firstValue;
-
-    @Column(name = "second_value", nullable = false)
-    private String secondValue;
+    @ElementCollection
+    @CollectionTable(name = "value_list", joinColumns = @JoinColumn(name = "filter_setting_id"))
+    @Column(name = "value")
+    private List<String> values;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "operator", nullable = false)

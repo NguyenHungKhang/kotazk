@@ -14,7 +14,7 @@ const CustomFilterBar = () => {
 const section = useSelector((state) => state.section.currentSection)
 
     return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
-        <Stack direction='row' spacing={2}>
+        <Stack direction='row' spacing={4}>
             <CustomFilterDialog />
            {(section?.type === "KANBAN" || section?.type === "LIST") && <CustomGroupedByDialog />}
     

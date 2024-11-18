@@ -28,6 +28,12 @@ public class SectionController {
         return sectionService.create(sectionRequestDto);
     }
 
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public SectionResponseDto update(@RequestBody SectionRequestDto sectionRequestDto, @PathVariable Long id) {
+        return sectionService.update(id, sectionRequestDto);
+    }
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public SectionResponseDto getOne(@PathVariable Long id) {

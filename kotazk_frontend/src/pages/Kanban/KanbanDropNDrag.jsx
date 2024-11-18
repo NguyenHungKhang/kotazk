@@ -77,9 +77,9 @@ function KanbanDropNDrag() {
     console.log(currentFilterList);
 
     const filterData = currentFilterList?.map(f => ({
-      key: f.key,
-      operation: f.operation,
-      values: f.value,
+      key: f.field,
+      operation: "IN",
+      values: f.options,
     }));
 
     const data = {

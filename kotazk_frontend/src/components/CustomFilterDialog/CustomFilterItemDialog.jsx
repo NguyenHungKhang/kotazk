@@ -1,30 +1,47 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Stack } from '@mui/material';
+import { Autocomplete, TextField, CircularProgress, Box, Stack, IconButton, Checkbox } from '@mui/material';
+import * as apiService from '../../api/index'
+import * as TablerIcons from '@tabler/icons-react'
+import { useSelector } from 'react-redux';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 
-const CustomFilterItemDialog = () => {
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
+
+const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
     const [selectedField, setSelectedField] = useState(null);
     const [options, setOptions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedOptions, setSelectedOptions] = useState([]); // Added state for selected options
+    const project = useSelector((state) => state.project.currentProject);
+    const RemoveIcon = TablerIcons["IconX"]
 
     const fields = [
-        { label: 'Status', value: 'status' },
-        { label: 'Priority', value: 'priority' },
-        { label: 'Task Type', value: 'taskType' }
+        { label: 'Status', value: 'status.id' },
+        { label: 'Priority', value: 'priority.id' },
+        { label: 'Task Type', value: 'taskType.id' }
     ];
+
+    useEffect(() => {
+        if (filter) {
+            setSelectedField(filter.field);
+            setSelectedOptions(filter.options);
+        }
+    }, [filter])
 
     const fetchOptions = async (field) => {
         setLoading(true);
         try {
             let response;
             switch (field) {
-                case 'status':
+                case 'status.id':
                     response = await fetchStatusOptions();
                     break;
-                case 'priority':
+                case 'priority.id':
                     response = await fetchPriorityOptions();
                     break;
-                case 'taskType':
+                case 'taskType.id':
                     response = await fetchTaskTypeOptions();
                     break;
                 default:
@@ -39,30 +56,45 @@ const CustomFilterItemDialog = () => {
     };
 
     const fetchStatusOptions = async () => {
-        // Replace with actual API logic
-        return [
-            { label: 'Open', value: '1' },
-            { label: 'Closed', value: '2' },
-            { label: 'In Progress', value: '3' }
-        ];
+        const data = {
+            "filters": []
+        }
+
+        const response = await apiService.statusAPI.getPageByProject(project?.id, data);
+        if (response?.data) {
+            return response?.data?.content.map(i => ({
+                "label": i.name,
+                "value": i.id
+            }))
+        } else return [];
     };
 
     const fetchPriorityOptions = async () => {
-        // Replace with actual API logic
-        return [
-            { label: 'High', value: '1' },
-            { label: 'Medium', value: '2' },
-            { label: 'Low', value: '3' }
-        ];
+        const data = {
+            "filters": []
+        }
+
+        const response = await apiService.priorityAPI.getPageByProject(project?.id, data);
+        if (response?.data) {
+            return response?.data?.content.map(i => ({
+                "label": i.name,
+                "value": i.id
+            }))
+        } else return [];
     };
 
     const fetchTaskTypeOptions = async () => {
-        // Replace with actual API logic
-        return [
-            { label: 'Bug', value: '1' },
-            { label: 'Feature', value: '2' },
-            { label: 'Improvement', value: '3' }
-        ];
+        const data = {
+            "filters": []
+        }
+
+        const response = await apiService.taskTypeAPI.getPageByProject(project?.id, data);
+        if (response?.data) {
+            return response?.data?.content.map(i => ({
+                "label": i.name,
+                "value": i.id
+            }))
+        } else return [];
     };
 
     useEffect(() => {
@@ -73,44 +105,94 @@ const CustomFilterItemDialog = () => {
         }
     }, [selectedField]);
 
+    const onSaveToFilterList = (newValue) => {
+        const newOptions = newValue.map(option => option.value)
+        setSelectedOptions(newOptions);
+        const newFilter = {
+            "field": selectedField,
+            "options": newOptions
+        }
+        setFilterDialogs(prev => prev.map((item, i) =>
+            i === index ? newFilter : item
+        ));
+    }
+
+    const handleRemove = () => {
+        setFilterDialogs(prev => prev.filter((item, i) => i != index));
+
+    }
+
     return (
-        <Stack direction='row' spacing={2}>
+        <Stack direction='row' spacing={2} alignItems={'center'}>
             {/* First Autocomplete for selecting the field */}
-            <Autocomplete
-                options={fields}
-                getOptionLabel={(option) => option.label}
-                onChange={(event, newValue) => setSelectedField(newValue ? newValue.value : '')}
-                renderInput={(params) => (
-                    <TextField {...params} size='small' variant="outlined" label="Select Field" />
-                )}
-            />
+            <Box width={150}>
+                <Autocomplete
+                    options={fields}
+                    value={fields.find(field => field.value === selectedField) || null}
+                    getOptionLabel={(option) => option.label}
+                    onChange={(event, newValue) => setSelectedField(newValue ? newValue.value : null)}
+                    renderInput={(params) => (
+                        <TextField {...params} size='small' variant="outlined" placeholder='Field' />
+                    )}
+                />
+            </Box>
 
             {/* Second Autocomplete for selecting options based on the chosen field */}
-            <Autocomplete
-                multiple
-                options={options}
-                getOptionLabel={(option) => option.label}
-                value={selectedOptions} // Bind to state
-                onChange={(event, newValue) => setSelectedOptions(newValue)} // Handle change
-                loading={loading}
-                renderInput={(params) => (
-                    <TextField
-                        {...params}
-                        size='small'
-                        variant="outlined"
-                        label="Select Options"
-                        InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                                <>
-                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                    {params.InputProps.endAdornment}
-                                </>
-                            ),
-                        }}
-                    />
-                )}
-            />
+            <Box flexGrow={1}>
+                <Autocomplete
+                    multiple
+                    options={options}
+                    getOptionLabel={(option) => option.label}
+                    disableCloseOnSelect
+                    value={options.filter(option => selectedOptions.includes(option.value))} // Match options with selected ids
+                    onChange={(event, newValue) => { onSaveToFilterList(newValue);}} // Save only ids
+                    loading={loading}
+                    limitTags={1}
+                    ChipProps={{
+                        sx: {
+                            my: "0 !important"
+                        }
+                    }}
+                    size='small'
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            size='small'
+                            variant="outlined"
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            }}
+                        />
+                    )}
+                    renderOption={(props, option, { selected }) => {
+                        const { key, ...optionProps } = props;
+                        return (
+                            <li key={key} {...optionProps}>
+                                <Checkbox
+                                    icon={icon}
+                                    checkedIcon={checkedIcon}
+                                    style={{ marginRight: 8 }}
+                                    checked={selected}
+                                />
+                                {option.label}
+                            </li>
+                        );
+                    }}
+                />
+            </Box>
+            <Box>
+                <IconButton
+                    onClick={() => handleRemove()}
+                    color='error' size='small'>
+                    <RemoveIcon size={16} />
+                </IconButton>
+            </Box>
         </Stack>
     );
 };
