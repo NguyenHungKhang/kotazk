@@ -3,6 +3,7 @@ package com.taskmanagement.kotazk.entity.enums;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum SortField {
+    POSITION("position"),
     PRIORITY("priority.position"),
     STATUS("status.position"),
     TASK_TYPE("taskType.position"),

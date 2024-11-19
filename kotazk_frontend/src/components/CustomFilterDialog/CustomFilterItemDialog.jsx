@@ -26,7 +26,11 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
     useEffect(() => {
         if (filter) {
             setSelectedField(filter.field);
-            setSelectedOptions(filter.options);
+            let initialOptions = [];
+            if (filter.field == "status.id" || filter.field == "taskType.id" || filter.field == "priority.id")
+                initialOptions = filter.options.map(Number);
+
+            setSelectedOptions(initialOptions);
         }
     }, [filter])
 
@@ -145,7 +149,7 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
                     getOptionLabel={(option) => option.label}
                     disableCloseOnSelect
                     value={options.filter(option => selectedOptions.includes(option.value))} // Match options with selected ids
-                    onChange={(event, newValue) => { onSaveToFilterList(newValue);}} // Save only ids
+                    onChange={(event, newValue) => { onSaveToFilterList(newValue); }} // Save only ids
                     loading={loading}
                     limitTags={1}
                     ChipProps={{

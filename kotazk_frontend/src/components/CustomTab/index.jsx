@@ -97,8 +97,6 @@ export default function CustomTab() {
 
 
     const handleNavigate = (section) => {
-        dispatch(setSection(section));
-        console.log(`/project/${project?.id}/section/${section?.id}`)
         navigate(`/project/${project?.id}/section/${section?.id}`);
     }
 
@@ -184,9 +182,6 @@ export default function CustomTab() {
                     <Divider orientation="vertical" variant="middle" flexItem />
                 </Box>
                 <Box>
-                    {/* <IconButton size="small">
-                        <AddIcon fontSize='small' />
-                    </IconButton> */}
                     <AddSectionDialog />
                 </Box>
             </Stack>

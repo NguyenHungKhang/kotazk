@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Popover, Button, IconButton, useTheme, Badge, styled } from '@mui/material';
+import { Autocomplete, TextField, CircularProgress, Box, Popover, Button, IconButton, useTheme, Badge, styled, Stack, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomFilterItemDialog from './CustomFilterItemDialog';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { setCurrentFilterList } from '../../redux/actions/filter.action';
 import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/themeUtil';
+import { useParams } from 'react-router-dom';
 
 
 const StyledBadge = styled(Badge)(({ theme }) => ({
@@ -16,25 +17,39 @@ const StyledBadge = styled(Badge)(({ theme }) => ({
     },
 }));
 
-const CustomComponent = () => {
+const CustomComponent = ({ section }) => {
+    const { sectionId } = useParams();
     const [anchorEl, setAnchorEl] = useState(null);
     const filters = useSelector((state) => state.filter.currentFilterList);
-    const [filterDialogs, setFilterDialogs] = useState([]);
+    const userChangeFilterList = useSelector((state) => state.filter.userChangeFilterList);
+    const [filterDialogs, setFilterDialogs] = useState(null);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const dispatch = useDispatch();
     const theme = useTheme();
 
-    // useEffect(() => {
-    //     if (filters && filterDialogs != filters)
-    //         setFilterDialogs(filters)
-    // }, [filters])
-
+    useEffect(() => {
+        if (!isInitialLoad)
+            setIsInitialLoad(true)
+    }, [sectionId, section])
 
     useEffect(() => {
-        if (filterDialogs)
+        if (filters && isInitialLoad) {
+            setFilterDialogs(filters);
+        }
+    }, [filters])
+
+    useEffect(() => {
+        if (filterDialogs && !isInitialLoad)
             setGlobalFilter();
+        else if (filterDialogs && filters && isInitialLoad)
+            setIsInitialLoad(false);
+        console.log("access");
     }, [filterDialogs])
 
+
+
     const setGlobalFilter = () => {
+        console.log(123)
         const globalFilters = filterDialogs.filter(f => f.field != null && f.options.length > 0);
         dispatch(setCurrentFilterList(globalFilters))
     }
@@ -64,24 +79,34 @@ const CustomComponent = () => {
 
     return (
         <div>
-            <Badge badgeContent={filterDialogs ? filterDialogs.length : 0} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
-                sx={{
-                    "& .MuiBadge-badge": {
-                        fontSize: 10, p: 2, minWidth: 10, minHeight: 10, height: 15, width: 15
-                    }
-                }}>
-                <Button
-                    sx={{ textTransform: 'none' }}
-                    color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                    size="small"
-                    startIcon={<FilterListIcon fontSize="small" />}
-                    onClick={handleClick}
-                >
-
-                    Filter
-
-                </Button>
-            </Badge>
+            <Button
+                sx={{ textTransform: 'none' }}
+                color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
+                size="small"
+                // variant='outlined'
+                startIcon={<FilterListIcon fontSize="small" />}
+                onClick={handleClick}
+            >
+                <Stack direction='row' spacing={1} alignItems={'center'}>
+                    <Box>
+                        Filter
+                    </Box>
+                    <Box
+                        display={'flex'}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        width={16}
+                        height={16}
+                        bgcolor={getCustomTwoModeColor(theme, "#000", "#fff")}
+                        p={1}
+                        borderRadius={1}
+                    >
+                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")}>
+                            {filterDialogs ? filterDialogs.length : 0}
+                        </Typography>
+                    </Box>
+                </Stack>
+            </Button>
             <Popover
                 id={id}
                 open={open}
@@ -99,7 +124,7 @@ const CustomComponent = () => {
                                 Clear All
                             </Button>
                         </Box>
-                        {filterDialogs.map((filter, index) => (
+                        {filterDialogs?.map((filter, index) => (
                             <CustomFilterItemDialog key={index} filter={filter} setFilterDialogs={setFilterDialogs} index={index} />
                         ))}
                         <Button onClick={handleAddFilter} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} variant="text" size='small' sx={{ textAlign: 'start' }}>

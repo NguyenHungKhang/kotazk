@@ -494,9 +494,9 @@ const ProjectList = () => {
 
     const fetchTasks = async () => {
         const filterData = currentFilterList?.map(f => ({
-            key: f.key,
-            operation: f.operation,
-            values: f.value,
+            key: f.field,
+            operation: "IN",
+            values: f.options,
         }));
 
         const data = {

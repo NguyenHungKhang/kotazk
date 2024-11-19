@@ -34,7 +34,9 @@ function KanbanDropNDrag() {
   // const [groupedTasks, setGroupedTasks] = useState(null);
   const groupedTasks = useSelector((state) => state.task.currentGroupedTaskList);
   const project = useSelector((state) => state.project.currentProject);
-  const currentFilterList = useSelector((state) => state.filter.currentFilterList)
+  const currentFilterList = useSelector((state) => state.filter.currentFilterList);
+  const sortEntity = useSelector((state) => state.sort.currentSortEntity);
+  const sortAscDirection = useSelector((state) => state.sort.currentSortDirection);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -47,7 +49,7 @@ function KanbanDropNDrag() {
     if (project) {
       fetchTasks();
     }
-  }, [project, groupByEntity, currentFilterList]);
+  }, [project, groupByEntity, currentFilterList, sortEntity, sortAscDirection]);
 
   useEffect(() => {
     if (tasks && groupByEntityList) {
@@ -74,8 +76,6 @@ function KanbanDropNDrag() {
   }
 
   const fetchTasks = async () => {
-    console.log(currentFilterList);
-
     const filterData = currentFilterList?.map(f => ({
       key: f.field,
       operation: "IN",
@@ -83,8 +83,8 @@ function KanbanDropNDrag() {
     }));
 
     const data = {
-      'sortBy': 'position',
-      'sortDirectionAsc': true,
+      'sortBy': sortEntity,
+      'sortDirectionAsc': sortAscDirection == "descending" ? false : true,
       'pageSize': 50,
       'filters': filterData || []
     }

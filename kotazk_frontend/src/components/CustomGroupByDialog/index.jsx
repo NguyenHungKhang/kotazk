@@ -6,12 +6,19 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Check from '@mui/icons-material/Check';
-import { Button, Menu, Stack, Typography, alpha, styled, useTheme } from '@mui/material';
+import { Box, Button, Menu, Stack, Typography, alpha, styled, useTheme } from '@mui/material';
 import LayersIcon from '@mui/icons-material/Layers';
 import { useDispatch } from 'react-redux';
 import { setCurrentGroupByEntity } from '../../redux/actions/groupBy.action';
 import { useSelector } from 'react-redux';
 import * as TablerIcons from '@tabler/icons-react'
+import { getCustomTwoModeColor } from '../../utils/themeUtil';
+
+const groupByMenu = [
+    { id: "status", label: "Status" },
+    { id: "taskType", label: "Task type" },
+    { id: "priority", label: "Priority" },
+]
 
 const StyledMenu = styled((props) => (
     <Menu
@@ -59,7 +66,6 @@ const StyledMenu = styled((props) => (
 export default function CustomGroupedByDialog() {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = React.useState(null);
-    // const [selectedItem, setSelectedItem] = React.useState('Status'); // Default selected item
     const selectedItem = useSelector((state) => state.groupBy.currentGroupByEntity);
     const section = useSelector((state) => state.section.currentSection);
     const open = Boolean(anchorEl);
@@ -67,7 +73,6 @@ export default function CustomGroupedByDialog() {
 
     const AddIcon = TablerIcons["IconPlus"];
     const DeleteIcon = TablerIcons["IconTrashXFilled"];
-
 
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
@@ -81,7 +86,6 @@ export default function CustomGroupedByDialog() {
         dispatch(setCurrentGroupByEntity({
             currentGroupByEntity: item,
             isSystemEntity: true,
-            idCustomEntity: null,
         }
         ))
         handleClose();
@@ -97,13 +101,34 @@ export default function CustomGroupedByDialog() {
                 onClick={handleClick}
                 sx={{
                     textTransform: 'none',
+                    width: 'fit-content'
                 }}
                 color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
                 size="small"
+                // variant='outlined'
                 startIcon={<LayersIcon fontSize="small" />}
             >
-                Group By
+                <Stack direction='row' spacing={1} alignItems={'center'}>
+                    <Box>
+                        Group By
+                    </Box>
+                    <Box
+                        display={'flex'}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        height={18}
+                        bgcolor={getCustomTwoModeColor(theme, "#000", "#fff")}
+                        px={1}
+                        borderRadius={1}
+                    >
+                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")}>
+                            {groupByMenu.find(i => i.id == selectedItem)?.label}
+                        </Typography>
+                    </Box>
+                </Stack>
             </Button>
+
+
             <StyledMenu
                 anchorEl={anchorEl}
                 open={open}

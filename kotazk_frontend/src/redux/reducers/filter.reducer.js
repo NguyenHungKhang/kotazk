@@ -1,5 +1,6 @@
 const initialState = {
     currentFilterList: null,
+    userChangeFilterList: false,
 }
 
 const FilterReducer = (state = initialState, action) => {
@@ -7,7 +8,14 @@ const FilterReducer = (state = initialState, action) => {
         case 'SET_CURRENT_FILTER_LIST':
             return {
                 ...state,
-                currentFilterList: action.payload
+                currentFilterList: action.payload,
+                userChangeFilterList: true
+            };
+        case 'INITIAL_CURRENT_FILTER_LIST':
+            return {
+                ...state,
+                currentFilterList: action.payload,
+                userChangeFilterList: false
             };
         default:
             return state;

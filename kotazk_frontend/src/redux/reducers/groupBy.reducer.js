@@ -1,7 +1,9 @@
+import { TroubleshootRounded } from "@mui/icons-material";
+
 const initialState = {
     currentGroupByEntity: 'status',
     isSystemEntity: true,
-    idCustomEntity: null,
+    userChangeGroupByEntity: false,
 }
 
 const GroupByReducer = (state = initialState, action) => {
@@ -9,16 +11,22 @@ const GroupByReducer = (state = initialState, action) => {
         case 'SET_CURRENT_GROUPBY_ENTITY':
             return {
                 ...state,
-                currentGroupByEntity: action.payload.currentGroupByEntity,
-                isSystemEntity: action.payload.isSystemEntity,
-                idCustomEntity: action.payload.idCustomEntity,
+                currentGroupByEntity: action.payload.currentGroupByEntity ?? "status",
+                isSystemEntity: true,
+                userChangeGroupByEntity: true
+            };
+        case 'INITIAL_CURRENT_GROUPBY_ENTITY':
+            return {
+                ...state,
+                currentGroupByEntity: action.payload.currentGroupByEntity ?? "status",
+                isSystemEntity: true,
+                userChangeGroupByEntity: false
             };
         case 'CLEAR_CURRENT_GROUPBY_ENTITY':
             return {
                 ...state,
                 currentGroupByEntity: null,
                 isSystemEntity: null,
-                idCustomEntity: null,
             };
         default:
             return state;

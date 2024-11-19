@@ -1,0 +1,2 @@
+export const setCurrentSortEntity = (sort) => ({type: 'SET_CURRENT_SORT_ENTITY', payload: sort});
+export const initialCurrentSortEntity = (sort) => ({type: 'INITIAL_CURRENT_SORT_ENTITY', payload: sort});

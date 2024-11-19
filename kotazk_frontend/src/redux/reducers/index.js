@@ -14,6 +14,7 @@ import SectionReducer from "./section.reducer";
 import MemberRoleReducer from "./memberRole.reducer";
 import ProjectReportReducer from "./projectReport.reducer";
 import { combineReducers } from 'redux'
+import SortReducer from "./sort.reducer";
 
 const allReducers = {
     workspace: WorkspaceReducer,
@@ -30,7 +31,8 @@ const allReducers = {
     groupBy: GroupByReducer,
     section: SectionReducer,
     memberRole: MemberRoleReducer,
-    projectReport: ProjectReportReducer
+    projectReport: ProjectReportReducer,
+    sort: SortReducer
 }
 
 const rootReducer = combineReducers(allReducers);
