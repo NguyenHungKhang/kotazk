@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.response.task;
 
+import com.taskmanagement.kotazk.payload.response.activityLog.ActivityLogResponseDto;
 import com.taskmanagement.kotazk.payload.response.attachment.AttachmentResponseDto;
 import com.taskmanagement.kotazk.payload.response.label.LabelResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
@@ -44,4 +45,5 @@ public class TaskResponseDto {
     Set<LabelResponseDto> labels = new HashSet<>();
     List<TaskResponseDto> childTasks = new ArrayList<>();
     List<AttachmentResponseDto> attachments = new ArrayList<>();
+    List<ActivityLogResponseDto> activityLogs = new ArrayList<>();
 }

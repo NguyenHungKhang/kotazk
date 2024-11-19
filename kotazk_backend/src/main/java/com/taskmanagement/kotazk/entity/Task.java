@@ -112,7 +112,8 @@ public class Task {
     private List<Task> childTasks;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ActivityLog> activityLogs;
+    @OrderBy("createdAt")
+    private List<ActivityLog> activityLogs;
 
     @CreationTimestamp
     @Column(name = "created_at")
