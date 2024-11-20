@@ -113,30 +113,12 @@ public class TaskService implements ITaskService {
         Task savedTask = taskRepository.save(newTask);
 
         if (parentTask != null) {
-            ActivityLog activityLog = ActivityLog.builder()
-                    .task(parentTask)
-                    .user(currentUser)
-                    .member(currentMember)
-                    .content(String.format("add child task 7461736B%s", savedTask.getId()))
-                    .userText(currentMember.getUser().getFirstName() + " " + currentMember.getUser().getLastName())
-                    .systemInitial(true)
-                    .systemRequired(false)
-                    .type(ActivityLogType.TASK_HISTORY)
-                    .build();
+            ActivityLog parrentActivityLog = activityLogTaskTemplate(parentTask, currentUser, currentMember, String.format("add child task 7461736B%s", savedTask.getId()));
+            activityLogs.add(parrentActivityLog);
         }
+        ActivityLog taskActivityLog = activityLogTaskTemplate(savedTask, currentUser, currentMember, String.format("create this task"));
 
-        ActivityLog activityLog = ActivityLog.builder()
-                .task(savedTask)
-                .user(currentUser)
-                .member(currentMember)
-                .content("create this task")
-                .userText(currentMember.getUser().getFirstName() + " " + currentMember.getUser().getLastName())
-                .systemInitial(true)
-                .systemRequired(false)
-                .type(ActivityLogType.TASK_HISTORY)
-                .build();
-
-        activityLogs.add(activityLog);
+        activityLogs.add(taskActivityLog);
         activityLogRepository.saveAll(activityLogs);
 
         return ModelMapperUtil.mapOne(savedTask, TaskResponseDto.class);

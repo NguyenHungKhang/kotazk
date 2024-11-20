@@ -27,6 +27,7 @@ import Section from "../pages/Section";
 import ProjectRole from "../pages/ProjectRole";
 import ProjectReport from "../pages/ProjectReport";
 import DnDGrid from "../playgrounds/components/DndGrid";
+import ListWorkspace from "../playgrounds/components/TestDnDLap";
 
 const pagesData = [
   {
@@ -93,6 +94,11 @@ const pagesData = [
     path: "/project/:projectId/setting",
     element: <Project><ProjectSetting /></Project>,
     title: "playground"
+  }, {
+    path: "/playground/list-wp",
+    element: <ListWorkspace />,
+    title: "playground"
+  }, {
   },
   {
     path: "/playground/task",
