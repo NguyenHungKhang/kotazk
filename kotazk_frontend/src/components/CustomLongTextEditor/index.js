@@ -330,13 +330,13 @@ export const CustomLongTextEditor = ({ content, setContent, saveContent }) => {
             {editable &&
 
                 <Stack direction={'row'} spacing={2} mt={2}>
-                    <Button size='small' variant='contained' onClick={() => {
+                    <Button size='small' variant='contained' color='success' onClick={() => {
                         saveContent();
                         setEditable(false)
                     }}>
                         Save
                     </Button>
-                    <Button size='small' variant='outlined' onClick={() => setEditable(false)}>
+                    <Button size='small' variant='outlined' color='error' onClick={() => setEditable(false)}>
                         Cancle
                     </Button>
                 </Stack>

@@ -28,14 +28,18 @@ public class TaskComment {
     private Task task;
 
     @ManyToOne
-    @JoinColumn(name = "member_id", nullable = false)
+    @JoinColumn(name = "member_id")
     private Member member;
 
-    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Attachment> attachments;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Folder> folders;
+//    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private Set<Attachment> attachments;
+//
+//    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private Set<Folder> folders;
 
     @CreationTimestamp
     @Column(name = "created_at")

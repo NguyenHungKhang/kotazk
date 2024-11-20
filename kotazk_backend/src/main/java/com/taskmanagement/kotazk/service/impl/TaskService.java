@@ -68,6 +68,8 @@ public class TaskService implements ITaskService {
                 true
         );
 
+        List<ActivityLog> activityLogs = new ArrayList<>();
+
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.CREATE_TASKS))
             throw new CustomException("This user do not have permission to create task in this project");
 
@@ -109,17 +111,33 @@ public class TaskService implements ITaskService {
                 .build();
 
         Task savedTask = taskRepository.save(newTask);
+
+        if (parentTask != null) {
+            ActivityLog activityLog = ActivityLog.builder()
+                    .task(parentTask)
+                    .user(currentUser)
+                    .member(currentMember)
+                    .content(String.format("add child task 7461736B%s", savedTask.getId()))
+                    .userText(currentMember.getUser().getFirstName() + " " + currentMember.getUser().getLastName())
+                    .systemInitial(true)
+                    .systemRequired(false)
+                    .type(ActivityLogType.TASK_HISTORY)
+                    .build();
+        }
+
         ActivityLog activityLog = ActivityLog.builder()
                 .task(savedTask)
                 .user(currentUser)
                 .member(currentMember)
-                .content("{userText} create this task")
+                .content("create this task")
                 .userText(currentMember.getUser().getFirstName() + " " + currentMember.getUser().getLastName())
                 .systemInitial(true)
                 .systemRequired(false)
                 .type(ActivityLogType.TASK_HISTORY)
                 .build();
-        activityLogRepository.save(activityLog);
+
+        activityLogs.add(activityLog);
+        activityLogRepository.saveAll(activityLogs);
 
         return ModelMapperUtil.mapOne(savedTask, TaskResponseDto.class);
     }
@@ -161,18 +179,16 @@ public class TaskService implements ITaskService {
 
         Optional.ofNullable(taskRequestDto.getName())
                 .ifPresent(name -> {
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    newActivityLog.setContent("{userText} changed name from {1} to {2}");
-                    newActivityLog.setFirstEntity(currentTask.getName());
-                    newActivityLog.setSecondEntity(name);
+                    String content = String.format("changed name from %s to %s", currentTask.getName(), name);
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setName(name);
                 });
 
         Optional.ofNullable(taskRequestDto.getDescription())
                 .ifPresent(desc -> {
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    newActivityLog.setContent("{userText} changed description");
+                    String content = String.format("changed description");
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setDescription(desc);
                 });
@@ -180,9 +196,8 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getAssigneeId())
                 .ifPresent(assigneeId -> {
                     Member assignee = checkAssignee(currentMember, project, assigneeId);
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    newActivityLog.setContent("{userText} assigned to {1}");
-                    newActivityLog.setFirstEntity(assignee.getUser().getEmail());
+                    String content = String.format("assigned to %s %s", assignee.getUser().getFirstName(), assignee.getUser().getLastName());
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setAssignee(assignee);
                 });
@@ -190,10 +205,8 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getStatusId())
                 .ifPresent(statusId -> {
                     Status status = checkStatus(project, statusId);
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    newActivityLog.setContent("{userText} changed status from {1} to {2}");
-                    newActivityLog.setFirstEntity(currentTask.getStatus().getName());
-                    newActivityLog.setSecondEntity(status.getName());
+                    String content = String.format("changed status from %s to %s", currentTask.getStatus().getName(), status.getName());
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setStatus(status);
                 });
@@ -201,42 +214,35 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getPriorityId())
                 .ifPresent(priorityId -> {
                     Priority priority = checkPriority(project, priorityId);
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    if(currentTask.getPriority() == null) {
-                        newActivityLog.setContent("{userText} set priority to {1}");
-                        newActivityLog.setFirstEntity(priority.getName());
-                    } else {
-                        newActivityLog.setContent("{userText} changed priority from {1} to {2}");
-                        newActivityLog.setFirstEntity(currentTask.getPriority().getName());
-                        newActivityLog.setSecondEntity(priority.getName());
-                    }
+                    String content;
+                    if (currentTask.getPriority() == null)
+                        content = String.format("set priority %s", priority.getName());
+                    else
+                        content = String.format("changed priority from %s to %s", currentTask.getPriority().getName(), priority.getName());
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setPriority(priority);
                 });
 
         Optional.ofNullable(taskRequestDto.getTimeEstimate())
                 .ifPresent(timeEstimate -> {
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    if(currentTask.getTimeEstimate() == null) {
-                        newActivityLog.setContent("{userText} set time estimate {1}");
-                        newActivityLog.setFirstEntity(timeEstimate.toString());
-                    } else {
-                        newActivityLog.setContent("{userText} changed time estimate from {1} to {2}");
-                        newActivityLog.setFirstEntity(currentTask.getTimeEstimate().toString());
-                        newActivityLog.setSecondEntity(timeEstimate.toString());
-                    }
+                    String content;
+                    if (currentTask.getPriority() == null)
+                        content = String.format("set time estimate %s", timeEstimate.toString());
+                    else
+                        content = String.format("changed time estimate from %s to %s", currentTask.getTimeEstimate().toString(), timeEstimate.toString());
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setTimeEstimate(timeEstimate);
                 });
 
         if (taskRequestDto.getIsCompleted() != null) {
-            ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-            if(taskRequestDto.getIsCompleted() == true) {
-                newActivityLog.setContent("{userText} set task completed");
-            } else {
-                newActivityLog.setContent("{userText} set task uncompleted");
-                newActivityLog.setFirstEntity(currentTask.getTimeEstimate().toString());
-            }
+            String content;
+            if (currentTask.getIsCompleted() == true)
+                content = String.format("set task completed");
+            else
+                content = String.format("set task uncompleted");
+            ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
             activityLogs.add(newActivityLog);
             currentTask.setIsCompleted(taskRequestDto.getIsCompleted());
         }
@@ -251,16 +257,16 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getTaskTypeId())
                 .ifPresent(taskTypeId -> {
                     TaskType taskType = checkTaskType(project, taskTypeId);
-                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember);
-                    newActivityLog.setContent("{userText} changed tsk type from {1} to {2}");
-                    newActivityLog.setFirstEntity(currentTask.getTaskType().getName());
-                    newActivityLog.setSecondEntity(taskType.getName());
+                    String content = String.format("changed task type from %s to %s", currentTask.getTaskType().getName(), taskType.getName());
+                    ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setTaskType(taskType);
                 });
 
         Optional.ofNullable(taskRequestDto.getLabelIds())
-                .ifPresent(labelIds -> currentTask.setLabels(checkLabels(project, labelIds)));
+                .ifPresent(labelIds -> {
+                    currentTask.setLabels(checkLabels(project, labelIds));
+                });
 
         Optional.ofNullable(taskRequestDto.getRePositionReq())
                 .ifPresent(rePositionReq -> {
@@ -642,7 +648,7 @@ public class TaskService implements ITaskService {
         taskRepository.saveAll(orderedTasks);
     }
 
-    private ActivityLog activityLogTaskTemplate(Task task, User user, Member member) {
+    private ActivityLog activityLogTaskTemplate(Task task, User user, Member member, String content) {
         ActivityLog activityLogTemplate = new ActivityLog();
         activityLogTemplate.setTask(task);
         activityLogTemplate.setUser(user);
@@ -652,6 +658,7 @@ public class TaskService implements ITaskService {
         activityLogTemplate.setSystemRequired(false);
         activityLogTemplate.setType(ActivityLogType.TASK_HISTORY);
         activityLogTemplate.setTask(task);
+        activityLogTemplate.setContent(content);
 
         return activityLogTemplate;
     }

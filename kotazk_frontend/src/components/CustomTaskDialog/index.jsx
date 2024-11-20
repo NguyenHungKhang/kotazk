@@ -25,6 +25,8 @@ import CustomTaskTypePicker from '../CustomTaskTypePicker';
 import { CustomLongTextEditor } from '../CustomLongTextEditor';
 import SubtaskComponent from './SubtaskComponent';
 import CustomTimeEstimateTextField from '../CustomTimeEstimateTextField';
+import TaskActivity from './TaskActivity';
+import CommentComponent from './CommentComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -581,7 +583,20 @@ const CustomTaskDialog = () => {
 
                     </Grid2> */}
 
+                <Box mt={6}>
+                    <Typography variant='h6' fontWeight={650}>
+                        Task Activities
+                    </Typography>
+                    <TaskActivity activityLogs={task?.activityLogs} />
+                </Box>
 
+
+                <Box mt={6}>
+                    <Typography variant='h6' fontWeight={650}>
+                        Comments
+                    </Typography>
+                    <CommentComponent/>
+                </Box>
 
             </DialogContent >
             <Divider />
