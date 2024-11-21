@@ -30,9 +30,27 @@ const CustomManageStatus = () => {
     const project = useSelector((state) => state.project.currentProject)
     const [selectedStatus, setSelectedStatus] = useState(null);
     const [openAddStatus, setOpenAddStatus] = useState(false);
-    const [items, setItems] = useState(statuses);
+    const [items, setItems] = useState(null);
     const DragIcon = TablerIcons["IconGripVertical"];
     const EditIcon = TablerIcons["IconEdit"];
+
+    useEffect(() => {
+        if (project)
+            fetchStatus();
+    }, [project])
+
+    const fetchStatus = async () => {
+        const data = {
+            'sortBy': 'position',
+            'sortDirectionAsc': true,
+            "filters": []
+        }
+
+        const response = await apiService.statusAPI.getPageByProject(project.id, data)
+        if (response?.data) {
+            dispatch(setCurrentStatusList(response?.data?.content))
+        }
+    }
 
     useEffect(() => {
         if (statuses)
@@ -83,11 +101,12 @@ const CustomManageStatus = () => {
     };
 
 
-    return (
-        <Box
-
-            p={4}
-            borderRadius={4}
+    return items == null ? <>Loading ...</> : (
+        <Card
+            sx={{
+                p: 4,
+                height: '100%'
+            }}
         >
             <Stack direction='row' spacing={2} alignItems='center'>
                 <Typography variant="h5" fontWeight={500} flexGrow={1}>
@@ -116,8 +135,8 @@ const CustomManageStatus = () => {
             </Stack>
             <Box
                 bgcolor={getSecondBackgroundColor(theme)}
-                borderRadius={4}
-                p={4}
+                borderRadius={2}
+                p={2}
             >
                 {openAddStatus && <StatusAddItem statuses={statuses} project={project} setOpenAddStatus={setOpenAddStatus} />}
                 {/* DragDropContext to enable drag and drop functionality */}
@@ -132,21 +151,24 @@ const CustomManageStatus = () => {
                                 {items?.map((status, index) => (
                                     <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
                                         {(provided) => (
-
-                                            <Stack
-                                                direction="row"
-                                                spacing={2}
-                                                alignItems='stretch'
+                                            <Card
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
-
                                             >
-                                                <Card {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                    <DragIcon size={20} stroke={2} />
-                                                </Card>
-                                                <StatusListItem status={status} statuses={statuses} />
-                                            </Stack>
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    alignItems='stretch'
 
+
+                                                >
+                                                    <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <DragIcon size={20} stroke={2} />
+                                                    </Box>
+                                                    <StatusListItem status={status} statuses={statuses} />
+
+                                                </Stack>
+                                            </Card>
                                         )}
                                     </Draggable>
                                 ))}
@@ -156,7 +178,7 @@ const CustomManageStatus = () => {
                     </Droppable>
                 </DragDropContext>
             </Box>
-        </Box>
+        </Card>
     );
 };
 
@@ -174,10 +196,8 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
     const [customization, setCustomization] = useState(null);
     const [isChange, setIsChange] = useState(false);
 
-    // Ref for the component
     const wrapperRef = useRef(null);
 
-    // Detect clicks outside of the component
     useEffect(() => {
         function handleClickOutside(event) {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -225,7 +245,7 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
             p={2}
             borderColor={theme.palette.success.main}
         >
-            <Card sx={{ py: 2, px: 4, flexGrow: 1 }}>
+            <Box sx={{ py: 2, px: 4, flexGrow: 1 }}>
                 <Stack
                     direction="row"
                     spacing={4}
@@ -248,20 +268,20 @@ const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
                     <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} />
                     <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} />
                 </Stack>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            </Box>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <IconButton
                     onClick={handleSaveStatus}
                     disabled={!isChange}
                 >
                     <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.success.main : theme.palette.grey[500]} />
                 </IconButton>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            </Box>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <IconButton onClick={() => setOpenAddStatus(false)}>
                     <CancleIcon size={20} stroke={2} color={theme.palette.error.main} />
                 </IconButton>
-            </Card>
+            </Box>
         </Stack>
     );
 };
@@ -332,7 +352,7 @@ const StatusListItem = ({ status, statuses }) => {
 
     return (
         <>
-            <Card
+            <Box
                 sx={{ py: 2, px: 4, flexGrow: 1 }}
             > <Stack
 
@@ -357,21 +377,21 @@ const StatusListItem = ({ status, statuses }) => {
                     <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} />
                     <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
                 </Stack>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
+            </Box>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
                 <IconButton
                     onClick={handleSaveStatus}
                     disabled={!isChange}
                 >
                     <EditIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
                 </IconButton>
-            </Card>
+            </Box>
             {!status.systemRequired &&
-                <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>
-                </Card>
+                </Box>
             }
         </>
     );

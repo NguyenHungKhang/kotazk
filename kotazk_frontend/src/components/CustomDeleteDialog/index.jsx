@@ -18,9 +18,13 @@ import { setCurrentPriorityList } from '../../redux/actions/priority.action';
 import { setCurrentLabelList } from '../../redux/actions/label.action';
 import { delteMemberRole } from '../../redux/actions/memberRole.action';
 import { deleteProjectReport } from '../../redux/actions/projectReport.action';
+import { removeItemTaskCommentList } from '../../redux/actions/taskComment.action';
+import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import { useTheme } from '@mui/material';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
+    const theme = useTheme();
     const dispatch = useDispatch();
     const { title, content, open, deleteType, deleteProps } = useSelector((state) => state.dialog.deleteDialog);
     const isGroupedList = useSelector((state) => state.task.isGroupedList);
@@ -68,6 +72,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_PROJECT_REPORT" && deleteProps != null) {
             const projectReportId = deleteProps.projectReportId;
             await handleDeleteProjectReport(projectReportId);
+        } else if (deleteType == "DELETE_TASK_COMMENT" && deleteProps != null) {
+            const taskCommentId = deleteProps.taskCommentId;
+            await handleDeleteTaskComment(taskCommentId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -290,6 +297,22 @@ export default function CustomDeleteDialog({ deleteAction }) {
         }
     };
 
+    
+    const handleDeleteTaskComment = async (taskCommentId) => {
+        try {
+            const response = await apiService.taskComment.remove(taskCommentId);
+            if (response?.data) {
+                dispatch(removeItemTaskCommentList(taskCommentId));
+                dispatch(setSnackbar({
+                    content: "Task comment delete successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete task comment:', error);
+        }
+    };
+
     return (
         <Dialog
             open={open}
@@ -307,7 +330,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleDeleteAction} variant='contained' color='error'>Delete</Button>
-                <Button onClick={handleClose} autoFocus variant='outlined' color='error'>
+                <Button onClick={handleClose} autoFocus variant='contained' color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}>
                     Cancle
                 </Button>
             </DialogActions>

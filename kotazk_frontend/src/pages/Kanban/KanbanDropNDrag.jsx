@@ -46,10 +46,10 @@ function KanbanDropNDrag() {
   }, [project, groupByEntity]);
 
   useEffect(() => {
-    if (project) {
+    if (project && groupByEntityList && currentFilterList && sortEntity && sortAscDirection) {
       fetchTasks();
     }
-  }, [project, groupByEntity, currentFilterList, sortEntity, sortAscDirection]);
+  }, [project, groupByEntityList, currentFilterList, sortEntity, sortAscDirection]);
 
   useEffect(() => {
     if (tasks && groupByEntityList) {

@@ -13,8 +13,10 @@ import GroupByReducer from "./groupBy.reducer";
 import SectionReducer from "./section.reducer";
 import MemberRoleReducer from "./memberRole.reducer";
 import ProjectReportReducer from "./projectReport.reducer";
-import { combineReducers } from 'redux'
 import SortReducer from "./sort.reducer";
+import TaskCommentReducer from "./taskComment.reducer";
+import { combineReducers } from 'redux'
+
 
 const allReducers = {
     workspace: WorkspaceReducer,
@@ -32,7 +34,8 @@ const allReducers = {
     section: SectionReducer,
     memberRole: MemberRoleReducer,
     projectReport: ProjectReportReducer,
-    sort: SortReducer
+    sort: SortReducer,
+    taskComment: TaskCommentReducer
 }
 
 const rootReducer = combineReducers(allReducers);

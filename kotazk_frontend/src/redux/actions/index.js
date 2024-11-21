@@ -14,5 +14,6 @@ import * as SectionActions from './section.action'
 import * as MemberRoleActions from './memberRole.action'
 import * as ProjectReportActions from './projectReport.action'
 import * as SortActions from './sort.action'
+import * as TaskCommentActions from './taskComment.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions, MemberRoleActions, SortActions }
+export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions, MemberRoleActions, SortActions, TaskCommentActions }
