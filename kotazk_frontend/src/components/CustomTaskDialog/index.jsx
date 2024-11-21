@@ -595,7 +595,7 @@ const CustomTaskDialog = () => {
                     <Typography variant='h6' fontWeight={650}>
                         Comments
                     </Typography>
-                    <CommentComponent/>
+                    <CommentComponent task={task} />
                 </Box>
 
             </DialogContent >

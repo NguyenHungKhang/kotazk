@@ -12,6 +12,7 @@ import * as memberRoleAPI from './memberRole.api.js'
 import * as attachmentAPI from './attachment.api.js'
 import * as userAPI from './user.api.js'
 import * as projectReport from './projectReport.api.js'
+import * as taskComment from './taskComment.api.js'
 export {
     authAPI,
     projectAPI,
@@ -26,5 +27,6 @@ export {
     memberRoleAPI,
     attachmentAPI,
     userAPI,
-    projectReport
+    projectReport,
+    taskComment
 };
