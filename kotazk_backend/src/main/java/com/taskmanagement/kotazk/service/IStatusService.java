@@ -15,6 +15,7 @@ public interface IStatusService {
     List<Status> initialStatus();
     StatusResponseDto create(StatusRequestDto status);
     StatusResponseDto update(Long id, StatusRequestDto status);
+    List<StatusResponseDto> saveList(List<StatusRequestDto> statuses, Long projectId);
     List<Map<String, Long>> delete(Long id);
     Boolean softDelete(Long id);
     StatusResponseDto getOne(Long id);

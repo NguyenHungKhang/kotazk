@@ -8,8 +8,6 @@ import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
-import com.taskmanagement.kotazk.payload.response.customization.CustomizationResponseDto;
-import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
@@ -35,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
@@ -76,8 +76,8 @@ public class StatusService implements IStatusService {
 
         return List.of(
                 createDefaultInitialStatus("To do", DEFAULT_POSITION_STEP, false, true, true, todoCustomization),
-                createDefaultInitialStatus("In process", 2L*DEFAULT_POSITION_STEP, false, false, true, inProcessCustomization),
-                createDefaultInitialStatus("Done", 3L*DEFAULT_POSITION_STEP, true, false, true, doneCustomization)
+                createDefaultInitialStatus("In process", 2L * DEFAULT_POSITION_STEP, false, false, true, inProcessCustomization),
+                createDefaultInitialStatus("Done", 3L * DEFAULT_POSITION_STEP, true, false, true, doneCustomization)
         );
     }
 
@@ -170,6 +170,60 @@ public class StatusService implements IStatusService {
 
         Status savedStatus = statusRepository.save(currentStatus);
         return ModelMapperUtil.mapOne(savedStatus, StatusResponseDto.class);
+    }
+
+    @Override
+    public List<StatusResponseDto> saveList(List<StatusRequestDto> statusRequestDtos, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+
+        Member currentProjectMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                true
+        );
+
+        AtomicInteger positionIndex = new AtomicInteger();
+        AtomicReference<Boolean> isCompletedStatusFlag = new AtomicReference<>(false);
+        AtomicReference<Boolean> isFromStartStatusFlag = new AtomicReference<>(false);
+
+        List<Status> statuses = statusRequestDtos.stream()
+                .map(s -> {
+                    Status status = new Status();
+                    Optional.ofNullable(s.getId()).ifPresent(status::setId);
+                    if (s.getProjectId() != projectId)
+                        throw new CustomException("Invalid input!");
+                    status.setProject(project);
+                    status.setName(s.getName());
+                    status.setDescription(s.getDescription());
+                    status.setIsCompletedStatus(s.getIsCompletedStatus());
+                    status.setIsFromAny(s.getIsFromAny());
+                    status.setIsFromStart(s.getIsFromStart());
+                    status.setPosition(RepositionUtil.calculateNewLastPosition(positionIndex.getAndIncrement()));
+                    status.setName(s.getName());
+
+                    Customization customization = new Customization();
+                    customization.setBackgroundColor(s.getCustomization().getBackgroundColor());
+                    customization.setIcon(s.getCustomization().getIcon());
+                    status.setCustomization(customization);
+
+                    if(s.getIsCompletedStatus() == true) isCompletedStatusFlag.set(true);
+                    if(s.getIsFromStart() == true) isFromStartStatusFlag.set(true);
+                    return status;
+                }).toList();
+
+        if(!isCompletedStatusFlag.get() || !isFromStartStatusFlag.get()) {
+            throw new CustomException("Need at least 1 completed status and 1 starter status!");
+        }
+
+        project.getStatuses().clear();
+        project.getStatuses().addAll(statuses);
+        List<Status> savedStatuses = projectRepository.save(project).getStatuses();
+
+        return ModelMapperUtil.mapList(savedStatuses, StatusResponseDto.class);
     }
 
     @Override

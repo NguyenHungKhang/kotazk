@@ -35,8 +35,14 @@ public class StatusController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public StatusResponseDto update(@Valid @RequestBody StatusRequestDto statusRequestDto, @PathVariable Long id) {
+    public StatusResponseDto update(@RequestBody StatusRequestDto statusRequestDto, @PathVariable Long id) {
         return statusService.update(id, statusRequestDto);
+    }
+
+    @PostMapping("/save-list/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<StatusResponseDto> saveList(@Valid @RequestBody List<StatusRequestDto> statusRequestDtos, @PathVariable Long projectId) {
+        return statusService.saveList(statusRequestDtos, projectId);
     }
 
     @DeleteMapping("/{id}")

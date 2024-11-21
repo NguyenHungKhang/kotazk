@@ -25,7 +25,7 @@ public class TaskType {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
@@ -47,7 +47,7 @@ public class TaskType {
     @Column(name = "position", nullable = false)
     private Long position;
 
-    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "taskType", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @OrderBy("position")
     private List<Task> tasks;
 

@@ -27,7 +27,7 @@ public class Status {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 

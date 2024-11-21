@@ -2,9 +2,11 @@ package com.taskmanagement.kotazk.controller;
 
 import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.request.tasktype.TaskTypeRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
+import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import com.taskmanagement.kotazk.service.ITaskTypeService;
 import com.taskmanagement.kotazk.service.impl.TaskTypeService;
@@ -31,8 +33,14 @@ public class TaskTypeController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public TaskTypeResponseDto update(@Valid @RequestBody TaskTypeRequestDto taskTypeRequestDto, @PathVariable Long id) {
+    public TaskTypeResponseDto update(@RequestBody TaskTypeRequestDto taskTypeRequestDto, @PathVariable Long id) {
         return taskTypeService.update(id, taskTypeRequestDto);
+    }
+
+    @PostMapping("/save-list/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<TaskTypeResponseDto> saveList(@Valid @RequestBody List<TaskTypeRequestDto> taskTypeRequestDtos, @PathVariable Long projectId) {
+        return taskTypeService.saveList(taskTypeRequestDtos, projectId);
     }
 
     @DeleteMapping("/{id}")

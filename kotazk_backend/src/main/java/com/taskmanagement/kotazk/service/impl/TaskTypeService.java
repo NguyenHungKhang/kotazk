@@ -13,6 +13,7 @@ import com.taskmanagement.kotazk.payload.request.tasktype.TaskTypeRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
+import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.ITaskRepository;
@@ -36,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
@@ -158,6 +160,47 @@ public class TaskTypeService implements ITaskTypeService {
         TaskType savedTaskType = taskTypeRepository.save(currentTaskType);
 
         return ModelMapperUtil.mapOne(savedTaskType, TaskTypeResponseDto.class);
+    }
+
+    @Override
+    public List<TaskTypeResponseDto> saveList(List<TaskTypeRequestDto> taskTypeRequestDtos, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(projectId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = null;
+        if (!isAdmin)
+            checkManageTaskTypePermission(currentUser.getId(), project.getId(), workSpace.getId());
+
+        AtomicInteger positionIndex = new AtomicInteger();
+
+        List<TaskType> taskTypes = taskTypeRequestDtos.stream()
+                .map(t -> {
+                    TaskType taskType = new TaskType();
+                    Optional.ofNullable(t.getId()).ifPresent(taskType::setId);
+                    if (t.getProjectId() != projectId)
+                        throw new CustomException("Invalid input!");
+                    taskType.setProject(project);
+                    taskType.setName(t.getName());
+                    taskType.setDescription(t.getDescription());
+                    taskType.setPosition(RepositionUtil.calculateNewLastPosition(positionIndex.getAndIncrement()));
+
+                    Customization customization = new Customization();
+                    customization.setBackgroundColor(t.getCustomization().getBackgroundColor());
+                    customization.setIcon(t.getCustomization().getIcon());
+                    taskType.setCustomization(customization);
+
+                    return taskType;
+                }).toList();
+
+        project.getTaskTypes().clear();
+        project.getTaskTypes().addAll(taskTypes);
+        List<TaskType> savedTaskTypes = projectRepository.save(project).getTaskTypes();
+
+        return ModelMapperUtil.mapList(savedTaskTypes, TaskTypeResponseDto.class);
     }
 
     @Override

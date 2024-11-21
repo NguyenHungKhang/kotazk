@@ -16,6 +16,7 @@ public interface ITaskTypeService {
     List<TaskType> initialTaskType();
     TaskTypeResponseDto create(TaskTypeRequestDto taskTypeRequestDto);
     TaskTypeResponseDto update(Long id, TaskTypeRequestDto taskTypeRequestDto);
+    List<TaskTypeResponseDto> saveList(List<TaskTypeRequestDto> taskTypeRequestDtos, Long projectId);
     List<Map<String, Object>>  delete(Long id);
     Boolean softDelete(Long id);
     RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
