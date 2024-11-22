@@ -10,10 +10,7 @@ import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDto;
-import com.taskmanagement.kotazk.repository.ICustomizationRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.IStatusRepository;
-import com.taskmanagement.kotazk.repository.ITaskRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IStatusService;
@@ -47,6 +44,8 @@ public class StatusService implements IStatusService {
     private IStatusRepository statusRepository;
     @Autowired
     private IProjectRepository projectRepository;
+    @Autowired
+    private IFilterSettingRepository filterSettingRepository;
     @Autowired
     private ITaskRepository taskRepository;
     @Autowired
@@ -190,10 +189,15 @@ public class StatusService implements IStatusService {
         AtomicReference<Boolean> isCompletedStatusFlag = new AtomicReference<>(false);
         AtomicReference<Boolean> isFromStartStatusFlag = new AtomicReference<>(false);
 
+        Set<Long> incomingStatusIds = new HashSet<>();
+
         List<Status> statuses = statusRequestDtos.stream()
                 .map(s -> {
                     Status status = new Status();
-                    Optional.ofNullable(s.getId()).ifPresent(status::setId);
+                    Optional.ofNullable(s.getId()).ifPresent(id -> {
+                        status.setId(id);
+                        incomingStatusIds.add(id);
+                    });
                     if (s.getProjectId() != projectId)
                         throw new CustomException("Invalid input!");
                     status.setProject(project);
@@ -203,21 +207,66 @@ public class StatusService implements IStatusService {
                     status.setIsFromAny(s.getIsFromAny());
                     status.setIsFromStart(s.getIsFromStart());
                     status.setPosition(RepositionUtil.calculateNewLastPosition(positionIndex.getAndIncrement()));
-                    status.setName(s.getName());
 
                     Customization customization = new Customization();
                     customization.setBackgroundColor(s.getCustomization().getBackgroundColor());
                     customization.setIcon(s.getCustomization().getIcon());
                     status.setCustomization(customization);
 
-                    if(s.getIsCompletedStatus() == true) isCompletedStatusFlag.set(true);
-                    if(s.getIsFromStart() == true) isFromStartStatusFlag.set(true);
+                    if (s.getIsCompletedStatus() == true) isCompletedStatusFlag.set(true);
+                    if (s.getIsFromStart() == true) {
+                        isFromStartStatusFlag.set(true);
+                    }
                     return status;
                 }).toList();
 
-        if(!isCompletedStatusFlag.get() || !isFromStartStatusFlag.get()) {
+        if (!isCompletedStatusFlag.get() || !isFromStartStatusFlag.get()) {
             throw new CustomException("Need at least 1 completed status and 1 starter status!");
         }
+
+        List<Status> deletedStatuses = project.getStatuses().stream()
+                .filter(st -> {
+                    if (!incomingStatusIds.contains(st.getId()) && st.getSystemRequired()) {
+                        throw new CustomException("Cannot delete system status");
+                    }
+                    return !incomingStatusIds.contains(st.getId());
+                })
+                .collect(Collectors.toList());
+
+        List<Task> tasksToDelete = deletedStatuses.stream()
+                .flatMap(st -> st.getTasks().stream())
+                .collect(Collectors.toList());
+
+        List<String> idStatusToDelete = deletedStatuses.stream().map(s -> s.getId().toString()).toList();
+
+        statuses.stream()
+                .filter(status -> Boolean.TRUE.equals(status.getIsFromStart()))
+                .findFirst()
+                .ifPresent(status -> {
+                    deletedStatuses.forEach(deletedStatus -> deletedStatus.setTasks(new ArrayList<>()));
+                    tasksToDelete.forEach(task -> task.setStatus(status));
+                    status.setTasks(tasksToDelete);
+                });
+
+        project.getSections().forEach(section -> {
+            section.getFilterSettings().forEach(filter -> {
+                if (filter.getField().equals(FilterField.STATUS)) {
+                    List<String> updatedValues = filter.getValues().stream()
+                            .filter(value -> !idStatusToDelete.contains(value))
+                            .collect(Collectors.toList());
+                    FilterSetting updatedFilter = FilterSetting.builder()
+                            .section(section)
+                            .field(filter.getField())
+                            .values(updatedValues)
+                            .operator(filter.getOperator())
+                            .build();
+
+                    section.getFilterSettings().remove(filter);
+                    section.getFilterSettings().add(updatedFilter);
+                }
+            });
+        });
+
 
         project.getStatuses().clear();
         project.getStatuses().addAll(statuses);

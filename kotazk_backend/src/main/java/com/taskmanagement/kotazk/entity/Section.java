@@ -30,7 +30,7 @@ public class Section {
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 

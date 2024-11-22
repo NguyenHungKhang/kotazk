@@ -12,6 +12,7 @@ public interface IPriorityService {
     List<Priority> initialPriority();
     PriorityResponseDto create(PriorityRequestDto priorityRequestDto);
     PriorityResponseDto update(Long id, PriorityRequestDto priorityRequestDto);
+    List<PriorityResponseDto> saveList(List<PriorityRequestDto> priorityRequestDtos, Long projectId);
     List<Long>  delete(Long id);
     Boolean softDelete(Long id);
     PriorityResponseDto getOne(Long id);

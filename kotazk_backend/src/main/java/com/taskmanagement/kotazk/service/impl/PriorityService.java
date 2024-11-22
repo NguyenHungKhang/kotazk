@@ -11,6 +11,7 @@ import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDto;
+import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import com.taskmanagement.kotazk.repository.IPriorityRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.ITaskRepository;
@@ -32,10 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
@@ -136,6 +135,80 @@ public class PriorityService implements IPriorityService {
         Priority savedPriority = priorityRepository.save(currentPriority);
 
         return ModelMapperUtil.mapOne(savedPriority, PriorityResponseDto.class);
+    }
+
+    @Override
+    public List<PriorityResponseDto> saveList(List<PriorityRequestDto> priorityRequestDtos, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(projectId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = null;
+
+        if (!isAdmin)
+            currentMember = checkManagePriority(currentUser, project, workSpace);
+
+        AtomicInteger positionIndex = new AtomicInteger();
+        Set<Long> incomingPriorityIds = new HashSet<>();
+
+        List<Priority> priorities = priorityRequestDtos.stream()
+                .map(p -> {
+                    Priority priority = new Priority();
+                    Optional.ofNullable(p.getId()).ifPresent(id -> {
+                        priority.setId(id);
+                        incomingPriorityIds.add(id);
+                    });
+                    if (p.getProjectId() != projectId)
+                        throw new CustomException("Invalid input!");
+                    priority.setProject(project);
+                    priority.setName(p.getName());
+                    priority.setPosition(RepositionUtil.calculateNewLastPosition(positionIndex.getAndIncrement()));
+
+                    Customization customization = new Customization();
+                    customization.setBackgroundColor(p.getCustomization().getBackgroundColor());
+                    customization.setIcon(p.getCustomization().getIcon());
+                    priority.setCustomization(customization);
+
+                    return priority;
+                }).toList();
+
+        List<Priority> deletedPriorities = project.getPriorities().stream()
+                .filter(tt -> {
+                    if (!incomingPriorityIds.contains(tt.getId()) && tt.getSystemRequired()) {
+                        throw new CustomException("Cannot delete system priority");
+                    }
+                    return !incomingPriorityIds.contains(tt.getId());
+                })
+                .toList();
+
+        List<String> idTaskTypesToDelete = deletedPriorities.stream().map(p -> p.getId().toString()).toList();
+
+        project.getSections().forEach(section -> {
+            section.getFilterSettings().forEach(filter -> {
+                if (filter.getField().equals(FilterField.TASK_TYPE)) {
+                    List<String> updatedValues = filter.getValues().stream()
+                            .filter(value -> !idTaskTypesToDelete.contains(value))
+                            .collect(Collectors.toList());
+                    FilterSetting updatedFilter = FilterSetting.builder()
+                            .section(section)
+                            .field(filter.getField())
+                            .values(updatedValues)
+                            .operator(filter.getOperator())
+                            .build();
+
+                    section.getFilterSettings().remove(filter);
+                    section.getFilterSettings().add(updatedFilter);
+                }
+            });
+        });
+
+        project.getPriorities().clear();
+        project.getPriorities().addAll(priorities);
+        List<Priority> savedPriorities = projectRepository.save(project).getPriorities();
+        return ModelMapperUtil.mapList(savedPriorities, PriorityResponseDto.class);
     }
 
     @Override

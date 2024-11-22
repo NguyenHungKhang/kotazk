@@ -1,10 +1,7 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.enums.MemberStatus;
-import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
-import com.taskmanagement.kotazk.entity.enums.Role;
-import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
+import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
@@ -15,6 +12,7 @@ import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
+import com.taskmanagement.kotazk.repository.IFilterSettingRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.ITaskRepository;
 import com.taskmanagement.kotazk.repository.ITaskTypeRepository;
@@ -50,6 +48,8 @@ public class TaskTypeService implements ITaskTypeService {
     @Autowired
     private ITaskTypeRepository taskTypeRepository;
     @Autowired
+    private IFilterSettingRepository filterSettingRepository;
+    @Autowired
     private ITaskRepository taskRepository;
     @Autowired
     private ICustomizationService customizationService = new CustomizationService();
@@ -75,8 +75,8 @@ public class TaskTypeService implements ITaskTypeService {
         milestoneCustomization.setBackgroundColor("#47ebcd");
         return List.of(
                 createDefaultInitialTaskType("Task", "", DEFAULT_POSITION_STEP, taskCustomization),
-                createDefaultInitialTaskType("Subtask", "", 3L*DEFAULT_POSITION_STEP, subtaskCustomization),
-                createDefaultInitialTaskType("Milestone", "", 2L*DEFAULT_POSITION_STEP, milestoneCustomization)
+                createDefaultInitialTaskType("Subtask", "", 3L * DEFAULT_POSITION_STEP, subtaskCustomization),
+                createDefaultInitialTaskType("Milestone", "", 2L * DEFAULT_POSITION_STEP, milestoneCustomization)
         );
     }
 
@@ -176,11 +176,15 @@ public class TaskTypeService implements ITaskTypeService {
             checkManageTaskTypePermission(currentUser.getId(), project.getId(), workSpace.getId());
 
         AtomicInteger positionIndex = new AtomicInteger();
+        Set<Long> incomingTaskTypeIds = new HashSet<>();
 
         List<TaskType> taskTypes = taskTypeRequestDtos.stream()
                 .map(t -> {
                     TaskType taskType = new TaskType();
-                    Optional.ofNullable(t.getId()).ifPresent(taskType::setId);
+                    Optional.ofNullable(t.getId()).ifPresent(id -> {
+                        taskType.setId(id);
+                        incomingTaskTypeIds.add(id);
+                    });
                     if (t.getProjectId() != projectId)
                         throw new CustomException("Invalid input!");
                     taskType.setProject(project);
@@ -196,10 +200,54 @@ public class TaskTypeService implements ITaskTypeService {
                     return taskType;
                 }).toList();
 
+        List<TaskType> deletedTaskTypes = project.getTaskTypes().stream()
+                .filter(tt -> {
+                    if (!incomingTaskTypeIds.contains(tt.getId()) && tt.getSystemRequired()) {
+                        throw new CustomException("Cannot delete system task type");
+                    }
+                    return !incomingTaskTypeIds.contains(tt.getId());
+                })
+                .toList();
+
+
+        List<Task> tasksToDelete = deletedTaskTypes.stream()
+                .flatMap(tt -> tt.getTasks().stream())
+                .toList();
+
+        List<String> idTaskTypesToDelete = deletedTaskTypes.stream().map(t -> t.getId().toString()).toList();
+
+        taskTypes.stream()
+                .filter(taskType -> Objects.equals(taskType.getName(), "Task"))
+                .findFirst()
+                .ifPresent(taskType -> {
+                    deletedTaskTypes.forEach(deletedTaskType -> deletedTaskType.setTasks(new ArrayList<>()));
+                    tasksToDelete.forEach(task -> task.setTaskType(taskType));
+                    taskType.setTasks(tasksToDelete);
+                });
+
+        project.getSections().forEach(section -> {
+            section.getFilterSettings().forEach(filter -> {
+                if (filter.getField().equals(FilterField.TASK_TYPE)) {
+                    List<String> updatedValues = filter.getValues().stream()
+                            .filter(value -> !idTaskTypesToDelete.contains(value))
+                            .collect(Collectors.toList());
+                    FilterSetting updatedFilter = FilterSetting.builder()
+                            .section(section)
+                            .field(filter.getField())
+                            .values(updatedValues)
+                            .operator(filter.getOperator())
+                            .build();
+
+                    section.getFilterSettings().remove(filter);
+                    section.getFilterSettings().add(updatedFilter);
+                }
+            });
+        });
+
         project.getTaskTypes().clear();
         project.getTaskTypes().addAll(taskTypes);
         List<TaskType> savedTaskTypes = projectRepository.save(project).getTaskTypes();
-
+//        filterSettingRepository.saveAll(filterSettings);
         return ModelMapperUtil.mapList(savedTaskTypes, TaskTypeResponseDto.class);
     }
 

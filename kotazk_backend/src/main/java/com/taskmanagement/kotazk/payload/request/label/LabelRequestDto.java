@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class LabelRequestDto {
+    Long id;
     Long workSpaceId;
     Long projectId;
     CustomizationRequestDto customization;

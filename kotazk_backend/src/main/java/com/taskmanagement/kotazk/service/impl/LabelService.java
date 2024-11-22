@@ -34,9 +34,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -119,6 +118,46 @@ public class LabelService implements ILabelService {
         Label savedLabel = labelRepository.save(currentLabel);
 
         return ModelMapperUtil.mapOne(savedLabel, LabelResponseDto.class);
+    }
+
+    @Override
+    public List<LabelResponseDto> saveList(List<LabelRequestDto> labelRequestDtos, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(projectId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = null;
+
+        if (!isAdmin)
+            currentMember = checkManageLabel(currentUser, project, workSpace);
+
+        AtomicInteger positionIndex = new AtomicInteger();
+
+        List<Label> labels = labelRequestDtos.stream()
+                .map(l -> {
+                    Label label = new Label();
+                    Optional.ofNullable(l.getId()).ifPresent(id -> {
+                        label.setId(id);
+                    });
+                    if (l.getProjectId() != projectId)
+                        throw new CustomException("Invalid input!");
+                    label.setProject(project);
+                    label.setName(l.getName());
+
+                    Customization customization = new Customization();
+                    customization.setBackgroundColor(l.getCustomization().getBackgroundColor());
+                    label.setCustomization(customization);
+
+                    return label;
+                }).toList();
+
+        project.getLabels().clear();
+        project.getLabels().addAll(labels);
+        List<Label> savedLabels = projectRepository.save(project).getLabels();
+        return ModelMapperUtil.mapList(savedLabels, LabelResponseDto.class);
     }
 
 

@@ -3,10 +3,12 @@ package com.taskmanagement.kotazk.controller;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.priority.PriorityRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
+import com.taskmanagement.kotazk.payload.request.tasktype.TaskTypeRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
+import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
 import com.taskmanagement.kotazk.service.IPriorityService;
 import com.taskmanagement.kotazk.service.IStatusService;
 import com.taskmanagement.kotazk.service.impl.PriorityService;
@@ -34,8 +36,14 @@ public class PriorityController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public PriorityResponseDto update(@Valid @RequestBody PriorityRequestDto priorityRequestDto, @PathVariable Long id) {
+    public PriorityResponseDto update(@RequestBody PriorityRequestDto priorityRequestDto, @PathVariable Long id) {
         return priorityService.update(id, priorityRequestDto);
+    }
+
+    @PostMapping("/save-list/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<PriorityResponseDto> saveList(@Valid @RequestBody List<PriorityRequestDto> priorityRequestDtos, @PathVariable Long projectId) {
+        return priorityService.saveList(priorityRequestDtos, projectId);
     }
 
     @DeleteMapping("/{id}")

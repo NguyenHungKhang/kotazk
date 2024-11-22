@@ -26,13 +26,14 @@ const reorder = (list, startIndex, endIndex) => {
 const CustomManageStatus = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const statuses = useSelector((state) => state.status.currentStatusList);
     const project = useSelector((state) => state.project.currentProject)
+    const [newStatusNumber, setNewStatusNumbeer] = useState(0);
     const [selectedStatus, setSelectedStatus] = useState(null);
     const [openAddStatus, setOpenAddStatus] = useState(false);
     const [items, setItems] = useState(null);
     const DragIcon = TablerIcons["IconGripVertical"];
     const EditIcon = TablerIcons["IconEdit"];
+    const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
         if (project)
@@ -48,30 +49,11 @@ const CustomManageStatus = () => {
 
         const response = await apiService.statusAPI.getPageByProject(project.id, data)
         if (response?.data) {
-            dispatch(setCurrentStatusList(response?.data?.content))
+            setItems(response?.data?.content)
         }
     }
 
-    useEffect(() => {
-        if (statuses)
-            setItems(statuses);
-    }, [, statuses])
 
-    const reorderItem = async (currentItemId, previousItemId, nextItemId) => {
-        const data = {
-            rePositionReq: (nextItemId == null && previousItemId == null) ? null : {
-                currentItemId: currentItemId,
-                nextItemId: nextItemId,
-                previousItemId: previousItemId
-            },
-        };
-
-        const response = await apiService.statusAPI.update(currentItemId, data);
-        if (response?.data) {
-            const finalAr = updateAndAddArray(statuses, [response.data]);
-            dispatch(setCurrentStatusList(finalAr));
-        }
-    }
 
     const onDragEnd = (result) => {
         const { destination, source } = result;
@@ -84,22 +66,46 @@ const CustomManageStatus = () => {
         // Reorder the items based on the drop
         const reorderedItems = reorder(items, source.index, destination.index);
         setItems(reorderedItems);
-
-        // Get the current item (the one that was dragged and dropped)
-        const currentItem = reorderedItems[destination.index];
-        const currentItemId = currentItem.id;
-
-        // Get the previous item in the new order (if any)
-        const previousItem = reorderedItems[destination.index - 1];
-        const previousItemId = previousItem ? previousItem.id : null;
-
-        // Get the next item in the new order (if any)
-        const nextItem = reorderedItems[destination.index + 1];
-        const nextItemId = nextItem ? nextItem.id : null;
-
-        reorderItem(currentItemId, previousItemId, nextItemId);
+        setIsChange(true);
     };
 
+
+    const addNewItem = () => {
+        const newItem = {
+            "id": `newStatus-${newStatusNumber}`,
+            "projectId": project?.id,
+            "name": `Status ${items.length + 1}`,
+            "isFromStart": false,
+            "isFromAny": true,
+            "isCompletedStatus": false,
+            "customization": {
+                "backgroundColor": "#0d9af2",
+                "icon": "IconCircleDot"
+            }
+        }
+        setItems(prev => [newItem, ...prev]);
+        setNewStatusNumbeer(prev => prev + 1);
+        setIsChange(true);
+    }
+
+    const handleSave = async () => {
+        const data = items.map((item) => {
+            if (item.id.toString().startsWith("newStatus-")) {
+                const { id, ...rest } = item;
+                return rest;
+            }
+            return item;
+        });
+        const response = await apiService.statusAPI.saveList(project?.id, data);
+        if (response?.data) {
+            setItems(response.data);
+            dispatch(setSnackbar({
+                content: "Update status successful!",
+                open: true
+            }));
+        }
+        setIsChange(false);
+    }
 
     return items == null ? <>Loading ...</> : (
         <Card
@@ -128,7 +134,7 @@ const CustomManageStatus = () => {
                     />
                 </Box>
                 <Box>
-                    <Button variant="contained" color="success" onClick={() => setOpenAddStatus(true)}>
+                    <Button variant="contained" color="success" onClick={() => addNewItem()}>
                         Add
                     </Button>
                 </Box>
@@ -138,7 +144,6 @@ const CustomManageStatus = () => {
                 borderRadius={2}
                 p={2}
             >
-                {openAddStatus && <StatusAddItem statuses={statuses} project={project} setOpenAddStatus={setOpenAddStatus} />}
                 {/* DragDropContext to enable drag and drop functionality */}
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="statuses">
@@ -165,7 +170,7 @@ const CustomManageStatus = () => {
                                                     <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                         <DragIcon size={20} stroke={2} />
                                                     </Box>
-                                                    <StatusListItem status={status} statuses={statuses} />
+                                                    <StatusListItem status={status} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
 
                                                 </Stack>
                                             </Card>
@@ -178,126 +183,25 @@ const CustomManageStatus = () => {
                     </Droppable>
                 </DragDropContext>
             </Box>
+            <Box mt={2}>
+                <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                    Save
+                </Button>
+            </Box>
         </Card>
     );
 };
 
-
-const StatusAddItem = ({ statuses, project, setOpenAddStatus }) => {
+const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const SaveIcon = TablerIcons["IconDeviceFloppy"];
-    const CancleIcon = TablerIcons["IconX"];
-
-    const [name, setName] = useState(null);
-    const [isFromStart, setIsFromStart] = useState(false);
-    const [isFromAny, setIsFromAny] = useState(true);
-    const [isCompletedStatus, setIsCompletedStatus] = useState(false);
-    const [customization, setCustomization] = useState(null);
-    const [isChange, setIsChange] = useState(false);
-
-    const wrapperRef = useRef(null);
-
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setOpenAddStatus(false); // Close the component when clicking outside
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [setOpenAddStatus]);
-
-    useEffect(() => {
-        setIsChange(name != null && name != "");
-    }, [name]);
-
-    const handleSaveStatus = async () => {
-        const data = {
-            name,
-            isFromStart,
-            isFromAny,
-            isCompletedStatus,
-            customization,
-            projectId: project?.id
-        };
-        const response = await apiService.statusAPI.create(data);
-        if (response?.data) {
-            dispatch(setCurrentStatusList(updateAndAddArray(statuses, [response?.data])));
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update status successful!",
-                open: true
-            }));
-            setOpenAddStatus(false);
-        }
-    };
-
-    return (
-        <Stack
-            ref={wrapperRef} // Attach the ref to the root element
-            direction='row'
-            spacing={2}
-            border='2px dashed'
-            p={2}
-            borderColor={theme.palette.success.main}
-        >
-            <Box sx={{ py: 2, px: 4, flexGrow: 1 }}>
-                <Stack
-                    direction="row"
-                    spacing={4}
-                    alignItems='center'
-                >
-                    <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={statusIconsList} customization={customization} setCustomization={setCustomization} />
-                        <CustomBasicTextField
-                            size="small"
-                            margin="dense"
-                            defaultValue={name}
-                            fullWidth
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                setIsChange(true);
-                            }}
-                        />
-                    </Stack>
-                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} />
-                    <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} />
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} />
-                </Stack>
-            </Box>
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton
-                    onClick={handleSaveStatus}
-                    disabled={!isChange}
-                >
-                    <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.success.main : theme.palette.grey[500]} />
-                </IconButton>
-            </Box>
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton onClick={() => setOpenAddStatus(false)}>
-                    <CancleIcon size={20} stroke={2} color={theme.palette.error.main} />
-                </IconButton>
-            </Box>
-        </Stack>
-    );
-};
-
-
-const StatusListItem = ({ status, statuses }) => {
-    const theme = useTheme();
-    const dispatch = useDispatch();
-    const DeleteIcon = TablerIcons["IconTrashXFilled"];
+    const DeleteIcon = TablerIcons["IconX"];
     const EditIcon = TablerIcons["IconEdit"];
     const [name, setName] = useState(status.name);
     const [isFromStart, setIsFromStart] = useState(status.isFromStart);
     const [isFromAny, setIsFromAny] = useState(status.isFromAny);
     const [isCompletedStatus, setIsCompletedStatus] = useState(status.isCompletedStatus);
     const [customization, setCustomization] = useState(status.customization);
-    const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
         if (status != null) {
@@ -305,49 +209,64 @@ const StatusListItem = ({ status, statuses }) => {
             setIsFromStart(status.isFromStart);
             setIsFromAny(status.isFromAny);
             setIsCompletedStatus(status.isCompletedStatus);
-            setCustomization(status.setCustomization);
+            setCustomization(status.customization);
         }
     }, [status])
 
+    // useEffect(() => {
+    //     if (customization != null && customization != status.customization)
+    //         setIsChange(true);
+    // }, [customization])
+
     useEffect(() => {
-        if (customization != null && customization != status.customization)
+        if (name && name != status?.name) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, name: name } : item))
             setIsChange(true);
+        }
+    }, [name])
+
+    useEffect(() => {
+        if (isFromStart != null && isFromStart != status?.isFromStart) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, isFromStart: isFromStart } : item))
+                    setIsChange(true);
+        }
+    }, [isFromStart])
+
+    useEffect(() => {
+        if (isFromAny != null && isFromAny != status?.isFromAny) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, isFromAny: isFromAny } : item))
+                    setIsChange(true);
+        }
+    }, [isFromAny])
+
+    useEffect(() => {
+        if (isCompletedStatus != null && isCompletedStatus != status?.isCompletedStatus) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, isCompletedStatus: isCompletedStatus } : item))
+                    setIsChange(true);
+        }
+    }, [isCompletedStatus])
+
+
+    useEffect(() => {
+        if (customization != null && customization != status?.customization) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, customization: customization } : item))
+                    setIsChange(true);
+        }
     }, [customization])
 
 
-    const handleSaveStatus = async () => {
-        const data = {
-            "name": name,
-            "isFromStart": isFromStart,
-            "isFromAny": isFromAny,
-            "isCompletedStatus": isCompletedStatus,
-            "customization": customization
-        }
-        const response = await apiService.statusAPI.update(status.id, data);
-        if (response?.data) {
-            dispatch(setCurrentStatusList(updateAndAddArray(statuses, [response?.data])))
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update status successful!",
-                open: true
-            }))
-        }
-    }
-
     const handleOpenDeleteDialog = (event) => {
-        event.stopPropagation();
-        dispatch(setDeleteDialog({
-            title: `Delete status "${name}"?`,
-            content:
-                `You're about to permanently delete this status. <strong>It's task will be moved to the first "Started status"</strong>.
-                <br/><br/>
-                If you're not sure, you can resolve or close this status instead.`,
-            open: true,
-            deleteType: "DELETE_STATUS",
-            deleteProps: {
-                statusId: status?.id
-            }
-        }));
+        setItems(prev => prev.filter((item, index) => index != itemIndex));
     };
 
     return (
@@ -377,14 +296,6 @@ const StatusListItem = ({ status, statuses }) => {
                     <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} />
                     <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
                 </Stack>
-            </Box>
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
-                <IconButton
-                    onClick={handleSaveStatus}
-                    disabled={!isChange}
-                >
-                    <EditIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
-                </IconButton>
             </Box>
             {!status.systemRequired &&
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

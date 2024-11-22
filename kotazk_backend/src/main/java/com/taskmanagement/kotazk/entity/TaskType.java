@@ -47,7 +47,7 @@ public class TaskType {
     @Column(name = "position", nullable = false)
     private Long position;
 
-    @OneToMany(mappedBy = "taskType", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @OneToMany(mappedBy = "taskType", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.LAZY)
     @OrderBy("position")
     private List<Task> tasks;
 

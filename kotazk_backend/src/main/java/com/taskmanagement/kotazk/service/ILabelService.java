@@ -12,6 +12,7 @@ import java.util.List;
 public interface ILabelService {
     LabelResponseDto create(LabelRequestDto labelRequestDto);
     LabelResponseDto update(Long id, LabelRequestDto labelRequestDto);
+    List<LabelResponseDto> saveList(List<LabelRequestDto> labelRequestDtos, Long projectId);
     List<Long>  delete(Long id);
     Boolean softDelete(Long id);
     LabelResponseDto getOne(Long id);

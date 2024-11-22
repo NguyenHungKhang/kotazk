@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class PriorityRequestDto {
+    Long id;
     Long projectId;
     CustomizationRequestDto customization;
     String name;
