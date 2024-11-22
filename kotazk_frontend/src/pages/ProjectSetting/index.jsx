@@ -3,13 +3,14 @@ import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { Card, Paper, TextField } from '@mui/material';
+import { Button, Card, Paper, TextField } from '@mui/material';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
 import CustomManageTaskType from '../../components/CustomManageTaskType';
 import CustomManagePriority from '../../components/CustomManagePriority';
 import CustomManageLabel from '../../components/CustomManageLabel';
 import CustomBasicTextField from '../../components/CustomBasicTextField';
 import { useSelector } from 'react-redux';
+import CustomDialogForManage from '../../components/CustomDialogForManage';
 
 const dummyData = [
     { title: "General", component: "General" },
@@ -50,6 +51,8 @@ function a11yProps(index) {
 
 export default function ProjectSetting() {
     const [value, setValue] = React.useState(0);
+    const [open, setOpen] = React.useState(false);
+    const [children, setChildren] = React.useState(<CustomManageStatus />);
 
     const project = useSelector((state) => state.project.currentProject);
 
@@ -59,7 +62,7 @@ export default function ProjectSetting() {
 
     return (
         <Box sx={{ width: '100%', height: '100%' }}>
-            <Paper sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            {/* <Paper sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={value} onChange={handleChange} aria-label="Setting tabs" textColor="secondary" indicatorColor="secondary">
                     {dummyData.map((item, index) => (
                         <Tab key={index} label={item.title} {...a11yProps(index)}
@@ -74,7 +77,14 @@ export default function ProjectSetting() {
                 <CustomTabPanel key={index} value={value} index={index}>
                     {item.component}
                 </CustomTabPanel>
-            ))}
+            ))} */}
+            <Button size='small' variant='contained' onClick={() => {setOpen(true); setChildren(<CustomManageStatus /> );}}>
+                Open Status Dialog
+            </Button>
+            <Button size='small' variant='contained' onClick={() => {setOpen(true); setChildren(<CustomManageTaskType /> );}}>
+                Open Task Type Dialog
+            </Button>
+            <CustomDialogForManage open={open} setOpen={setOpen} children={children}/>
         </Box>
         // <>
         //     <Card

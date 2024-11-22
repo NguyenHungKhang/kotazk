@@ -34,12 +34,10 @@ export default function CustomDialogForManage({ children, open, setOpen }) {
             open={open}
             onClose={handleClose}
         >
-            <DialogContent>
-                {children}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={handleClose} variant='contained'>Close</Button>
-            </DialogActions>
+            {React.isValidElement(children) ?
+                React.cloneElement(children, { handleClose: handleClose, isDialog: true })
+                :
+                children}
         </Dialog>
     );
 }

@@ -1,5 +1,5 @@
-import { Box, Button, Card, Checkbox, Grid, IconButton, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
-import { getSecondBackgroundColor } from "../../utils/themeUtil";
+import { Box, Button, Card, Checkbox, Grid, IconButton, Paper, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
+import { getCustomTwoModeColor, getSecondBackgroundColor } from "../../utils/themeUtil";
 import { useSelector } from "react-redux";
 import CustomTaskType from '../CustomTaskType/index';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -23,76 +23,106 @@ const reorder = (list, startIndex, endIndex) => {
     return result;
 };
 
-const CustomManageTaskType = () => {
+const CustomManageTaskType = ({ handleClose, isDialog }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList);
-    const project = useSelector((state) => state.project.currentProject)
+    const project = useSelector((state) => state.project.currentProject);
+    const [newTaskTypeNumber, setNewTaskTypeNumbeer] = useState(0);
     const [selectedTaskType, setSelectedTaskType] = useState(null);
     const [openAddTaskType, setOpenAddTaskType] = useState(false);
-    const [items, setItems] = useState(taskTypes);
+    const [items, setItems] = useState(null);
     const DragIcon = TablerIcons["IconGripVertical"];
     const EditIcon = TablerIcons["IconEdit"];
+    const AddIcon = TablerIcons["IconPlus"];
+    const CloseIcon = TablerIcons["IconX"];
+    const [isChange, setIsChange] = useState(false);
+
 
     useEffect(() => {
-        if (taskTypes)
-            setItems(taskTypes);
-    }, [, taskTypes])
+        if (project)
+            fetchStatus();
+    }, [project])
 
-    const reorderItem = async (currentItemId, previousItemId, nextItemId) => {
+    const fetchStatus = async () => {
         const data = {
-            rePositionReq: (nextItemId == null && previousItemId == null) ? null : {
-                currentItemId: currentItemId,
-                nextItemId: nextItemId,
-                previousItemId: previousItemId
-            },
-        };
+            'sortBy': 'position',
+            'sortDirectionAsc': true,
+            "filters": []
+        }
 
-        const response = await apiService.taskTypeAPI.update(currentItemId, data);
+        const response = await apiService.taskTypeAPI.getPageByProject(project.id, data)
         if (response?.data) {
-            const finalAr = updateAndAddArray(taskTypes, [response.data]);
-            dispatch(setCurrentTaskTypeList(finalAr));
+            setItems(response?.data?.content)
         }
     }
+
+    const addNewItem = () => {
+        const newItem = {
+            "id": `newTaskType-${newTaskTypeNumber}`,
+            "projectId": project?.id,
+            "name": `Task type ${items.length + 1}`,
+            "customization": {
+                "backgroundColor": "#0d9af2",
+                "icon": "IconCircleDot"
+            }
+        }
+        setItems(prev => [...prev, newItem]);
+        setNewTaskTypeNumbeer(prev => prev + 1);
+        setIsChange(true);
+    }
+
 
     const onDragEnd = (result) => {
         const { destination, source } = result;
 
-        // If no destination, or item didn't move
         if (!destination || destination.index === source.index) {
             return;
         }
 
-        // Reorder the items based on the drop
         const reorderedItems = reorder(items, source.index, destination.index);
         setItems(reorderedItems);
-
-        // Get the current item (the one that was dragged and dropped)
-        const currentItem = reorderedItems[destination.index];
-        const currentItemId = currentItem.id;
-
-        // Get the previous item in the new order (if any)
-        const previousItem = reorderedItems[destination.index - 1];
-        const previousItemId = previousItem ? previousItem.id : null;
-
-        // Get the next item in the new order (if any)
-        const nextItem = reorderedItems[destination.index + 1];
-        const nextItemId = nextItem ? nextItem.id : null;
-
-        reorderItem(currentItemId, previousItemId, nextItemId);
+        setIsChange(true);
     };
 
+    const handleSave = async () => {
+        const data = items.map((item) => {
+            if (item.id.toString().startsWith("newTaskType-")) {
+                const { id, ...rest } = item;
+                return rest;
+            }
+            return item;
+        });
+        const response = await apiService.taskTypeAPI.saveList(project?.id, data);
+        if (response?.data) {
+            setItems(response.data);
+            dispatch(setSnackbar({
+                content: "Update taskType successful!",
+                open: true
+            }));
+        }
+        setIsChange(false);
+    }
 
     return (
-        <Box
-            bgcolor={getSecondBackgroundColor(theme)}
-            p={4}
-            borderRadius={4}
+        <Card
+            sx={{
+                p: 4
+            }}
         >
             <Stack direction='row' spacing={2} alignItems='center'>
-                <Typography variant="h5" fontWeight={500} flexGrow={1}>
+                <Typography variant="h6" fontWeight={500} flexGrow={1}>
                     TaskType Setting
                 </Typography>
+                {
+                    isDialog && (
+                        <Box>
+                            <IconButton onClick={handleClose}>
+                                <CloseIcon size={18} stroke={2} />
+                            </IconButton>
+                        </Box>
+                    )
+                }
+
             </Stack>
             <Stack
                 mt={2}
@@ -114,35 +144,42 @@ const CustomManageTaskType = () => {
                     </Button>
                 </Box>
             </Stack>
-            {openAddTaskType && <TaskTypeAddItem taskTypes={taskTypes} project={project} setOpenAddTaskType={setOpenAddTaskType} />}
             {/* DragDropContext to enable drag and drop functionality */}
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="taskTypes">
                     {(provided) => (
                         <Stack
-                            spacing={2}
-                            mt={2}
                             {...provided.droppableProps}
                             ref={provided.innerRef}
                         >
                             {items?.map((taskType, index) => (
                                 <Draggable key={taskType.id} draggableId={taskType.id.toString()} index={index}>
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
 
-                                        <Stack
-                                            direction="row"
-                                            spacing={2}
-                                            alignItems='stretch'
+                                        <Paper
+                                            sx={{
+                                                boxShadow: 0,
+                                                borderRadius: 0,
+                                                borderTop: "1px solid",
+                                                borderBottom: snapshot.isDragging || index === items.length - 1 ? "1px solid" : 0,
+                                                borderColor: snapshot.isDragging ? getCustomTwoModeColor(theme, theme.palette.grey[500], theme.palette.grey[600]) : getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                                            }}
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
-
                                         >
-                                            <Card {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <DragIcon size={20} stroke={2} />
-                                            </Card>
-                                            <TaskTypeListItem taskType={taskType} taskTypes={taskTypes} />
-                                        </Stack>
+                                            <Stack
+                                                direction="row"
+                                                spacing={2}
+                                                alignItems='stretch'
 
+
+                                            >
+                                                <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <DragIcon size={20} stroke={2} />
+                                                </Box>
+                                                <TaskTypeListItem taskType={taskType} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
+                                            </Stack>
+                                        </Paper>
                                     )}
                                 </Draggable>
                             ))}
@@ -151,116 +188,42 @@ const CustomManageTaskType = () => {
                     )}
                 </Droppable>
             </DragDropContext>
-        </Box>
+            <Box
+                    sx={{
+                        borderBottom: "1px solid",
+                        borderColor: getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                    }}
+                >
+                    <Button
+                        onClick={() => addNewItem()}
+                        fullWidth
+                        color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
+                        sx={{
+                            justifyContent: 'flex-start'
+                        }}
+                        startIcon={<AddIcon size={18} stroke={2} />}
+                    >
+                        Add status
+                    </Button>
+                </Box>
+                <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
+                <Box>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                        Save
+                    </Button>
+                </Box>
+            </Stack>
+        </Card>
     );
 };
 
-
-const TaskTypeAddItem = ({ taskTypes, project, setOpenAddTaskType }) => {
+const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const SaveIcon = TablerIcons["IconDeviceFloppy"];
-    const CancleIcon = TablerIcons["IconX"];
-
-    const [name, setName] = useState(null);
-    const [customization, setCustomization] = useState(null);
-    const [isChange, setIsChange] = useState(false);
-
-    // Ref for the component
-    const wrapperRef = useRef(null);
-
-    // Detect clicks outside of the component
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setOpenAddTaskType(false); // Close the component when clicking outside
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [setOpenAddTaskType]);
-
-    useEffect(() => {
-        setIsChange(name != null && name != "");
-    }, [name]);
-
-    const handleSaveTaskType = async () => {
-        const data = {
-            name,
-            customization,
-            projectId: project?.id
-        };
-        const response = await apiService.taskTypeAPI.create(data);
-        if (response?.data) {
-            dispatch(setCurrentTaskTypeList(updateAndAddArray(taskTypes, [response?.data])));
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update taskType successful!",
-                open: true
-            }));
-            setOpenAddTaskType(false);
-        }
-    };
-
-    return (
-        <Stack
-            ref={wrapperRef} // Attach the ref to the root element
-            direction='row'
-            spacing={2}
-            border='2px dashed'
-            p={2}
-            borderColor={theme.palette.success.main}
-        >
-            <Card sx={{ py: 2, px: 4, flexGrow: 1 }}>
-                <Stack
-                    direction="row"
-                    spacing={4}
-                    alignItems='center'
-                >
-                    <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={taskTypeIconsList} customization={customization} setCustomization={setCustomization} />
-                        <CustomBasicTextField
-                            size="small"
-                            margin="dense"
-                            defaultValue={name}
-                            fullWidth
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                setIsChange(true);
-                            }}
-                        />
-                    </Stack>
-                </Stack>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton
-                    onClick={handleSaveTaskType}
-                    disabled={!isChange}
-                >
-                    <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.success.main : theme.palette.grey[500]} />
-                </IconButton>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton onClick={() => setOpenAddTaskType(false)}>
-                    <CancleIcon size={20} stroke={2} color={theme.palette.error.main} />
-                </IconButton>
-            </Card>
-        </Stack>
-    );
-};
-
-
-const TaskTypeListItem = ({ taskType, taskTypes }) => {
-    const theme = useTheme();
-    const dispatch = useDispatch();
-    const DeleteIcon = TablerIcons["IconTrashXFilled"];
+    const DeleteIcon = TablerIcons["IconX"];
     const EditIcon = TablerIcons["IconEdit"];
     const [name, setName] = useState(taskType.name);
     const [customization, setCustomization] = useState(taskType.customization);
-    const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
         if (taskType != null) {
@@ -270,46 +233,32 @@ const TaskTypeListItem = ({ taskType, taskTypes }) => {
     }, [taskType])
 
     useEffect(() => {
-        if (customization != null && customization != taskType.customization)
+        if (name && name != taskType?.name) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, name: name } : item))
             setIsChange(true);
+        }
+    }, [name])
+
+
+    useEffect(() => {
+        if (customization != null && customization != taskType?.customization) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, customization: customization } : item))
+            setIsChange(true);
+        }
     }, [customization])
 
-
-    const handleSaveTaskType = async () => {
-        const data = {
-            "name": name,
-            "customization": customization
-        }
-        const response = await apiService.taskTypeAPI.update(taskType.id, data);
-        if (response?.data) {
-            dispatch(setCurrentTaskTypeList(updateAndAddArray(taskTypes, [response?.data])))
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update taskType successful!",
-                open: true
-            }))
-        }
-    }
-
     const handleOpenDeleteDialog = (event) => {
-        event.stopPropagation();
-        dispatch(setDeleteDialog({
-            title: `Delete taskType "${name}"?`,
-            content:
-                `You're about to permanently delete this task type. <strong>It's task will be moved to the type "Task"</strong>.
-                <br/><br/>
-                If you're not sure, you can resolve or close this task type instead.`,
-            open: true,
-            deleteType: "DELETE_TASKTYPE",
-            deleteProps: {
-                taskTypeId: taskType?.id
-            }
-        }));
+        setItems(prev => prev.filter((item, index) => index != itemIndex));
+        setIsChange(true);
     };
 
     return (
         <>
-            <Card
+            <Box
                 sx={{ py: 2, px: 4, flexGrow: 1 }}
             > <Stack
 
@@ -331,21 +280,13 @@ const TaskTypeListItem = ({ taskType, taskTypes }) => {
                         />
                     </Stack>
                 </Stack>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
-                <IconButton
-                    onClick={handleSaveTaskType}
-                    disabled={!isChange}
-                >
-                    <EditIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
-                </IconButton>
-            </Card>
+            </Box>
             {!taskType?.systemRequired &&
-                <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
+                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>
-                </Card>
+                </Box>
             }
         </>
     );

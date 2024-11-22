@@ -1,5 +1,5 @@
-import { Box, Button, Card, Checkbox, Grid, IconButton, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
-import { getSecondBackgroundColor } from "../../utils/themeUtil";
+import { Box, Button, Card, Checkbox, Divider, Grid, IconButton, Paper, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
+import { getCustomTwoModeColor, getSecondBackgroundColor } from "../../utils/themeUtil";
 import { useSelector } from "react-redux";
 import CustomStatus from '../CustomStatus/index';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -23,7 +23,7 @@ const reorder = (list, startIndex, endIndex) => {
     return result;
 };
 
-const CustomManageStatus = () => {
+const CustomManageStatus = ({ handleClose, isDialog }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject)
@@ -32,7 +32,8 @@ const CustomManageStatus = () => {
     const [openAddStatus, setOpenAddStatus] = useState(false);
     const [items, setItems] = useState(null);
     const DragIcon = TablerIcons["IconGripVertical"];
-    const EditIcon = TablerIcons["IconEdit"];
+    const AddIcon = TablerIcons["IconPlus"];
+    const CloseIcon = TablerIcons["IconX"];
     const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
@@ -83,7 +84,7 @@ const CustomManageStatus = () => {
                 "icon": "IconCircleDot"
             }
         }
-        setItems(prev => [newItem, ...prev]);
+        setItems(prev => [...prev, newItem]);
         setNewStatusNumbeer(prev => prev + 1);
         setIsChange(true);
     }
@@ -115,9 +116,19 @@ const CustomManageStatus = () => {
             }}
         >
             <Stack direction='row' spacing={2} alignItems='center'>
-                <Typography variant="h5" fontWeight={500} flexGrow={1}>
+                <Typography variant="h6" fontWeight={500} flexGrow={1}>
                     Status Setting
                 </Typography>
+                {
+                    isDialog && (
+                        <Box>
+                            <IconButton onClick={handleClose}>
+                                <CloseIcon size={18} stroke={2} />
+                            </IconButton>
+                        </Box>
+                    )
+                }
+
             </Stack>
             <Stack
                 my={2}
@@ -133,30 +144,30 @@ const CustomManageStatus = () => {
                         placeholder="Search status..."
                     />
                 </Box>
-                <Box>
-                    <Button variant="contained" color="success" onClick={() => addNewItem()}>
-                        Add
-                    </Button>
-                </Box>
             </Stack>
             <Box
-                bgcolor={getSecondBackgroundColor(theme)}
-                borderRadius={2}
+                // bgcolor={getSecondBackgroundColor(theme)}
+                // borderRadius={2}
                 p={2}
             >
-                {/* DragDropContext to enable drag and drop functionality */}
                 <DragDropContext onDragEnd={onDragEnd}>
                     <Droppable droppableId="statuses">
                         {(provided) => (
                             <Stack
-                                spacing={2}
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
                             >
                                 {items?.map((status, index) => (
                                     <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
-                                        {(provided) => (
-                                            <Card
+                                        {(provided, snapshot) => (
+                                            <Paper
+                                                sx={{
+                                                    boxShadow: 0,
+                                                    borderRadius: 0,
+                                                    borderTop: "1px solid",
+                                                    borderBottom: snapshot.isDragging || index === items.length - 1 ? "1px solid" : 0,
+                                                    borderColor: snapshot.isDragging ? getCustomTwoModeColor(theme, theme.palette.grey[500], theme.palette.grey[600]) : getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                                                }}
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                             >
@@ -173,7 +184,7 @@ const CustomManageStatus = () => {
                                                     <StatusListItem status={status} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
 
                                                 </Stack>
-                                            </Card>
+                                            </Paper>
                                         )}
                                     </Draggable>
                                 ))}
@@ -182,12 +193,32 @@ const CustomManageStatus = () => {
                         )}
                     </Droppable>
                 </DragDropContext>
+                <Box
+                    sx={{
+                        borderBottom: "1px solid",
+                        borderColor: getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                    }}
+                >
+                    <Button
+                        onClick={() => addNewItem()}
+                        fullWidth
+                        color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
+                        sx={{
+                            justifyContent: 'flex-start'
+                        }}
+                        startIcon={<AddIcon size={18} stroke={2} />}
+                    >
+                        Add status
+                    </Button>
+                </Box>
             </Box>
-            <Box mt={2}>
-                <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
-                    Save
-                </Button>
-            </Box>
+            <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
+                <Box>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                        Save
+                    </Button>
+                </Box>
+            </Stack>
         </Card>
     );
 };
@@ -213,11 +244,6 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
         }
     }, [status])
 
-    // useEffect(() => {
-    //     if (customization != null && customization != status.customization)
-    //         setIsChange(true);
-    // }, [customization])
-
     useEffect(() => {
         if (name && name != status?.name) {
             setItems(prev => prev.map((item, index) =>
@@ -232,7 +258,7 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
             setItems(prev => prev.map((item, index) =>
                 index == itemIndex ?
                     { ...item, isFromStart: isFromStart } : item))
-                    setIsChange(true);
+            setIsChange(true);
         }
     }, [isFromStart])
 
@@ -241,7 +267,7 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
             setItems(prev => prev.map((item, index) =>
                 index == itemIndex ?
                     { ...item, isFromAny: isFromAny } : item))
-                    setIsChange(true);
+            setIsChange(true);
         }
     }, [isFromAny])
 
@@ -250,7 +276,7 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
             setItems(prev => prev.map((item, index) =>
                 index == itemIndex ?
                     { ...item, isCompletedStatus: isCompletedStatus } : item))
-                    setIsChange(true);
+            setIsChange(true);
         }
     }, [isCompletedStatus])
 
@@ -260,19 +286,20 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
             setItems(prev => prev.map((item, index) =>
                 index == itemIndex ?
                     { ...item, customization: customization } : item))
-                    setIsChange(true);
+            setIsChange(true);
         }
     }, [customization])
 
 
     const handleOpenDeleteDialog = (event) => {
         setItems(prev => prev.filter((item, index) => index != itemIndex));
+        setIsChange(true);
     };
 
     return (
         <>
             <Box
-                sx={{ py: 2, px: 4, flexGrow: 1 }}
+                sx={{ py: 1, px: 4, flexGrow: 1 }}
             > <Stack
 
                 direction="row"
@@ -297,9 +324,9 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                     <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
                 </Stack>
             </Box>
-            {!status.systemRequired &&
+            {status.systemRequired == false &&
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
+                    <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>
                 </Box>
@@ -320,7 +347,8 @@ function IsFromAnyButton({ selected, setSelected, setIsChange }) {
                 setIsChange != null && setIsChange(true);
             }}
             sx={{
-                textTransform: 'none'
+                textTransform: 'none',
+                py: 1
             }}
             size="small"
         >
@@ -341,7 +369,8 @@ function IsFromStartButton({ selected, setSelected, setIsChange }) {
                 setIsChange != null && setIsChange(true);
             }}
             sx={{
-                textTransform: 'none'
+                textTransform: 'none',
+                py: 1
             }}
             size="small"
         >
@@ -361,7 +390,8 @@ function IsCompletedButton({ selected, setSelected, setIsChange }) {
                 setIsChange != null && setIsChange(true);
             }}
             sx={{
-                textTransform: 'none'
+                textTransform: 'none',
+                py: 1
             }}
             size="small"
         >
