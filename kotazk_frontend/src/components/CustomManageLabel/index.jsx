@@ -1,5 +1,5 @@
-import { Box, Button, Card, Checkbox, Grid, IconButton, Stack, TextField, ToggleButton, Typography, useTheme } from "@mui/material";
-import { getSecondBackgroundColor } from "../../utils/themeUtil";
+import { Box, Button, Card, Checkbox, Divider, Grid, IconButton, Stack, TextField, ToggleButton, Typography, alpha, useTheme } from "@mui/material";
+import { getCustomTwoModeColor, getSecondBackgroundColor } from "../../utils/themeUtil";
 import { useSelector } from "react-redux";
 import CustomLabel from '../CustomLabel/index';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -17,175 +17,165 @@ import { setDeleteDialog } from "../../redux/actions/dialog.action";
 import CustomColorPicker from "../CustomColorPicker";
 import CustomColorPickerDialog from "../CustomColorPicker/CustomColorPickerDialog";
 
-const CustomManageLabel = () => {
+const CustomManageLabel = ({ handleClose, isDialog }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const labels = useSelector((state) => state.label.currentLabelList);
     const project = useSelector((state) => state.project.currentProject)
-    const [selectedLabel, setSelectedLabel] = useState(null);
-    const [openAddLabel, setOpenAddLabel] = useState(false);
-    const [items, setItems] = useState(labels);
-    const DragIcon = TablerIcons["IconGripVertical"];
-    const EditIcon = TablerIcons["IconEdit"];
+    const [newLabelNumber, setNewLabelNumbeer] = useState(0);
+    const [items, setItems] = useState([]);
+    const AddIcon = TablerIcons["IconPlus"];
+    const CloseIcon = TablerIcons["IconX"];
+    const [isChange, setIsChange] = useState(false);
 
     useEffect(() => {
-        if (labels)
-            setItems(labels);
-    }, [, labels])
+        if (project)
+            fetchStatus();
+    }, [project])
+
+    const fetchStatus = async () => {
+        const data = {
+            'sortBy': 'name',
+            'sortDirectionAsc': true,
+            "filters": []
+        }
+
+        const response = await apiService.labelAPI.getPageByProject(project.id, data)
+        if (response?.data) {
+            setItems(response?.data?.content)
+        }
+    }
+
+    const addNewItem = () => {
+        const newItem = {
+            "id": `newLabel-${newLabelNumber}`,
+            "projectId": project?.id,
+            "name": `Label ${items.length + 1}`,
+            "customization": {
+                "backgroundColor": "#0d9af2",
+            }
+        }
+        setItems(prev => [newItem, ...prev]);
+        setNewLabelNumbeer(prev => prev + 1);
+        setIsChange(true);
+    }
+
+
+    const handleSave = async () => {
+        const data = items.map((item) => {
+            if (item.id.toString().startsWith("newLabel-")) {
+                const { id, ...rest } = item;
+                return rest;
+            }
+            return item;
+        });
+        const response = await apiService.labelAPI.saveList(project?.id, data);
+        if (response?.data) {
+            setItems(response.data);
+            dispatch(setSnackbar({
+                content: "Update labels successful!",
+                open: true
+            }));
+        }
+        setIsChange(false);
+    }
 
     return (
-        <Box
-            bgcolor={getSecondBackgroundColor(theme)}
-            p={4}
-            borderRadius={4}
+        <Card
+            sx={{
+                p: 4
+            }}
         >
             <Stack direction='row' spacing={2} alignItems='center'>
-                <Typography variant="h5" fontWeight={500} flexGrow={1}>
+                <Typography variant="h6" fontWeight={500} flexGrow={1}>
                     Label Setting
                 </Typography>
+                {
+                    isDialog && (
+                        <Box>
+                            <IconButton onClick={handleClose}>
+                                <CloseIcon size={18} stroke={2} />
+                            </IconButton>
+                        </Box>
+                    )
+                }
+
             </Stack>
-            <Stack
-                mt={2}
-                direction="row"
-                spacing={2}
-                alignItems="center"
+            <Box
+                sx={{
+                    p: 2
+                }}
             >
-                <Box flexGrow={1}>
-                    <TextField
-                        fullWidth
-                        size="small"
-                        margin="dense"
-                        placeholder="Search label..."
-                    />
-                </Box>
+                <Stack
+                    mb={2}
+                    direction="row"
+                    spacing={2}
+                    alignItems="center"
+                >
+                    <Box flexGrow={1}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            margin="dense"
+                            placeholder="Search label..."
+                        />
+                    </Box>
+                </Stack>
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems='stretch'
+                    flexWrap='wrap'
+                    useFlexGap
+                >
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Button
+                            size="small"
+                            onClick={() => addNewItem()}
+                            color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
+                            fullWidth
+                            startIcon={<AddIcon size={18} stroke={2} />}
+                            sx={{
+                                border: '1px dashed',
+                                borderRadius: 2,
+                                width: '250px'
+                            }}
+                        >
+                            Add Lable
+                        </Button>
+                    </Box>
+                    {items?.map((label, index) =>
+                        <LabelListItem key={label?.id} label={label} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
+                    )}
+
+                </Stack>
+            </Box>
+            <Divider sx={{ my: 2 }} />
+            <Stack direction={'row'} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
-                    <Button variant="contained" color="success" onClick={() => setOpenAddLabel(true)}>
-                        Add
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                        Save
                     </Button>
                 </Box>
             </Stack>
-            {openAddLabel && <LabelAddItem labels={labels} project={project} setOpenAddLabel={setOpenAddLabel} />}
-            <Stack
-                direction="row"
-                spacing={2}
-                alignItems='stretch'
-                flexWrap='wrap'
-                useFlexGap
-            >
-                {labels.map((label) =>
-                    <LabelListItem key={label?.id} label={label} labels={labels} />
-                )}
-
-            </Stack>
-        </Box>
+        </Card>
     );
 };
 
-
-const LabelAddItem = ({ labels, project, setOpenAddLabel }) => {
+const LabelListItem = ({ label, setItems, itemIndex, isChange, setIsChange }) => {
+    const textLengthRef = useRef(null);
     const theme = useTheme();
     const dispatch = useDispatch();
-    const SaveIcon = TablerIcons["IconDeviceFloppy"];
-    const CancleIcon = TablerIcons["IconX"];
-    const [name, setName] = useState(null);
-    const [backgroundColor, setBackgroundColor] = useState(null);
-    const [isChange, setIsChange] = useState(false);
-
-    // Ref for the component
-    const wrapperRef = useRef(null);
-
-    // Detect clicks outside of the component
-    useEffect(() => {
-        function handleClickOutside(event) {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                setOpenAddLabel(false); // Close the component when clicking outside
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [setOpenAddLabel]);
-
-    useEffect(() => {
-        setIsChange(name != null && name != "");
-    }, [name]);
-
-    const handleSaveLabel = async () => {
-        const data = {
-            name,
-            projectId: project?.id
-        };
-        const response = await apiService.labelAPI.create(data);
-        if (response?.data) {
-            dispatch(setCurrentLabelList(updateAndAddArray(labels, [response?.data])));
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update label successful!",
-                open: true
-            }));
-            setOpenAddLabel(false);
-        }
-    };
-
-    return (
-        <Stack
-            ref={wrapperRef}
-            direction='row'
-            spacing={2}
-            border='2px dashed'
-            p={2}
-            borderColor={theme.palette.success.main}
-        >
-            <Card sx={{ py: 2, px: 4, flexGrow: 1 }}>
-                <Stack
-                    direction="row"
-                    spacing={4}
-                    alignItems='center'
-                >
-                    <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorPicker color={backgroundColor} onChange={setBackgroundColor} />
-                        <CustomBasicTextField
-                            size="small"
-                            margin="dense"
-                            defaultValue={name}
-                            fullWidth
-                            onChange={(e) => {
-                                setName(e.target.value);
-                                setIsChange(true);
-                            }}
-                        />
-                    </Stack>
-                </Stack>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton
-                    onClick={handleSaveLabel}
-                    disabled={!isChange}
-                >
-                    <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.success.main : theme.palette.grey[500]} />
-                </IconButton>
-            </Card>
-            <Card sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <IconButton onClick={() => setOpenAddLabel(false)}>
-                    <CancleIcon size={20} stroke={2} color={theme.palette.error.main} />
-                </IconButton>
-            </Card>
-        </Stack>
-    );
-};
-
-
-const LabelListItem = ({ label, labels }) => {
-    const theme = useTheme();
-    const dispatch = useDispatch();
-    const DeleteIcon = TablerIcons["IconTrashXFilled"];
+    const DeleteIcon = TablerIcons["IconX"];
     const SaveIcon = TablerIcons["IconDeviceFloppy"];
     const [name, setName] = useState(label.name);
     const [customization, setCustomization] = useState(label.customization);
     const [backgroundColor, setBackgroundColor] = useState(label?.customization?.backgroundColor);
-    const [isChange, setIsChange] = useState(false);
+    const [textLength, setTextLength] = useState(0);
 
     useEffect(() => {
         if (label != null) {
@@ -195,87 +185,97 @@ const LabelListItem = ({ label, labels }) => {
     }, [label])
 
     useEffect(() => {
-        if (backgroundColor != null && backgroundColor != label?.customization?.backgroundColor)
+        if (name && name != label?.name) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    { ...item, name: name } : item))
             setIsChange(true);
+        }
+    }, [name])
+
+
+    useEffect(() => {
+        if (backgroundColor != null && backgroundColor != label?.customization?.backgroundColor) {
+            setItems(prev => prev.map((item, index) =>
+                index == itemIndex ?
+                    {
+                        ...item, customization: {
+                            backgroundColor: backgroundColor
+                        }
+                    } : item))
+            setIsChange(true);
+        }
     }, [backgroundColor])
 
-
-    const handleSaveLabel = async () => {
-        const data = {
-            "name": name,
-            "customization": {
-                'backgroundColor': backgroundColor
-            }
-        }
-        const response = await apiService.labelAPI.update(label.id, data);
-        if (response?.data) {
-            dispatch(setCurrentLabelList(updateAndAddArray(labels, [response?.data])))
-            setIsChange(false);
-            dispatch(setSnackbar({
-                content: "Update label successful!",
-                open: true
-            }))
-        }
-    }
-
     const handleOpenDeleteDialog = (event) => {
-        event.stopPropagation();
-        dispatch(setDeleteDialog({
-            title: `Delete label "${name}"?`,
-            content:
-                `You're about to permanently delete this label. <strong>It's task will have empty label"</strong>.
-                <br/><br/>
-                If you're not sure, you can resolve or close this label instead.`,
-            open: true,
-            deleteType: "DELETE_LABEL",
-            deleteProps: {
-                labelId: label?.id
-            }
-        }));
+        setItems(prev => prev.filter((item, index) => index != itemIndex));
+        setIsChange(true)
     };
+
+    useEffect(() => {
+        if (textLengthRef.current) {
+            setTextLength(textLengthRef.current.offsetWidth);
+        }
+    }, []);
 
     return (
         <Card
             sx={{
-                p: 2
+                width: 'fit-content',
+                minWidth: 0,
+                px: 1,
+                py: 0,
+                boxShadow: 0,
+                borderRadius: 2,
+                bgcolor: alpha(backgroundColor, 0.5)
             }}
         >
             <Stack direction='row' spacing={1} alignItems='center'>
                 <CustomColorPickerDialog color={backgroundColor} setColor={setBackgroundColor} />
-                <CustomBasicTextField
-                    size="small"
-                    margin="dense"
-                    defaultValue={name}
-                    sx={{
-                        bgcolor: backgroundColor || '#0d9af2',
-                        borderRadius: 2,
-        
-                    }}
-                    InputProps={{
-                        sx: {
-                            color: backgroundColor && theme.palette.getContrastText(backgroundColor),
-                            height: 30,
-                            width: `${(name.length+1)*12}px`
-                        },
-                    }}
-                    onChange={(e) => {
-                        setName(e.target.value);
-                        setIsChange(true);
-                    }
-                    }
-                />
-                {isChange ?
-                    <IconButton
-                        onClick={handleSaveLabel}
+                <Stack>
+                    <Box display={'flex'} justifyContent={'center'} alignItems={'center'}>
+                        <CustomBasicTextField
+                            size="small"
+                            // margin="dense"
+                            hiddenLabel={true}
+                            defaultValue={name}
+                            fullWidth
+                            sx={{
+                                my: 1,
+                                bgcolor: backgroundColor || '#0d9af2',
+                                borderRadius: 2,
+
+                            }}
+                            InputProps={{
+                                sx: {
+                                    color: backgroundColor && theme.palette.getContrastText(backgroundColor),
+                                    height: 30,
+                                },
+                            }}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                setIsChange(true);
+                            }}
+                        />
+                    </Box>
+                    <Box
+                        flexGrow={1}
+                        height={"0 !important"}
+                        // position={'absolute'}
+                        visibility={'hidden'}
+                        mx={4}
                     >
-                        <SaveIcon size={20} stroke={2} color={isChange ? theme.palette.info.main : theme.palette.grey[500]} />
-                    </IconButton>
-                    :
-                    !label?.systemRequired &&
-                    <IconButton onClick={(e) => handleOpenDeleteDialog(e)}>
+                        {name}
+                    </Box>
+                </Stack>
+                <Box
+                    bgcolor={"#fff"}
+                    borderRadius={2}
+                >
+                    <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>
-                }
+                </Box>
             </Stack>
 
 

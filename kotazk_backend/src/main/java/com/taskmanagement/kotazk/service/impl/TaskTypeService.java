@@ -185,6 +185,12 @@ public class TaskTypeService implements ITaskTypeService {
                         taskType.setId(id);
                         incomingTaskTypeIds.add(id);
                     });
+                    if(!t.getId().equals(null)) {
+                        TaskType existTaskType = taskTypeRepository.findById(t.getId())
+                                .orElseThrow(() -> new CustomException("Invalid input"));
+                        taskType.setSystemRequired(existTaskType.getSystemRequired());
+                        taskType.setSystemInitial(existTaskType.getSystemInitial());
+                    }
                     if (t.getProjectId() != projectId)
                         throw new CustomException("Invalid input!");
                     taskType.setProject(project);
@@ -196,6 +202,7 @@ public class TaskTypeService implements ITaskTypeService {
                     customization.setBackgroundColor(t.getCustomization().getBackgroundColor());
                     customization.setIcon(t.getCustomization().getIcon());
                     taskType.setCustomization(customization);
+
 
                     return taskType;
                 }).toList();

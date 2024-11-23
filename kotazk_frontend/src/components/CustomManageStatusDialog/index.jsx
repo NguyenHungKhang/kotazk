@@ -28,8 +28,6 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject)
     const [newStatusNumber, setNewStatusNumbeer] = useState(0);
-    const [selectedStatus, setSelectedStatus] = useState(null);
-    const [openAddStatus, setOpenAddStatus] = useState(false);
     const [items, setItems] = useState(null);
     const DragIcon = TablerIcons["IconGripVertical"];
     const AddIcon = TablerIcons["IconPlus"];
@@ -79,6 +77,7 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
             "isFromStart": false,
             "isFromAny": true,
             "isCompletedStatus": false,
+            "systemRequired": false,
             "customization": {
                 "backgroundColor": "#0d9af2",
                 "icon": "IconCircleDot"
@@ -108,7 +107,7 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
         setIsChange(false);
     }
 
-    return items == null ? <>Loading ...</> : (
+    return (
         <Card
             sx={{
                 p: 4,
@@ -227,7 +226,6 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
     const theme = useTheme();
     const dispatch = useDispatch();
     const DeleteIcon = TablerIcons["IconX"];
-    const EditIcon = TablerIcons["IconEdit"];
     const [name, setName] = useState(status.name);
     const [isFromStart, setIsFromStart] = useState(status.isFromStart);
     const [isFromAny, setIsFromAny] = useState(status.isFromAny);
@@ -299,7 +297,7 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
     return (
         <>
             <Box
-                sx={{ py: 1, px: 4, flexGrow: 1 }}
+                sx={{ px: 4, flexGrow: 1 }}
             > <Stack
 
                 direction="row"
@@ -324,12 +322,17 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                     <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
                 </Stack>
             </Box>
-            {status.systemRequired == false &&
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {status.systemRequired == false ?
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>
                 </Box>
+                :
+                <Box
+                    width={30}
+                    height={30}
+                />
             }
         </>
     );

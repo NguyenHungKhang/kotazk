@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import { Button, Card, Paper, TextField } from '@mui/material';
+import { Button, Card, Divider, Grid2, Paper, Stack, TextField, Typography, useTheme } from '@mui/material';
 import CustomManageStatus from '../../components/CustomManageStatusDialog';
 import CustomManageTaskType from '../../components/CustomManageTaskType';
 import CustomManagePriority from '../../components/CustomManagePriority';
@@ -11,90 +11,75 @@ import CustomManageLabel from '../../components/CustomManageLabel';
 import CustomBasicTextField from '../../components/CustomBasicTextField';
 import { useSelector } from 'react-redux';
 import CustomDialogForManage from '../../components/CustomDialogForManage';
+import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import { Link } from 'react-router-dom';
 
-const dummyData = [
-    { title: "General", component: "General" },
-    { title: "Status", component: <CustomManageStatus /> },
-    { title: "Task type", component: <CustomManageTaskType /> },
-    { title: "Label", component: <CustomManageLabel /> },
-    { title: "Priority", component: <CustomManagePriority /> },
-]
-
-function CustomTabPanel(props) {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}
-        >
-            {value === index && <Box height={'100%'}>{children}</Box>}
-        </div>
-    );
-}
-
-CustomTabPanel.propTypes = {
-    children: PropTypes.node,
-    index: PropTypes.number.isRequired,
-    value: PropTypes.number.isRequired,
-};
-
-function a11yProps(index) {
-    return {
-        id: `simple-tab-${index}`,
-        'aria-controls': `simple-tabpanel-${index}`,
-    };
-}
 
 export default function ProjectSetting() {
-    const [value, setValue] = React.useState(0);
     const [open, setOpen] = React.useState(false);
     const [children, setChildren] = React.useState(<CustomManageStatus />);
-
     const project = useSelector((state) => state.project.currentProject);
-
-    const handleChange = (event, newValue) => {
-        setValue(newValue);
-    };
+    const theme = useTheme();
 
     return (
-        <Box sx={{ width: '100%', height: '100%' }}>
-            {/* <Paper sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-                <Tabs value={value} onChange={handleChange} aria-label="Setting tabs" textColor="secondary" indicatorColor="secondary">
-                    {dummyData.map((item, index) => (
-                        <Tab key={index} label={item.title} {...a11yProps(index)}
-                            sx={{
-                                textTransform: 'none'
-                            }}
-                        />
-                    ))}
-                </Tabs>
-            </Paper>
-            {dummyData.map((item, index) => (
-                <CustomTabPanel key={index} value={value} index={index}>
-                    {item.component}
-                </CustomTabPanel>
-            ))} */}
-            <Button size='small' variant='contained' onClick={() => {setOpen(true); setChildren(<CustomManageStatus /> );}}>
-                Open Status Dialog
-            </Button>
-            <Button size='small' variant='contained' onClick={() => {setOpen(true); setChildren(<CustomManageTaskType /> );}}>
-                Open Task Type Dialog
-            </Button>
-            <CustomDialogForManage open={open} setOpen={setOpen} children={children}/>
-        </Box>
-        // <>
-        //     <Card
-        //         sx={{
-        //             height: '100%'
-        //         }}
-        //     >
-        //         <TextField size='small' defaultValue={project?.name} />
-        //         <TextField multiline rows={4} placeholder='description' />
-        //     </Card>
-        // </>
+
+        <Grid2 container spacing={2} height={'100%'}>
+            <Grid2 size={8}>
+                <Card
+                    sx={{
+                        height: '100%',
+                        p: 2
+                    }}
+                >
+                    <TextField
+                        size='small'
+                        fullWidth
+                        defaultValue={project?.name}
+                    />
+                </Card>
+            </Grid2>
+            <Grid2 size={4}>
+                <Card
+                    sx={{
+                        height: '100%',
+                        p: 2
+                    }}
+                >
+                    <Typography variant='h6' fontWeight={500}>
+                        Access and members
+                    </Typography>
+                    <Stack spacing={2}>
+                        <Button component={Link} to={`/project/${project?.id}/member`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined'>
+                            Members Setting
+                        </Button>
+                        <Button component={Link} to={`/project/${project?.id}/role`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined'>
+                            Roles Setting
+                        </Button>
+                    </Stack>
+
+
+                    <Typography variant='h6' fontWeight={500} mt={4}>
+                        Fields
+                    </Typography>
+                    <Box sx={{ width: '100%', height: '100%' }}>
+                        <Stack spacing={2}>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageStatus />); }}>
+                                Status
+                            </Button>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageTaskType />); }}>
+                                Task type
+                            </Button>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManagePriority />); }}>
+                                Priority
+                            </Button>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageLabel />); }}>
+                                Label
+                            </Button>
+                        </Stack>
+                        <CustomDialogForManage open={open} setOpen={setOpen} children={children} />
+                    </Box>
+                </Card>
+            </Grid2>
+        </Grid2>
     );
 }

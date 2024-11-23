@@ -8,4 +8,6 @@ export const update = async (priorityId, data) => await axiosInstance.put(`${ORI
 
 export const remove = async (priorityId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${priorityId}`);
 
+export const saveList = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/save-list/by-project/${projectId}`, data);
+
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);

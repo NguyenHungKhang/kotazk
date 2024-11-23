@@ -72,9 +72,10 @@ const Project = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
-                // backgroundImage: `url('https://i.pinimg.com/564x/b0/94/c5/b094c5ceba9148e06fca396ac12367d6.jpg')`,
-                // background: theme.palette.mode == "light" ? "#EFEFEF" : "#121212",
+                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
+                background: theme.palette.mode === 'dark'
+                    ? 'linear-gradient(135deg, #522580, #223799)'
+                    : 'linear-gradient(135deg, #667eea, #764ba2)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}

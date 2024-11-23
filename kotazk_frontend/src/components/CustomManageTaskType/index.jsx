@@ -61,6 +61,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
             "id": `newTaskType-${newTaskTypeNumber}`,
             "projectId": project?.id,
             "name": `Task type ${items.length + 1}`,
+            "systemRequired": false,
             "customization": {
                 "backgroundColor": "#0d9af2",
                 "icon": "IconCircleDot"
@@ -111,7 +112,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
         >
             <Stack direction='row' spacing={2} alignItems='center'>
                 <Typography variant="h6" fontWeight={500} flexGrow={1}>
-                    TaskType Setting
+                    Task type Setting
                 </Typography>
                 {
                     isDialog && (
@@ -125,7 +126,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
 
             </Stack>
             <Stack
-                mt={2}
+                my={2}
                 direction="row"
                 spacing={2}
                 alignItems="center"
@@ -138,61 +139,68 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                         placeholder="Search taskType..."
                     />
                 </Box>
-                <Box>
-                    <Button variant="contained" color="success" onClick={() => setOpenAddTaskType(true)}>
-                        Add
-                    </Button>
-                </Box>
             </Stack>
             {/* DragDropContext to enable drag and drop functionality */}
-            <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="taskTypes">
-                    {(provided) => (
-                        <Stack
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                        >
-                            {items?.map((taskType, index) => (
-                                <Draggable key={taskType.id} draggableId={taskType.id.toString()} index={index}>
-                                    {(provided, snapshot) => (
-
-                                        <Paper
-                                            sx={{
-                                                boxShadow: 0,
-                                                borderRadius: 0,
-                                                borderTop: "1px solid",
-                                                borderBottom: snapshot.isDragging || index === items.length - 1 ? "1px solid" : 0,
-                                                borderColor: snapshot.isDragging ? getCustomTwoModeColor(theme, theme.palette.grey[500], theme.palette.grey[600]) : getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
-                                            }}
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                        >
-                                            <Stack
-                                                direction="row"
-                                                spacing={2}
-                                                alignItems='stretch'
-
-
-                                            >
-                                                <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                    <DragIcon size={20} stroke={2} />
-                                                </Box>
-                                                <TaskTypeListItem taskType={taskType} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
-                                            </Stack>
-                                        </Paper>
-                                    )}
-                                </Draggable>
-                            ))}
-                            {provided.placeholder}
-                        </Stack>
-                    )}
-                </Droppable>
-            </DragDropContext>
             <Box
-                    sx={{
-                        borderBottom: "1px solid",
-                        borderColor: getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
-                    }}
+                sx={{
+                    p: 2
+                }}
+            >
+                <Typography
+                sx={{
+                    mb: 2
+                }}
+                >
+                    Options
+                </Typography>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="taskTypes">
+                        {(provided) => (
+                            <Stack
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                            >
+                                {items?.map((taskType, index) => (
+                                    <Draggable key={taskType.id} draggableId={taskType.id.toString()} index={index}>
+                                        {(provided, snapshot) => (
+
+                                            <Paper
+                                                sx={{
+                                                    boxShadow: 0,
+                                                    borderRadius: 0,
+                                                    borderTop: "1px solid",
+                                                    borderBottom: snapshot.isDragging || index === items.length - 1 ? "1px solid" : 0,
+                                                    borderColor: snapshot.isDragging ? getCustomTwoModeColor(theme, theme.palette.grey[500], theme.palette.grey[600]) : getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                                                }}
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                            >
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={2}
+                                                    alignItems='stretch'
+
+
+                                                >
+                                                    <Box {...provided.dragHandleProps} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <DragIcon size={20} stroke={2} />
+                                                    </Box>
+                                                    <TaskTypeListItem taskType={taskType} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
+                                                </Stack>
+                                            </Paper>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
+                            </Stack>
+                        )}
+                    </Droppable>
+                </DragDropContext>
+                <Box
+                // sx={{
+                //     borderBottom: "1px solid",
+                //     borderColor: getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])
+                // }}
                 >
                     <Button
                         onClick={() => addNewItem()}
@@ -206,7 +214,8 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                         Add status
                     </Button>
                 </Box>
-                <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
+            </Box>
+            <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
                     <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
                         Save
@@ -259,7 +268,7 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
     return (
         <>
             <Box
-                sx={{ py: 2, px: 4, flexGrow: 1 }}
+                sx={{ px: 4, flexGrow: 1 }}
             > <Stack
 
                 direction="row"
@@ -281,8 +290,8 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
                     </Stack>
                 </Stack>
             </Box>
-            {!taskType?.systemRequired &&
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {!taskType.systemRequired &&
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
                     </IconButton>

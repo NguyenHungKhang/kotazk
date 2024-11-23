@@ -102,7 +102,13 @@ export default function CustomAddTaskDialog() {
                 }
             }}
         >
-            <DialogTitle>Add new task</DialogTitle>
+            <DialogTitle
+                sx={{
+                    bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
+                }}
+            >
+                Add new task
+            </DialogTitle>
             <DialogContent
                 sx={{
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
@@ -149,7 +155,7 @@ export default function CustomAddTaskDialog() {
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
                 }}
             >
-                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button> 
+                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button>
                 <Button onClick={handleClose} color="error" variant='contained' size='small'>Cancle</Button>
             </DialogActions>
         </Dialog>

@@ -1,23 +1,26 @@
 import React, { useState } from 'react';
-import { Popover, Button, Box } from '@mui/material';
+import { Popover, Button, Box, IconButton, useTheme } from '@mui/material';
 import CustomColorPicker from '.';
+import * as TablerIcons from '@tabler/icons-react';
 
 const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
-    const [anchorEl, setAnchorEl] = useState(null); // For anchoring the Popover
+    const [anchorEl, setAnchorEl] = useState(null);
+    const ColorIcon = TablerIcons["IconPalette"];
+    const theme = useTheme();
 
     const handleOpen = (event) => {
-        setAnchorEl(event.currentTarget); // Set the block as the anchor for the Popover
+        setAnchorEl(event.currentTarget);
     };
 
     const handleClose = () => {
-        setAnchorEl(null); // Close the Popover by removing the anchor
+        setAnchorEl(null);
     };
 
     const handleColorChange = (newColor) => {
-        setColor(newColor); // Update the state with the new selected color
+        setColor(newColor);
     };
 
-    const open = Boolean(anchorEl); // Determines if the Popover is open
+    const open = Boolean(anchorEl);
     const id = open ? 'color-picker-popover' : undefined;
 
     return (
@@ -31,9 +34,19 @@ const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
                     backgroundColor: color,  // Display current color
                     cursor: 'pointer',
                     borderRadius: 2, // Rounded corners (optional)
-                    border: '1px solid #ccc',  // Border to make it stand out
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
                 }}
-            />
+            >
+                <IconButton size='small' 
+                sx={{
+                    p: 0
+                }}
+                >
+                    <ColorIcon color={theme.palette.getContrastText(color)} />
+                </IconButton>
+            </Box>
 
             {/* Popover that opens on block click */}
             <Popover
@@ -53,11 +66,6 @@ const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
                 <Box p={2}>
                     {/* Custom Color Picker */}
                     <CustomColorPicker color={color} onChange={handleColorChange} />
-
-                    {/* Save Button */}
-                    <Button onClick={handleClose} color="primary">
-                        Save
-                    </Button>
                 </Box>
             </Popover>
         </div>

@@ -198,8 +198,16 @@ public class StatusService implements IStatusService {
                         status.setId(id);
                         incomingStatusIds.add(id);
                     });
+                    if(!s.getId().equals(null)) {
+                        Status existStatus = statusRepository.findById(s.getId())
+                                .orElseThrow(() -> new CustomException("Invalid input"));
+                        status.setSystemRequired(existStatus.getSystemRequired());
+                        status.setSystemInitial(existStatus.getSystemInitial());
+                    }
+
                     if (s.getProjectId() != projectId)
                         throw new CustomException("Invalid input!");
+
                     status.setProject(project);
                     status.setName(s.getName());
                     status.setDescription(s.getDescription());

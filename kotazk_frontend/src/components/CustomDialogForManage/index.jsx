@@ -6,7 +6,7 @@ import * as React from 'react';
 
 export default function CustomDialogForManage({ children, open, setOpen }) {
     const [fullWidth, setFullWidth] = React.useState(true);
-    const [maxWidth, setMaxWidth] = React.useState('lg');
+    const [maxWidth, setMaxWidth] = React.useState('md');
 
     const handleClickOpen = () => {
         setOpen(true);

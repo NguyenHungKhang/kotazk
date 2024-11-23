@@ -8,4 +8,6 @@ export const update = async (labelId, data) => await axiosInstance.put(`${ORIGIN
 
 export const remove = async (labelId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${labelId}`);
 
+export const saveList = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/save-list/by-project/${projectId}`, data);
+
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
