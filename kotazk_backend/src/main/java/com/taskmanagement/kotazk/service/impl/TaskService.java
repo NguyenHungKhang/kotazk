@@ -4,6 +4,7 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
@@ -178,6 +179,7 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getAssigneeId())
                 .ifPresent(assigneeId -> {
                     Member assignee = checkAssignee(currentMember, project, assigneeId);
+                    if(assignee == null) return;
                     String content = String.format("assigned to %s %s", assignee.getUser().getFirstName(), assignee.getUser().getLastName());
                     ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
@@ -439,6 +441,54 @@ public class TaskService implements ITaskService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    @Override
+    public PageResponse<TaskResponseDto> getToday(Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        List<Timestamp> timestamps = timeUtil.get24HCurrentUTCTimestamp();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(projectId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = Optional.of(project.getWorkSpace())
+                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
+
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
+
+        SearchParamRequestDto searchParam =  new SearchParamRequestDto();
+        searchParam.setSortBy("position");
+        searchParam.setSortDirectionAsc(true);
+
+        FilterCriteriaRequestDto assigneeFilterCriteriaRequestDto = new FilterCriteriaRequestDto();
+        assigneeFilterCriteriaRequestDto.setOperation(FilterOperator.EQUAL);
+        assigneeFilterCriteriaRequestDto.setKey("assignee.user.id");
+        assigneeFilterCriteriaRequestDto.setValue(currentUser.getId().toString());
+
+        FilterCriteriaRequestDto isCompletedFilterCriteriaRequestDto = new FilterCriteriaRequestDto();
+        isCompletedFilterCriteriaRequestDto.setOperation(FilterOperator.EQUAL);
+        isCompletedFilterCriteriaRequestDto.setKey("isCompleted");
+        isCompletedFilterCriteriaRequestDto.setValue(String.valueOf(false));
+
+        FilterCriteriaRequestDto timeStampFilterCriteriaRequestDto = new FilterCriteriaRequestDto();
+//        endAtFilterCriteriaRequestDto.setOperation(FilterOperator.BETWEEN);
+//        endAtFilterCriteriaRequestDto.setKey("endAt");
+        timeStampFilterCriteriaRequestDto.setValues(timestamps.stream().map(ts -> String.valueOf(ts.getTime())).toList());
+    timeStampFilterCriteriaRequestDto.setSpecificTimestampFilter(true);
+
+        List<FilterCriteriaRequestDto> filterCriteriaRequestDtos = new ArrayList<>();
+        filterCriteriaRequestDtos.add(assigneeFilterCriteriaRequestDto);
+        filterCriteriaRequestDtos.add(isCompletedFilterCriteriaRequestDto);
+        filterCriteriaRequestDtos.add(timeStampFilterCriteriaRequestDto);
+
+        searchParam.setFilters(filterCriteriaRequestDtos);
+
+        return getPageByProject(searchParam, projectId);
     }
 
     // Utility methods

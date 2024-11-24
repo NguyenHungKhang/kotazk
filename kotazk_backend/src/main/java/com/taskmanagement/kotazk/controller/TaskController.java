@@ -1,5 +1,7 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.entity.enums.FilterOperator;
+import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
@@ -55,5 +57,11 @@ public class TaskController {
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<TaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long projectId) {
         return taskService.getPageByProject(searchParam, projectId);
+    }
+
+    @GetMapping("/today/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<TaskResponseDto> getTodayTask(@PathVariable Long projectId) {
+        return taskService.getToday(projectId);
     }
 }

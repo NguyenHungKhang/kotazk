@@ -17,4 +17,5 @@ public interface ITaskService {
     RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
     TaskResponseDto getOne(Long id);
     PageResponse<TaskResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<TaskResponseDto> getToday(Long projectId);
 }
