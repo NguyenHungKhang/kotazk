@@ -23,6 +23,7 @@ public interface IMemberService {
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
+    MemberResponseDto getCurrentOne(Long projectId);
     PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId);
     Member checkProjectMember(
             Long userId,

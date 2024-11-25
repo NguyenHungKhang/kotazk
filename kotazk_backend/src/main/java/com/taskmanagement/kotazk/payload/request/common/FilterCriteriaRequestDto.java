@@ -18,4 +18,5 @@ public class FilterCriteriaRequestDto {
     private String value;
     private List<String> values;
     private Boolean specificTimestampFilter = false;
+    private Boolean specificTimestampFilterNotNull = false;
 }

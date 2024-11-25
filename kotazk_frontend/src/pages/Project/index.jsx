@@ -16,7 +16,7 @@ import { setCurrentStatusList } from "../../redux/actions/status.action";
 import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 import { setCurrentPriorityList } from "../../redux/actions/priority.action";
 import { setCurrentLabelList } from "../../redux/actions/label.action";
-import { setCurrentProjectMemberList } from "../../redux/actions/member.action";
+import { setCurrentProjectMemberList, setCurrentUserMember } from "../../redux/actions/member.action";
 import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 import { setSectionList } from "../../redux/actions/section.action";
@@ -38,9 +38,21 @@ const Project = ({ children }) => {
         }
     ]
     useEffect(() => {
-        if (projectId != null)
+        if (projectId != null) {
             fetchInitial();
-    }, [, projectId])
+            getCurrentUser();
+        }
+    }, [projectId])
+
+    const getCurrentUser = async () => {
+        try {
+            const res = await apiService.memberAPI.getCurrentOne(projectId);
+            if (res?.data)
+                dispatch(setCurrentUserMember(res?.data))
+        } catch (err) {
+            console.error('Error fetching current member details:', err);
+        }
+    };
 
     const fetchInitial = async () => {
         try {
@@ -101,13 +113,14 @@ const Project = ({ children }) => {
                     >
                         <CustomHeader />
                         <CustomBreadcrumb data={breadcrumbData} />
-                        <Stack direction='row' mt={2}>
+                        <Stack direction='row' mt={2} spacing={2} alignItems={'center'}>
                             <Box flexGrow={1}>
                                 <CustomTab />
                             </Box>
                             <Box>
                                 <CustomFilterBar />
                             </Box>
+
                         </Stack>
 
                     </Paper>

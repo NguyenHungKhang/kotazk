@@ -1,4 +1,5 @@
 const initialState = {
+    currentUserMember: null,
     currentProjectMemberList: null,
 }
 
@@ -8,6 +9,11 @@ const MemberReducer = (state = initialState, action) => {
             return {
                 ...state,
                 currentProjectMemberList: action.payload
+            };
+        case 'SET_CURRENT_USER_MEMBER':
+            return {
+                ...state,
+                currentUserMember: action.payload
             };
         default:
             return state;

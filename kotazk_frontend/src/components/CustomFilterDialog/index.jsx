@@ -80,7 +80,7 @@ const CustomComponent = ({ section }) => {
     return (
         <div>
             <Button
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: 'none', textWrap: 'nowrap' }}
                 color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
                 size="small"
                 // variant='outlined'

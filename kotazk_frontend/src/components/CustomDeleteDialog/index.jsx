@@ -75,6 +75,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_TASK_COMMENT" && deleteProps != null) {
             const taskCommentId = deleteProps.taskCommentId;
             await handleDeleteTaskComment(taskCommentId);
+        } else if (deleteType == "DELETE_SECTION" && deleteProps != null) {
+            const sectionId = deleteProps.sectionId;
+            await handleDeleteSection(sectionId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -297,7 +300,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
         }
     };
 
-    
+
     const handleDeleteTaskComment = async (taskCommentId) => {
         try {
             const response = await apiService.taskComment.remove(taskCommentId);
@@ -310,6 +313,21 @@ export default function CustomDeleteDialog({ deleteAction }) {
             }
         } catch (error) {
             console.error('Failed to delete task comment:', error);
+        }
+    };
+
+
+    const handleDeleteSection = async (sectionId) => {
+        try {
+            const response = await apiService.sectionAPI.remove(sectionId);
+            if (response?.data) {
+                dispatch(setSnackbar({
+                    content: "Section delete successfully!",
+                    open: true
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete section:', error);
         }
     };
 
