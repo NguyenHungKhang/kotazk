@@ -15,6 +15,8 @@ import { setAddAndUpdateReportDialog, setDeleteDialog, setFullReportDialog } fro
 import { useDispatch } from 'react-redux';
 import { setProjectReports } from '../../redux/actions/projectReport.action';
 
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+
 const ProjectReport = () => {
 
     // const [projectReports, setProjectReports] = useState([]);
@@ -89,94 +91,74 @@ const ProjectReport = () => {
         }));
     }
 
+    const onDragEnd = (result) => {
+        const { destination, source } = result;
+        if (!destination) return;
 
+        const reorderedReports = Array.from(projectReports);
+        const [reorderedReport] = reorderedReports.splice(source.index, 1);
+        reorderedReports.splice(destination.index, 0, reorderedReport);
+
+        dispatch(setProjectReports(reorderedReports));
+    };
 
     return projectReports == null ? <>Loading...</> : (
-        <Box
-            height={'100%'}
-            width={'100%'}
-            overflow={'auto'}
-        >
-            <Card
-                sx={{
-                    mb: 2,
-                    p: 2
-                }}
-            >
+        <Box height={'100%'} width={'100%'} overflow={'auto'}>
+            <Card sx={{ mb: 2, p: 2 }}>
                 <Button onClick={() => handleOpenAddAndEditDialog(null)}>
                     Add report
                 </Button>
             </Card>
 
-            <Grid2 container spacing={2} width={'100%'} height={"100%"}>
-                {projectReports?.map((pr, index) => (
-                    <Grid2 key={index} item size={4}>
-                        <Card
-                            sx={{
-                                width: '100%',
-                                // aspectRatio: '1.615/1',
-                                height: '100%',
-                                maxHeight: 500
-                            }}
-                        >
-                            <Box px={4} py={2}>
-                                <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                                    <Box flexGrow={1}>
-                                        <Typography variant='h6' fontWeight={650}>
-                                            {pr.name}
-                                        </Typography>
-                                    </Box>
-                                    <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                                        <IconButton
-                                            size='small'
-                                            onClick={() => handleExpand(pr)}
-                                        >
-                                            <ExpandIcon size={18} />
-                                        </IconButton>
-                                        <IconButton
-                                            size='small'
-                                            onClick={() => handleOpenAddAndEditDialog(pr)}
-                                        >
-                                            <EditIcon size={18} />
-                                        </IconButton>
-                                        <IconButton
-                                            color='error'
-                                            size='small'
-                                            onClick={() => handleOpenDeleteDialog(pr)}
-                                        >
-                                            <RemoveIcon size={18} />
-                                        </IconButton>
-                                    </Stack>
-                                </Stack>
-                            </Box>
-                            <Divider />
-                            <Box
-                                width={'100%'}
-                                height={'100%'}
-                                maxHeight={300}
-                                p={2}
-                            // pb={8}
-                            >
-                                {pr.type == "BAR_CHART" && (
-                                    <CustomBarchart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />
-                                )}
-                                {pr.type == "STACKED_BAR" && (
-                                    <CustomStackedBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />
-                                )}
-                                {pr.type == "LINE" && (
-                                    <CustomLinechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />
-                                )}
-                                {pr.type == "GROUPED_BAR" && (
-                                    <CustomGroupeddBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />
-                                )}
-                                {pr.type == "PIE" && (
-                                    <CustomPiechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />
-                                )}
-                            </Box>
-                        </Card>
-                    </Grid2>
-                ))}
-            </Grid2>
+            {/* Kéo thả các thẻ báo cáo */}
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="reports" direction="horizontal">
+                    {(provided) => (
+                        <Grid2 container spacing={2} width={'100%'} height={"100%"} {...provided.droppableProps} ref={provided.innerRef}>
+                            {projectReports?.map((pr, index) => (
+                                <Draggable key={pr.id} draggableId={pr.id.toString()} index={index}>
+                                    {(provided) => (
+                                        <Grid2 item xs={4} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                            <Card sx={{ width: '100%', height: '100%', maxHeight: 500 }}>
+                                                <Box px={4} py={2}>
+                                                    <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                                                        <Box flexGrow={1}>
+                                                            <Typography variant='h6' fontWeight={650}>
+                                                                {pr.name}
+                                                            </Typography>
+                                                        </Box>
+                                                        <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                                                            <IconButton size='small' onClick={() => handleExpand(pr)}>
+                                                                <ExpandIcon size={18} />
+                                                            </IconButton>
+                                                            <IconButton size='small' onClick={() => handleOpenAddAndEditDialog(pr)}>
+                                                                <EditIcon size={18} />
+                                                            </IconButton>
+                                                            <IconButton color='error' size='small' onClick={() => handleOpenDeleteDialog(pr)}>
+                                                                <RemoveIcon size={18} />
+                                                            </IconButton>
+                                                        </Stack>
+                                                    </Stack>
+                                                </Box>
+                                                <Divider />
+                                                <Box width={'100%'} height={'100%'} maxHeight={300} p={2}>
+                                                    {pr.type == "BAR_CHART" && <CustomBarchart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                    {pr.type == "STACKED_BAR" && <CustomStackedBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                    {pr.type == "LINE" && <CustomLinechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                    {pr.type == "GROUPED_BAR" && <CustomGroupeddBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                    {pr.type == "PIE" && <CustomPiechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                </Box>
+                                            </Card>
+                                        </Grid2>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </Grid2>
+                    )}
+                </Droppable>
+            </DragDropContext>
+
             <CustomFullChartDialog />
             <CustomAddChartDialog />
         </Box>
