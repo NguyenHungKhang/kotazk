@@ -51,17 +51,13 @@ const CustomSaveSectionButton = ({ sectionId }) => {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        // Set the Tooltip to open automatically after the component mounts
         setOpen(true);
-
-        // Optionally, you can set it to close after a delay
         const timer = setTimeout(() => {
             setOpen(false);
-        }, 3000);  // Close after 3 seconds
+        }, 3000);
 
-        // Cleanup the timer when the component is unmounted
         return () => clearTimeout(timer);
-    }, []); // Empty dependency array ensures this runs only once on mount
+    }, []);
 
 
     const handleSave = async () => {
@@ -139,6 +135,7 @@ const CustomAddTaskButton = () => {
             variant="contained"
             sx={{
                 textTransform: 'none',
+                textWrap: 'nowrap',
                 background: 'linear-gradient(45deg, #FF3259 30%, #FF705A 90%)',
                 color: '#FFFFFF',
                 '&:hover': {

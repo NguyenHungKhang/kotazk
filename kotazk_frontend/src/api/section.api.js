@@ -6,6 +6,8 @@ export const add  = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_UR
 
 export const update  = async (sectionId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${sectionId}`, data);
 
+export const remove  = async (sectionId, data) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${sectionId}`);
+
 export const getOne = async (sectionId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/${sectionId}`);
 
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);

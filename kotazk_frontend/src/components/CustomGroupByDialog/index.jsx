@@ -18,6 +18,8 @@ const groupByMenu = [
     { id: "status", label: "Status" },
     { id: "taskType", label: "Task type" },
     { id: "priority", label: "Priority" },
+    { id: "assignee", label: "Assignee" },
+    { id: "isCompleted", label: "Completion" },
 ]
 
 const StyledMenu = styled((props) => (
@@ -101,7 +103,8 @@ export default function CustomGroupedByDialog() {
                 onClick={handleClick}
                 sx={{
                     textTransform: 'none',
-                    width: 'fit-content'
+                    width: 'fit-content',
+                    textWrap: 'nowrap'
                 }}
                 color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
                 size="small"
@@ -121,7 +124,7 @@ export default function CustomGroupedByDialog() {
                         px={1}
                         borderRadius={1}
                     >
-                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")}>
+                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")} sx={{ textWrap: 'nowrap' }}>
                             {groupByMenu.find(i => i.id == selectedItem)?.label}
                         </Typography>
                     </Box>
@@ -160,6 +163,18 @@ export default function CustomGroupedByDialog() {
                         </ListItemIcon>
                         <ListItemText inset>Priority</ListItemText>
                     </MenuItem>
+                    <MenuItem onClick={() => handleSelect('assignee')}>
+                        <ListItemIcon>
+                            {selectedItem === 'assignee' && <Check />}
+                        </ListItemIcon>
+                        <ListItemText inset>Assignee</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={() => handleSelect('isCompleted')}>
+                        <ListItemIcon>
+                            {selectedItem === 'isCompleted' && <Check />}
+                        </ListItemIcon>
+                        <ListItemText inset>Completion</ListItemText>
+                    </MenuItem>
                     <Divider />
                     {section?.type === "LIST" &&
                         <MenuItem onClick={() => handleSelect('Clear')}>
@@ -170,13 +185,6 @@ export default function CustomGroupedByDialog() {
 
                         </MenuItem>
                     }
-
-                    <MenuItem onClick={() => handleSelect('Add single select custom field')}>
-                        <Stack direction={'row'} spacing={2}>
-                            <AddIcon size={18} />
-                            <Typography variant='body1'>Add single select custom field</Typography>
-                        </Stack>
-                    </MenuItem>
                 </MenuList>
             </StyledMenu>
         </>

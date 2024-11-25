@@ -35,6 +35,8 @@ const CustomSortDialog = () => {
         { value: "status.position", label: "Status" },
         { value: "priority.position", label: "Priority" },
         { value: "taskType.position", label: "Task Type" },
+        { value: "isCompleted", label: "Completetion" },
+        { value: "assignee.user.lastName", label: "Assignee" },
         { value: "position", label: "Default position" },
     ];
 
@@ -67,6 +69,7 @@ const CustomSortDialog = () => {
             <Button
                 sx={{
                     textTransform: 'none',
+                    textWrap: 'nowrap'
                 }}
                 color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
                 size="small"
@@ -95,7 +98,7 @@ const CustomSortDialog = () => {
                                 <DesIcon size={18} color={getCustomTwoModeColor(theme, "#fff", "#000")} />
                             )}
                         </Box>
-                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")}>
+                        <Typography variant='body2' color={getCustomTwoModeColor(theme, "#fff", "#000")} sx={{ textWrap: 'nowrap' }}>
                             {fieldOptions.find(i => i.value == selectedField)?.label}
                         </Typography>
                     </Box>

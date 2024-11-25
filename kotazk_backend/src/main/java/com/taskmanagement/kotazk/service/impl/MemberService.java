@@ -265,6 +265,21 @@ public class MemberService implements IMemberService {
     }
 
     @Override
+    public MemberResponseDto getCurrentOne(Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        Member member = project.getMembers().stream()
+                .filter(m -> m.getUser().getId() == currentUser.getId())
+                .findFirst()
+                .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), project.getName())));
+
+        return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
+    }
+
+    @Override
     public PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
@@ -317,9 +332,9 @@ public class MemberService implements IMemberService {
         }
 
         List<FilterCriteriaRequestDto> workspaceFilterList = new ArrayList<>();
-        workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false));
-        workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>(), false));
-        workspaceFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.WORK_SPACE), new ArrayList<>(), false));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false, false));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>(), false, false));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.WORK_SPACE), new ArrayList<>(), false, false));
 
         Member workspaceMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(workspaceFilterList))
                 .orElse(null);
@@ -356,9 +371,9 @@ public class MemberService implements IMemberService {
         }
 
         List<FilterCriteriaRequestDto> projectFilterList = new ArrayList<>();
-        projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false));
-        projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>(), false));
-        projectFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.PROJECT), new ArrayList<>(), false));
+        projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false, false));
+        projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>(), false, false));
+        projectFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.PROJECT), new ArrayList<>(), false, false));
 
         Member projectMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(projectFilterList))
                 .orElse(null);

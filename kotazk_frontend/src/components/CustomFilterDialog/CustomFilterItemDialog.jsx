@@ -20,15 +20,19 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
     const fields = [
         { label: 'Status', value: 'status.id' },
         { label: 'Priority', value: 'priority.id' },
-        { label: 'Task Type', value: 'taskType.id' }
+        { label: 'Task Type', value: 'taskType.id' },
+        { label: 'Assignee', value: 'assignee.id' },
+        { label: 'Completion', value: 'isCompleted' }
     ];
 
     useEffect(() => {
         if (filter) {
             setSelectedField(filter.field);
             let initialOptions = [];
-            if (filter.field == "status.id" || filter.field == "taskType.id" || filter.field == "priority.id")
+            if (filter.field == "status.id" || filter.field == "taskType.id" || filter.field == "priority.id" || filter.field == "assignee.id")
                 initialOptions = filter.options.map(Number);
+            else if (filter.field == "isCompleted")
+                initialOptions = filter.options.map(Boolean);
 
             setSelectedOptions(initialOptions);
         }
@@ -47,6 +51,12 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
                     break;
                 case 'taskType.id':
                     response = await fetchTaskTypeOptions();
+                    break;
+                case 'assignee.id':
+                    response = await fetchMemberOptions();
+                    break;
+                case 'isCompleted':
+                    response = await fetchIsCompletedOptions();
                     break;
                 default:
                     response = [];
@@ -80,10 +90,10 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
 
         const response = await apiService.priorityAPI.getPageByProject(project?.id, data);
         if (response?.data) {
-            return response?.data?.content.map(i => ({
+            return [{ "label": "No priority*", "value": 0 }, ...response.data.content.map(i => ({
                 "label": i.name,
                 "value": i.id
-            }))
+            }))]
         } else return [];
     };
 
@@ -100,6 +110,34 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
             }))
         } else return [];
     };
+
+    const fetchMemberOptions = async () => {
+        const data = {
+            "filters": []
+        }
+
+        const response = await apiService.memberAPI.getPageByProject(project?.id, data);
+        if (response?.data) {
+            return [{ "label": "No assignee", "value": 0 }, ...response.data.content.map(i => ({
+                "label": i.user.firstName + ' ' + i.user.lastName,
+                "value": i.id
+            }))]
+        } else return [];
+    };
+
+    const fetchIsCompletedOptions = async () => {
+        return [
+            {
+                "label": "Completed",
+                "value": true
+            },
+            {
+                "label": "Uncompleted",
+                "value": false
+            }
+        ]
+    };
+
 
     useEffect(() => {
         if (selectedField) {

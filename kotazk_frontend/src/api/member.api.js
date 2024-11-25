@@ -8,4 +8,6 @@ export const updateStatus = async (memberId, data) => await axiosInstance.put(`$
 
 export const remove = async (memberId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${memberId}`);
 
+export const getCurrentOne = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/${projectId}`);
+
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);

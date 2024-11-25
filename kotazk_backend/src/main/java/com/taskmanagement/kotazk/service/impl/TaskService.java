@@ -179,8 +179,11 @@ public class TaskService implements ITaskService {
         Optional.ofNullable(taskRequestDto.getAssigneeId())
                 .ifPresent(assigneeId -> {
                     Member assignee = checkAssignee(currentMember, project, assigneeId);
-                    if(assignee == null) return;
-                    String content = String.format("assigned to %s %s", assignee.getUser().getFirstName(), assignee.getUser().getLastName());
+                    String content;
+                    if (assignee == null)
+                        content = String.format("removed assignee from");
+                    else
+                        content = String.format("assigned to %s %s", assignee.getUser().getFirstName(), assignee.getUser().getLastName());
                     ActivityLog newActivityLog = activityLogTaskTemplate(currentTask, currentUser, currentMember, content);
                     activityLogs.add(newActivityLog);
                     currentTask.setAssignee(assignee);
@@ -199,7 +202,9 @@ public class TaskService implements ITaskService {
                 .ifPresent(priorityId -> {
                     Priority priority = checkPriority(project, priorityId);
                     String content;
-                    if (currentTask.getPriority() == null)
+                    if (priority == null)
+                        content = String.format("removed priority from this task");
+                    else if (currentTask.getPriority() == null)
                         content = String.format("set priority %s", priority.getName());
                     else
                         content = String.format("changed priority from %s to %s", currentTask.getPriority().getName(), priority.getName());
@@ -461,7 +466,7 @@ public class TaskService implements ITaskService {
             currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
 
-        SearchParamRequestDto searchParam =  new SearchParamRequestDto();
+        SearchParamRequestDto searchParam = new SearchParamRequestDto();
         searchParam.setSortBy("position");
         searchParam.setSortDirectionAsc(true);
 
@@ -479,7 +484,7 @@ public class TaskService implements ITaskService {
 //        endAtFilterCriteriaRequestDto.setOperation(FilterOperator.BETWEEN);
 //        endAtFilterCriteriaRequestDto.setKey("endAt");
         timeStampFilterCriteriaRequestDto.setValues(timestamps.stream().map(ts -> String.valueOf(ts.getTime())).toList());
-    timeStampFilterCriteriaRequestDto.setSpecificTimestampFilter(true);
+        timeStampFilterCriteriaRequestDto.setSpecificTimestampFilter(true);
 
         List<FilterCriteriaRequestDto> filterCriteriaRequestDtos = new ArrayList<>();
         filterCriteriaRequestDtos.add(assigneeFilterCriteriaRequestDto);

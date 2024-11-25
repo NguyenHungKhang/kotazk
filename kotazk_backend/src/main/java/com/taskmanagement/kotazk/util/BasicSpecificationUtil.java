@@ -75,10 +75,32 @@ public class BasicSpecificationUtil<T> {
                 case IN: {
                     CriteriaBuilder.In<Object> inClause = criteriaBuilder.in(finalPath);
                     List<?> values = (List<?>) castToRequiredType(finalPath.getJavaType(), input.getValues());
+
+                    boolean containsZero = false;
+                    for (Object value : values) {
+                        if (value.equals(0L) || value.equals(0) || value.equals("0")) {
+                            System.out.println(1);
+                            containsZero = true;
+                        } else {
+                            inClause.value(value);
+                        }
+                    }
+                    if (containsZero) {
+                        return criteriaBuilder.or(
+                                inClause,
+                                criteriaBuilder.isNull(finalPath)
+                        );
+                    }
+
+                    return inClause; // Return the IN clause if 0 is not present
+                }
+                case NOT_IN: {
+                    CriteriaBuilder.In<Object> inClause = criteriaBuilder.in(finalPath);
+                    List<?> values = (List<?>) castToRequiredType(finalPath.getJavaType(), input.getValues());
                     for (Object value : values) {
                         inClause.value(value);
                     }
-                    return inClause;
+                    return criteriaBuilder.not(inClause);
                 }
                 case IS_NULL:
                     return criteriaBuilder.isNull(finalPath);
@@ -180,59 +202,47 @@ public class BasicSpecificationUtil<T> {
         boolean hasStartAt = root.getModel().getAttributes().contains("startAt");
         boolean hasEndAt = root.getModel().getAttributes().contains("endAt");
 
-        if (!hasStartAt && !hasEndAt) {
+        if (Boolean.TRUE.equals(input.getSpecificTimestampFilterNotNull())) {
+            predicates.add(criteriaBuilder.or(
+                    criteriaBuilder.isNotNull(startPath),
+                    criteriaBuilder.isNotNull(endPath)
+            ));
+        } else if (!hasStartAt && !hasEndAt) {
             return criteriaBuilder.conjunction(); // No filtering if both fields are missing
         }
 
         if (timestamps.size() == 1) {
-            if (hasStartAt) {
-                if (startPath.getJavaType().equals(Timestamp.class)) {
-                    predicates.add(criteriaBuilder.or(
-                            criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) startPath, (Comparable) firstTimestamp),
-                            criteriaBuilder.isNull(startPath) // Include records where startAt is null
-                    ));
-                } else {
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) startPath, (Comparable) firstTimestamp));
-                }
-            }
-            if (hasEndAt) {
-                if (endPath.getJavaType().equals(Timestamp.class)) {
-                    predicates.add(criteriaBuilder.or(
-                            criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) endPath, (Comparable) firstTimestamp),
-                            criteriaBuilder.isNull(endPath) // Include records where endAt is null
-                    ));
-                } else {
-                    predicates.add(criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) endPath, (Comparable) firstTimestamp));
-                }
-            }
+            predicates.add(
+                    criteriaBuilder.and(
+                            criteriaBuilder.and(
+                                    criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) startPath, (Comparable) firstTimestamp),
+                                    criteriaBuilder.isNotNull(startPath)
+                            ),
+                            criteriaBuilder.and(
+                                    criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) endPath, (Comparable) firstTimestamp),
+                                    criteriaBuilder.isNotNull(endPath) // Include records where endAt is null
+                            )
+                    )
+            );
         } else if (timestamps.size() == 2) {
             Object filterStart = castToRequiredType(startPath.getJavaType(), timestamps.get(0));
             Object filterEnd = castToRequiredType(endPath.getJavaType(), timestamps.get(1));
 
-            if (hasStartAt && hasEndAt) {
-                predicates.add(criteriaBuilder.or(
-                        criteriaBuilder.between((Path<Comparable>) startPath, (Comparable) filterStart, (Comparable) filterEnd),
-                        criteriaBuilder.between((Path<Comparable>) endPath, (Comparable) filterStart, (Comparable) filterEnd),
-                        criteriaBuilder.and(
-                                criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) startPath, (Comparable) filterStart),
-                                criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) endPath, (Comparable) filterEnd)
-                        )
-                ));
-            } else {
-                // Handle null cases for startAt and/or endAt
-                if (hasStartAt) {
-                    predicates.add(criteriaBuilder.or(
-                            criteriaBuilder.between((Path<Comparable>) startPath, (Comparable) filterStart, (Comparable) filterEnd),
-                            criteriaBuilder.isNull(startPath) // Include records where startAt is null
-                    ));
-                }
-                if (hasEndAt) {
-                    predicates.add(criteriaBuilder.or(
-                            criteriaBuilder.between((Path<Comparable>) endPath, (Comparable) filterStart, (Comparable) filterEnd),
-                            criteriaBuilder.isNull(endPath) // Include records where endAt is null
-                    ));
-                }
-            }
+            predicates.add(criteriaBuilder.or(
+                    criteriaBuilder.and(
+                            criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) startPath, (Comparable) firstTimestamp),
+                            criteriaBuilder.isNotNull(startPath)
+                    ),
+                    criteriaBuilder.and(
+                            criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) endPath, (Comparable) filterEnd),
+                            criteriaBuilder.isNotNull(endPath) // Include records where endAt is null
+
+                    ),
+                    criteriaBuilder.and(
+                            criteriaBuilder.lessThanOrEqualTo((Path<Comparable>) startPath, (Comparable) filterStart),
+                            criteriaBuilder.greaterThanOrEqualTo((Path<Comparable>) endPath, (Comparable) filterEnd)
+                    )
+            ));
         }
 
         return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

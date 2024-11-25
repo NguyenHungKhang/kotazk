@@ -62,14 +62,29 @@ function KanbanDropNDrag() {
 
   const fetchGroupByEntityList = async () => {
     const data = {
-      'sortBy': 'position',
+      'sortBy': groupByEntity == 'assignee' ? 'user.lastName' : 'position',
       'sortDirectionAsc': true,
       'filters': []
     }
     let groupByEntityListResponse = null;
     if (groupByEntity == 'status') groupByEntityListResponse = await apiService.statusAPI.getPageByProject(project.id, data)
     else if (groupByEntity == 'taskType') groupByEntityListResponse = await apiService.taskTypeAPI.getPageByProject(project.id, data)
-    else if (groupByEntity == 'priority') groupByEntityListResponse = await apiService.priorityAPI.getPageByProject(project.id, data)
+    else if (groupByEntity == 'priority') {
+      groupByEntityListResponse = await apiService.priorityAPI.getPageByProject(project.id, data)
+      if (groupByEntityListResponse?.data)
+        setGroupByEntityList([...groupByEntityListResponse.data.content, { "id": 0, "name": "No priority*" }])
+      return;
+    }
+    else if (groupByEntity == 'assignee') {
+      groupByEntityListResponse = await apiService.memberAPI.getPageByProject(project.id, data);
+      if (groupByEntityListResponse?.data)
+        setGroupByEntityList([...groupByEntityListResponse.data.content, { "id": 0, "name": "No assignee*" }])
+      return;
+    }
+    else if (groupByEntity == 'isCompleted') {
+      setGroupByEntityList([{ "id": 1, "name": "Completion", "value": true }, { "id": 0, "name": "Uncompletion", "value": false }])
+      return;
+    }
 
     if (groupByEntityListResponse?.data)
       setGroupByEntityList(groupByEntityListResponse?.data.content)
@@ -99,15 +114,36 @@ function KanbanDropNDrag() {
 
   const groupTasks = () => {
     const grouped = groupByEntityList.reduce((acc, entity) => {
-      const key = entity.id; // Assuming entity.id matches task's groupByEntity value
-      const items = tasks?.filter(task => task[groupByEntity]?.id == key);
-      acc.push({
-        ...entity,
-        items: items || [],
-        droppableId: String(entity.id)
-      });
+      if (groupByEntity == "isCompleted") {
+        const key = entity.value;
+        const items = tasks?.filter(task => task[groupByEntity] == key);
+        acc.push({
+          ...entity,
+          items: items || [],
+          droppableId: String(entity.value)
+        });
+      } else {
+        const key = entity.id;
+        const items = tasks?.filter(task => {
+
+          if (groupByEntity == "priority")
+            if (key == 0) {
+              return task[groupByEntity] == null;
+            }
+
+          return task[groupByEntity]?.id == key;
+
+        });
+        acc.push({
+          ...entity,
+          items: items || [],
+          droppableId: String(entity.id)
+        });
+      }
       return acc;
     }, []);
+
+
     dispatch(setCurrentGroupedTaskList(
       {
         list: grouped,
@@ -128,12 +164,20 @@ function KanbanDropNDrag() {
     const groupMappings = {
       status: "statusId",
       taskType: "taskTypeId",
-      priority: "priority"
+      priority: "priorityId",
+      assignee: "assigneeId",
+      isCompleted: "isCompleted"
     };
     const groupField = groupMappings[groupByEntity];
-    const groupValue = dstGroupId || null;
 
-    if (!groupValue && !rePositionReq) return null;
+    let groupValue;
+    if (groupByEntity == "isCompleted")
+      groupValue = dstGroupId == "1"
+    else {
+      groupValue = dstGroupId || null;
+    }
+
+    if (groupValue == null && !rePositionReq) return null;
 
     const data = {
       [groupField]: groupValue,
@@ -231,6 +275,7 @@ function KanbanDropNDrag() {
           direction='row'
           spacing={1}
           sx={{ overflowX: 'auto' }}
+          height={'100%'}
         >
           {groupedTasks?.map((gt, index) => (
             <Box key={index}>
@@ -271,6 +316,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
   }
 
   return (
+
     <Droppable droppableId={id.toString()}>
       {(provided, snapshot) => (
         <div {...provided.droppableProps} ref={provided.innerRef}>
@@ -311,7 +357,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               >
                 <ColorIcon size={12} color={groupByEntity?.customization?.backgroundColor} />
                 <Box flexGrow={1}>
-                  {groupByEntity.name}
+                  {groupBy == "assignee" && groupByEntity?.id != 0 ? groupByEntity?.user?.firstName + " " + groupByEntity?.user?.lastName : groupByEntity.name}
                 </Box>
                 {/* Action buttons */}
                 <IconButton size="small" onClick={() => setCollapse(!collapse)}>
@@ -346,7 +392,8 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
               </Card>
             }
 
-            {!collapse && <Box height={`calc(100vh - ${theme.spacing(69)})`}
+            {!collapse && <Box
+              height={`calc(100vh - ${theme.spacing(73)})`}
               sx={{
                 pb: 1,
                 overflowY: 'auto',
