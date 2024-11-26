@@ -139,7 +139,21 @@ public class SectionService implements ISectionService {
 
     @Override
     public Boolean delete(Long id) {
-        return null;
+        User currentUser = SecurityUtil.getCurrentUser();
+        Section section = sectionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Section", "id", id));
+        Project project = section.getProject();
+        WorkSpace workSpace = project.getWorkSpace();
+        Member currentMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_SECTION),
+                true
+        );
+
+        sectionRepository.deleteById(id);
+        return true;
     }
 
     @Override
@@ -150,16 +164,15 @@ public class SectionService implements ISectionService {
     @Override
     public SectionResponseDto getOne(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
         Section currentSection = sectionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Section", "id", id));
         Project project = currentSection.getProject();
-        Member currentMember = memberService.checkProjectMember(
-                currentUser.getId(),
-                project.getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                true
-        );
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
 
         return ModelMapperUtil.mapOne(currentSection, SectionResponseDto.class);
     }

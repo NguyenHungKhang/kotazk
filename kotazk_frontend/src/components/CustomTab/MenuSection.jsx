@@ -68,12 +68,12 @@ const StyledMenu = styled((props) => (
     },
 }));
 
-export default function MenuSection({section}) {
+export default function MenuSection({section, setEditing}) {
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const theme = useTheme();
     const open = Boolean(anchorEl);
-    const project = useSelector((state) => state.project.currentProject)
+    const project = useSelector((state) => state.project.currentProject);
     const dispatch = useDispatch();
 
     const ArchiveIcon = TablerIcons["IconArchiveFilled"];
@@ -85,6 +85,11 @@ export default function MenuSection({section}) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    const handleEdit = () => {
+        setEditing(true);
+        handleClose();
+    }
 
     const handleOpenDeleteDialog = (event) => {
         dispatch(setDeleteDialog({
@@ -132,10 +137,10 @@ export default function MenuSection({section}) {
                 onClose={handleClose}
             >
                 <Divider sx={{ my: 0.5 }} />
-                <MenuItem onClick={handleClose} disableRipple>
+                <MenuItem onClick={handleEdit} disableRipple>
                     <Stack direction={'row'} spacing={2}>
                         <ArchiveIcon size={18} />
-                        <Typography>Edit</Typography>
+                        <Typography>Rename</Typography>
                     </Stack>
                 </MenuItem>
                 <MenuItem onClick={() => handleOpenDeleteDialog()} disableRipple>
