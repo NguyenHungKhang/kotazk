@@ -28,6 +28,8 @@ import ProjectRole from "../pages/ProjectRole";
 import ProjectReport from "../pages/ProjectReport";
 import DnDGrid from "../playgrounds/components/DndGrid";
 import ListWorkspace from "../playgrounds/components/TestDnDLap";
+import Register from "../pages/Register";
+import OtpVerification from "../pages/OtpVerification";
 
 const pagesData = [
   {
@@ -38,6 +40,16 @@ const pagesData = [
   {
     path: "/login",
     element: <Login />,
+    title: "playground"
+  },
+  {
+    path: "/register",
+    element: <Register />,
+    title: "playground"
+  },
+  {
+    path: "/OtpVerification",
+    element: <OtpVerification />,
     title: "playground"
   },
   {

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Card, CardContent, InputAdornment, Link, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LockIcon from '@mui/icons-material/Lock';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import TwitterIcon from '@mui/icons-material/Twitter';
+// import FacebookIcon from '@mui/icons-material/Facebook';
+// import TwitterIcon from '@mui/icons-material/Twitter';
 import GoogleIcon from '@mui/icons-material/Google';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
@@ -178,7 +178,15 @@ const Login = () => {
 
                         {/* Sign Up Link */}
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
-                            Or Sign Up Using <Link href="#" variant="body2" color={theme.palette.primary.main}>SIGN UP</Link>
+                            Or Sign Up Using{' '}
+                            <Link
+                                component="button"
+                                variant="body2"
+                                color={theme.palette.primary.main}
+                                onClick={() => navigate('/register')}
+                            >
+                                SIGN UP
+                            </Link>
                         </Typography>
                     </Box>
                 </CardContent>
