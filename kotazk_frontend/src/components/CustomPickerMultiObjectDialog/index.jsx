@@ -15,7 +15,6 @@ const CustomPickerMultiObjectDialog = ({ selectedObjects, setSelectedObjects, sa
     const [objects, setObjects] = useState(objectsData);
 
     const handleOpenPopover = (event) => {
-        console.log('AnchorEl:', event.currentTarget);
         if (!anchorEl) {
             setAnchorEl(event.currentTarget);
         }

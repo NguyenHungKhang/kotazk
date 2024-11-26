@@ -500,7 +500,7 @@ public class TaskService implements ITaskService {
     private Member checkAssignee(Member currentMember, Project project, Long assigneeId) {
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.ASSIGN_TASKS) &&
                 !currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT)
-        ) return null;
+        ) throw new CustomException("User don't have permission to assign member tasks");
 
         return project.getMembers().stream()
                 .filter(m -> m.getId().equals(assigneeId) &&

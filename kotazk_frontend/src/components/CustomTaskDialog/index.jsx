@@ -271,7 +271,6 @@ const CustomTaskDialog = () => {
                                         Task type
                                     </Typography>
                                 </Stack>
-
                             </Grid2>
                             <Grid2 item size={9}>
                                 <CustomTaskTypePicker currentTaskType={task?.taskType} taskId={task?.id} />
@@ -410,7 +409,6 @@ const CustomTaskDialog = () => {
                                 </Stack>
                             </Grid2>
                             <Grid2 item size={9}>
-                                {/* <PriorityComponent /> */}
                                 <CustomPriorityPicker currentPriority={task?.priority} taskId={task?.id} />
                             </Grid2>
 
@@ -469,90 +467,6 @@ const CustomTaskDialog = () => {
                     </Box>
                 </Box>
 
-                {/* <Box mt={6}>
-                    <Typography variant='h6' fontWeight={650}>
-                        Custom Fields
-                    </Typography>
-                    <Grid2 container mt={2}>
-                        <Grid2
-                            item
-                            borderRadius={"8px 0 0 0 "}
-                            size={3}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            p={2}
-                        >
-                            <CustomBasicTextField
-                                size='small'
-                                contentEditable={false}
-                                fullWidth
-                                placeholder='Name of field...'
-                            />
-                        </Grid2>
-                        <Grid2
-                            item
-                            size={9}
-                            borderRadius={"0 8px 0 0"}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            borderLeft='none'
-                            p={2}
-                        >
-                            Value
-                        </Grid2>
-
-                        <Grid2
-                            item
-                            // borderRadius={"8px 0 0 0 "}
-                            size={3}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            borderTop='none'
-                            p={2}
-                        >
-                            Field 2
-                        </Grid2>
-                        <Grid2
-                            item
-                            size={9}
-                            // borderRadius={"0 8px 0 0"}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            borderTop='none'
-                            borderLeft='none'
-                            p={2}
-                        >
-                            Value 2
-                        </Grid2>
-
-                        <Grid2
-                            item
-                            borderRadius={"0 0 0 8px "}
-                            size={3}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            borderTop='none'
-                            p={2}
-                        >
-                            Field 3
-                        </Grid2>
-                        <Grid2
-                            item
-                            size={9}
-                            borderRadius={"0 0 8px 0"}
-                            border="1px solid"
-                            borderColor={theme.palette.mode === "light" ? theme.palette.grey[500] : theme.palette.grey[600]}
-                            borderLeft='none'
-                            borderTop='none'
-                            p={2}
-                        >
-                            Value 3
-                        </Grid2>
-                    </Grid2>
-                </Box> */}
-
-
-
                 <Box mt={6}>
                     <Typography variant='h6' fontWeight={650}>
                         Subtasks
@@ -568,20 +482,6 @@ const CustomTaskDialog = () => {
                         <CustomFileUploader currentFiles={task?.attachments} task={task} />
                     </Box>
                 </Box>
-
-                {/* <Grid2 item size={5}>
-                        <Box
-                            bgcolor={getSecondBackgroundColor(theme)}
-                            height='100%'
-                            borderRadius={4}
-                            p={4}
-                        >
-                            <Typography variant="h4">
-                                Comment And Activity log: Upcomming...
-                            </Typography>
-                        </Box>
-
-                    </Grid2> */}
 
                 <Box mt={6}>
                     <Typography variant='h6' fontWeight={650}>
@@ -599,24 +499,13 @@ const CustomTaskDialog = () => {
                 </Box>
 
             </DialogContent >
-            <Divider />
-            {/* <DialogActions
-                sx={{
-                    position: 'sticky',
-                    bottom: 0,
-                    zIndex: 1, // Ensure it's on top of the content
-                    justifyContent: 'space-between', // Space between footer elements
-                    padding: '16px', // Optional padding
-                }}
-            >
-                <CommentAndActivitySection />
-            </DialogActions> */}
         </Dialog >
     );
 }
 
 const NameInput = ({ currentName, onBlur }) => {
     const [name, setName] = React.useState();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     React.useEffect(() => {
         setName(currentName);
@@ -631,6 +520,7 @@ const NameInput = ({ currentName, onBlur }) => {
             fullWidth
             placeholder='Name of task...'
             InputProps={{
+                readOnly: !currentMember?.role?.projectPermissions?.includes("EDIT_TASKS"),
                 sx: {
                     fontSize: 20,
                     fontWeight: 650

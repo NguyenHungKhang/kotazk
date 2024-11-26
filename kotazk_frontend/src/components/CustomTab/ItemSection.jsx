@@ -82,7 +82,7 @@ const ItemSection = ({ section, sectionId }) => {
         >
             {getIconBySectionType(section.type)}
 
-            {(editing && currentMember?.projectPermissions?.includes("MANAGE_SECTION")) ?
+            {(editing && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) ?
                 <Box>
                     <CustomBasicTextField
                         size='small'
@@ -113,7 +113,7 @@ const ItemSection = ({ section, sectionId }) => {
                     >
                         {section.name}
                     </Typography>
-                    {(Number(sectionId) === section.id && currentMember?.projectPermissions?.includes("MANAGE_SECTION")) && (
+                    {(Number(sectionId) === section.id && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) && (
                         <MenuSection section={section} setEditing={setEditing} />
                     )}
                 </>

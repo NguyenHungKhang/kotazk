@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react'
 import { getSecondBackgroundColor } from '../../utils/themeUtil'
 import * as TablerIcons from '@tabler/icons-react'
 import Placeholder from '@tiptap/extension-placeholder'
+import { useSelector } from 'react-redux'
 
 const StyledButton = styled(Button)(() => ({
     p: `${1} !important`,
@@ -287,9 +288,11 @@ const extensions = [
 
 export const CustomLongTextEditor = ({ content, setContent, saveContent }) => {
     const [editable, setEditable] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
     const editor = useEditor({
         extensions: extensions,
         content: content,
+        editable: !currentMember?.role?.projectPermissions?.includes("EDIT_TASKS"),
         onUpdate: ({ editor }) => {
             setContent(editor.getHTML());
         },

@@ -64,13 +64,14 @@ const StyledMenu = styled((props) => (
     },
 }));
 
-export default function CommentItemDialog({ setEditing, commentId }) {
+export default function CommentItemDialog({ setEditing, comment }) {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = React.useState(null);
     const selectedItem = useSelector((state) => state.groupBy.currentGroupByEntity);
     const section = useSelector((state) => state.section.currentSection);
     const open = Boolean(anchorEl);
     const dispatch = useDispatch();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const MoreIcon = TablerIcons["IconDots"];
     const EditIcon = TablerIcons["IconPencil"];
@@ -98,52 +99,66 @@ export default function CommentItemDialog({ setEditing, commentId }) {
             open: true,
             deleteType: "DELETE_TASK_COMMENT",
             deleteProps: {
-                taskCommentId: commentId
+                taskCommentId: comment?.id
             }
         }));
         handleClose();
     };
 
     return (
-        <>    <IconButton size="small"
-            sx={{
-                bgcolor: theme.palette.background.default
-            }}
-            onClick={handleClick}
-        >
-            <MoreIcon size={18} />
-        </IconButton>
+        <>
+            {
+                ((currentMember?.role?.projectPermissions.includes("DELETE_ALL_COMMENTS") || (currentMember?.role?.projectPermissions.includes("DELETE_OWN_COMMENT") && comment?.member?.id == currentMember?.id)) &&
+                    (currentMember?.role?.projectPermissions.includes("DELETE_ALL_COMMENTS") || (currentMember?.role?.projectPermissions.includes("DELETE_OWN_COMMENT") && comment?.member?.id == currentMember?.id))) && (
+                    <>
+                        <IconButton size="small"
+                            sx={{
+                                bgcolor: theme.palette.background.default
+                            }}
+                            onClick={handleClick}
+                        >
+                            <MoreIcon size={18} />
+                        </IconButton>
 
 
-            <StyledMenu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={handleClose}
-                sx={{ width: 320 }}
-            >
-                <MenuList
-                    sx={{
-                        '& .MuiListItemText-inset': {
-                            pl: "0 !important"
-                        }
-                    }}
-                    dense>
-                    <MenuItem onClick={() => handleSelectEdit()}>
-                        <Stack direction={'row'} spacing={2}>
-                            <EditIcon size={18} />
-                            <Typography variant='body1'>Edit</Typography>
-                        </Stack>
-                    </MenuItem>
+                        <StyledMenu
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            sx={{ width: 320 }}
+                        >
+                            <MenuList
+                                sx={{
+                                    '& .MuiListItemText-inset': {
+                                        pl: "0 !important"
+                                    }
+                                }}
+                                dense>
+                                {(currentMember?.role?.projectPermissions.includes("EDIT_ALL_COMMENTS") ||
+                                    (currentMember?.role?.projectPermissions.includes("EDIT_OWN_COMMENT") && comment?.member?.id == currentMember?.id)) && (
+                                        <MenuItem onClick={() => handleSelectEdit()}>
+                                            <Stack direction={'row'} spacing={2}>
+                                                <EditIcon size={18} />
+                                                <Typography variant='body1'>Edit</Typography>
+                                            </Stack>
+                                        </MenuItem>
+                                    )}
 
-                    <MenuItem onClick={(e) => handleSelectDelete(e)}>
-                        <Stack direction={'row'} spacing={2}>
-                            <DeleteIcon size={18} color={theme.palette.error.main} />
-                            <Typography variant='body1' color='error'>Delete</Typography>
-                        </Stack>
-
-                    </MenuItem>
-                </MenuList>
-            </StyledMenu>
+                                {(currentMember?.role?.projectPermissions.includes("DELETE_ALL_COMMENTS") ||
+                                    (currentMember?.role?.projectPermissions.includes("DELETE_OWN_COMMENT") && comment?.member?.id == currentMember?.id)) && (
+                                        <MenuItem onClick={(e) => handleSelectDelete(e)}>
+                                            <Stack direction={'row'} spacing={2}>
+                                                <DeleteIcon size={18} color={theme.palette.error.main} />
+                                                <Typography variant='body1' color='error'>Delete</Typography>
+                                            </Stack>
+                                        </MenuItem>
+                                    )}
+                            </MenuList>
+                        </StyledMenu>
+                    </>
+                )
+            }
         </>
+
     );
 }

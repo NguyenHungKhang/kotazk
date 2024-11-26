@@ -15,6 +15,7 @@ const CustomTimeEstimateTextField = ({ currentTimeEstimate, taskId }) => {
     const [anchorEl, setAnchorEl] = useState(null); // State to track the popover anchor
     const [open, setOpen] = useState(false); // State to control popover visibility
     const isGroupedList = useSelector((state) => state.task.isGroupedList);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -71,8 +72,10 @@ const CustomTimeEstimateTextField = ({ currentTimeEstimate, taskId }) => {
     };
 
     const handleClick = (event) => {
-        setAnchorEl(event.currentTarget); // Set anchor to the clicked element
-        setOpen(true); // Open the popover
+        if (currentMember?.role?.projectPermissions.includes("EDIT_TASKS")) {
+            setAnchorEl(event.currentTarget); // Set anchor to the clicked element
+            setOpen(true); // Open the popover
+        }
     };
 
     const handleClosePopover = () => {
