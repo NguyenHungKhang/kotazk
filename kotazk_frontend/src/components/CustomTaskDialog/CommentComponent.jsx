@@ -16,8 +16,9 @@ const CommentComponent = ({ task }) => {
     const comments = useSelector((state) => state.taskComment.currentTaskCommentList);
     const theme = useTheme();
     const LoadMoreIcon = TablerIcons["IconChevronsRight"];
-    const SendIcon = TablerIcons["IconSend2"];;
+    const SendIcon = TablerIcons["IconSend2"];
     const [content, setContent] = useState(null);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -84,55 +85,58 @@ const CommentComponent = ({ task }) => {
                 </Stack>
 
             </Box>
-            <Box mt={2}
-                sx={{
-                    bgcolor: getSecondBackgroundColor(theme),
-                    p: 2,
-                    borderRadius: 2,
-                }}
-            >
+            {currentMember?.role?.projectPermissions.includes("ADD_COMMENT") && (
+                <Box mt={2}
+                    sx={{
+                        bgcolor: getSecondBackgroundColor(theme),
+                        p: 2,
+                        borderRadius: 2,
+                    }}
+                >
 
-                <Stack direction={"row"} spacing={2} p={2} borderRadius={2} width={'100%'}>
-                    <Box
-                        pt={0.5}
-                    >
-                        <Avatar
-                            sx={{
-                                height: 30,
-                                width: 30
-                            }}
-                        />
-                    </Box>
-                    <Box flexGrow={1} bgcolor={theme.palette.background.default}>
-                        <TextField
-                            size="small"
-                            multiline
-                            maxRows={4}
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            fullWidth
-                            placeholder="Enter comment..."
-                            onKeyDown={handleKeyDown}
-                            sx={{
-                                width: '100%',
-                            }}
-                        />
-                    </Box>
-                    <Box
-                        pt={0.5}
-                    >
-                        <IconButton
-                            size="small"
-                            onClick={() => handleSubmit()}
-                            sx={{
-                                bgcolor: theme.palette.background.default
-                            }}
+                    <Stack direction={"row"} spacing={2} p={2} borderRadius={2} width={'100%'}>
+                        <Box
+                            pt={0.5}
                         >
-                            <SendIcon size={20} />
-                        </IconButton>
-                    </Box>
-                </Stack>
-            </Box>
+                            <Avatar
+                                sx={{
+                                    height: 30,
+                                    width: 30
+                                }}
+                            />
+                        </Box>
+                        <Box flexGrow={1} bgcolor={theme.palette.background.default}>
+                            <TextField
+                                size="small"
+                                multiline
+                                maxRows={4}
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                fullWidth
+                                placeholder="Enter comment..."
+                                onKeyDown={handleKeyDown}
+                                sx={{
+                                    width: '100%',
+                                }}
+                            />
+                        </Box>
+                        <Box
+                            pt={0.5}
+                        >
+                            <IconButton
+                                size="small"
+                                onClick={() => handleSubmit()}
+                                sx={{
+                                    bgcolor: theme.palette.background.default
+                                }}
+                            >
+                                <SendIcon size={20} />
+                            </IconButton>
+                        </Box>
+                    </Stack>
+                </Box>
+            )}
+
         </>
     );
 }
@@ -141,6 +145,7 @@ const CommentItem = ({ comment }) => {
     const theme = useTheme();
     const [editing, setEditing] = useState(false);
     const [content, setContent] = useState(null);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -218,7 +223,7 @@ const CommentItem = ({ comment }) => {
 
                 </Stack>
                 <Box>
-                    <CommentItemDialog setEditing={setEditing} commentId={comment?.id} />
+                    <CommentItemDialog setEditing={setEditing} comment={comment} />
                 </Box>
             </Stack>
         </Stack>

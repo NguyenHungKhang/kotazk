@@ -27,6 +27,7 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
     const [anchorEl, setAnchorEl] = useState(null);
     const [startDate, setStartDate] = useState(startAt ? dayjs(startAt) : null);
     const [endDate, setEndDate] = useState(endAt ? dayjs(endAt) : null);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const ClearIcon = TablerIcon["IconWashDrycleanOff"];
 
@@ -86,7 +87,9 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
 
     // Open the popover
     const handleOpenPopover = (event) => {
-        setAnchorEl(event.currentTarget);
+        if (currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS")) {
+            setAnchorEl(event.currentTarget);
+        }
     };
 
     const handleClosePopover = () => {
@@ -108,17 +111,18 @@ function CustomDueTimePicker({ startAt, endAt, taskId }) {
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box onClick={handleOpenPopover}
+            <Box
+                onClick={handleOpenPopover}
                 px={2}
                 py={2}
                 borderRadius={2}
                 sx={{
                     cursor: 'pointer',
                     '&:hover': {
-                        bgcolor: theme.palette.action.hover
+                        bgcolor: currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS") ? theme.palette.action.hover : null
                     },
                     '&:focus': {
-                        bgcolor: theme.palette.action.focus
+                        bgcolor: currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS") ? theme.palette.action.focus : null
                     },
                 }}
             >

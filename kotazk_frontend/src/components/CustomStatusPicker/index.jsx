@@ -65,6 +65,7 @@ const CustomStatusPicker = ({ currentStatus, taskId }) => {
 
 const CustomStatusOpenComponent = ({ onClick, status, setStatuses, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const handleFecthStatus = async () => {
         try {
@@ -89,19 +90,21 @@ const CustomStatusOpenComponent = ({ onClick, status, setStatuses, projectId, se
         <Box
             ref={setTarget}
             onClick={() => {
-                handleFecthStatus();
-                onClick();
+                if (currentMember?.role?.projectPermissions.includes("EDIT_TASKS")) {
+                    handleFecthStatus();
+                    onClick();
+                }
             }}
             width='100%'
             sx={{
-                cursor: 'pointer',
+                cursor: currentMember?.role?.projectPermissions.includes("EDIT_TASKS") ? 'pointer' : null,
                 borderRadius: 2,
                 py: 1,
                 px: 2,
                 '&:hover': {
-                    bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
+                    bgcolor: currentMember?.role?.projectPermissions.includes("EDIT_TASKS") ? (theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800]) : null,
                 },
-                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
+                bgcolor: (currentMember?.role?.projectPermissions.includes("EDIT_TASKS") && isFocusing) ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
             }}
         >
             <CustomStatus status={status} changeable={false} />

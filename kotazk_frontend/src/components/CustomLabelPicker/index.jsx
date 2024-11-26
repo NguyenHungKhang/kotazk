@@ -17,7 +17,6 @@ const CustomLabelPicker = ({ currentLabelList, taskId }) => {
     const [selectedLabels, setSelectedLabels] = useState([]);
     const dispatch = useDispatch();
 
-
     useEffect(() => {
         if (project != null)
             listLabelsFetch()
@@ -120,18 +119,24 @@ const CustomLabelOpenComponent = () => {
 
 const CustomLabelItemPicker = (props) => {
     const theme = useTheme();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
     return (
         <ListItem
             sx={{
                 py: 0,
                 px: 1,
                 my: 1,
-                cursor: 'pointer',
+                cursor: currentMember?.role?.projectPermissions.includes("EDIT_TASKS") ? 'pointer' : null,
                 '&:hover': {
-                    backgroundColor: theme.palette.action.hover,
+                    backgroundColor: currentMember?.role?.projectPermissions.includes("EDIT_TASKS") ? theme.palette.action.hover : null,
                 }
             }}
-            onClick={(event) => props.onClick(props.object, event)}
+            onClick={(event) => {
+                if (currentMember?.role?.projectPermissions.includes("EDIT_TASKS")) {
+                    props.onClick(props.object, event);
+                }
+            }}
             dense
         >
             <CustomLabel label={props.object} alwaysShowLabel={true} />

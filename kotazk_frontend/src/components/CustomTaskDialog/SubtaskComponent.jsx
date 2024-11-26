@@ -13,6 +13,7 @@ import SubtaskMenu from "./SubtaskMenu";
 const SubtaskComponent = ({ subtasks, parentTask, projectId }) => {
     const theme = useTheme();
     const [addNewTask, setAddNewTask] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const calcProgessValue = () => {
         const completedTasks = parentTask?.childTasks?.filter(t => t.isCompleted == true).length;
@@ -73,7 +74,10 @@ const SubtaskComponent = ({ subtasks, parentTask, projectId }) => {
                         <AddSubtaskItem setIsNewSubtask={setAddNewTask} parentTask={parentTask} projectId={projectId} />
                         :
                         <Button
-                            onClick={() => setAddNewTask(true)}
+                            onClick={() => {
+                                if (currentMember?.role?.projectPermissions.includes("EDIT_TASKS"))
+                                    setAddNewTask(true)
+                            }}
                             variant='text'
                             size="small"
                             color={theme.palette.mode == 'light' ? 'customBlack' : 'customWhite'}
@@ -96,6 +100,7 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
     const [name, setName] = useState(null);
     const dispatch = useDispatch();
     const isGroupedList = useSelector((state) => state.task.isGroupedList);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const DragIcon = TablerIcons["IconGripVertical"];
     const DashedOutlinedCheckCircleIcon = TablerIcons["IconCircleDashedCheck"];
@@ -144,10 +149,6 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
             }}
         >
             <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
-                {/* <DragIcon size={18} />
-                <IconButton size="small">
-                    <DashedOutlinedCheckCircleIcon size={18} />
-                </IconButton> */}
                 <Box>
                     <Typography>
                         New subtask:
@@ -168,19 +169,6 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
                         fullWidth
                     />
                 </Box>
-                {/* <Button onClick={() => handleSave()}>
-                    Save task
-                </Button>
-                <Avatar
-                    alt="Unassigned"
-                    sx={{
-                        alignSelf: 'flex-end',
-                        width: 24,
-                        height: 24,
-                        border: "2px dotted",
-                        borderColor: theme.palette.mode === "light" ? theme.palette.grey[700] : theme.palette.grey[400],
-                    }}
-                /> */}
             </Stack>
         </Card>
     )
@@ -191,6 +179,7 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
     const [name, setName] = useState(null);
     const dispatch = useDispatch();
     const isGroupedList = useSelector((state) => state.task.isGroupedList);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const DragIcon = TablerIcons["IconGripVertical"];
     const DashedOutlinedCheckCircleIcon = TablerIcons["IconCircleDashedCheck"];
@@ -235,58 +224,33 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
     }
 
     const handleCompleteTask = async () => {
-        const data = {
-            'isCompleted': !subtask?.isCompleted,
-        }
-        try {
-            const response = await apiService.taskAPI.update(subtask?.id, data);
-            if (response?.data) {
-                const updatedParentTask = {
-                    ...parentTask,
-                    childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
-                }
-
-                if (isGroupedList)
-                    dispatch(addAndUpdateGroupedTaskList(updatedParentTask))
-                else
-                    dispatch(addAndUpdateTaskList(updatedParentTask));
-
-                const taskDialogData = {
-                    task: updatedParentTask
-                };
-                dispatch(setTaskDialog(taskDialogData));
+        if (currentMember?.role?.projectPermissions.includes("EDIT_TASKS")) {
+            const data = {
+                'isCompleted': !subtask?.isCompleted,
             }
-        } catch (error) {
-            console.error('Failed to update task:', error);
+            try {
+                const response = await apiService.taskAPI.update(subtask?.id, data);
+                if (response?.data) {
+                    const updatedParentTask = {
+                        ...parentTask,
+                        childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
+                    }
+
+                    if (isGroupedList)
+                        dispatch(addAndUpdateGroupedTaskList(updatedParentTask))
+                    else
+                        dispatch(addAndUpdateTaskList(updatedParentTask));
+
+                    const taskDialogData = {
+                        task: updatedParentTask
+                    };
+                    dispatch(setTaskDialog(taskDialogData));
+                }
+            } catch (error) {
+                console.error('Failed to update task:', error);
+            }
         }
     }
-
-    // const handleSave = async () => {
-    //     const data = {
-    //         'name': name,
-    //         'parentTaskId': parentTaskId,
-    //         'projectId': projectId
-    //     }
-    //     if (isNewSubtask) {
-    //         try {
-    //             const response = await apiService.taskAPI.create(data);
-    //             if (response?.data) {
-    //                 if (isGroupedList)
-    //                     dispatch(addAndUpdateGroupedTaskList(response?.data))
-    //                 else
-    //                     dispatch(addAndUpdateTaskList(response?.data));
-
-    //                 const taskDialogData = {
-    //                     task: response.data.parent
-    //                 };
-    //                 dispatch(setTaskDialog(taskDialogData));
-    //                 setIsNewSubtask(false);
-    //             }
-    //         } catch (error) {
-    //             console.error('Failed to update task:', error);
-    //         }
-    //     }
-    // }
 
     return (
         <Card
@@ -317,6 +281,11 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
                         placeholder="Name of task..."
                         onChange={(e) => setName(e.target.value)}
                         onBlur={() => handleSaveName()}
+                        slotProps={{
+                            input: {
+                                readOnly: !currentMember?.role?.projectPermissions.includes("EDIT_TASKS")
+                            }
+                        }}
                         sx={{
                             '& .MuiInputBase-input': {
                                 py: `4px !important`,

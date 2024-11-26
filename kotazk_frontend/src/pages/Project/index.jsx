@@ -47,8 +47,9 @@ const Project = ({ children }) => {
     const getCurrentUser = async () => {
         try {
             const res = await apiService.memberAPI.getCurrentOne(projectId);
-            if (res?.data)
+            if (res?.data) {
                 dispatch(setCurrentUserMember(res?.data))
+            }
         } catch (err) {
             console.error('Error fetching current member details:', err);
         }
@@ -113,7 +114,7 @@ const Project = ({ children }) => {
                     >
                         <CustomHeader />
                         <CustomBreadcrumb data={breadcrumbData} />
-                        <Stack direction='row' mt={2} spacing={2} alignItems={'center'}>
+                        <Stack direction='row' mt={2} spacing={6} alignItems={'center'}>
                             <Box flexGrow={1}>
                                 <CustomTab />
                             </Box>

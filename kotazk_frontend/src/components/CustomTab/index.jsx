@@ -67,7 +67,7 @@ export default function CustomTab() {
                 }}
             >
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable isDropDisabled={!currentMember?.projectPermissions?.includes("MANAGE_SECTION")} droppableId="sections" direction="horizontal">
+                    <Droppable isDropDisabled={!currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")} droppableId="sections" direction="horizontal">
                         {(provided) => (
                             <Stack
                                 direction="row"
@@ -110,7 +110,7 @@ export default function CustomTab() {
                                 </Box>
                                 {sections.map((section, index) => (
                                     <Draggable
-                                        isDragDisabled={!currentMember?.projectPermissions?.includes("MANAGE_SECTION")}
+                                        isDragDisabled={!currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")}
                                         key={section.id}
                                         draggableId={String(section.id)}
                                         index={index}
@@ -134,9 +134,11 @@ export default function CustomTab() {
                 </DragDropContext>
             </Box>
             <Divider orientation="vertical" flexItem />
-            <Box>
-                <AddSectionDialog />
-            </Box>
+            {currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION") && (
+                <Box>
+                    <AddSectionDialog />
+                </Box>
+            )}
         </Stack>
     );
 }

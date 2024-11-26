@@ -421,11 +421,10 @@ public class MemberService implements IMemberService {
                     false
             );
 
-            System.out.println(currentWorkSpaceMember.getId());
-
             if(currentProjectMember != null) return currentProjectMember;
             else if(currentWorkSpaceMember != null) return currentWorkSpaceMember;
             else throw new CustomException("Invalid input!");
+
         } else if (workspace != null) {
             return checkWorkSpaceMember(
                     user.getId(),

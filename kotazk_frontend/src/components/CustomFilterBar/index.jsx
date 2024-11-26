@@ -23,10 +23,15 @@ const CustomFilterBar = () => {
     const userChangeFilterList = useSelector((state) => state.filter.userChangeFilterList);
     const userChangeGroupByEntity = useSelector((state) => state.groupBy.userChangeGroupByEntity);
     const userChangeSortEntity = useSelector((state) => state.sort.userChangeSortEntity);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+    const InfoIcon = allIcons["IconInfoSquareRoundedFilled"];
 
     return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
-        <Stack direction='row' spacing={4}>
-            {(userChangeFilterList || userChangeGroupByEntity || userChangeSortEntity) && (
+        <Stack direction='row' spacing={4} alignItems={'center'}>
+            <Tooltip placement="top" title="You can save section view if your member role has permision to manage section" arrow>
+                <InfoIcon size={20} color={theme.palette.text.secondary}/>
+            </Tooltip>
+            {((userChangeFilterList || userChangeGroupByEntity || userChangeSortEntity) && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) && (
                 < CustomSaveSectionButton sectionId={section?.id} />
             )}
 
@@ -34,7 +39,12 @@ const CustomFilterBar = () => {
             {(section?.type === "KANBAN" || section?.type === "LIST") && <CustomGroupedByDialog />}
 
             <CustomSortDialog />
-            <CustomAddTaskButton />
+            {
+                 currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
+                    <CustomAddTaskButton />
+                 )
+            }
+
         </Stack>
     );
 }
@@ -95,7 +105,7 @@ const CustomSaveSectionButton = ({ sectionId }) => {
     }
 
     return (
-        <Tooltip  placement="top" title="Click for save filter, grouping and sorting of section" open={open} onClose={() => setOpen(false)} arrow>
+        <Tooltip placement="top" title="Click for save filter, grouping and sorting of section" open={open} onClose={() => setOpen(false)} arrow>
             <Button
                 size='small'
                 variant="contained"

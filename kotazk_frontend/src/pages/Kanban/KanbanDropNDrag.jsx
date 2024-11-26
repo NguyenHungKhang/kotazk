@@ -296,6 +296,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
   const CollapseIcon = TablerIcon["IconLayoutSidebarLeftCollapseFilled"];
   const ManageSettingIcon = TablerIcon["IconSettings"]
   const ColorIcon = TablerIcon["IconSquareRoundedFilled"];
+  const currentMember = useSelector((state) => state.member.currentUserMember);
   const dispatch = useDispatch();
 
   const addTask = () => {
@@ -365,32 +366,32 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                 </IconButton>
               </Stack>
             </Card>
-            {!collapse &&
-
-              <Card
-                // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
-                sx={{
-                  boxShadow: 0,
-                  borderRadius: 2,
-                  width: 320,
-                  mb: 1,
-                  border: '1px solid',
-                  borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
-                }}
-              >
-                <IconButton
-                  onClick={() => addTask()}
-                  size='small'
+            {!collapse && (
+              currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
+                <Card
+                  // bgcolor={alpha(groupByEntity?.customization?.backgroundColor, 0.3)}
                   sx={{
-                    p: 2,
-                    width: '100%',
-                    borderRadius: 2
+                    boxShadow: 0,
+                    borderRadius: 2,
+                    width: 320,
+                    mb: 1,
+                    border: '1px solid',
+                    borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
                   }}
                 >
-                  <AddIcon fontSize='small' />
-                </IconButton>
-              </Card>
-            }
+                  <IconButton
+                    onClick={() => addTask()}
+                    size='small'
+                    sx={{
+                      p: 2,
+                      width: '100%',
+                      borderRadius: 2
+                    }}
+                  >
+                    <AddIcon fontSize='small' />
+                  </IconButton>
+                </Card>
+              ))}
 
             {!collapse && <Box
               height={`calc(100vh - ${theme.spacing(73)})`}

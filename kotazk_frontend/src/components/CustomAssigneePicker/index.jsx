@@ -39,6 +39,7 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
                 dispatch(setTaskDialog(taskDialogData));
             }
         } catch (error) {
+            alert(error);
             console.error('Failed to update task:', error);
         }
     }
@@ -63,7 +64,7 @@ const CustomAssigneePicker = ({ currentAssignee, taskId }) => {
 
 const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
-
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const listMemberFetch = async () => {
         try {
@@ -84,7 +85,7 @@ const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId,
                 setMembers(response?.data.content);
             }
         } catch (error) {
-            console.error('Failed to update task:', error);
+            console.error(error);
         }
     }
 
@@ -92,17 +93,19 @@ const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId,
         <Box
             ref={setTarget}
             onClick={() => {
-                listMemberFetch();
-                onClick();
+                if (currentMember?.role?.projectPermissions.includes("ASSIGN_TASKS")) {
+                    listMemberFetch();
+                    onClick();
+                }
             }}
             width='100%'
             sx={{
-                cursor: 'pointer',
+                cursor: currentMember?.role?.projectPermissions.includes("ASSIGN_TASKS") ? 'pointer' : null,
                 borderRadius: 2,
                 '&:hover': {
-                    bgcolor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
+                    bgcolor: currentMember?.role?.projectPermissions.includes("ASSIGN_TASKS") ? (theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800]) : 'inherit',
                 },
-                bgcolor: isFocusing ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
+                bgcolor: (currentMember?.role?.projectPermissions.includes("ASSIGN_TASKS") && isFocusing) ? (theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[700]) : null
             }}
         >
             {assignee != null ?

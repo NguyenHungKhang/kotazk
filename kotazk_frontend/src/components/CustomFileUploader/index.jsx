@@ -21,6 +21,7 @@ registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 function CustomFileUploader({ currentFiles, task }) {
   const dispatch = useDispatch();
   const isGroupedList = useSelector((state) => state.task.isGroupedList);
+  const currentMember = useSelector((state) => state.member.currentUserMember);
 
   const [files, setFiles] = useState([]);
   const theme = useTheme();
@@ -59,18 +60,18 @@ function CustomFileUploader({ currentFiles, task }) {
   const handleRemoveFile = async (event, file) => {
     event.stopPropagation();
     dispatch(setDeleteDialog({
-        title: `Delete attachment "${file?.fileName}"?`,
-        content:
-            `You're about to permanently delete this attachment.
+      title: `Delete attachment "${file?.fileName}"?`,
+      content:
+        `You're about to permanently delete this attachment.
             <br/><br/>
             If you're not sure, you can resolve or close this attachment instead.`,
-        open: true,
-        deleteType: "DELETE_TASK_ATTACHMENT",
-        deleteProps: {
-            attachmentId: file?.id,
-            task: task
-        }
-        // deleteAction: () => handleDelete(),
+      open: true,
+      deleteType: "DELETE_TASK_ATTACHMENT",
+      deleteProps: {
+        attachmentId: file?.id,
+        task: task
+      }
+      // deleteAction: () => handleDelete(),
     }));
   };
 
@@ -107,28 +108,32 @@ function CustomFileUploader({ currentFiles, task }) {
   return (
     <div className="App">
       <Box>
-        <FileUploader
-          handleChange={handleSaveFile}
-          name="file"
-          types={fileTypes}
-        >
-          <Box
-            bgcolor={getSecondBackgroundColor(theme)}
-            p={2}
-            height={80} borderRadius={2}
-            border={"1px dashed"}
-          >
-            <Stack direction={'row'} spacing={2} height={'100%'} alignItems={'center'} >
-              <AttachmentIcon />
-              <Box>
-                <Typography>
-                  Drop files here or click to browse attachments
-                </Typography>
-              </Box>
-            </Stack>
 
-          </Box>
-        </FileUploader>
+        {currentMember?.role?.projectPermissions.includes("CREATE_ATTACHMENTS") && (
+          <FileUploader
+            handleChange={handleSaveFile}
+            name="file"
+            types={fileTypes}
+          >
+            <Box
+              bgcolor={getSecondBackgroundColor(theme)}
+              p={2}
+              height={80} borderRadius={2}
+              border={"1px dashed"}
+            >
+              <Stack direction={'row'} spacing={2} height={'100%'} alignItems={'center'} >
+                <AttachmentIcon />
+                <Box>
+                  <Typography>
+                    Drop files here or click to browse attachments
+                  </Typography>
+                </Box>
+              </Stack>
+
+            </Box>
+          </FileUploader>
+        )}
+
       </Box>
       <Stack direction={'row'} spacing={2} mt={2}>
 
