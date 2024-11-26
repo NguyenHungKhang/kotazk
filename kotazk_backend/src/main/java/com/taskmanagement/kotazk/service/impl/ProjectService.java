@@ -396,44 +396,19 @@ public class ProjectService implements IProjectService {
 
     @Override
     public ProjectDetailsResponseDto getDetailsOne(Long id) {
-        Project currentProject = projectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
         User currentUser = SecurityUtil.getCurrentUser();
-        WorkSpace workSpace = currentProject.getWorkSpace();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+        WorkSpace workSpace = project.getWorkSpace();
 
 
-        Member currentProjectMember = memberService.checkProjectMember(
-                currentUser.getId(),
-                currentProject.getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                false
-        );
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
 
-        Member currentWorkSpaceMember = null;
-
-        if (currentProject.getVisibility().equals(Visibility.PRIVATE))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    workSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PUBLIC_PROJECT),
-                    false
-            );
-        else if (currentProject.getVisibility().equals(Visibility.PUBLIC))
-            currentWorkSpaceMember = memberService.checkWorkSpaceMember(
-                    currentUser.getId(),
-                    workSpace.getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
-                    false
-            );
-
-        if (currentProjectMember == null && currentWorkSpaceMember == null)
-            throw new CustomException("This member's role is not permission with this action!");
-
-
-        return ModelMapperUtil.mapOne(currentProject, ProjectDetailsResponseDto.class);
+        return ModelMapperUtil.mapOne(project, ProjectDetailsResponseDto.class);
     }
 
     @Override

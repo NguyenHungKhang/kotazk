@@ -9,12 +9,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import * as TablerIcons from '@tabler/icons-react';
 import { setSection, setSectionList } from '../../redux/actions/section.action';
 import MenuSection from './MenuSection';
-
-const ListIcon = TablerIcons["IconListDetails"];
-const BoardIcon = TablerIcons["IconLayoutKanbanFilled"];
-const CalendarIcon = TablerIcons["IconCalendarMonth"];
-const FileIcon = TablerIcons["IconPaperclip"];
-const ReportIcon = TablerIcons["IconChartInfographic"];
+import ItemSection from './ItemSection';
 
 export default function CustomTab() {
     const theme = useTheme();
@@ -23,26 +18,10 @@ export default function CustomTab() {
     const sections = useSelector((state) => state.section.currentSectionList);
     const { sectionId } = useParams();
     const project = useSelector((state) => state.project.currentProject);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
     const handleNavigate = (section) => {
         navigate(`/project/${project?.id}/section/${section?.id}`);
-    };
-
-    const getIconBySectionType = (type) => {
-        switch (type) {
-            case "KANBAN":
-                return <BoardIcon size={18} />;
-            case "LIST":
-                return <ListIcon size={18} />;
-            case "CALENDAR":
-                return <CalendarIcon size={18} />;
-            case "FILE":
-                return <FileIcon size={18} />;
-            case "REPORT":
-                return <ReportIcon size={18} />;
-            default:
-                return null;
-        }
     };
 
     // Handles drag end event
@@ -88,7 +67,7 @@ export default function CustomTab() {
                 }}
             >
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="sections" direction="horizontal">
+                    <Droppable isDropDisabled={!currentMember?.projectPermissions?.includes("MANAGE_SECTION")} droppableId="sections" direction="horizontal">
                         {(provided) => (
                             <Stack
                                 direction="row"
@@ -131,6 +110,7 @@ export default function CustomTab() {
                                 </Box>
                                 {sections.map((section, index) => (
                                     <Draggable
+                                        isDragDisabled={!currentMember?.projectPermissions?.includes("MANAGE_SECTION")}
                                         key={section.id}
                                         draggableId={String(section.id)}
                                         index={index}
@@ -141,37 +121,8 @@ export default function CustomTab() {
                                                 {...provided.draggableProps}
                                                 {...provided.dragHandleProps}
                                                 onClick={() => handleNavigate(section)}
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 1,
-                                                    px: 2,
-                                                    py: 1,
-                                                    borderRadius: 1,
-                                                    textDecoration: 'none',
-                                                    cursor: 'pointer',
-                                                    backgroundColor: Number(sectionId) === section.id ? theme.palette.primary.main : 'transparent',
-                                                    color: Number(sectionId) === section.id ? theme.palette.primary.contrastText : theme.palette.text.primary,
-                                                    '&:hover': {
-                                                        backgroundColor: Number(sectionId) === section.id
-                                                            ? theme.palette.primary.dark
-                                                            : theme.palette.action.hover,
-                                                    },
-                                                }}
                                             >
-                                                {getIconBySectionType(section.type)}
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        textWrap: 'nowrap',
-                                                        textTransform: 'none',
-                                                    }}
-                                                >
-                                                    {section.name}
-                                                </Typography>
-                                                {Number(sectionId) === section.id && (
-                                                    <MenuSection section={section} />
-                                                )}
+                                                <ItemSection section={section} sectionId={sectionId} />
                                             </Box>
                                         )}
                                     </Draggable>

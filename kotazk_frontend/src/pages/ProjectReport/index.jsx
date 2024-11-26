@@ -118,7 +118,7 @@ const ProjectReport = () => {
                             {projectReports?.map((pr, index) => (
                                 <Draggable key={pr.id} draggableId={pr.id.toString()} index={index}>
                                     {(provided) => (
-                                        <Grid2 item xs={4} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                        <Grid2 size={4} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                             <Card sx={{ width: '100%', height: '100%', maxHeight: 500 }}>
                                                 <Box px={4} py={2}>
                                                     <Stack direction={'row'} spacing={2} alignItems={'center'}>
