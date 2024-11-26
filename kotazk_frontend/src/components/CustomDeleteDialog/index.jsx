@@ -21,6 +21,8 @@ import { deleteProjectReport } from '../../redux/actions/projectReport.action';
 import { removeItemTaskCommentList } from '../../redux/actions/taskComment.action';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
 import { useTheme } from '@mui/material';
+import { setSection, setSectionList } from '../../redux/actions/section.action';
+import { useNavigate } from 'react-router-dom';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -34,6 +36,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
     const taskTypes = useSelector((state) => state.taskType.currentTaskTypeList)
     const priorities = useSelector((state) => state.priority.currentPriorityList);
     const labels = useSelector((state) => state.label.currentLabelList);
+    const sections = useSelector((state) => state.section.currentSectionList);
+    const project = useSelector((state) => state.project.currentProject);
+    const navigate = useNavigate();
 
     const handleClose = () => {
         dispatch(setDeleteDialog({ open: false }));
@@ -319,8 +324,24 @@ export default function CustomDeleteDialog({ deleteAction }) {
 
     const handleDeleteSection = async (sectionId) => {
         try {
+            const index = sections.findIndex(s => s.id == sectionId);
+            if (index > 0) {
+                setSection(sections[index - 1]);
+                navigate(`/project/${project?.id}/section/${sections[index-1].id}`)
+            } else if (index == 0) {
+                if (sections.length > 1) {
+                    setSection(sections[1]);
+                    navigate(`/project/${project?.id}/section/${sections[1].id}`)
+                } else {
+                    setSection(null);
+                    navigate(`/project/${project?.id}`)
+                }
+            }
+
             const response = await apiService.sectionAPI.remove(sectionId);
             if (response?.data) {
+                const finalSections = sections.filter(s => s.id != sectionId);
+                dispatch(setSectionList(finalSections))
                 dispatch(setSnackbar({
                     content: "Section delete successfully!",
                     open: true

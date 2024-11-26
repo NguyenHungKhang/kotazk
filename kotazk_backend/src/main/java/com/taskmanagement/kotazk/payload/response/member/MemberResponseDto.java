@@ -6,6 +6,7 @@ import com.taskmanagement.kotazk.entity.User;
 import com.taskmanagement.kotazk.entity.WorkSpace;
 import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
 import com.taskmanagement.kotazk.entity.enums.MemberStatus;
+import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleSummaryResponseDto;
 import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
 import jakarta.persistence.*;
@@ -25,5 +26,5 @@ public class MemberResponseDto {
     UserResponseDto user;
     MemberStatus status;
     EntityBelongsTo memberFor;
-    MemberRoleSummaryResponseDto role;
+    MemberRoleResponseDto role;
 }

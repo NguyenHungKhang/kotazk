@@ -34,6 +34,13 @@ public class SectionController {
         return sectionService.update(id, sectionRequestDto);
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean delete(@PathVariable Long id) {
+        return sectionService.delete(id);
+    }
+
+
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public SectionResponseDto getOne(@PathVariable Long id) {

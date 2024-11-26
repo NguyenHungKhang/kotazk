@@ -420,9 +420,12 @@ public class MemberService implements IMemberService {
                     Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
                     false
             );
-            return Optional.ofNullable(currentProjectMember)
-                    .orElse(Optional.ofNullable(currentWorkSpaceMember)
-                            .orElseThrow(() -> new CustomException("Invalid input!")));
+
+            System.out.println(currentWorkSpaceMember.getId());
+
+            if(currentProjectMember != null) return currentProjectMember;
+            else if(currentWorkSpaceMember != null) return currentWorkSpaceMember;
+            else throw new CustomException("Invalid input!");
         } else if (workspace != null) {
             return checkWorkSpaceMember(
                     user.getId(),
@@ -440,7 +443,7 @@ public class MemberService implements IMemberService {
         if (isThrowException) {
             throw new CustomException(errorMessage);
         }
-        System.out.println(errorMessage);
+//        System.out.println(errorMessage);
         return null;
     }
 
