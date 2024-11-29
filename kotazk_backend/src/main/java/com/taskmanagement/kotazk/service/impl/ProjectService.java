@@ -424,7 +424,7 @@ public class ProjectService implements IProjectService {
                 currentUser.getId(),
                 workSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST),
+                Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
                 false
         );
 
@@ -433,7 +433,7 @@ public class ProjectService implements IProjectService {
             Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
 
             if (currentWorkSpaceMember != null &&
-                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST)) {
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.BROWSE_PRIVATE_PROJECT)) {
                 privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
             } else {
                 Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);
@@ -490,7 +490,7 @@ public class ProjectService implements IProjectService {
                 currentUser.getId(),
                 workSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST),
+                Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
                 false
         );
 
@@ -499,7 +499,7 @@ public class ProjectService implements IProjectService {
             Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
 
             if (currentWorkSpaceMember != null &&
-                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST)) {
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.BROWSE_PRIVATE_PROJECT)) {
                 privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
             } else {
                 Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);

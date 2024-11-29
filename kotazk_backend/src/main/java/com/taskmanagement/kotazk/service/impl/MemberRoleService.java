@@ -315,6 +315,52 @@ public class MemberRoleService implements IMemberRoleService {
     }
 
     @Override
+    public PageResponse<MemberRoleResponseDto> getPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", workspaceId));
+        Member currentMember;
+        currentMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                true
+        );
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
+
+        Specification<MemberRole> workspaceSpecification = (Root<MemberRole> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<MemberRole, WorkSpace> projectJoin = root.join("workSpace");
+            return criteriaBuilder.equal(projectJoin.get("id"), workSpace.getId());
+        };
+
+        Specification<MemberRole> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<MemberRole> specification = Specification.where(workspaceSpecification)
+                .and(filterSpecification);
+
+        Page<MemberRole> page = memberRoleRepository.findAll(specification, pageable);
+        List<MemberRoleResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberRoleResponseDto.class);
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
     public List<MemberRole> initialMemberRole(Boolean forWorkSpace) {
 
         // Tạo các MemberRole với thông tin mặc định

@@ -13,10 +13,12 @@ import { useSelector } from 'react-redux';
 import CustomDialogForManage from '../../components/CustomDialogForManage';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
 import { Link } from 'react-router-dom';
+import ProjectMember from '../ProjectMember';
 
 
 export default function ProjectSetting() {
     const [open, setOpen] = React.useState(false);
+    const [maxWidth, setMaxWidth] = React.useState("log");
     const [children, setChildren] = React.useState(<CustomManageStatus />);
     const project = useSelector((state) => state.project.currentProject);
     const theme = useTheme();
@@ -49,7 +51,10 @@ export default function ProjectSetting() {
                         Access and members
                     </Typography>
                     <Stack spacing={2}>
-                        <Button component={Link} to={`/project/${project?.id}/member`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined'>
+                        <Button
+                            // component={Link} 
+                            // to={`/project/${project?.id}/member`} 
+                            color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}>
                             Members Setting
                         </Button>
                         <Button component={Link} to={`/project/${project?.id}/role`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined'>
@@ -63,20 +68,20 @@ export default function ProjectSetting() {
                     </Typography>
                     <Box sx={{ width: '100%', height: '100%' }}>
                         <Stack spacing={2}>
-                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageStatus />); }}>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md");  setOpen(true); setChildren(<CustomManageStatus />); }}>
                                 Status
                             </Button>
-                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageTaskType />); }}>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md");  setOpen(true); setChildren(<CustomManageTaskType />); }}>
                                 Task type
                             </Button>
-                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManagePriority />); }}>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md");  setOpen(true); setChildren(<CustomManagePriority />); }}>
                                 Priority
                             </Button>
-                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setOpen(true); setChildren(<CustomManageLabel />); }}>
+                            <Button color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md");  setOpen(true); setChildren(<CustomManageLabel />); }}>
                                 Label
                             </Button>
                         </Stack>
-                        <CustomDialogForManage open={open} setOpen={setOpen} children={children} />
+                        <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />
                     </Box>
                 </Card>
             </Grid2>

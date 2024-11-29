@@ -233,7 +233,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 currentUser.getId(),
                 currentWorkSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
                 true
         );
         return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceDetailResponseDto.class);
@@ -248,7 +248,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 currentUser.getId(),
                 currentWorkSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
                 true
         );
         return ModelMapperUtil.mapOne(currentWorkSpace, WorkSpaceSummaryResponseDto.class);
@@ -268,7 +268,7 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         Specification<WorkSpace> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
         Specification<WorkSpace> specification = isAdmin ? filterSpecification :
-                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO))
+                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE))
                         .and(filterSpecification);
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
@@ -298,7 +298,7 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         Specification<WorkSpace> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
         Specification<WorkSpace> specification = isAdmin ? filterSpecification :
-                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO))
+                hasUserPermissions(userId, Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE))
                         .and(filterSpecification);
 
         Page<WorkSpace> page = workSpaceRepository.findAll(specification, pageable);
@@ -321,7 +321,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 userId,
                 workspaceId,
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_WORKSPACE_INFO),
+                Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
                 true
         );
     }

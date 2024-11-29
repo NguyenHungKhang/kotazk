@@ -28,6 +28,9 @@ import ProjectRole from "../pages/ProjectRole";
 import ProjectReport from "../pages/ProjectReport";
 import DnDGrid from "../playgrounds/components/DndGrid";
 import ListWorkspace from "../playgrounds/components/TestDnDLap";
+import EmailChipInput from "../playgrounds/components/EmailChipInput";
+import WorkSpaceMember from "../pages/WorkSpaceMember";
+import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
 
 const pagesData = [
   {
@@ -47,7 +50,12 @@ const pagesData = [
   },
   {
     path: "/workspace/:workspaceId",
-    element: <Workspace />,
+    element: <Workspace ><WorkspaceDashBoard /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/member",
+    element: <WorkSpaceMember />,
     title: "workspace"
   },
   {
@@ -123,6 +131,11 @@ const pagesData = [
   {
     path: "/test/darkmode",
     element: <CustomStatusColorIconPicker />,
+    title: "playground"
+  },
+  {
+    path: "/playground/email-chip",
+    element: <EmailChipInput />,
     title: "playground"
   },
 ];

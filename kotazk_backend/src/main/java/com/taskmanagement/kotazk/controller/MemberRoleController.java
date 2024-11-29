@@ -68,6 +68,16 @@ public class MemberRoleController {
         return memberRoleService.getPageByProject(searchParam, projectId);
     }
 
+    @PostMapping("/page/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberRoleResponseDto> getByWorkspace(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long workspaceId
+
+    ) {
+        return memberRoleService.getPageByWorkspace(searchParam, workspaceId);
+    }
+
     @PostMapping("/re-position/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
     public MemberRoleResponseDto rePositionByProject(@Valid @RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long projectId) {

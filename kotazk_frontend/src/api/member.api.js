@@ -10,4 +10,8 @@ export const remove = async (memberId) => await axiosInstance.delete(`${ORIGINAL
 
 export const getCurrentOne = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/${projectId}`);
 
+export const inviteList = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/invite-list`, data);
+
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
+
+export const getPageByWorkspace = async (workspaceId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-workspace/${workspaceId}`, data);

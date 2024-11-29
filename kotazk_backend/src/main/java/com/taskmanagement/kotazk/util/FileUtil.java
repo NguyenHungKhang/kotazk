@@ -41,6 +41,7 @@ public class FileUtil {
         FILE_EXTENSION_MAP.put("application/msword", "doc");
         FILE_EXTENSION_MAP.put("application/vnd.ms-excel", "xls");
         FILE_EXTENSION_MAP.put("application/vnd.ms-powerpoint", "ppt");
+        FILE_EXTENSION_MAP.put("application/pdf", "pdf");
     }
 
     public FileUtil() {

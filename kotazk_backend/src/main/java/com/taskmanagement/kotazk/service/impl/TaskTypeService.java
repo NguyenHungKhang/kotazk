@@ -185,7 +185,7 @@ public class TaskTypeService implements ITaskTypeService {
                         taskType.setId(id);
                         incomingTaskTypeIds.add(id);
                     });
-                    if(!t.getId().equals(null)) {
+                    if(!(t.getId() == null)) {
                         TaskType existTaskType = taskTypeRepository.findById(t.getId())
                                 .orElseThrow(() -> new CustomException("Invalid input"));
                         taskType.setSystemRequired(existTaskType.getSystemRequired());

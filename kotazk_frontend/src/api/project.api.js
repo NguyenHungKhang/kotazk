@@ -11,3 +11,5 @@ export const getById = async (projectId) => await axiosInstance.get(`${ORIGINAL_
 export const getDetailsById = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/details/${projectId}`);
 
 export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/`, data);
+
+export const update = async (projectId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${projectId}`, data);

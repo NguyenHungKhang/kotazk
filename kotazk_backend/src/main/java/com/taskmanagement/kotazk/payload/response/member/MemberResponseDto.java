@@ -23,6 +23,7 @@ public class MemberResponseDto {
     Long id;
     Long workSpaceId;
     Long projectId;
+    String email;
     UserResponseDto user;
     MemberStatus status;
     EntityBelongsTo memberFor;

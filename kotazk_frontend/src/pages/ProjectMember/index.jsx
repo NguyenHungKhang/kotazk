@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import * as apiService from '../../api/index'
 import Invitation from "./Invition";
+import AddProjectMember from "./AddProjectMember";
 
 const dummyMemberData = [
     {
@@ -46,16 +47,19 @@ const ProjectMember = () => {
 
     return (
         <Grid2 container spacing={2} height={'100% !important'}>
+            {/* <Grid2>
+                <AddProjectMember currentMembers={members} currentRoleMembers={memberRoles} />
+            </Grid2> */}
             <Grid2
                 item
-                size={8}
+                size={12}
                 height={'100% !important'}
             >
-                   <MemberList members={activeMembers} setMembers={setActiveMembers} />
+                <MemberList members={activeMembers} setMembers={setActiveMembers} />
             </Grid2>
-            <Grid2 item size={4}>
-                <Invitation activeMembers={activeMembers} setActiveMembers={setActiveMembers}/>
-            </Grid2>
+            {/* <Grid2 item size={4}>
+                <Invitation activeMembers={activeMembers} setActiveMembers={setActiveMembers} />
+            </Grid2> */}
         </Grid2>
 
     );
