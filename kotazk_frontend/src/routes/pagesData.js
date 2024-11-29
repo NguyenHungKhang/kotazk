@@ -31,6 +31,8 @@ import ListWorkspace from "../playgrounds/components/TestDnDLap";
 import EmailChipInput from "../playgrounds/components/EmailChipInput";
 import WorkSpaceMember from "../pages/WorkSpaceMember";
 import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
+import Register from "../pages/Register";
+import OtpVerification from "../pages/OtpVerification";
 
 const pagesData = [
   {
@@ -41,6 +43,16 @@ const pagesData = [
   {
     path: "/login",
     element: <Login />,
+    title: "playground"
+  },
+  {
+    path: "/register",
+    element: <Register />,
+    title: "playground"
+  },
+  {
+    path: "/OtpVerification",
+    element: <OtpVerification />,
     title: "playground"
   },
   {
