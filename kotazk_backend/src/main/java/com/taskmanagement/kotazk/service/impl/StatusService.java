@@ -90,7 +90,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 project.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -138,7 +138,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -181,7 +181,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 project.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -198,7 +198,7 @@ public class StatusService implements IStatusService {
                         status.setId(id);
                         incomingStatusIds.add(id);
                     });
-                    if(!s.getId().equals(null)) {
+                    if(!(s.getId() == null)) {
                         Status existStatus = statusRepository.findById(s.getId())
                                 .orElseThrow(() -> new CustomException("Invalid input"));
                         status.setSystemRequired(existStatus.getSystemRequired());
@@ -294,7 +294,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -335,7 +335,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -585,7 +585,7 @@ public class StatusService implements IStatusService {
                 .description("")
                 .position(position)
                 .systemInitial(true)
-                .systemRequired(false)
+                .systemRequired(true)
                 .isCompletedStatus(isCompletedStatus)
                 .isFromStart(isFromStart)
                 .isFromAny(isFromAny)

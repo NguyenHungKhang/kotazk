@@ -20,6 +20,7 @@ import { setCurrentProjectMemberList, setCurrentUserMember } from "../../redux/a
 import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 import { setSectionList } from "../../redux/actions/section.action";
+import { setTaskSearchText } from "../../redux/actions/searchText.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -73,6 +74,7 @@ const Project = ({ children }) => {
             dispatch(setCurrentProject(projectBasicInfoRes));
             dispatch(setCurrentWorkspace(workSpace));
             dispatch(setSectionList(sections));
+            dispatch(setTaskSearchText(""));
         } catch (err) {
             console.error('Error fetching project details:', err);
         }
@@ -128,30 +130,11 @@ const Project = ({ children }) => {
                     <Box
                         flexGrow={1}
                         sx={{
-                            //                     '--dot-bg': alpha(theme.palette.background.default, 0.2),  // Initial opacity (20%)
-                            //                     '--dot-color': theme.palette.mode === "light"
-                            //                         ? alpha(theme.palette.text.secondary, 0.2)  // Initial opacity (20%)
-                            //                         : alpha(theme.palette.grey[700], 0.2),      // Initial opacity (20%)
-                            //                     '--dot-size': '1px',
-                            //                     '--dot-space': '15px',
-                            //                     background: `
-                            //     linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-                            //     linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
-                            //     var(--dot-color)
-                            // `,
+                          
                             overflow: 'hidden',
                             width: open ? '86vw' : '95vw',
                             transition: 'width 0.3s',
-                            // transition: 'all 0.3s ease',  // Smooth transition when hover happens
-                            // border: "2px solid",
-                            // borderColor: "transparent",
-                            // '&:hover': {
-                            //     borderColor: theme.palette.background.default,
-                            //     '--dot-bg': alpha(theme.palette.background.default, 0.5),  // Opacity on hover (30%)
-                            //     '--dot-color': theme.palette.mode === "light"
-                            //         ? alpha(theme.palette.text.secondary, 0.5)  // Opacity on hover (30%)
-                            //         : alpha(theme.palette.grey[700], 0.5)       // Opacity on hover (30%)
-                            // }
+                           
                         }}
                     >
                         {children}

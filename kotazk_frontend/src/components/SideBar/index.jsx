@@ -6,33 +6,39 @@ import { useSelector } from "react-redux";
 import CustomProjectColorIconPicker from "../CustomProjectColorIconPicker";
 import * as apiService from "../../api/index"
 import { Link, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setCurrentProjectList } from "../../redux/actions/project.action";
 
 const SideBar = ({ open, setOpen }) => {
     const theme = useTheme();
-    const {projectId} = useParams();
+    const { projectId } = useParams();
     const [projects, setProjects] = useState([])
-    const workspace = useSelector((state) => state.workspace.currentWorkspace)
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const projectList = useSelector((state) => state.project.currentProjectList);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        if (workspace)
-            fetchProjects();
-    }, [workspace])
+        if (workspace != null)
+            initialFetch();
+    }, [workspace]);
 
-    const fetchProjects = async () => {
+
+    const initialFetch = async () => {
         const data = {
-            filters: []
+            "sortBy": "name",
+            "sortDirectionAsc": true,
+            "filters": [
+            ]
         }
-
-        const response = await apiService.projectAPI.getSummaryPageByWorkspace(workspace?.id, data)
-        if (response?.data)
-            setProjects(response?.data)
+        await apiService.projectAPI.getPageByWorkspace(workspace.id, data)
+            .then(res => { dispatch(setCurrentProjectList(res.data)); })
+            .catch(err => console.warn(err))
     }
+
 
     const Menus = [
         { title: "Dashboard", icon: <IconLayoutDashboardFilled size={20} /> },
-        { title: "Members", icon: <IconUsers size={20} /> },
         { title: "Setting", icon: <IconSettingsFilled size={20} /> },
-        { title: "Personal", icon: <IconCloudLock size={20} /> },
     ];
 
     return (
@@ -141,8 +147,42 @@ const SideBar = ({ open, setOpen }) => {
                                 )}
                             </ListItem>
                         ))}
-                        <Divider flexItem />
-                        {projects?.content?.map((project, index) => (
+                        {projectList?.content?.filter(p => p.isPinned == true).length > 0 &&
+                            <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Pinned</strong></Divider>
+                        }
+
+                        {projectList?.content?.filter(p => p.isPinned == true).map((project, index) => (
+                            <ListItem
+                                key={index}
+                                sx={{
+                                    py: 0.5,
+                                    mt: 1,
+                                    borderRadius: 1,
+                                    bgcolor: projectId == project.id ? theme.palette.primary.main : 'transparent',
+                                    '&:hover': {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                    }
+                                }}
+                                component={Link}
+                                to={`/project/${project.id}`}
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                    <CustomProjectColorIconPicker />
+                                </ListItemIcon>
+                                {open && (
+                                    <ListItemText
+                                        primary={
+                                            <Typography noWrap color={projectId == project.id ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                                {project.name}
+                                            </Typography>
+                                        }
+                                        sx={{ ml: 2 }}
+                                    />
+                                )}
+                            </ListItem>
+                        ))}
+                        <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Project</strong></Divider>
+                        {projectList?.content?.map((project, index) => (
                             <ListItem
                                 key={index}
                                 sx={{

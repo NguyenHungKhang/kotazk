@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Skeleton, Stack, Tooltip, darken, useTheme } from "@mui/material";
+import { Button, ButtonGroup, InputAdornment, Skeleton, Stack, TextField, Tooltip, darken, useTheme } from "@mui/material";
 import LayersIcon from '@mui/icons-material/Layers';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -16,6 +16,7 @@ import { initialCurrentFilterList } from "../../redux/actions/filter.action";
 import { initialCurrentGroupByEntity } from "../../redux/actions/groupBy.action";
 import CustomSortDialog from "../CustomSortDialog";
 import { initialCurrentSortEntity } from "../../redux/actions/sort.action";
+import { setTaskSearchText } from "../../redux/actions/searchText.action";
 
 const CustomFilterBar = () => {
     const theme = useTheme();
@@ -27,9 +28,10 @@ const CustomFilterBar = () => {
     const InfoIcon = allIcons["IconInfoSquareRoundedFilled"];
 
     return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
-        <Stack direction='row' spacing={4} alignItems={'center'}>
+        <Stack direction='row' spacing={2} alignItems={'center'}>
+            <SearchTextField />
             <Tooltip placement="top" title="You can save section view if your member role has permision to manage section" arrow>
-                <InfoIcon size={20} color={theme.palette.text.secondary}/>
+                <InfoIcon size={20} color={theme.palette.text.secondary} />
             </Tooltip>
             {((userChangeFilterList || userChangeGroupByEntity || userChangeSortEntity) && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) && (
                 < CustomSaveSectionButton sectionId={section?.id} />
@@ -40,9 +42,9 @@ const CustomFilterBar = () => {
 
             <CustomSortDialog />
             {
-                 currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
+                currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
                     <CustomAddTaskButton />
-                 )
+                )
             }
 
         </Stack>
@@ -162,5 +164,66 @@ const CustomAddTaskButton = () => {
 
     );
 }
+
+const SearchTextField = () => {
+    const dispatch = useDispatch();
+    const theme = useTheme();
+    const SearchIcon = allIcons["IconSearch"];
+    const ApplySearchIcon = allIcons["IconZoomCheckFilled"];
+    const [searchValue, setSearchValue] = useState("");
+    const [isSearchApplied, setIsSearchApplied] = useState(false);
+
+    const handleOnChange = (e) => {
+        setSearchValue(e.target.value);
+        setIsSearchApplied(false); // Reset the icon when the user starts typing
+    };
+
+    const applySearch = async () => {
+        await dispatch(setTaskSearchText(searchValue.trim().replace(/\s+/g, " ")));
+        if (searchValue.trim() != "")
+            setIsSearchApplied(true);
+        else
+            setIsSearchApplied(false);
+    };
+
+    const handleOnBlur = () => {
+        applySearch();
+    };
+
+    const handleOnKeyPress = (e) => {
+        if (e.key === "Enter") {
+            applySearch();
+        }
+    };
+
+    return (
+        <Tooltip placement="top" title="Press enter or click out for apply search text" arrow>
+            <TextField
+                size="small"
+                placeholder="Type to search..."
+                value={searchValue}
+                onChange={handleOnChange}
+                onBlur={handleOnBlur}
+                onKeyPress={handleOnKeyPress}
+                sx={{
+                    "& .MuiInputBase-root": {
+                        height: "30px",
+                    }
+                }}
+                InputProps={{
+                    startAdornment: (
+                        <InputAdornment position="start">
+                            {isSearchApplied ? (
+                                <ApplySearchIcon size={20} stroke={2} />
+                            ) : (
+                                <SearchIcon size={20} stroke={2} />
+                            )}
+                        </InputAdornment>
+                    ),
+                }}
+            />
+        </Tooltip>
+    );
+};
 
 export default CustomFilterBar;

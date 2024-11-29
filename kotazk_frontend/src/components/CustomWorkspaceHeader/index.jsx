@@ -12,19 +12,25 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
+import WorkSpaceMember from "../../pages/WorkSpaceMember";
+import CustomDialogForManage from "../CustomDialogForManage";
 
-const CustomHeader = () => {
+const CustomWorkspaceHeader = () => {
     const theme = useTheme();
     const AddIcon = allIcons["IconPlus"];
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
-    const project = useSelector((state) => state.project.currentProject);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const [members, setMembers] = useState([]);
 
+    const [open, setOpen] = useState(false);
+    const [maxWidth, setMaxWidth] = useState("sm");
+    const [children, setChildren] = useState(<WorkSpaceMember />);
+
     useEffect(() => {
-        if (project)
+        if (workspace)
             membersFetch();
-    }, [project]);
+    }, [workspace]);
 
     const membersFetch = async () => {
         const memberFilter = {
@@ -46,7 +52,7 @@ const CustomHeader = () => {
             ],
         };
 
-        const response = await apiService.memberAPI.getPageByProject(project?.id, memberFilter)
+        const response = await apiService.memberAPI.getPageByWorkspace(workspace?.id, memberFilter)
         if (response?.data)
             setMembers(response?.data?.content);
 
@@ -63,7 +69,7 @@ const CustomHeader = () => {
                             fontWeight={650}
                         >
 
-                            {project ? project.name : "Project name"}
+                            {workspace?.name}
                         </Typography>
                     </Stack>
 
@@ -91,7 +97,7 @@ const CustomHeader = () => {
                             </Avatar>
                         ))}
                     </AvatarGroup>
-                    <Button
+                    {/* <Button
                         component={Link}
                         to={`/project/${project?.id}/member`}
                         sx={{
@@ -105,7 +111,7 @@ const CustomHeader = () => {
                         }
                     >
                         Add member
-                    </Button>
+                    </Button> */}
                 </Stack>
                 <Stack direction='row' spacing={2}>
                     <Box>
@@ -117,11 +123,12 @@ const CustomHeader = () => {
                             sx={{
                                 textTransform: 'none'
                             }}
+                            onClick={() => { setMaxWidth("sm"); setOpen(true); setChildren(<WorkSpaceMember />); }}
                         >
                             Share
                         </Button>
                     </Box>
-                    <Box>
+                    {/* <Box>
                         <Button
                             component={Link}
                             to={`/project/${project?.id}/setting`}
@@ -135,7 +142,7 @@ const CustomHeader = () => {
                         >
                             Setting
                         </Button>
-                    </Box>
+                    </Box> */}
                 </Stack>
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">
@@ -181,8 +188,9 @@ const CustomHeader = () => {
                     </Avatar>
                 </Stack>
             </Stack>
+            <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />
         </Box>
     );
 }
 
-export default CustomHeader;
+export default CustomWorkspaceHeader;

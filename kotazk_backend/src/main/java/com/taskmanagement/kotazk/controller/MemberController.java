@@ -1,6 +1,7 @@
 package com.taskmanagement.kotazk.controller;
 
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.member.MemberInviteRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
 
@@ -72,5 +74,22 @@ public class MemberController {
             @PathVariable Long projectId
     ) {
         return memberService.getListPageByProject(searchParam, projectId);
+    }
+
+    @PostMapping("/invite-list")
+    @ResponseStatus(HttpStatus.OK)
+    public List<MemberResponseDto> inviteListMember(
+            @RequestBody MemberInviteRequestDto memberInviteRequestDto
+    ) {
+        return memberService.inviteList(memberInviteRequestDto);
+    }
+
+    @PostMapping("/page/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberResponseDto> getPageByWorkspace(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long workspaceId
+    ) {
+        return memberService.getListPageByWorkspace(searchParam, workspaceId);
     }
 }

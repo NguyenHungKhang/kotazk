@@ -5,16 +5,19 @@ import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orien
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import { FileUploader } from "react-drag-drop-files";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileWord, faFileExcel, faFilePowerpoint, faFilePdf, faFileText, faFileVideo } from '@fortawesome/free-solid-svg-icons';
 
 import * as apiService from '../../api/index';
 import * as TablerIcons from '@tabler/icons-react';
-import { Box, IconButton, Link, Stack, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, IconButton, LinearProgress, Link, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { useDispatch, useSelector } from 'react-redux';
 import { addAndUpdateGroupedTaskList, addAndUpdateTaskList } from '../../redux/actions/task.action';
 import { setDeleteDialog, setTaskDialog } from '../../redux/actions/dialog.action';
+import axiosInstance from '../../api/axios.interceptor';
 
-const fileTypes = ["JPEG", "PNG", "GIF"];
+const fileTypes = ["PDF", "JPG", "PNG", "GIF", "MP4", "PPTX", "DOCX", "XLSX", "TXT", "DOC", "XLS", "PPT"];
 
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview);
 
@@ -29,33 +32,66 @@ function CustomFileUploader({ currentFiles, task }) {
   const DownloadIcon = TablerIcons["IconDownload"]
   const RemoveIcon = TablerIcons["IconX"]
   const AttachmentIcon = TablerIcons["IconPaperclip"]
+  const FileUploadIcon = TablerIcons["IconFileUpload"];
 
   useEffect(() => {
     setFiles(currentFiles);
   }, [currentFiles]);
 
+  const [uploadInProgress, setUploadInProgress] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0);
+
   const handleSaveFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const response = await apiService.attachmentAPI.createForTask(task?.id, file);
+      setUploadInProgress(true);
+      setUploadPercent(0); // Reset the progress to 0 before starting the upload
+
+      const response = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_API_URL}/${process.env.REACT_APP_SECURE_PART_URL}/attachment/for-task/${task?.id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.lengthComputable) {
+              const percent = (progressEvent.loaded / progressEvent.total) * 100 - 1;
+              setUploadPercent(Math.round(percent)); // Update the progress state
+            }
+          },
+          timeout: 60000
+        }
+      );
+
       if (response?.data) {
         const updatedTask = {
           ...task,
-          attachments: [...task?.attachments, response?.data]
-        }
-        if (isGroupedList)
-          dispatch(addAndUpdateGroupedTaskList(updatedTask))
-        else
-          dispatch(addAndUpdateTaskList(updatedTask));
-
-        const taskDialogData = {
-          task: updatedTask
+          attachments: [...task?.attachments, response.data],
         };
+
+        if (isGroupedList) {
+          dispatch(addAndUpdateGroupedTaskList(updatedTask));
+        } else {
+          dispatch(addAndUpdateTaskList(updatedTask));
+        }
+
+        const taskDialogData = { task: updatedTask };
         dispatch(setTaskDialog(taskDialogData));
+
       }
     } catch (err) {
-      console.log('Upload aborted');
+      console.error('Upload failed', err);
+    } finally {
+      setUploadInProgress(false);
+      setUploadPercent(0); // Reset progress after completion or failure
     }
   };
+
+
+
 
   const handleRemoveFile = async (event, file) => {
     event.stopPropagation();
@@ -106,7 +142,11 @@ function CustomFileUploader({ currentFiles, task }) {
   }
 
   return (
-    <div className="App">
+    <Box
+      p={2}
+      borderRadius={2}
+      border={"1px solid"}
+    >
       <Box>
 
         {currentMember?.role?.projectPermissions.includes("CREATE_ATTACHMENTS") && (
@@ -114,32 +154,43 @@ function CustomFileUploader({ currentFiles, task }) {
             handleChange={handleSaveFile}
             name="file"
             types={fileTypes}
+            maxSize={10}
           >
             <Box
               bgcolor={getSecondBackgroundColor(theme)}
               p={2}
-              height={80} borderRadius={2}
+              height={'fit-content'}
+              borderRadius={2}
               border={"1px dashed"}
             >
-              <Stack direction={'row'} spacing={2} height={'100%'} alignItems={'center'} >
-                <AttachmentIcon />
+              <Stack direction={'row'} spacing={2} height={'100%'} alignItems={'center'}>
+                <FileUploadIcon size={50} 
+                stroke={1.5}
+                  // color={theme.palette.text.secondary}
+                />
                 <Box>
-                  <Typography>
+                  <Typography fontSize={16} fontWeight={'bold'}>
                     Drop files here or click to browse attachments
+                  </Typography>
+                  <Typography color={theme.palette.text.secondary} >
+                    Max size: 10MB
+                  </Typography>
+                  <Typography color={theme.palette.text.secondary}>
+                    Extentions file support: {fileTypes.map(ext => `.${ext.toLowerCase()}`).join(" ")}
                   </Typography>
                 </Box>
               </Stack>
-
             </Box>
           </FileUploader>
         )}
 
       </Box>
-      <Stack direction={'row'} spacing={2} mt={2}>
+      <Stack direction={'row'} spacing={2} mt={2} useFlexGap flexWrap="wrap">
 
         {currentFiles?.map((file, index) => (
           <Box key={index} bgcolor={getSecondBackgroundColor(theme)} p={2} borderRadius={2}
             sx={{
+              width: '32.5%',
               border: '1px solid',
               borderColor: 'transparent',
               '&:hover': {
@@ -147,51 +198,169 @@ function CustomFileUploader({ currentFiles, task }) {
               }
             }}
           >
-            <Stack direction={'row'} spacing={2} alignItems={'center'}>
-              <Box
-                width={60}
-                height={60}
+            <Tooltip title={file.fileName} placement="top" arrow>
+              <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                {(file.fileType == "jpg" || file.fileType == "png" || file.fileType == "gif") && (
+                  <Box>
+                    <Box
+                      width={45}
+                      height={45}
+                    >
 
-              >
-                <div style={{
-                  position: 'relative',
-                  paddingTop: '100%',
-                }}>
+
+                      <div style={{
+                        position: 'relative',
+                        paddingTop: '100%',
+                      }}>
+                        <Box
+                          component="img"
+                          src={file.fileUrl}
+                          alt="Image Preview"
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            borderRadius: 2,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }} />
+                      </div>
+                    </Box>
+                  </Box>
+                )}
+                {(file.fileType == "doc" || file.fileType == "docx") && (
                   <Box
-                    component="img"
-                    src={file.fileUrl}
-                    alt="Image Preview"
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      borderRadius: 2,
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                    }} />
-                </div>
-              </Box>
-              <Box>
-                <Link component={'button'} textAlign={'start'} fontWeight={650} onClick={() => downloadFile(file.fileName, file.fileUrl)} underline='hover' color={theme.palette.text.primary}>
-                  {file.fileName}
-                </Link>
-                <Typography textAlign={'start'} color={theme.palette.text.secondary}>
-                  {formatFileSize(file.fileSize)}
-                </Typography>
-              </Box>
-              <IconButton size='small' onClick={() => downloadFile(file.fileName, file.fileUrl)}>
-                <DownloadIcon size={16} />
-              </IconButton>
-              <IconButton size='small' onClick={(e) => handleRemoveFile(e, file)}>
-                <RemoveIcon size={16} />
-              </IconButton>
-            </Stack>
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFileWord} size='3x' />
+                  </Box>
+                )}
+                {(file.fileType == "xls" || file.fileType == "xlsx") && (
+                  <Box
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFileExcel} size='3x' />
+                  </Box>
+                )}
+                {(file.fileType == "ppt" || file.fileType == "pptx") && (
+                  <Box
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFilePowerpoint} size='3x' />
+                  </Box>
+                )}
+                {(file.fileType == "txt") && (
+                  <Box
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFileText} size='3x' />
+                  </Box>
+                )}
+                {(file.fileType == "pdf") && (
+                  <Box
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFilePdf} size='3x' />
+                  </Box>
+                )}
+                {(file.fileType == "mp4") && (
+                  <Box
+                    width={'100%'}
+                    height={'100%'}
+                    display={'flex'}
+                    justifyContent={'center'}
+                    alignItems={'center'}
+                  >
+                    <FontAwesomeIcon icon={faFileVideo} size='3x' />
+                  </Box>
+                )}
+                <Box flexGrow={1} width={'100%'} sx={{ overflow: "hidden !important" }}>
+                  <Typography
+                    textAlign={'start'}
+                    fontWeight={650}
+                    onClick={() => downloadFile(file.fileName, file.fileUrl)}
+                    color={theme.palette.text.primary}
+                    noWrap
+                  >
+                    {file.fileName}
+                  </Typography>
+                  <Typography textAlign={'start'} color={theme.palette.text.secondary}>
+                    {formatFileSize(file.fileSize)}
+                  </Typography>
+                </Box>
+                <IconButton size='small' onClick={() => downloadFile(file.fileName, file.fileUrl)}>
+                  <DownloadIcon size={16} />
+                </IconButton>
+                {currentMember?.role?.projectPermissions.includes("CREATE_ATTACHMENTS")
 
+                }
+                <IconButton size='small' onClick={(e) => handleRemoveFile(e, file)}>
+                  <RemoveIcon size={16} />
+                </IconButton>
+              </Stack>
+            </Tooltip>
           </Box>
         ))}
+        {uploadInProgress && (
+          <Box bgcolor={getSecondBackgroundColor(theme)} p={2} borderRadius={2}
+            sx={{
+              width: '32.5%',
+              border: '1px solid',
+              borderColor: 'transparent',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+              <CircularProgress />
+              <Box
+                sx={{
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  right: 0,
+                  position: 'absolute',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  component="div"
+                  sx={{ color: 'text.secondary' }}
+                >
+                  {`${uploadPercent}%`}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
+
       </Stack>
-    </div>
+    </Box>
   );
 }
 

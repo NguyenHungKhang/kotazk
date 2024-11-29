@@ -64,7 +64,7 @@ public class Task {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description", columnDefinition = "LONGTEXT")
+    @Column(name = "description")
     private String description;
 
     @Column(name = "position", nullable = false)

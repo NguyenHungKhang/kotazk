@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper, Box, Typography, TextField, useTheme, Pagination } from '@mui/material';
+import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Checkbox, Grid, Stack, Card, CardContent, MenuItem, Select, IconButton, Button, Divider, Paper, Box, Typography, TextField, useTheme, Pagination, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import * as TablerIcons from '@tabler/icons-react'
@@ -9,10 +9,10 @@ import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { setDeleteDialog } from '../../redux/actions/dialog.action';
 import EmailChipInput from '../../playgrounds/components/EmailChipInput';
-import AddProjectMember from './AddProjectMember';
+import AddWorkspaceMember from './AddWorkspaceMember';
 
 
-const MemberList = ({ members, setMembers }) => {
+const WorkSpaceMember = () => {
     const theme = useTheme();
     // const [selectedMembers, setSelectedMembers] = useState([]);
     // const [roles, setRoles] = useState(memberRoles);
@@ -20,31 +20,42 @@ const MemberList = ({ members, setMembers }) => {
     const [memberRoles, setMemberRoles] = useState(null);
     const [foundedUser, setFoundedUser] = useState(null);
     const [searchUser, setSearchUser] = useState(null);
-    const project = useSelector((state) => state.project.currentProject)
+    const [members, setMembers] = useState([]);
     const workSpace = useSelector((state) => state.workspace.currentWorkspace)
     const [searchText, setSearchText] = useState("");
     const RefreshIcon = TablerIcons["IconRefresh"];
 
+    const [memberStatus, setMemberStatus] = React.useState('ACTIVE');
+
+    const handleChangeMemberStatus = (event, statusMember) => {
+        if (statusMember != null)
+            setMemberStatus(statusMember);
+    };
+
     useEffect(() => {
-        if (project != null && workSpace != null)
+        if (workSpace != null)
             initialFetch();
-    }, [project, workSpace, searchText]);
+    }, [workSpace, searchText, memberStatus]);
 
     const initialFetch = async () => {
         try {
             const memberFilter = {
                 filters: [
-                    {
-                        key: "user.email",
-                        operation: "LIKE",
-                        value: searchText,
-                        values: []
-                    },
+                    // {
+                    //     key: "user.email",
+                    //     operation: "LIKE",
+                    //     value: searchText,
+                    //     values: []
+                    // },
                     {
                         key: "status",
                         operation: "EQUAL",
-                        value: "ACTIVE",
-                        values: []
+                        value: memberStatus,
+                    },
+                    {
+                        key: "memberFor",
+                        operation: "EQUAL",
+                        value: "WORK_SPACE",
                     }
                 ],
             };
@@ -62,8 +73,8 @@ const MemberList = ({ members, setMembers }) => {
 
             // Run both API calls concurrently
             const [memberResponse, memberRoleResponse] = await Promise.all([
-                apiService.memberAPI.getPageByProject(project?.id, memberFilter),
-                apiService.memberRoleAPI.getPageByProject(memberRoleFilter, project?.id)
+                apiService.memberAPI.getPageByWorkspace(workSpace?.id, memberFilter),
+                apiService.memberRoleAPI.getPageByWorkspace(workSpace?.id, memberRoleFilter)
             ]);
 
             // Handle member response
@@ -82,41 +93,9 @@ const MemberList = ({ members, setMembers }) => {
         }
     };
 
-
-
-    const findUser = async () => {
-        try {
-            const response = await apiService.userAPI.getOneByEmail(searchUser)
-
-            if (response?.data) {
-                setFoundedUser(response?.data);
-            }
-
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
-
-    const createMember = async () => {
-        try {
-            const data = {
-                projectId: project?.id,
-                userId: foundedUser?.id,
-                memberFor: "PROJECT",
-                memberRoleId: memberRoles[0].id,
-            }
-            const response = await apiService.memberAPI.create(data)
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    };
-
-    const SaveIcon = TablerIcons["IconDeviceFloppy"]
-    const InviteIcon = TablerIcons["IconUserPlus"]
-
     return (
         <Stack spacing={2}>
-            <AddProjectMember currentMembers={members} currentRoleMembers={memberRoles} />
+            <AddWorkspaceMember currentMembers={members} currentRoleMembers={memberRoles} />
             <Card
                 sx={{
                     height: '100% !important',
@@ -126,16 +105,10 @@ const MemberList = ({ members, setMembers }) => {
             >
                 <Stack direction={'column'} height={'100%'} >
                     <Box p={2}>
-                        <Typography fontWeight={650} variant='h5'>
-                            Project member
-                        </Typography>
-                    </Box>
-
-                    <Box p={2}>
                         <TextField
                             size='small'
                             fullWidth
-                            placeholder='Typing name or email for searching'
+                            placeholder='Typing email for searching'
                             onChange={(e) => setSearchText(e.target.value)}
                         />
                     </Box>
@@ -144,9 +117,17 @@ const MemberList = ({ members, setMembers }) => {
                             <Typography fontWeight={650} variant='h6'>
                                 Members
                             </Typography>
-                            {/* <IconButton size='small'>
-                            <RefreshIcon size={20}/>
-                        </IconButton> */}
+                            <ToggleButtonGroup
+                                color="primary"
+                                size='small'
+                                value={memberStatus}
+                                exclusive
+                                onChange={handleChangeMemberStatus}
+                                aria-label="Platform"
+                            >
+                                <ToggleButton size='small' value="ACTIVE" sx={{ textTransform: 'none' }}>Active</ToggleButton>
+                                <ToggleButton size='small' value="INVITED" sx={{ textTransform: 'none' }}>Invited</ToggleButton>
+                            </ToggleButtonGroup>
                         </Stack>
 
                         <Stack spacing={1}>
@@ -171,7 +152,7 @@ const MemberItem = ({ member, memberRoles }) => {
     const handleOpenDeleteDialog = (event) => {
         event.stopPropagation();
         dispatch(setDeleteDialog({
-            title: `Delete member "${member?.user?.firstName} ${member?.user?.lastName}"?`,
+            title: `Delete member "${member.user ? member.user.email : member.email}"?`,
             content:
                 `You're about to permanently delete this nember and their comments.`,
             open: true,
@@ -202,12 +183,21 @@ const MemberItem = ({ member, memberRoles }) => {
                                 height: 30
                             }} />
                         <Box>
-                            <Typography fontWeight={650}>
-                                {member.user.firstName + ' ' + member.user.lastName}
-                            </Typography>
-                            <Typography color={theme.palette.text.secondary}>
-                                {member.user.email}
-                            </Typography>
+                            {
+                                member.user ?
+                                    <>
+                                        <Typography fontWeight={650}>
+                                            {member.user.firstName + ' ' + member.user.lastName}
+                                        </Typography>
+                                        <Typography color={theme.palette.text.secondary}>
+                                            {member.user.email}
+                                        </Typography>
+                                    </> :
+                                    <Typography fontWeight={650}>
+                                        {member.email}
+                                    </Typography>
+                            }
+
                         </Box>
                     </Stack>
                 </Box>
@@ -246,4 +236,4 @@ const MemberItem = ({ member, memberRoles }) => {
     );
 }
 
-export default MemberList;
+export default WorkSpaceMember;

@@ -1,0 +1,256 @@
+import * as React from 'react';
+import TextField from '@mui/material/TextField';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
+import Avatar from '@mui/material/Avatar';
+import Stack from '@mui/material/Stack';
+import Chip from '@mui/material/Chip';
+import { Box, Button, Select, MenuItem, InputLabel, FormControl, Checkbox, FormGroup, FormControlLabel, Card, Typography, Divider } from '@mui/material';
+import * as apiService from '../../api/index'
+import { useSelector } from 'react-redux';
+
+const filter = createFilterOptions();
+
+export default function AddProjectMember({ currentMembers, currentRoleMembers }) {
+    const [value, setValue] = React.useState([]);
+    const [members, setMembers] = React.useState([]);
+    const [selectedMemberRole, setSelectedMemberRole] = React.useState(null);
+    const [memberRoles, setMemberRoles] = React.useState([]);
+    const [isOverideRole, setIsOverideRole] = React.useState(true);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+
+    const handleIsOverideRole = (event) => {
+        setIsOverideRole(event.target.checked);
+    };
+    React.useEffect(() => {
+        if (workspace) {
+            fetchWorkspaceMember();
+        }
+    }, [workspace]);
+
+
+    React.useEffect(() => {
+        if (currentRoleMembers) {
+            setMemberRoles(currentRoleMembers);
+            setSelectedMemberRole(currentRoleMembers.find(r => r.name == "Editor" && r.systemInitial == true)?.id);
+        }
+    }, [currentRoleMembers]);
+
+    const fetchWorkspaceMember = async () => {
+        try {
+
+            const data = {
+                "filters": [
+                    {
+                        "key": "status",
+                        "operation": "EQUAL",
+                        "value": "ACTIVE"
+                    },
+                    {
+                        "key": "memberFor",
+                        "operation": "EQUAL",
+                        "value": "WORK_SPACE"
+                    }
+                ]
+            }
+
+            const response = await apiService.memberAPI.getPageByWorkspace(workspace.id, data)
+            if (response?.data) {
+                setMembers(response?.data?.content.map((m) => ({
+                    firstName: m.user.firstName,
+                    lastName: m.user.lastName,
+                    email: m.user.email,
+                    id: m.id,
+                    avatar: m.user.avatar
+                })));
+            }
+
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    const getAvatarText = (lastName) => {
+        return lastName?.charAt(0).toUpperCase() || '?';
+    };
+
+    const isValidEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email) && !email.includes(' '); // Ensure no spaces
+    };
+
+    const isDuplicate = (email) => {
+        return value.some((item) => item.email.toLowerCase() === email.toLowerCase());
+    };
+
+    const processEmail = (email) => {
+        let processedEmail = email;
+        if (!isValidEmail(email) && !email.includes('@')) {
+            processedEmail = `${email}@gmail.com`;
+        }
+        return processedEmail;
+    };
+
+    const handleRoleChange = (event) => {
+        setSelectedMemberRole(event.target.value)
+    };
+
+    return (
+        <Card
+            sx={{
+                width: '100%'
+            }}
+        >
+            <Typography variant='h6' fontWeight={650} p={4}>
+                Invite Member
+            </Typography>
+            <Divider />
+            <Box p={4}>
+                <Stack direction={'row'} spacing={2} alignItems="center" width={'100%'}>
+                    <Box flexGrow={1}>
+                        <Autocomplete
+                            multiple
+                            value={value}
+                            fullWidth
+                            onChange={(event, newValue) => {
+                                const lastValue = newValue[newValue.length - 1];
+
+                                if (typeof lastValue === 'string') {
+                                    let processedEmail = processEmail(lastValue);
+                                    if (isValidEmail(processedEmail) && !isDuplicate(processedEmail)) {
+                                        setValue([
+                                            ...newValue.slice(0, -1),
+                                            { email: processedEmail, firstName: null, lastName: null, id: null, avatar: null },
+                                        ]);
+                                    }
+                                } else if (lastValue?.inputValue) {
+                                    let processedEmail = processEmail(lastValue.inputValue);
+                                    if (isValidEmail(processedEmail) && !isDuplicate(processedEmail)) {
+                                        setValue([
+                                            ...newValue.slice(0, -1),
+                                            { email: processedEmail, firstName: null, lastName: null, id: null, avatar: null },
+                                        ]);
+                                    }
+                                } else {
+                                    setValue(newValue);
+                                }
+                            }}
+                            filterOptions={(options, params) => {
+                                const filtered = filter(options, params);
+                                const { inputValue } = params;
+
+                                if (inputValue !== '' && !options.some((option) => option.email === inputValue) && !isDuplicate(inputValue)) {
+                                    let processedEmail = processEmail(inputValue);
+                                    filtered.push({
+                                        inputValue: processedEmail,
+                                        email: processedEmail,
+                                        firstName: null,
+                                        lastName: null,
+                                        id: null,
+                                        avatar: null,
+                                    });
+                                }
+
+                                return filtered;
+                            }}
+                            size='small'
+                            selectOnFocus
+                            clearOnBlur
+                            handleHomeEndKeys
+                            id="free-solo-multiple-demo"
+                            options={members}
+                            getOptionLabel={(option) => {
+                                if (typeof option === 'string') {
+                                    return option;
+                                }
+                                if (option.inputValue) {
+                                    return option.inputValue;
+                                }
+                                return `${option.firstName} ${option.lastName} (${option.email})`;
+                            }}
+                            renderOption={(props, option) => {
+                                const { key, ...optionProps } = props;
+
+                                return (
+                                    <li key={key} {...optionProps}>
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                            {option.id &&
+                                                <Avatar
+                                                    src={option.avatar}
+                                                    sx={{
+                                                        height: 30,
+                                                        width: 30,
+                                                    }}
+                                                >
+                                                    {!option.avatar && getAvatarText(option.lastName)}
+                                                </Avatar>}
+                                            {option.id ?
+                                                <span>
+                                                    {option.firstName}{option.lastName} - {option.email}
+                                                </span>
+                                                :
+                                                <Typography color='info'>
+                                                    Add new email: {option.email}
+                                                </Typography>
+                                            }
+                                        </Stack>
+                                    </li>
+                                );
+                            }}
+                            freeSolo
+                            renderTags={(tagValue, getTagProps) =>
+                                tagValue.map((option, index) => (
+                                    <Chip
+                                        key={option.email}
+                                        label={option.firstName && option.lastName ? `${option.firstName} ${option.lastName}` : option.email}
+                                        avatar={option.id ?
+                                            <Avatar src={option.avatar}>
+                                                {!option.avatar && getAvatarText(option.lastName)}
+                                            </Avatar> : null
+                                        }
+                                        {...getTagProps({ index })}
+                                        sx={{
+                                            borderRadius: 1,  // Change borderRadius here
+                                        }}
+                                    />
+                                ))
+                            }
+                            renderInput={(params) => (
+                                <TextField {...params} placeholder="Enter email" size='small' fullWidth />
+                            )}
+                        />
+                    </Box>
+                    {/* Role Members Selector */}
+                    <Box>
+                        <Select
+                            size="small"
+                            value={selectedMemberRole}
+                            onChange={handleRoleChange}
+                        >
+                            {memberRoles.map((role) => (
+                                <MenuItem key={role.id} value={role.id}>
+                                    {role.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </Box>
+
+                    {/* Invite Button */}
+                    <Box>
+                        <Button variant='contained' onClick={() => console.log(value)}>
+                            Invite
+                        </Button>
+                    </Box>
+                </Stack>
+                <FormGroup>
+                    <FormControlLabel control={<Checkbox
+                        checked={isOverideRole}
+                        onChange={handleIsOverideRole}
+                        inputProps={{ 'aria-label': 'controlled' }}
+                    />} label="Override a member's role in the project" />
+                    <FormControlLabel control={<Checkbox
+                    />} label="Add to workspace" />
+                </FormGroup>
+            </Box>
+        </Card>
+    );
+}

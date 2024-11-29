@@ -15,6 +15,7 @@ import MemberRoleReducer from "./memberRole.reducer";
 import ProjectReportReducer from "./projectReport.reducer";
 import SortReducer from "./sort.reducer";
 import TaskCommentReducer from "./taskComment.reducer";
+import SearchTextReducer from "./searchText.reducer";
 import { combineReducers } from 'redux'
 
 
@@ -35,7 +36,8 @@ const allReducers = {
     memberRole: MemberRoleReducer,
     projectReport: ProjectReportReducer,
     sort: SortReducer,
-    taskComment: TaskCommentReducer
+    taskComment: TaskCommentReducer,
+    searchText: SearchTextReducer
 }
 
 const rootReducer = combineReducers(allReducers);

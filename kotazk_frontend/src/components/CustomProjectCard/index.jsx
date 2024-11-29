@@ -1,14 +1,46 @@
 import React from 'react';
-import { Avatar, Box, Card, Typography, Stack, Chip } from '@mui/material';
+import { Avatar, Box, Card, Typography, Stack, Chip, IconButton } from '@mui/material';
 import { alpha } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import * as TablerIcons from "@tabler/icons-react";
+import * as apiService from '../../api/index'
+import { useSelector } from 'react-redux';
+import { setCurrentProjectList } from '../../redux/actions/project.action';
+import { updateAndAddArray } from '../../utils/arrayUtil';
+import { useDispatch } from 'react-redux';
 
 const ProjectCard = ({ project, theme }) => {
+    const PinIcon = TablerIcons["IconPin"];
+    const PinnedIcon = TablerIcons["IconPinnedFilled"];
+    const projectList = useSelector((state) => state.project.currentProjectList);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const handlePin = async (event) => {
+        const data = {
+            isPinned: !project?.isPinned
+        }
+
+        const response = await apiService.projectAPI.update(project?.id, data);
+        if (response?.data) {
+            const finalProjectList = {
+                ...projectList,
+                content: updateAndAddArray(projectList.content, [response?.data])
+            }
+            dispatch(setCurrentProjectList(finalProjectList))
+        }
+
+    }
+
+    const handleNavigate = () => {
+        navigate(`/project/${project.id}`);
+    }
+
     return (
         <Card
-            component={Link}
-            to={`/project/${project.id}`}
+            onClick={() => handleNavigate()}
             sx={{
+                cursor: 'pointer',
                 transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
                 '&:hover .overlay': {
                     backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
@@ -55,17 +87,33 @@ const ProjectCard = ({ project, theme }) => {
                             zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
                             p: 2,
                             borderRadius: 2,
+                            width: '100%'
                         }}
                     >
-                        <Typography
-                            className='projectName'
-                            variant="h6"
-                            fontWeight={650}
-                            color="white"
-                        >
-                            {project.name}
-                        </Typography>
+                        <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
+                            <Box flexGrow={1}>
+                                <Typography
+                                    className='projectName'
+                                    variant="h6"
+                                    fontWeight={650}
+                                    color="white"
+                                >
+                                    {project.name}
+                                </Typography>
+                            </Box>
+                            <Box>
+                                {project.isPinned ?
+                                    <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
+                                        <PinnedIcon size={18} color="white" />
+                                    </IconButton>
+                                    :
+                                    <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
+                                        <PinIcon size={18} color="white" />
+                                    </IconButton>
+                                }
 
+                            </Box>
+                        </Stack>
                     </Box>
 
                     {/* Stack ở dưới cùng của ảnh */}

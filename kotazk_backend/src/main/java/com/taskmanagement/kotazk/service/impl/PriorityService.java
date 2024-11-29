@@ -59,6 +59,17 @@ public class PriorityService implements IPriorityService {
 
     @Override
     public List<Priority> initialPriority() {
+//        Customization taskCustomization = new Customization();
+//        taskCustomization.setIcon("IconAssembly");
+//        taskCustomization.setBackgroundColor("#0d9af2");
+//
+//        Customization subtaskCustomization = new Customization();
+//        subtaskCustomization.setIcon("IconSubtask");
+//        subtaskCustomization.setBackgroundColor("#8a3df5");
+//
+//        Customization milestoneCustomization = new Customization();
+//        milestoneCustomization.setIcon("IconAssemblyFilled");
+//        milestoneCustomization.setBackgroundColor("#47ebcd");
         return List.of(
                 createDefaultInitialPriority("High", RepositionUtil.calculateNewLastPosition(2)),
                 createDefaultInitialPriority("Medium", RepositionUtil.calculateNewLastPosition(1)),
