@@ -10,12 +10,48 @@ import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 import * as TablerIcons from '@tabler/icons-react';
 
-const CustomNewTaskPriorityPicker = ({ setNewTaskPriority }) => {
-    const prioritys = useSelector((state) => state.priority.currentPriorityList)
+const CustomNewTaskPriorityPicker = ({ currentPriority, setNewTaskPriority }) => {
+    const project = useSelector((state) => state.project.currentProject);
+    const [priorities, setPriorities] = useState([]);
     const [priority, setPriority] = useState(null);
+
+    useEffect(() => {
+        if (currentPriority) {
+            setPriority(currentPriority);
+            setNewTaskPriority(currentPriority?.id);
+        } else if (!currentPriority && priorities?.length > 0) {
+            const foundPriority = priorities.find(t => t.name == "Task")
+            setPriority(foundPriority);
+            setNewTaskPriority(foundPriority?.id);
+        }
+    }, [currentPriority, priorities]);
+
+    useEffect(() => {
+        if (project) {
+            fetchPriority();
+        }
+    }, [project]);
 
     const savePriority = async (object) => {
         setNewTaskPriority(object?.id)
+    }
+
+    const fetchPriority = async () => {
+        try {
+            const data = {
+                'sortBy': 'position',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.priorityAPI.getPageByProject(project?.id, data);
+            if (response?.data) {
+                setPriorities([...response?.data.content]);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
     }
 
     return (
@@ -29,18 +65,19 @@ const CustomNewTaskPriorityPicker = ({ setNewTaskPriority }) => {
                 setSelectedObject={setPriority}
                 saveMethod={savePriority}
                 ItemComponent={CustomPriorityItemPicker}
-                objectsData={prioritys}
+                objectsData={priorities}
                 isNotNull={false}
             />
         </Box>
     );
 }
 
-const CustomPriorityOpenComponent = ({ onClick, priority, isFocusing }) => {
+const CustomPriorityOpenComponent = ({ onClick, priority, setTarget, isFocusing }) => {
     const theme = useTheme();
     const PriorityIcon = TablerIcons["IconFlag"]
     return (
         <Box
+            ref={setTarget}
             onClick={onClick}
             width='100%'
             sx={{

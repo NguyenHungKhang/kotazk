@@ -126,6 +126,14 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserResponseDto getCurrentUser() {
+        User currentUser = SecurityUtil.getCurrentUser();
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", currentUser.getId()));
+        return ModelMapperUtil.mapOne(user, UserResponseDto.class);
+    }
+
+    @Override
     public User verifyIDToken(String idToken) {
 
         NetHttpTransport transport = new NetHttpTransport();

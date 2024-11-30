@@ -9,9 +9,45 @@ import * as apiService from '../../api/index'
 import { setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomMember from "../CustomMember";
 
-const CustomNewTaskAssigneePicker = ({ setNewTaskAssigneePicker }) => {
-    const members = useSelector((state) => state.member.currentProjectMemberList)
+const CustomNewTaskAssigneePicker = ({ currentAssignee, setNewTaskAssigneePicker }) => {
+    const project = useSelector((state) => state.project.currentProject);
+    const [members, setMembers] = useState(null);
     const [assignee, setAssignee] = useState(null);
+
+    useEffect(() => {
+        if (currentAssignee) {
+            console.log(currentAssignee);
+            setAssignee(currentAssignee);
+            setNewTaskAssigneePicker(currentAssignee?.id);
+        } else if (!currentAssignee && members?.length > 0) {
+            setAssignee(null);
+            setNewTaskAssigneePicker(null);
+        }
+    }, [currentAssignee, members]);
+
+    useEffect(() => {
+        if (project) {
+            fetchAssignee();
+        }
+    }, [project]);
+
+    const fetchAssignee = async () => {
+        try {
+            const data = {
+                'sortBy': 'user.lastName',
+                'sortDirectionAsc': true,
+                'filters': [
+
+                ]
+            }
+            const response = await apiService.memberAPI.getPageByProject(project?.id, data);
+            if (response?.data) {
+                setMembers([...response?.data.content]);
+            }
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
 
     const saveAssignee = async (object) => {
         setNewTaskAssigneePicker(object?.id);
@@ -35,10 +71,11 @@ const CustomNewTaskAssigneePicker = ({ setNewTaskAssigneePicker }) => {
     );
 }
 
-const CustomAssigneeOpenComponent = ({ onClick, assignee, isFocusing }) => {
+const CustomAssigneeOpenComponent = ({ onClick, assignee, setTarget, isFocusing }) => {
     const theme = useTheme();
     return (
         <Box
+            ref={setTarget}
             onClick={onClick}
             width='100%'
             sx={{

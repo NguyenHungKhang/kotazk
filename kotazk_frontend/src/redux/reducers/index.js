@@ -16,10 +16,12 @@ import ProjectReportReducer from "./projectReport.reducer";
 import SortReducer from "./sort.reducer";
 import TaskCommentReducer from "./taskComment.reducer";
 import SearchTextReducer from "./searchText.reducer";
+import UserReducer from "./user.reducer";
 import { combineReducers } from 'redux'
 
 
 const allReducers = {
+    user: UserReducer,
     workspace: WorkspaceReducer,
     project: ProjectReducer,
     task: TaskReducer,

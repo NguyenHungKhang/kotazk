@@ -10,36 +10,37 @@ import { useDispatch } from 'react-redux';
 import * as apiService from '../../api/index'
 import { setCurrentWorkspaceList } from '../../redux/actions/workspace.action';
 
-const workspaces =
-{
-    content: [
-        { name: 'Autodesk Inc.', owner: 'International Tax', icon: '📁', members: 3 },
-        { name: 'Adobe Inc.', owner: 'Audit Engagement', icon: '📂', members: 5 },
-        { name: 'HP Inc.', owner: 'Risk Assurance Engagement', icon: '📁', members: 8 },
-        // Add more workspaces as needed
-    ]
-};
+// const workspaces =
+// {
+//     content: [
+//         { name: 'Autodesk Inc.', owner: 'International Tax', icon: '📁', members: 3 },
+//         { name: 'Adobe Inc.', owner: 'Audit Engagement', icon: '📂', members: 5 },
+//         { name: 'HP Inc.', owner: 'Risk Assurance Engagement', icon: '📁', members: 8 },
+//         // Add more workspaces as needed
+//     ]
+// };
 
 const WorkspaceList = () => {
     const theme = useTheme();
-    // const workspaces = useSelector((state) => state.workspace.currentWorkspaceList);
-    // const dispatch = useDispatch();
+    const workspaces = useSelector((state) => state.workspace.currentWorkspaceList);
+    const currentUser = useSelector((state) => state.user.currentUser);
+    const dispatch = useDispatch();
 
-    // useEffect(() => {
-    //     initialFetch();
-    // }, [dispatch])
+    useEffect(() => {
+        initialFetch();
+    }, [dispatch])
 
 
-    // const initialFetch = async () => {
-    //     const data = {
-    //         "filters": [
+    const initialFetch = async () => {
+        const data = {
+            "filters": [
 
-    //         ],
-    //     }
-    //     const response = await apiService.workspaceAPI.getPageSumary(data)
-    //     if(response?.data)
-    //         dispatch(setCurrentWorkspaceList(response?.data))
-    // }
+            ],
+        }
+        const response = await apiService.workspaceAPI.getPageSumary(data)
+        if(response?.data)
+            dispatch(setCurrentWorkspaceList(response?.data))
+    }
 
     return workspaces != null && (
         <div>
@@ -97,7 +98,7 @@ const WorkspaceList = () => {
                 </Box>
 
                 {/* Recently Viewed Section */}
-                <Typography variant="h6" style={{ margin: '16px 0' }}>
+                {/* <Typography variant="h6" style={{ margin: '16px 0' }}>
                     Recently Viewed
                 </Typography>
                 <Grid container spacing={2}>
@@ -113,11 +114,11 @@ const WorkspaceList = () => {
                             </Card>
                         </Grid>
                     ))}
-                </Grid>
+                </Grid> */}
 
                 {/* Favourites Section */}
                 <Typography variant="h6" style={{ margin: '16px 0' }}>
-                    Favourites
+                    My Workspaces
                 </Typography>
                 <Grid container spacing={2}>
                     {workspaces?.content?.slice(0, 3).map((ws, index) => (
@@ -137,7 +138,7 @@ const WorkspaceList = () => {
 
                 {/* My Workspaces Section */}
                 <Typography variant="h6" style={{ margin: '16px 0' }}>
-                    My Workspaces
+                    Accessable Workspaces
                 </Typography>
                 <Box display="flex" justifyContent="space-between" marginBottom={2}>
                     <Box>

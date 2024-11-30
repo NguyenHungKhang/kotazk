@@ -14,6 +14,6 @@ public interface IUserService {
     Boolean logout();
     User verifyIDToken(String idToken);
     String processOAuthPostLogin(String idToken);
-
     UserResponseDto getOneByEmail(String email);
+    UserResponseDto getCurrentUser();
 }

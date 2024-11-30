@@ -1,4 +1,4 @@
-package com.taskmanagement.kotazk.payload.response.status;
+package com.taskmanagement.kotazk.payload.response.tasktype;
 
 import com.taskmanagement.kotazk.payload.response.customization.CustomizationResponseDto;
 import lombok.AllArgsConstructor;
@@ -6,16 +6,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.sql.Timestamp;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-public class StatusSummaryResponseDto {
+public class TaskTypeSummaryResponseDto {
     Long id;
     String name;
     String description;
     CustomizationResponseDto customization;
-
 }

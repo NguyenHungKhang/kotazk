@@ -11,12 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProjectSummaryResponseDto {
     Long id;
-//    WorkSpaceSummaryResponseDto workSpace;
-//    MemberResponseDto member;
     String name;
     Boolean isPinned;
     Long position;
-//    String description;
-//    ProjectStatus status;
-//    Visibility visibility;
 }

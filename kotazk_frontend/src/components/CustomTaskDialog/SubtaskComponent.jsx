@@ -30,7 +30,7 @@ const SubtaskComponent = ({ subtasks, parentTask, projectId }) => {
     return (
         <>
             {
-                subtasks.length > 0 && (
+                subtasks?.length > 0 && (
                     <Box
                         mb={2}
                         bgcolor={getSecondBackgroundColor(theme)}
@@ -106,6 +106,8 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
     const DashedOutlinedCheckCircleIcon = TablerIcons["IconCircleDashedCheck"];
     const FilledCheckCircleIcon = TablerIcons["IconCircleCheckFilled"];
 
+
+
     const handleSave = async () => {
         if (name == null || name.trim() == "") {
             setIsNewSubtask(false)
@@ -139,7 +141,6 @@ const AddSubtaskItem = ({ setIsNewSubtask, parentTask, projectId }) => {
             }
         }
     }
-
 
     return (
         <Card
@@ -187,13 +188,15 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
     const OpenIcon = TablerIcons["IconArrowsMaximize"];
     const MoreIcon = TablerIcons["IconDots"]
 
-    const handleAccessChildTask = () => {
-        const taskDialogData = {
-            task: subtask,
-            parentTask: parentTask,
-            open: true
-        };
-        dispatch(setTaskDialog(taskDialogData));
+    const handleAccessChildrenTask = async () => {
+        const response = await apiService.taskAPI.getOne(subtask?.id)
+        if (response?.data) {
+            const data = {
+                task: response?.data,
+                open: true
+            }
+            dispatch(setTaskDialog(data));
+        }
     }
 
     const handleSaveName = async () => {
@@ -205,7 +208,13 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
             if (response?.data) {
                 const updatedParentTask = {
                     ...parentTask,
-                    childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
+                    childTasks: parentTask.childTasks.map(task => task.id === subtask.id ?
+                        {
+                            ...task,
+                            name: response?.data?.name,
+                        }
+                        : task
+                    )
                 }
 
                 if (isGroupedList)
@@ -233,7 +242,13 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
                 if (response?.data) {
                     const updatedParentTask = {
                         ...parentTask,
-                        childTasks: parentTask.childTasks.map(task => task.id === subtask.id ? response?.data : task)
+                        childTasks: parentTask.childTasks.map(task => task.id === subtask.id ?
+                            {
+                                ...task,
+                                isCompleted: response?.data?.isCompleted,
+                            }
+                            : task
+                        )
                     }
 
                     if (isGroupedList)
@@ -268,7 +283,7 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
                     {subtask?.isCompleted ? <FilledCheckCircleIcon size={18} color={theme.palette.success.main} /> : <DashedOutlinedCheckCircleIcon size={18} />}
                 </IconButton>
                 <IconButton
-                    onClick={() => handleAccessChildTask()}
+                    onClick={() => handleAccessChildrenTask()}
                     size="small"
                 >
                     <OpenIcon size={18} />

@@ -16,5 +16,6 @@ import * as ProjectReportActions from './projectReport.action'
 import * as SortActions from './sort.action'
 import * as TaskCommentActions from './taskComment.action'
 import * as SearchTextActions from './searchText.action'
+import * as UserActions from './user.action'
 
-export { WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions, MemberRoleActions, SortActions, TaskCommentActions, SearchTextActions }
+export { UserActions, WorkspaceActions, ProjectActions, TaskActions, StatusActions, TaskTypeActions, DialogActions, PriorityActions, LabelActions, MemberActions, SnackbarActions, FilterActions, GrouoByActions, SectionActions, MemberRoleActions, SortActions, TaskCommentActions, SearchTextActions }

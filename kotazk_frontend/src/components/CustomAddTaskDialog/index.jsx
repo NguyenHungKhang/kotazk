@@ -145,9 +145,9 @@ export default function CustomAddTaskDialog() {
                 <Stack direction='row' spacing={2} p={2} bgcolor={getSecondBackgroundColor(theme)} alignItems={'center'} borderRadius={2}>
                     <CustomNewTaskStatusPicker currentStatus={props?.groupBy == "status" ? props.groupByEntity : null} setStatusForNewTask={setStatus} />
                     <CustomNewTaskTaskTypePicker currentTaskType={props?.groupBy == "taskType" ? props.groupByEntity : null} setNewTaskTaskTypePicker={setTaskType} />
-                    <CustomNewTaskPriorityPicker setNewTaskPriority={setPriority} />
+                    <CustomNewTaskPriorityPicker currentPriority={props?.groupBy == "priority" ? props.groupByEntity : null} setNewTaskPriority={setPriority} />
                     <CustomNewTaskDueDateTimePicker setNewTaskStartAt={setStartAt} setNewTaskEndAt={setEndAt} />
-                    <CustomNewTaskAssigneePicker setNewTaskAssigneePicker={setAssignee} />
+                    <CustomNewTaskAssigneePicker currentAssignee={props?.groupBy == "assignee" ? props.groupByEntity : null} setNewTaskAssigneePicker={setAssignee} />
                 </Stack>
             </DialogContent>
             <DialogActions

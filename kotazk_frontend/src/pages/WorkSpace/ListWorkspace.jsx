@@ -17,6 +17,7 @@ const ListProject = () => {
     const theme = useTheme();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const projectList = useSelector((state) => state.project.currentProjectList);
+    const pinnedProject =projectList?.content?.filter(p => p.isPinned == true);
     const [searchText, setSearchText] = useState("");
     const SearchIcon = TablerIcons["IconSearch"];
     const ExpandIcon = TablerIcons["IconCaretDownFilled"];
@@ -105,9 +106,9 @@ const ListProject = () => {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                        {projectList?.content?.filter(p => p.isPinned == true)?.length > 0 ?
+                        {pinnedProject?.length > 0 ?
                             <Grid container spacing={4}>
-                                {projectList?.content?.filter(p => p.isPinned == true).map((project) => (
+                                {pinnedProject?.map((project) => (
                                     <Grid item xs={12} sm={6} md={4} lg={3} xl={12 / 5} key={project.id}>
                                         <CustomProjectCard project={project} theme={theme} />
                                     </Grid>

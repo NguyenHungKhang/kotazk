@@ -26,4 +26,10 @@ public class UserController {
     public UserResponseDto getOne(@Param("email") String email) {
         return userService.getOneByEmail(email);
     }
+
+    @GetMapping("/current")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto getCurrentOne() {
+        return userService.getCurrentUser();
+    }
 }
