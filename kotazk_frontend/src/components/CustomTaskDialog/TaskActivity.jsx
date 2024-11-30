@@ -1,13 +1,34 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Link, Stack, Typography, useTheme } from "@mui/material";
 import dayjs from "dayjs";
 import { getCustomTwoModeColor, getSecondBackgroundColor } from "../../utils/themeUtil";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as TablerIcons from '@tabler/icons-react'
+import * as apiService from '../../api/index'
 
-const TaskActivity = ({ activityLogs }) => {
+const TaskActivity = ({ taskId }) => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const ExpandIcon = TablerIcons["IconChevronDown"]
+  const [activityLogs, setActivityLogs] = useState([]);
+  useEffect(() => {
+    if (taskId)
+      fetchActivityLogs();
+  }, [taskId])
+
+  const fetchActivityLogs = async () => {
+    const data = {
+      "filters": [
+        {
+          "key": "task.id",
+          "operation": "EQUAL",
+          "value": taskId
+        }
+      ]
+    }
+    const response = await apiService.activityLogAPI.getAll(data)
+    if (response?.data)
+      setActivityLogs(response?.data)
+  }
 
   const handleChange = () => {
     setExpanded(!expanded);

@@ -13,12 +13,8 @@ import lombok.NoArgsConstructor;
 public class AttachmentResponseDto {
     Long id;
     Long taskId;
-    Long taskCommentId;
     String fileName;
     String fileType;
     String fileSize;
     String fileUrl;
-    Long position;
-    Boolean isHidden;
-    AttachmentType type;
 }

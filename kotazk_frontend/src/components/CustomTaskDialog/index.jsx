@@ -125,12 +125,15 @@ const CustomTaskDialog = () => {
         }
     }
 
-    const handleAccessParentTask = () => {
-        const data = {
-            task: parentTask,
-            open: true
+    const handleAccessParentTask = async (taskId) => {
+        const response = await apiService.taskAPI.getOne(taskId)
+        if(response?.data) {
+            const data = {
+                task: response?.data,
+                open: true
+            }
+            dispatch(setTaskDialog(data));
         }
-        dispatch(setTaskDialog(data));
     }
 
 
@@ -235,14 +238,14 @@ const CustomTaskDialog = () => {
 
                     <Breadcrumbs separator="›">
                         {
-                            task?.parentTaskId && parentTask && (
+                            task?.parentTask && (
                                 <Link
                                     component="button"
                                     underline="hover"
                                     fontWeight={650}
-                                    onClick={() => handleAccessParentTask()}
+                                    onClick={() => handleAccessParentTask(task?.parentTask?.id)}
                                 >
-                                    {parentTask?.name}
+                                    {task?.parentTask?.name}
                                 </Link>
                             )
                         }
@@ -487,7 +490,7 @@ const CustomTaskDialog = () => {
                     <Typography variant='h6' fontWeight={650}>
                         Task Activities
                     </Typography>
-                    <TaskActivity activityLogs={task?.activityLogs} />
+                    <TaskActivity taskId={task?.id} />
                 </Box>
 
 

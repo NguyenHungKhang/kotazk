@@ -13,4 +13,5 @@ public class TaskSummaryResponseDto {
     Long id;
     String name;
     Boolean isCompleted;
+    Long position;
 }

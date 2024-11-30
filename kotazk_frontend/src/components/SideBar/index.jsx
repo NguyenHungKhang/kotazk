@@ -15,6 +15,7 @@ const SideBar = ({ open, setOpen }) => {
     const [projects, setProjects] = useState([])
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const projectList = useSelector((state) => state.project.currentProjectList);
+    const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -147,11 +148,11 @@ const SideBar = ({ open, setOpen }) => {
                                 )}
                             </ListItem>
                         ))}
-                        {projectList?.content?.filter(p => p.isPinned == true).length > 0 &&
+                        {pinnedProject?.length > 0 &&
                             <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Pinned</strong></Divider>
                         }
 
-                        {projectList?.content?.filter(p => p.isPinned == true).map((project, index) => (
+                        {pinnedProject?.map((project, index) => (
                             <ListItem
                                 key={index}
                                 sx={{
