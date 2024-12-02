@@ -5,7 +5,13 @@ import Chip from '@mui/material/Chip';
 import HomeIcon from '@mui/icons-material/Home';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box } from '@mui/material';
+import { Link } from 'react-router-dom';
 
+const dummyData = [
+    { label: 'Home', href: '#' },
+    { label: 'Catalog', href: '#' },
+    { label: 'Accessories' },
+];
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
     const backgroundColor =
         theme.palette.mode === 'light'
@@ -31,7 +37,7 @@ function handleClick(event) {
     console.info('You clicked a breadcrumb.');
 }
 
-export default function CustomBreadcrumb() {
+export default function CustomBreadcrumb({data}) {
     return (
         <Box
             mt={2}
@@ -42,10 +48,10 @@ export default function CustomBreadcrumb() {
                 '&::before': {
                     content: '""',
                     position: 'absolute',
-                    top: -12, // Điều chỉnh vị trí của đường cong
+                    top: -5, // Điều chỉnh vị trí của đường cong
                     left: 10,
                     width: 18,
-                    height: 28, // Chiều cao của đường cong
+                    height: 21, // Chiều cao của đường cong
                     background: 'transparent', // Màu sắc của đường cong
                     // Tạo đường cong hình elip
                     border: "2px solid grey",
@@ -58,18 +64,18 @@ export default function CustomBreadcrumb() {
         >
             <div role="presentation" onClick={handleClick}>
                 <Breadcrumbs aria-label="breadcrumb">
-                    <StyledBreadcrumb
-                        component="a"
-                        href="#"
-                        label="Home"
-                        icon={<HomeIcon fontSize="small" />}
-                    />
-                    <StyledBreadcrumb component="a" href="#" label="Catalog" />
-                    <StyledBreadcrumb
-                        label="Accessories"
-                        deleteIcon={<ExpandMoreIcon />}
-                        onDelete={handleClick}
-                    />
+                    {data?.map((item, index) => (
+                        <StyledBreadcrumb
+                            key={index}
+                            component={Link}
+                            to={item.href || '#'}
+                            label={item.label}
+                            sx={{
+                                cursor: item.href && 'pointer'
+                            }}
+                            // onClick={item.href ? handleClick : undefined}
+                        />
+                    ))}
                 </Breadcrumbs>
             </div>
         </Box>

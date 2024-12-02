@@ -1,6 +1,5 @@
 package com.taskmanagement.kotazk.security;
 
-import com.taskmanagement.kotazk.exception.JwtException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;

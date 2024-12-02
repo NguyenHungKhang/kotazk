@@ -25,11 +25,18 @@ public class TaskType {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "customization_id")
+    private Customization customization;
+
+
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
+
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    @Builder.Default
+    private Boolean systemRequired = false;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -40,12 +47,9 @@ public class TaskType {
     @Column(name = "position", nullable = false)
     private Long position;
 
-    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Task> tasks;
-
-    @OneToMany(mappedBy = "taskType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "taskType", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.LAZY)
     @OrderBy("position")
-    private List<Field> fields;
+    private List<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

@@ -25,9 +25,9 @@ public class Status {
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Không gian chứa dự án
+    private Project project;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
@@ -59,7 +59,7 @@ public class Status {
     @OrderBy("position")
     private List<Task> tasks;
 
-    @OneToMany(mappedBy = "fromStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "fromStatus", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.LAZY)
     private Set<Transition> transitionFromStatuses;
 
     @OneToMany(mappedBy = "toStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -26,16 +27,18 @@ public class Section {
     private String name;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id")
-    private WorkSpace workSpace;
-
-    @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
+
+    @OneToOne(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    private SortSetting sortSetting;
+
+    @OneToOne(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
+    private GroupBySetting groupBySetting;
 
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
@@ -57,10 +60,10 @@ public class Section {
     private Set<Setting> settings;
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<GroupBySetting> groupBySettings;
+    private List<ProjectReport> projectReports;
 
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<FilterSetting> filterSettings;
+    private List<FilterSetting> filterSettings;
 
     @CreationTimestamp
     @Column(name = "created_at")

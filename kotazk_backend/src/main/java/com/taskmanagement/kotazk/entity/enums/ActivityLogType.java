@@ -6,5 +6,6 @@ public enum ActivityLogType {
     WORKSPACE_HISTORY,
     GOAL_HISTORY,
     SPRINT_HISTORY,
-    USER_HISTORY
+    USER_HISTORY,
+    SECTION_HISTORY
 }

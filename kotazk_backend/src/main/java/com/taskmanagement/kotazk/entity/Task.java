@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -27,6 +28,10 @@ public class Task {
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_task_id")
+    private Task parentTask;
 
     @ManyToOne
     @JoinColumn(name = "creator_id", nullable = false)
@@ -78,7 +83,7 @@ public class Task {
     private Priority priority;
 
     @Column(name = "time_estimate")
-    private Long timeEstimate; // count as minute;
+    private Float timeEstimate; // count as minute;
 
     @Column(name = "time_tracking")
     private Long timeTracking; // count as minute;
@@ -96,13 +101,19 @@ public class Task {
     private Set<TaskRecord> taskRecords;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Attachment> attachments;
+    @OrderBy("position")
+    private List<Attachment> attachments;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Folder> folders;
 
+    @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position")
+    private List<Task> childTasks;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ActivityLog> activityLogs;
+    @OrderBy("createdAt")
+    private List<ActivityLog> activityLogs;
 
     @CreationTimestamp
     @Column(name = "created_at")

@@ -14,7 +14,7 @@ import java.util.List;
 @Data
 @Builder
 public class FieldRequestDto {
-    Long taskTypeId;
+    Long projectId;
     String name;
     String description;
     String defaultValue;

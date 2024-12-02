@@ -4,16 +4,13 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
-import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDto;
-import com.taskmanagement.kotazk.repository.ICustomizationRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.IStatusRepository;
-import com.taskmanagement.kotazk.repository.ITaskRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IStatusService;
@@ -33,7 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_STEP;
 
 @Service
 @Transactional
@@ -43,6 +44,8 @@ public class StatusService implements IStatusService {
     private IStatusRepository statusRepository;
     @Autowired
     private IProjectRepository projectRepository;
+    @Autowired
+    private IFilterSettingRepository filterSettingRepository;
     @Autowired
     private ITaskRepository taskRepository;
     @Autowired
@@ -58,10 +61,22 @@ public class StatusService implements IStatusService {
 
     @Override
     public List<Status> initialStatus() {
+        Customization todoCustomization = new Customization();
+        todoCustomization.setIcon("IconCircleDot");
+        todoCustomization.setBackgroundColor("#FFA344");
+
+        Customization inProcessCustomization = new Customization();
+        inProcessCustomization.setIcon("IconCircleDotFilled");
+        inProcessCustomization.setBackgroundColor("#0d9af2");
+
+        Customization doneCustomization = new Customization();
+        doneCustomization.setIcon("IconCircleCheckFilled");
+        doneCustomization.setBackgroundColor("#47ebcd");
+
         return List.of(
-                createDefaultInitialStatus("To do", 0L, false, true, true),
-                createDefaultInitialStatus("In process", 1L, false, false, true),
-                createDefaultInitialStatus("Done", 2L, true, false, true)
+                createDefaultInitialStatus("To do", DEFAULT_POSITION_STEP, false, true, true, todoCustomization),
+                createDefaultInitialStatus("In process", 2L * DEFAULT_POSITION_STEP, false, false, true, inProcessCustomization),
+                createDefaultInitialStatus("Done", 3L * DEFAULT_POSITION_STEP, true, false, true, doneCustomization)
         );
     }
 
@@ -75,7 +90,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 project.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -99,6 +114,8 @@ public class StatusService implements IStatusService {
                 .name(statusRequestDto.getName())
                 .description(statusRequestDto.getDescription())
                 .position(RepositionUtil.calculateNewLastPosition(project.getStatuses().size()))
+                .systemRequired(false)
+                .systemInitial(false)
                 .build();
 
         Status savedStatus = statusRepository.save(newStatus);
@@ -111,6 +128,8 @@ public class StatusService implements IStatusService {
 
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
+        Project project = projectRepository.findById(currentStatus.getProject().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", currentStatus.getProject().getId()));
         if (currentStatus.getDeletedAt() != null) throw new ResourceNotFoundException("Status", "id", id);
 
         Project currentProject = currentStatus.getProject();
@@ -119,22 +138,153 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
+
+        Optional.ofNullable(status.getCustomization()).ifPresent(statusCustomization -> {
+            Customization customization = Optional.ofNullable(currentStatus.getCustomization())
+                    .orElseGet(() -> {
+                        Customization newCustomization = new Customization();
+                        currentStatus.setCustomization(newCustomization);
+                        return newCustomization;
+                    });
+
+            Optional.ofNullable(statusCustomization.getBackgroundColor())
+                    .ifPresent(customization::setBackgroundColor);
+            Optional.ofNullable(statusCustomization.getIcon())
+                    .ifPresent(customization::setIcon);
+        });
 
         Optional.ofNullable(status.getName()).ifPresent(currentStatus::setName);
         Optional.ofNullable(status.getDescription()).ifPresent(currentStatus::setDescription);
         Optional.ofNullable(status.getIsFromAny()).ifPresent(currentStatus::setIsFromAny);
         Optional.ofNullable(status.getIsFromStart()).ifPresent(currentStatus::setIsFromStart);
         Optional.ofNullable(status.getIsCompletedStatus()).ifPresent(currentStatus::setIsCompletedStatus);
+        Optional.ofNullable(status.getRePositionReq())
+                .ifPresent(rePositionReq -> {
+                    Long newPosition = calculateNewPositionForStatus(rePositionReq, project, currentStatus);
+                    currentStatus.setPosition(newPosition);
+                });
 
         Status savedStatus = statusRepository.save(currentStatus);
         return ModelMapperUtil.mapOne(savedStatus, StatusResponseDto.class);
     }
 
     @Override
-    public Boolean delete(Long id) {
+    public List<StatusResponseDto> saveList(List<StatusRequestDto> statusRequestDtos, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+
+        Member currentProjectMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
+                true
+        );
+
+        AtomicInteger positionIndex = new AtomicInteger();
+        AtomicReference<Boolean> isCompletedStatusFlag = new AtomicReference<>(false);
+        AtomicReference<Boolean> isFromStartStatusFlag = new AtomicReference<>(false);
+
+        Set<Long> incomingStatusIds = new HashSet<>();
+
+        List<Status> statuses = statusRequestDtos.stream()
+                .map(s -> {
+                    Status status = new Status();
+                    Optional.ofNullable(s.getId()).ifPresent(id -> {
+                        status.setId(id);
+                        incomingStatusIds.add(id);
+                    });
+                    if(!(s.getId() == null)) {
+                        Status existStatus = statusRepository.findById(s.getId())
+                                .orElseThrow(() -> new CustomException("Invalid input"));
+                        status.setSystemRequired(existStatus.getSystemRequired());
+                        status.setSystemInitial(existStatus.getSystemInitial());
+                    }
+
+                    if (s.getProjectId() != projectId)
+                        throw new CustomException("Invalid input!");
+
+                    status.setProject(project);
+                    status.setName(s.getName());
+                    status.setDescription(s.getDescription());
+                    status.setIsCompletedStatus(s.getIsCompletedStatus());
+                    status.setIsFromAny(s.getIsFromAny());
+                    status.setIsFromStart(s.getIsFromStart());
+                    status.setPosition(RepositionUtil.calculateNewLastPosition(positionIndex.getAndIncrement()));
+
+                    Customization customization = new Customization();
+                    customization.setBackgroundColor(s.getCustomization().getBackgroundColor());
+                    customization.setIcon(s.getCustomization().getIcon());
+                    status.setCustomization(customization);
+
+                    if (s.getIsCompletedStatus() == true) isCompletedStatusFlag.set(true);
+                    if (s.getIsFromStart() == true) {
+                        isFromStartStatusFlag.set(true);
+                    }
+                    return status;
+                }).toList();
+
+        if (!isCompletedStatusFlag.get() || !isFromStartStatusFlag.get()) {
+            throw new CustomException("Need at least 1 completed status and 1 starter status!");
+        }
+
+        List<Status> deletedStatuses = project.getStatuses().stream()
+                .filter(st -> {
+                    if (!incomingStatusIds.contains(st.getId()) && st.getSystemRequired()) {
+                        throw new CustomException("Cannot delete system status");
+                    }
+                    return !incomingStatusIds.contains(st.getId());
+                })
+                .collect(Collectors.toList());
+
+        List<Task> tasksToDelete = deletedStatuses.stream()
+                .flatMap(st -> st.getTasks().stream())
+                .collect(Collectors.toList());
+
+        List<String> idStatusToDelete = deletedStatuses.stream().map(s -> s.getId().toString()).toList();
+
+        statuses.stream()
+                .filter(status -> Boolean.TRUE.equals(status.getIsFromStart()))
+                .findFirst()
+                .ifPresent(status -> {
+                    deletedStatuses.forEach(deletedStatus -> deletedStatus.setTasks(new ArrayList<>()));
+                    tasksToDelete.forEach(task -> task.setStatus(status));
+                    status.setTasks(tasksToDelete);
+                });
+
+        project.getSections().forEach(section -> {
+            section.getFilterSettings().forEach(filter -> {
+                if (filter.getField().equals(FilterField.STATUS)) {
+                    List<String> updatedValues = filter.getValues().stream()
+                            .filter(value -> !idStatusToDelete.contains(value))
+                            .collect(Collectors.toList());
+                    FilterSetting updatedFilter = FilterSetting.builder()
+                            .section(section)
+                            .field(filter.getField())
+                            .values(updatedValues)
+                            .operator(filter.getOperator())
+                            .build();
+
+                    section.getFilterSettings().remove(filter);
+                    section.getFilterSettings().add(updatedFilter);
+                }
+            });
+        });
+
+
+        project.getStatuses().clear();
+        project.getStatuses().addAll(statuses);
+        List<Status> savedStatuses = projectRepository.save(project).getStatuses();
+
+        return ModelMapperUtil.mapList(savedStatuses, StatusResponseDto.class);
+    }
+
+    @Override
+    public List<Map<String, Long>> delete(Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
         Status currentStatus = statusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Status", "id", id));
@@ -144,39 +294,35 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
-        Status tranferStatus = null;
-
-        if (currentStatus.getIsCompletedStatus())
-            tranferStatus = currentProject.getStatuses().stream()
-                    .filter(status -> status.getIsCompletedStatus() && !status.equals(currentStatus))
-                    .min(Comparator.comparingLong(Status::getPosition))
-                    .orElse(null);
-        else
-            tranferStatus = currentProject.getStatuses().stream()
-                    .filter(status -> status.getIsFromStart() && !status.equals(currentStatus))
-                    .min(Comparator.comparingLong(Status::getPosition))
-                    .orElse(null);
-
-        if (tranferStatus == null) throw new CustomException("Cannot delete this status");
+        Status transferStatus = currentProject.getStatuses().stream()
+                .filter(status -> (currentStatus.getIsCompletedStatus() && status.getIsCompletedStatus())
+                        || (!currentStatus.getIsCompletedStatus() && status.getIsFromStart()))
+                .filter(status -> !status.equals(currentStatus))
+                .min(Comparator.comparingLong(Status::getPosition))
+                .orElseThrow(() -> new CustomException("Cannot delete this status"));
 
         List<Task> tasksToTransfer = currentStatus.getTasks();
-        tasksToTransfer.sort(Comparator.comparingLong(Task::getPosition));
+        List<Map<String, Long>> taskTransferResults = new ArrayList<>();
 
-        int position = 1;
-        for (Task task : tasksToTransfer) {
-            task.setStatus(tranferStatus);
-            task.setPosition((long) position);
-            position++;
+        if (tasksToTransfer != null && !tasksToTransfer.isEmpty()) {
+            tasksToTransfer.forEach(task -> {
+                task.setStatus(transferStatus);
+                Map<String, Long> taskTransferInfo = new HashMap<>();
+                taskTransferInfo.put("taskId", task.getId());
+                taskTransferInfo.put("newStatusId", transferStatus.getId());
+                taskTransferResults.add(taskTransferInfo);
+            });
+            taskRepository.saveAllAndFlush(tasksToTransfer);
         }
-        taskRepository.saveAll(tasksToTransfer);
 
-        statusRepository.deleteById(currentStatus.getId());
-        return true;
+        statusRepository.deleteAllInBatch(Collections.singleton(currentStatus));
+        return taskTransferResults;
     }
+
 
     @Override
     public Boolean softDelete(Long id) {
@@ -189,7 +335,7 @@ public class StatusService implements IStatusService {
                 currentUser.getId(),
                 currentProject.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.MANAGE_WORKFLOW),
+                Collections.singletonList(ProjectPermission.MANAGE_STATUS),
                 true
         );
 
@@ -433,16 +579,129 @@ public class StatusService implements IStatusService {
 
     // Utilities Function
 
-    private Status createDefaultInitialStatus(String name, Long position, boolean isCompletedStatus, boolean isFromStart, boolean isFromAny) {
+    private Status createDefaultInitialStatus(String name, Long position, boolean isCompletedStatus, boolean isFromStart, boolean isFromAny, Customization customization) {
         return Status.builder()
                 .name(name)
                 .description("")
                 .position(position)
                 .systemInitial(true)
-                .systemRequired(false)
+                .systemRequired(true)
                 .isCompletedStatus(isCompletedStatus)
                 .isFromStart(isFromStart)
                 .isFromAny(isFromAny)
+                .customization(customization)
                 .build();
+    }
+
+    public Long calculateNewPositionForStatus(RePositionRequestDto rePositionReq, Project project, Status currentStatus) {
+        if (rePositionReq.getPreviousItemId() != null) {
+            Long newPositionBaseOnPrevious = handlePreviousTaskPosition(rePositionReq.getPreviousItemId(), currentStatus, project);
+            if (newPositionBaseOnPrevious != null)
+                return newPositionBaseOnPrevious;
+        } else if (rePositionReq.getNextItemId() != null) {
+            Long newPositionBaseOnNext = handleNextTaskPosition(rePositionReq.getNextItemId(), currentStatus, project);
+            if (newPositionBaseOnNext != null)
+                return newPositionBaseOnNext;
+        }
+
+        throw new CustomException("Both previous and next positions cannot be null.");
+    }
+
+    private Long handlePreviousTaskPosition(Long previousStatusId, Status currentStatus, Project project) {
+        Optional<Status> previousStatusOpt = project.getStatuses().stream()
+                .filter(status -> status.getId().equals(previousStatusId))
+                .findFirst();
+
+        if (previousStatusOpt.isEmpty()) {
+            return null;
+        }
+
+        long previousStatusPosition = previousStatusOpt.get().getPosition();
+
+        Long nextStatusPosition = project.getStatuses().stream()
+                .map(Status::getPosition)
+                .filter(position -> position > previousStatusPosition)
+                .min(Long::compare)
+                .orElse(roundDownToSignificant(previousStatusPosition + DEFAULT_POSITION_STEP));
+
+        if (nextStatusPosition - previousStatusPosition <= 1) {
+            repositionAllStatuses(project); // This will reorder tasks
+
+            long updatedPreviousStatusPosition = project.getStatuses().stream()
+                    .filter(status -> status.getId().equals(previousStatusId))
+                    .map(Status::getPosition)
+                    .findFirst()
+                    .orElse(0L);
+
+            nextStatusPosition = project.getTasks().stream()
+                    .map(Task::getPosition)
+                    .filter(position -> position > updatedPreviousStatusPosition)
+                    .min(Long::compare)
+                    .orElse(roundDownToSignificant(updatedPreviousStatusPosition + DEFAULT_POSITION_STEP));
+
+            return (updatedPreviousStatusPosition + nextStatusPosition) / 2;
+        }
+
+        return (previousStatusPosition + nextStatusPosition) / 2;
+    }
+
+    // Function to round down to the nearest "significant" value, like 1,000,000 or 10,000
+    private long roundDownToSignificant(long value) {
+        if (value <= 0) return 0;
+        int magnitude = (int) Math.log10(value);  // Get the number of digits - 1
+        long factor = (long) Math.pow(10, magnitude); // Calculate the power of 10 based on magnitude
+        return (value / factor) * factor; // Round down by removing less significant digits
+    }
+
+    private Long handleNextTaskPosition(Long nextStatusId, Status currentStatus, Project project) {
+        Optional<Status> nextStatusOpt = project.getStatuses().stream()
+                .filter(status -> status.getId().equals(nextStatusId))
+                .findFirst();
+
+        if (nextStatusOpt.isEmpty()) {
+            return null;
+        }
+
+        final Long nextStatusPosition = nextStatusOpt.get().getPosition();
+
+        long previousStatusPosition = project.getStatuses().stream()
+                .map(Status::getPosition)
+                .filter(position -> position < nextStatusPosition)
+                .max(Long::compare)
+                .orElse(0L);
+
+        if (nextStatusPosition - previousStatusPosition <= 1) {
+            repositionAllStatuses(project); // This will reorder tasks
+
+            // After repositioning, refetch the previous and next task positions
+            final Long updatedNextStatusPosition = project.getStatuses().stream()
+                    .filter(status -> status.getId().equals(nextStatusId)) // Fetch the new position of the previous task by ID
+                    .map(Status::getPosition)
+                    .findFirst()
+                    .orElse(0L); // Default to 0 if no previous task found
+
+            previousStatusPosition = project.getStatuses().stream()
+                    .map(Status::getPosition)
+                    .filter(position -> position < updatedNextStatusPosition)
+                    .max(Long::compare)
+                    .orElse(roundDownToSignificant(updatedNextStatusPosition + DEFAULT_POSITION_STEP));
+
+            return (updatedNextStatusPosition + previousStatusPosition) / 2;
+        }
+
+        return (previousStatusPosition + nextStatusPosition) / 2;
+    }
+
+    private void repositionAllStatuses(Project project) {
+        List<Status> orderedStatuses = project.getStatuses().stream()
+                .sorted(Comparator.comparing(Status::getPosition))
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < orderedStatuses.size(); i++) {
+            Status statusToReposition = orderedStatuses.get(i);
+            statusToReposition.setPosition(RepositionUtil.calculateNewLastPosition(i));
+        }
+
+        statusRepository.saveAll(orderedStatuses);
     }
 }

@@ -16,4 +16,5 @@ public class PriorityResponseDto {
     Long projectId;
     CustomizationResponseDto customization;
     String name;
+    Long position;
 }

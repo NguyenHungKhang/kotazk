@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class UserResponseDto {
+    Long id;
     String firstName;
     String lastName;
     String bio;

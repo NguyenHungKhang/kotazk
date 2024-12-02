@@ -22,9 +22,6 @@ public class ActivityLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
-
     @ManyToOne
     @JoinColumn(name = "work_space_id")
     private WorkSpace workSpace;
@@ -38,6 +35,10 @@ public class ActivityLog {
     private Task task;
 
     @ManyToOne
+    @JoinColumn(name = "section_id")
+    private Section section;
+
+    @ManyToOne
     @JoinColumn(name = "member_id")
     private Member member;
 
@@ -45,35 +46,22 @@ public class ActivityLog {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Goal
-
-    // Sprint
-
     @Column(name = "system_initial", nullable = false)
     private Boolean systemInitial;
 
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
+    @Column(name = "user_text")
+    private String userText;
+
     @Column(name = "content")
     private String content;
 
-    @Column(name = "first_parameter", nullable = false)
-    private String firstParameter;
-
-    @Column(name = "secondParameter", nullable = false)
-    private String secondParameter;
-
-    @Column(name = "first_url", nullable = false)
-    private String firstUrl;
-
-    @Column(name = "second_url", nullable = false)
-    private String secondUrl;
-
-    @Column(name = "first_entity", nullable = false)
+    @Column(name = "first_entity")
     private String firstEntity;
 
-    @Column(name = "second_entity", nullable = false)
+    @Column(name = "second_entity")
     private String secondEntity;
 
     @Enumerated(EnumType.STRING)

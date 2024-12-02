@@ -15,7 +15,7 @@ import java.util.List;
 @Builder
 public class FieldResponseDto {
     Long id;
-    Long taskTypeId;
+    Long projectId;
     Boolean systemInitial;
     Boolean systemRequired;
     String name;

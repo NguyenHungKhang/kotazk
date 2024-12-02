@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Card, CardContent, InputAdornment, Link, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LockIcon from '@mui/icons-material/Lock';
+<<<<<<< HEAD
 import EmailIcon from '@mui/icons-material/Email';
+=======
+import PersonIcon from '@mui/icons-material/Person';
+>>>>>>> origin/develop
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -36,6 +41,45 @@ const Register = () => {
     const login = () => {
         navigate('/login');
     }
+=======
+// import * as apiService from '../../api/index';
+
+const Register = () => {
+    const [email, setEmail] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
+
+    const theme = useTheme();
+    const navigate = useNavigate();
+
+    const handleClickShowPassword = () => setShowPassword(!showPassword);
+    const handleClickShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+    const handleSubmit = async (event) => {
+        // event.preventDefault();
+
+        // Check if password and confirm password match
+        if (password !== confirmPassword) {
+            setPasswordError(true);
+            return;
+        }
+
+        // setPasswordError(false); // Clear any previous error
+
+        // const data = { email, firstName, lastName, password };
+        // try {
+        //     await apiService.authAPI.register(data);
+        //     navigate('/workspace/');
+        // } catch (error) {
+        //     console.warn("Registration failed", error);
+        // }
+    };
+>>>>>>> origin/develop
 
     return (
         <Box
@@ -61,6 +105,7 @@ const Register = () => {
                         Register
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+<<<<<<< HEAD
 
                         {/* Username Input */}
                         <Box fullWidth margin="normal" sx={{ mt: 4 }}>
@@ -96,6 +141,8 @@ const Register = () => {
                             />
                         </Box>
 
+=======
+>>>>>>> origin/develop
                         {/* Email Input */}
                         <Box fullWidth margin="normal" sx={{ mt: 4 }}>
                             <Typography variant="body1" gutterBottom>
@@ -104,18 +151,26 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="email"
+<<<<<<< HEAD
                                 name="email"
+=======
+>>>>>>> origin/develop
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Type your email"
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
+<<<<<<< HEAD
                                             <EmailIcon />
+=======
+                                            <AccountCircleIcon />
+>>>>>>> origin/develop
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
+<<<<<<< HEAD
                                 sx={{
                                     '& .MuiInput-underline:before': {
                                         borderBottom: `1px solid ${theme.palette.text.primary}`,
@@ -127,6 +182,52 @@ const Register = () => {
                                         borderBottom: `2px solid ${theme.palette.text.primary}`,
                                     },
                                 }}
+=======
+                            />
+                        </Box>
+
+                        {/* First Name Input */}
+                        <Box fullWidth margin="normal" sx={{ mt: 4 }}>
+                            <Typography variant="body1" gutterBottom>
+                                First Name
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                id="firstName"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                placeholder="Type your first name"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PersonIcon />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                variant="standard"
+                            />
+                        </Box>
+
+                        {/* Last Name Input */}
+                        <Box fullWidth margin="normal" sx={{ mt: 4 }}>
+                            <Typography variant="body1" gutterBottom>
+                                Last Name
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                id="lastName"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                placeholder="Type your last name"
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <PersonIcon />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                variant="standard"
+>>>>>>> origin/develop
                             />
                         </Box>
 
@@ -138,7 +239,10 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="password"
+<<<<<<< HEAD
                                 name="password"
+=======
+>>>>>>> origin/develop
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -151,17 +255,22 @@ const Register = () => {
                                     ),
                                     endAdornment: (
                                         <InputAdornment position="end">
+<<<<<<< HEAD
                                             <IconButton
                                                 aria-label="toggle password visibility"
                                                 onClick={handleClickShowPassword}
                                                 edge="end"
                                             >
+=======
+                                            <IconButton onClick={handleClickShowPassword}>
+>>>>>>> origin/develop
                                                 {showPassword ? <VisibilityOff /> : <Visibility />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
+<<<<<<< HEAD
                                 sx={{
                                     '& .MuiInput-underline:before': {
                                         borderBottom: `1px solid ${theme.palette.text.primary}`,
@@ -173,6 +282,8 @@ const Register = () => {
                                         borderBottom: `2px solid ${theme.palette.text.primary}`,
                                     },
                                 }}
+=======
+>>>>>>> origin/develop
                             />
                         </Box>
 
@@ -184,8 +295,12 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="confirmPassword"
+<<<<<<< HEAD
                                 name="confirmPassword"
                                 type={showPassword ? 'text' : 'password'}
+=======
+                                type={showConfirmPassword ? 'text' : 'password'}
+>>>>>>> origin/develop
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm your password"
@@ -197,17 +312,23 @@ const Register = () => {
                                     ),
                                     endAdornment: (
                                         <InputAdornment position="end">
+<<<<<<< HEAD
                                             <IconButton
                                                 aria-label="toggle password visibility"
                                                 onClick={handleClickShowPassword}
                                                 edge="end"
                                             >
                                                 {showPassword ? <VisibilityOff /> : <Visibility />}
+=======
+                                            <IconButton onClick={handleClickShowConfirmPassword}>
+                                                {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+>>>>>>> origin/develop
                                             </IconButton>
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
+<<<<<<< HEAD
                                 sx={{
                                     '& .MuiInput-underline:before': {
                                         borderBottom: `1px solid ${theme.palette.text.primary}`,
@@ -223,6 +344,16 @@ const Register = () => {
                         </Box>
 
                         {/* Register Button */}
+=======
+                            />
+                            {passwordError && (
+                                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                                    Password and Confirm Password do not match
+                                </Typography>
+                            )}
+                        </Box>
+
+>>>>>>> origin/develop
                         <Button
                             type="submit"
                             fullWidth
@@ -240,7 +371,19 @@ const Register = () => {
                         </Button>
 
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
+<<<<<<< HEAD
                             Already have an account? <Link component="button" onClick={login} variant="body2" color={theme.palette.primary.main}>Login</Link>
+=======
+                            Already have an account?{' '}
+                            <Link
+                                component="button"
+                                variant="body2"
+                                color={theme.palette.primary.main}
+                                onClick={() => navigate('/login')}
+                            >
+                                Login
+                            </Link>
+>>>>>>> origin/develop
                         </Typography>
                     </Box>
                 </CardContent>

@@ -20,8 +20,9 @@ public interface IMemberRoleService {
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberRoleResponseDto getOne(Long id);
-    RePositionResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId);
+    MemberRoleResponseDto rePositionByProject(RePositionRequestDto rePositionRequestDto, Long projectId);
     RePositionResponseDto rePositionByWorkspace(RePositionRequestDto rePositionRequestDto, Long workspaceId);
-    PageResponse<MemberRoleResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId);
+    PageResponse<MemberRoleResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<MemberRoleResponseDto> getPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId);
     List<MemberRole> initialMemberRole(Boolean forWorkSpace);
 }

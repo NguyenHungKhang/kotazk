@@ -10,7 +10,9 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
@@ -40,6 +42,8 @@ public class ProjectService implements IProjectService {
     @Autowired
     private IMemberService memberService = new MemberService();
     @Autowired
+    private ISectionService sectionService = new SectionService();
+    @Autowired
     private IMemberRoleService memberRoleService = new MemberRoleService();
     @Autowired
     private IStatusService statusService = new StatusService();
@@ -68,17 +72,6 @@ public class ProjectService implements IProjectService {
                 true
         );
 
-
-        Customization customization = null;
-        if (workSpace.getCustomization() != null) {
-            customization = Customization.builder()
-                    .avatar(workSpace.getCustomization().getAvatar())
-                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-                    .fontColor(workSpace.getCustomization().getFontColor())
-                    .icon(workSpace.getCustomization().getIcon())
-                    .build();
-        }
-
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(false);
         Optional<MemberRole> memberRole = memberRoles.stream()
                 .filter(item -> Objects.equals(item.getName(), "Admin"))
@@ -100,22 +93,24 @@ public class ProjectService implements IProjectService {
 
         List<Priority> priorities = priorityService.initialPriority();
 
+        List<Section> sections = sectionService.initialSection();
+
         Project newProject = Project.builder()
                 .name(projectDto.getName())
                 .description(projectDto.getDescription())
-                .status(projectDto.getStatus())
+                .status(ProjectStatus.ACTIVE)
                 .visibility(projectDto.getVisibility())
-                .isPinned(projectDto.getIsPinned())
+                .isPinned(false)
                 .key(generateUniqueKey())
-                .position((long) workSpace.getProjects().size())
+                .position(RepositionUtil.calculateNewLastPosition(workSpace.getProjects().size()))
                 .member(currentMember)
                 .workSpace(workSpace)
-                .customization(customization)
-                .memberRoles(new HashSet<>(memberRoles))
+                .memberRoles(memberRoles)
                 .members(Collections.singletonList(member))
                 .statuses(statuses)
                 .taskTypes(taskTypes)
                 .priorities(priorities)
+                .sections(sections)
                 .build();
 
         memberRoles.forEach(role -> role.setProject(newProject));
@@ -123,6 +118,7 @@ public class ProjectService implements IProjectService {
         statuses.forEach(status -> status.setProject(newProject));
         taskTypes.forEach(taskType -> taskType.setProject(newProject));
         priorities.forEach(priority -> priority.setProject(newProject));
+        sections.forEach(section -> section.setProject(newProject));
 
         Project savedProject = projectRepository.save(newProject);
 
@@ -399,6 +395,23 @@ public class ProjectService implements IProjectService {
     }
 
     @Override
+    public ProjectDetailsResponseDto getDetailsOne(Long id) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+        WorkSpace workSpace = project.getWorkSpace();
+
+
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
+        return ModelMapperUtil.mapOne(project, ProjectDetailsResponseDto.class);
+    }
+
+    @Override
     public PageResponse<ProjectResponseDto> getPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
@@ -411,7 +424,7 @@ public class ProjectService implements IProjectService {
                 currentUser.getId(),
                 workSpace.getId(),
                 Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST),
+                Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
                 false
         );
 
@@ -420,7 +433,7 @@ public class ProjectService implements IProjectService {
             Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
 
             if (currentWorkSpaceMember != null &&
-                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.VIEW_PRIVATE_PROJECT_LIST)) {
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.BROWSE_PRIVATE_PROJECT)) {
                 privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
             } else {
                 Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);
@@ -464,6 +477,71 @@ public class ProjectService implements IProjectService {
         );
     }
 
+    @Override
+    public PageResponse<ProjectSummaryResponseDto> getSummaryPageByWorkSpace(SearchParamRequestDto searchParam, Long workSpaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work space", "id", workSpaceId));
+
+        Member currentWorkSpaceMember = memberService.checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.BROWSE_PRIVATE_PROJECT),
+                false
+        );
+
+        Specification<Project> permissionSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Predicate publicProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PUBLIC);
+            Predicate privateProjectsPredicate = criteriaBuilder.disjunction();
+
+            if (currentWorkSpaceMember != null &&
+                    currentWorkSpaceMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.BROWSE_PRIVATE_PROJECT)) {
+                privateProjectsPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+            } else {
+                Join<Project, Member> projectMemberJoin = root.join("members", JoinType.LEFT);
+                Predicate privateMemberPredicate = criteriaBuilder.equal(root.get("visibility"), Visibility.PRIVATE);
+                Predicate userMemberPredicate = criteriaBuilder.equal(projectMemberJoin.get("user").get("id"), userId);
+                Predicate statusPredicate = criteriaBuilder.equal(projectMemberJoin.get("status"), MemberStatus.ACTIVE);
+                privateProjectsPredicate = criteriaBuilder.and(privateMemberPredicate, userMemberPredicate, statusPredicate);
+            }
+
+            return criteriaBuilder.or(publicProjectsPredicate, privateProjectsPredicate);
+        };
+
+        Specification<Project> workSpaceSpecification = (Root<Project> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Project, WorkSpace> workSpaceJoin = root.join("workSpace");
+            return criteriaBuilder.equal(workSpaceJoin.get("id"), workSpace.getId());
+        };
+
+        Specification<Project> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
+
+        Specification<Project> specification = Specification.where(workSpaceSpecification)
+                .and(permissionSpecification)
+                .and(filterSpecification);
+
+        Page<Project> page = projectRepository.findAll(specification, pageable);
+        List<ProjectSummaryResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), ProjectSummaryResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
 
     // Utilities function
     private String generateUniqueKey() {

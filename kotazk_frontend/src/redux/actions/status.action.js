@@ -1,0 +1,1 @@
+export const setCurrentStatusList = (listStatus) => ({type: 'SET_CURRENT_STATUS_LIST', payload: listStatus});

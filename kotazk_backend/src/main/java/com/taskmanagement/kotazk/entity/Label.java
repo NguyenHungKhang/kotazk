@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Entity
 @Table(name = "label")
@@ -20,25 +21,24 @@ public class Label {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id", nullable = false)
-    private WorkSpace workSpace;
-
-    @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    private Boolean systemRequired = false;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @ManyToMany(mappedBy = "labels")
+    private Set<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

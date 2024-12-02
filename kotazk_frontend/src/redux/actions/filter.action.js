@@ -1,0 +1,2 @@
+export const setCurrentFilterList = (filter) => ({type: 'SET_CURRENT_FILTER_LIST', payload: filter});
+export const initialCurrentFilterList = (filter) => ({type: 'INITIAL_CURRENT_FILTER_LIST', payload: filter});

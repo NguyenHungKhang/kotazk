@@ -1,108 +1,223 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { Box, Button, Stack, useTheme } from "@mui/material";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartLine } from "@fortawesome/free-solid-svg-icons";
-import { IconLayoutDashboardFilled } from "@tabler/icons-react";
-import { IconSettingsFilled } from "@tabler/icons-react";
-import { IconLetterK } from "@tabler/icons-react";
-import { IconVectorBezier2 } from "@tabler/icons-react";
-import { IconTablePlus } from "@tabler/icons-react";
+import { Box, Button, Stack, alpha, useTheme, Typography, Avatar, List, ListItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
+import { IconLayoutDashboardFilled, IconSettingsFilled, IconUsers, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
+import { useSelector } from "react-redux";
+import CustomProjectColorIconPicker from "../CustomProjectColorIconPicker";
+import * as apiService from "../../api/index"
+import { Link, useParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setCurrentProjectList } from "../../redux/actions/project.action";
 
-const SideBar = () => {
+const SideBar = ({ open, setOpen }) => {
     const theme = useTheme();
-    const [open, setOpen] = useState(true);
+    const { projectId } = useParams();
+    const [projects, setProjects] = useState([])
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const projectList = useSelector((state) => state.project.currentProjectList);
+    const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (workspace != null)
+            initialFetch();
+    }, [workspace]);
+
+
+    const initialFetch = async () => {
+        const data = {
+            "sortBy": "name",
+            "sortDirectionAsc": true,
+            "filters": [
+            ]
+        }
+        await apiService.projectAPI.getPageByWorkspace(workspace.id, data)
+            .then(res => { dispatch(setCurrentProjectList(res.data)); })
+            .catch(err => console.warn(err))
+    }
+
+
     const Menus = [
-        { title: "Dashboard", src: <IconLayoutDashboardFilled /> },
-        { title: "Setting", src: <IconSettingsFilled /> },
-        { title: "Project Name", src: <IconVectorBezier2 />, gap: true },
-        // { title: "Schedule ", src: "Calendar" },
-        // { title: "Search", src: "Search" },
-        // { title: "Analytics", src: "Chart" },
-        // { title: "Files ", src: "Folder", gap: true },
-        // { title: "Setting", src: "Setting" },
+        { title: "Dashboard", icon: <IconLayoutDashboardFilled size={20} /> },
+        { title: "Setting", icon: <IconSettingsFilled size={20} /> },
     ];
 
     return (
-        <Stack
-            direction='column'
-            alignItems='center'
+        <Box
+            bgcolor={theme.palette.background.paper}
             sx={{
-                backgroundColor: theme.palette.grey[900],
-            }}
-        >
-            <div
-                className={` ${open ? "w-72" : "w-20 "
-                    } p-5  pt-8 relative duration-300`}
-                style={{
-                    flexGrow: 1
-                }}
-            >
-                <ArrowBackIosNewIcon
-                    sx={{
-                        background: "white",
-                        border: "2px solid",
-                        height: 30,
-                        width: 30
-                    }}
-                    className={`absolute cursor-pointer -right-3 top-9 w-7
-          border-2 rounded-full  ${!open && "rotate-180"}`}
-                    onClick={() => setOpen(!open)} />
-                <div className="flex gap-x-4 items-center"
-
+                borderRadius: 2,
+                width: open ? 240 : 70,
+                transition: 'width 0.3s',
+            }}>
+            <Box bgcolor={alpha("#f5f5fc", 0.07)} height="100%" p={2} borderRadius={4}>
+                <Stack
+                    direction='column'
+                    alignItems='center'
+                    spacing={2}
                 >
-                    <img
-                        src="https://i.pinimg.com/474x/55/26/85/5526851366d0b5c204c2b63cf1305578.jpg"
-                        width="35"
-                        height="35"
-                        className={`cursor-pointer duration-500 rounded-full ${open && "rotate-[360deg]"
-                            }`}
-                    />
-
-                    <h1
-                        className={`text-white origin-left font-medium text-xl duration-200 ${!open && "scale-0"
-                            }`}
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            mb: 2,
+                            position: 'relative',
+                        }}
                     >
-                        Kotazk
-                    </h1>
-                </div>
-                <ul className="pt-6">
-                    {Menus.map((Menu, index) => (
-                        <li
-                            key={index}
-                            className={`flex  rounded-md p-2 cursor-pointer hover:bg-light-white text-gray-300 text-sm items-center gap-x-4 
-              ${Menu.gap ? "mt-9" : "mt-2"} ${index === 0 && "bg-light-white"
-                                } `}
-                        >
-                            {Menu.src}
-                            <span className={`${!open && "hidden"} origin-left duration-200`}>
-                                {Menu.title}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <Box
-                width='100%'
-                p={2}
-            >
-                <Button
-                    sx={{
-                        color: "white",
-                        border: '1px dashed white',
-                        borderRadius: 2,
-                        p: 3,
-                        textTransform: "none",
-                    }}
-                    fullWidth
-                    startIcon={<IconTablePlus />}
-                >
-                    {open ? 'Add Project' : null}
-                </Button>
+                        <Stack direction='row' spacing={2} alignItems='center'>
+                            <Avatar
+                                src="https://i.pinimg.com/474x/55/26/85/5526851366d0b5c204c2b63cf1305578.jpg"
+                                sx={{
+                                    width: 35,
+                                    height: 35,
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.5s',
+                                    transform: open ? 'rotate(360deg)' : 'none',
+                                }}
+                            />
+                            {open && (
+                                <Typography variant="h6" sx={{ ml: 2 }}>
+                                    Kotazk
+                                </Typography>
+                            )}
+                        </Stack>
+                        <ArrowBackIosNewIcon
+                            sx={{
+                                position: open ? 'block' : 'absolute',
+                                top: 8,
+                                right: -16,
+                                transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
+                                background: theme.palette.background.default,
+                                color: theme.palette.text.primary,
+                                border: "2px solid",
+                                borderColor: theme.palette.text.secondary,
+                                borderRadius: 2,
+                                cursor: 'pointer',
+                                transition: 'transform 0.3s',
+                            }}
+                            fontSize="small"
+                            onClick={() => setOpen(!open)}
+                        />
+                    </Box>
+                    <Divider flexItem />
+                    <Stack direction='row' spacing={2} alignItems='center'>
+                        <Avatar
+                            // src="https://i.pinimg.com/474x/55/26/85/5526851366d0b5c204c2b63cf1305578.jpg"
+                            sx={{
+                                width: 30,
+                                height: 30,
+                            }}
+                        > H</Avatar>
+                        {open && (
+                            <Box>
+                                <Typography variant="body1" sx={{ ml: 2 }} fontWeight={650}>
+                                    Nguyen Hung Khang
+                                </Typography>
+                                <Typography variant="body2" sx={{ ml: 2 }} color={theme.palette.text.secondary}>
+                                    {workspace?.name}
+                                </Typography>
+                            </Box>
+                        )}
+                    </Stack>
+                    <Divider flexItem />
+                    <List sx={{ width: '100%' }}>
+                        {Menus.map((Menu, index) => (
+                            <ListItem
+                                key={index}
+                                sx={{
+                                    py: 0.5,
+                                    mt: Menu.gap ? 4 : 1,
+                                    borderRadius: 1,
+                                    bgcolor: index === 0 ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                                    '&:hover': {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                                    }
+                                }}
+                                button
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                    {Menu.icon}
+                                </ListItemIcon>
+                                {open && (
+                                    <ListItemText
+                                        primary={Menu.title}
+                                        sx={{ ml: 2 }}
+                                    />
+                                )}
+                            </ListItem>
+                        ))}
+                        {pinnedProject?.length > 0 &&
+                            <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Pinned</strong></Divider>
+                        }
+
+                        {pinnedProject?.map((project, index) => (
+                            <ListItem
+                                key={index}
+                                sx={{
+                                    py: 0.5,
+                                    mt: 1,
+                                    borderRadius: 1,
+                                    bgcolor: projectId == project.id ? theme.palette.primary.main : 'transparent',
+                                    '&:hover': {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                    }
+                                }}
+                                component={Link}
+                                to={`/project/${project.id}`}
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                    <CustomProjectColorIconPicker />
+                                </ListItemIcon>
+                                {open && (
+                                    <ListItemText
+                                        primary={
+                                            <Typography noWrap color={projectId == project.id ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                                {project.name}
+                                            </Typography>
+                                        }
+                                        sx={{ ml: 2 }}
+                                    />
+                                )}
+                            </ListItem>
+                        ))}
+                        <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Project</strong></Divider>
+                        {projectList?.content?.map((project, index) => (
+                            <ListItem
+                                key={index}
+                                sx={{
+                                    py: 0.5,
+                                    mt: 1,
+                                    borderRadius: 1,
+                                    bgcolor: projectId == project.id ? theme.palette.primary.main : 'transparent',
+                                    '&:hover': {
+                                        bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                    }
+                                }}
+                                component={Link}
+                                to={`/project/${project.id}`}
+                            >
+                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                    <CustomProjectColorIconPicker />
+                                </ListItemIcon>
+                                {open && (
+                                    <ListItemText
+                                        primary={
+                                            <Typography noWrap color={projectId == project.id ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                                {project.name}
+                                            </Typography>
+                                        }
+                                        sx={{ ml: 2 }}
+                                    />
+                                )}
+                            </ListItem>
+                        ))}
+                    </List>
+                </Stack>
             </Box>
-
-
-        </Stack>
+        </Box>
     );
 };
+
 export default SideBar;

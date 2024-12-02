@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "priority")
@@ -24,12 +25,12 @@ public class Priority {
     private Project project;
 
     @Column(name = "system_initial", nullable = false)
-    private Boolean systemInitial;
+    private Boolean systemInitial = false;
 
     @Column(name = "system_required", nullable = false)
-    private Boolean systemRequired;
+    private Boolean systemRequired = false;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "customization_id")
     private Customization customization;
 
@@ -38,6 +39,10 @@ public class Priority {
 
     @Column(name = "position", nullable = false)
     private Long position;
+
+    @OneToMany(mappedBy = "priority", fetch = FetchType.LAZY)
+    @OrderBy("position")
+    private List<Task> tasks;
 
     @CreationTimestamp
     @Column(name = "created_at")

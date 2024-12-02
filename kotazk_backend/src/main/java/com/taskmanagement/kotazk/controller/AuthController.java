@@ -28,11 +28,13 @@ import org.springframework.web.servlet.LocaleResolver;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/test/auth")
+@RequestMapping("/api/v1/public/auth")
 public class AuthController {
     @Autowired
     IUserService userService = new UserService();
@@ -46,7 +48,6 @@ public class AuthController {
     // signup
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequestDto signupRequest) throws IOException, InterruptedException {
-        System.out.println(1);
         return new ResponseEntity<UserLoginResponseDto>(userService.signup(signupRequest), HttpStatus.OK);
     }
 
@@ -55,16 +56,23 @@ public class AuthController {
     public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequestDto login, HttpServletResponse response) {
         UserLoginResponseDto userLoginResponse = userService.login(login);
 
+        // Create cookies for accessToken and refreshToken
         ResponseCookie accessTokenCookie = ResponseCookie.from("AUTH-TOKEN", userLoginResponse.getAccess_token())
-                .httpOnly(true).maxAge(3600).path("/").secure(false).build();
+                .httpOnly(false).maxAge(3600).path("/").secure(false).build();
         ResponseCookie refreshTokenCookie = ResponseCookie.from("REFRESH-TOKEN", userLoginResponse.getRefresh_token())
-                .httpOnly(true).maxAge(14 * 24 * 3600).path("/").secure(false).build();
+                .httpOnly(false).maxAge(14 * 24 * 3600).path("/").secure(false).build();
 
+        // Add cookies to the response headers
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-        return ResponseEntity.ok().build();
-    }
 
+        // Include tokens in the JSON response body
+        Map<String, String> responseBody = new HashMap<>();
+        responseBody.put("accessToken", userLoginResponse.getAccess_token());
+        responseBody.put("refreshToken", userLoginResponse.getRefresh_token());
+
+        return ResponseEntity.ok(responseBody);
+    }
     // normal logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@AuthenticationPrincipal UserDetails userDetails, HttpServletResponse response) {

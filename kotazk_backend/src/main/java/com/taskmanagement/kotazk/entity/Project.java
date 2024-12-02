@@ -31,13 +31,10 @@ public class Project {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "customization_id")
-    private Customization customization;
-
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Builder.Default
     @Column(name = "is_pinned", nullable = false)
     private Boolean isPinned = false;
 
@@ -49,7 +46,8 @@ public class Project {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private ProjectStatus status;
+    @Builder.Default
+    private ProjectStatus status = ProjectStatus.ACTIVE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false)
@@ -60,7 +58,7 @@ public class Project {
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
-    private Set<MemberRole> memberRoles;
+    private List<MemberRole> memberRoles;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @OrderBy("role.position, name")
@@ -94,8 +92,8 @@ public class Project {
     private List<Priority> priorities;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Label> labels;
-
+    @OrderBy("name")
+    private List<Label> labels;
 
     @CreationTimestamp
     @Column(name = "created_at")

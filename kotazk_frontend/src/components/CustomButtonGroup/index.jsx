@@ -3,11 +3,13 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
-export default function CustomButtonGroup() {
+const CustomButtonGroup = () => {
   return (
-    <ButtonGroup variant="outlined" aria-label="Basic button group">
-      <Button>One</Button>
+    <ButtonGroup size='small' variant="contained" aria-label="Basic button group">
+      <Button size='small' sx={{ textTransform: 'none' }}>Create task</Button>
       <Button size='small'><KeyboardArrowDownIcon /></Button>
     </ButtonGroup>
   );
 }
+
+export default CustomButtonGroup;

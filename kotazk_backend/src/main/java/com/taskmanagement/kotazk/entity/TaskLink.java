@@ -29,14 +29,6 @@ public class TaskLink {
     @JoinColumn(name = "second_task_id", nullable = false)
     private Task secondTask;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "first_task_relationship", nullable = false)
-    private TaskLinkRelationship firstTaskRelationship;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "second_task_relationship", nullable = false)
-    private TaskLinkRelationship secondTaskRelationship;
-
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;

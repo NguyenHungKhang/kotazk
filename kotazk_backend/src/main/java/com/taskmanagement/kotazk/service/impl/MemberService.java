@@ -6,10 +6,10 @@ import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.member.MemberInviteRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
-import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
 import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
@@ -71,7 +71,7 @@ public class MemberService implements IMemberService {
                         currentUser.getId(),
                         workSpace.getId(),
                         Collections.singletonList(MemberStatus.ACTIVE),
-                        Collections.singletonList(WorkSpacePermission.INVITE_MEMBER),
+                        Collections.singletonList(WorkSpacePermission.MANAGE_MEMBER),
                         true
                 );
             }
@@ -80,15 +80,16 @@ public class MemberService implements IMemberService {
                 project = projectRepository.findById(memberRequestDto.getProjectId())
                         .orElseThrow(() -> new ResourceNotFoundException("Project", "id", memberRequestDto.getProjectId()));
                 if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ||
-                        Objects.equals(memberRole.getWorkSpace().getId(), project.getId()))
+                        !Objects.equals(memberRole.getProject().getId(), project.getId()))
                     throw new CustomException("This member's role is not suitable with this project!");
                 checkProjectMember(
                         currentUser.getId(),
                         project.getId(),
                         Collections.singletonList(MemberStatus.ACTIVE),
-                        Collections.singletonList(ProjectPermission.INVITE_MEMBER),
+                        Collections.singletonList(ProjectPermission.MANAGE_MEMBER),
                         true
                 );
+                workSpace = project.getWorkSpace();
             }
         } else
             throw new CustomException("Invalid Input!");
@@ -106,10 +107,12 @@ public class MemberService implements IMemberService {
         Member newMember = Member.builder()
                 .user(user)
                 .memberFor(memberRequestDto.getMemberFor())
-                .status(MemberStatus.ACTIVE)
+                .status(MemberStatus.INVITED)
                 .role(memberRole)
                 .workSpace(workSpace)
                 .project(project)
+                .systemInitial(false)
+                .systemRequired(false)
                 .build();
 
         Member savedMember = memberRepository.save(newMember);
@@ -118,7 +121,7 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public MemberResponseDto revoke(Long id) {
+    public MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
 
         Member currentMember = memberRepository.findById(id)
@@ -130,7 +133,7 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getProject().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.REVOKE_MEMBER),
+                    Collections.singletonList(ProjectPermission.MANAGE_MEMBER),
                     true
             );
         else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
@@ -138,15 +141,143 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getWorkSpace().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.REVOKE_MEMBER),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_MEMBER),
                     true
             );
 
-        currentMember.setStatus(MemberStatus.BANNED);
+        currentMember.setStatus(memberRequestDto.getStatus());
 
         Member savedMember = memberRepository.save(currentMember);
 
         return ModelMapperUtil.mapOne(savedMember, MemberResponseDto.class);
+    }
+
+    @Override
+    public List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Optional<Project> project = projectRepository.findById(memberInviteRequestDto.getProjectId());
+        Optional<WorkSpace> workspace = workSpaceRepository.findById(memberInviteRequestDto.getWorkspaceId());
+        MemberRole memberRole = memberRoleRepository.findById(memberInviteRequestDto.getMemberRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", memberInviteRequestDto.getMemberRoleId()));
+        List<Member> savedMembers = new ArrayList<>();
+        if (project.isPresent()) {
+            if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) || memberRole.getProject().getId() != project.get().getId())
+                return null;
+
+            memberInviteRequestDto.getItems().stream()
+                    .map(item -> {
+                        Member member;
+                        if (item.getId() != null) {
+                            member = project.get().getMembers().stream()
+                                    .filter(pm -> pm.getId() == item.getId())
+                                    .findFirst()
+                                    .orElseThrow(() -> new CustomException("Invalid input"));
+                            if (member.getId() != project.get().getMember().getId()) {
+                                member.setRole(memberRole);
+                            }
+                        } else {
+                            Optional<User> existUser = userRepository.findByEmail(item.getEmail());
+
+                            member = new Member();
+                            member.setEmail(item.getEmail());
+                            member.setStatus(MemberStatus.INVITED);
+                            member.setUser(existUser.isPresent() ? existUser.get() : null);
+                            member.setMemberFor(EntityBelongsTo.PROJECT);
+                            member.setProject(project.get());
+                            member.setWorkSpace(project.get().getWorkSpace());
+                            member.setRole(memberRole);
+                            member.setSystemInitial(false);
+                            member.setSystemRequired(false);
+
+                            Member memberForWorkspace = new Member();
+                            memberForWorkspace.setEmail(item.getEmail());
+                            memberForWorkspace.setUser(existUser.isPresent() ? existUser.get() : null);
+                            memberForWorkspace.setStatus(MemberStatus.INVITED);
+                            memberForWorkspace.setMemberFor(EntityBelongsTo.WORK_SPACE);
+                            memberForWorkspace.setWorkSpace(project.get().getWorkSpace());
+                            memberForWorkspace.setRole(project.get().getWorkSpace().getMemberRoles().stream()
+                                    .filter(r -> r.getName() == "Editor" && r.getSystemInitial() == true)
+                                    .findFirst()
+                                    .orElseThrow(() -> new CustomException("Invalid input")));
+                            memberForWorkspace.setSystemInitial(false);
+                            memberForWorkspace.setSystemRequired(false);
+                            savedMembers.add(member);
+                        }
+                        savedMembers.add(member);
+                        return null;
+                    });
+        } else if (workspace.isPresent()) {
+            if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) || memberRole.getWorkSpace().getId() != workspace.get().getId())
+                return null;
+            List<Member> members = memberInviteRequestDto.getItems().stream()
+                    .map(item -> {
+                        Member member;
+                        System.out.println(1.5);
+                        if (item.getId() != null) {
+                            member = workspace.get().getMembers().stream()
+                                    .filter(pm -> pm.getId() == item.getId())
+                                    .findFirst()
+                                    .orElseThrow(() -> new CustomException("Invalid input"));
+                            if (member.getUser().getId() != workspace.get().getUser().getId()) {
+                                member.setRole(memberRole);
+                            }
+                            System.out.println(2);
+                        } else {
+                            System.out.println(3);
+                            Optional<User> existUser = userRepository.findByEmail(item.getEmail());
+
+                            member = new Member();
+                            member.setEmail(item.getEmail());
+                            member.setStatus(MemberStatus.INVITED);
+                            member.setUser(existUser.isPresent() ? existUser.get() : null);
+                            member.setMemberFor(EntityBelongsTo.WORK_SPACE);
+                            member.setProject(null);
+                            member.setWorkSpace(workspace.get());
+                            member.setRole(memberRole);
+                            member.setSystemInitial(false);
+                            member.setSystemRequired(false);
+
+                        }
+                        return member;
+                    }).toList();
+
+            savedMembers.addAll(members);
+        }
+
+        memberRepository.saveAll(savedMembers);
+        return null;
+    }
+
+    @Override
+    public MemberResponseDto revoke(Long id) {
+//        User currentUser = SecurityUtil.getCurrentUser();
+//
+//        Member currentMember = memberRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
+//
+//        Member member = null;
+//        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+//            member = checkProjectMember(
+//                    currentUser.getId(),
+//                    currentMember.getProject().getId(),
+//                    Collections.singletonList(MemberStatus.ACTIVE),
+//                    Collections.singletonList(ProjectPermission.REVOKE_MEMBER),
+//                    true
+//            );
+//        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+//            member = checkWorkSpaceMember(
+//                    currentUser.getId(),
+//                    currentMember.getWorkSpace().getId(),
+//                    Collections.singletonList(MemberStatus.ACTIVE),
+//                    Collections.singletonList(WorkSpacePermission.REVOKE_MEMBER),
+//                    true
+//            );
+//
+//        currentMember.setStatus(MemberStatus.BANNED);
+//
+//        Member savedMember = memberRepository.save(currentMember);
+
+        return null;
     }
 
     @Override
@@ -162,7 +293,7 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getProject().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.DELETE_MEMBER),
+                    Collections.singletonList(ProjectPermission.MANAGE_MEMBER),
                     true
             );
         else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
@@ -170,7 +301,7 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getWorkSpace().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.DELETE_MEMBER),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_MEMBER),
                     true
             );
 
@@ -195,7 +326,7 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getProject().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.DELETE_MEMBER),
+                    Collections.singletonList(ProjectPermission.MANAGE_MEMBER),
                     true
             );
         else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
@@ -203,7 +334,7 @@ public class MemberService implements IMemberService {
                     currentUser.getId(),
                     currentMember.getWorkSpace().getId(),
                     Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.DELETE_MEMBER),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_MEMBER),
                     true
             );
 
@@ -222,43 +353,44 @@ public class MemberService implements IMemberService {
 
         Member currentMember = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
-
-        Member member = null;
-        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
-            member = checkProjectMember(
-                    currentUser.getId(),
-                    currentMember.getProject().getId(),
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                    true
-            );
-        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
-            member = checkProjectBrowserPermission(currentUser, currentMember.getProject());
+        Project project = currentMember.getProject();
+        WorkSpace workSpace = currentMember.getWorkSpace();
+        Member member = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
 
         return ModelMapperUtil.mapOne(currentMember, MemberResponseDto.class);
     }
 
     @Override
-    public PageResponse<MemberResponseDto> getListPage(SearchParamRequestDto searchParam, Long workSpaceId, Long projectId) {
+    public MemberResponseDto getCurrentOne(Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        Member member = project.getMembers().stream()
+                .filter(m -> m.getUser().getId() == currentUser.getId())
+                .findFirst()
+                .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), project.getName())));
+
+        return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
+    }
+
+    @Override
+    public PageResponse<MemberResponseDto> getListPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
         boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
 
-        Project project = projectRepository.findById(projectId).orElse(null);
-        WorkSpace workSpace = workSpaceRepository.findById(workSpaceId).orElse(null);
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", workspaceId));
 
-        Member currentMember = null;
-        if (workSpace != null)
-            currentMember = checkWorkSpaceMember(
-                    currentUser.getId(),
-                    workSpaceId,
-                    Collections.singletonList(MemberStatus.ACTIVE),
-                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
-                    true
-            );
-        else if (project != null)
-            currentMember = checkProjectBrowserPermission(currentUser, project);
-        else throw new CustomException("Invalid input!");
+        Member currentMember = checkWorkSpaceMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                true
+        );
 
         Pageable pageable = PageRequest.of(
                 searchParam.getPageNum(),
@@ -266,7 +398,55 @@ public class MemberService implements IMemberService {
                 Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
-        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+        Specification<Member> workspaceSpecification = (Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Member, WorkSpace> projectJoin = root.join("workSpace");
+            return criteriaBuilder.equal(projectJoin.get("id"), workSpace.getId());
+        };
+
+        Specification<Member> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Member> specification = Specification.where(workspaceSpecification)
+                .and(filterSpecification);
+
+        Page<Member> page = memberRepository.findAll(specification, pageable);
+        List<MemberResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberResponseDto.class);
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
+    public PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
+        Member currentMember = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
+
+        Specification<Member> projectSpecification = (Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Member, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), project.getId());
+        };
+
+        Specification<Member> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Member> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
 
         Page<Member> page = memberRepository.findAll(specification, pageable);
         List<MemberResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberResponseDto.class);
@@ -294,9 +474,11 @@ public class MemberService implements IMemberService {
         }
 
         List<FilterCriteriaRequestDto> workspaceFilterList = new ArrayList<>();
-        workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
-        workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>()));
-        workspaceFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.WORK_SPACE), new ArrayList<>()));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false, false));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("workSpace.id", FilterOperator.EQUAL, workspaceId.toString(), new ArrayList<>(), false, false));
+        workspaceFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.WORK_SPACE), new ArrayList<>(), false, false));
+
+        System.out.println(workspaceFilterList);
 
         Member workspaceMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(workspaceFilterList))
                 .orElse(null);
@@ -333,9 +515,9 @@ public class MemberService implements IMemberService {
         }
 
         List<FilterCriteriaRequestDto> projectFilterList = new ArrayList<>();
-        projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>()));
-        projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>()));
-        projectFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.PROJECT), new ArrayList<>()));
+        projectFilterList.add(new FilterCriteriaRequestDto("user.id", FilterOperator.EQUAL, userId.toString(), new ArrayList<>(), false, false));
+        projectFilterList.add(new FilterCriteriaRequestDto("project.id", FilterOperator.EQUAL, projectId.toString(), new ArrayList<>(), false, false));
+        projectFilterList.add(new FilterCriteriaRequestDto("memberFor", FilterOperator.EQUAL, String.valueOf(EntityBelongsTo.PROJECT), new ArrayList<>(), false, false));
 
         Member projectMember = memberRepository.findOne(specificationUtil.getSpecificationFromFilters(projectFilterList))
                 .orElse(null);
@@ -359,39 +541,54 @@ public class MemberService implements IMemberService {
         return projectMember;
     }
 
+    @Override
+    public Member checkProjectAndWorkspaceBrowserPermission(User user, Project project, WorkSpace workspace) {
+
+        if (project != null) {
+            Member currentWorkSpaceMember = checkWorkSpaceMember(
+                    user.getId(),
+                    project.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(
+                            project.getVisibility().equals(Visibility.PRIVATE)
+                                    ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
+                                    : WorkSpacePermission.BROWSE_PUBLIC_PROJECT
+                    ),
+                    false
+            );
+
+            Member currentProjectMember = checkProjectMember(
+                    user.getId(),
+                    project.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
+                    false
+            );
+
+            if (currentProjectMember != null) return currentProjectMember;
+            else if (currentWorkSpaceMember != null) return currentWorkSpaceMember;
+            else throw new CustomException("Invalid input!");
+
+        } else if (workspace != null) {
+            return checkWorkSpaceMember(
+                    user.getId(),
+                    workspace.getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.BROWSE_WORKSPACE),
+                    true
+            );
+        } else throw new CustomException("Invalid input");
+    }
+
     // Utility methods
 
     private Member handleResult(String errorMessage, boolean isThrowException) {
         if (isThrowException) {
             throw new CustomException(errorMessage);
         }
-        System.out.println(errorMessage);
+//        System.out.println(errorMessage);
         return null;
     }
 
-    private Member checkProjectBrowserPermission(User user, Project project) {
-        Member currentWorkSpaceMember = checkWorkSpaceMember(
-                user.getId(),
-                project.getWorkSpace().getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(
-                        project.getVisibility().equals(Visibility.PRIVATE)
-                                ? WorkSpacePermission.BROWSE_PRIVATE_PROJECT
-                                : WorkSpacePermission.BROWSE_PUBLIC_PROJECT
-                ),
-                false
-        );
-
-        Member currentProjectMember = checkProjectMember(
-                user.getId(),
-                project.getId(),
-                Collections.singletonList(MemberStatus.ACTIVE),
-                Collections.singletonList(ProjectPermission.BROWSE_PROJECT),
-                false
-        );
-        return Optional.ofNullable(currentProjectMember)
-                .orElse(Optional.ofNullable(currentWorkSpaceMember)
-                        .orElseThrow(() -> new CustomException("Invalid input!")));
-    }
 
 }

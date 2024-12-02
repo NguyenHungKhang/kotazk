@@ -1,27 +1,69 @@
-import { Stack, Typography, Box, Avatar, Button, IconButton, AvatarGroup, TextField, InputAdornment, Divider } from "@mui/material";
+import { Stack, Typography, Box, Avatar, Button, IconButton, AvatarGroup, TextField, InputAdornment, Divider, Badge, darken } from "@mui/material";
+import * as allIcons from "@tabler/icons-react"
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import MicIcon from '@mui/icons-material/Mic';
 import ChatIcon from '@mui/icons-material/Chat';
-import AddIcon from '@mui/icons-material/Add';
 import { useTheme } from "@mui/material";
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
+import CustomColorIconPicker from "../CustomProjectColorIconPicker";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import * as apiService from "../../api/index"
 
 const CustomHeader = () => {
     const theme = useTheme();
+    const AddIcon = allIcons["IconPlus"];
+    const ShareIcon = allIcons["IconShare"];
+    const SettingIcon = allIcons["IconSettings"];
+    const project = useSelector((state) => state.project.currentProject);
+    const [members, setMembers] = useState([]);
+
+    useEffect(() => {
+        if (project)
+            membersFetch();
+    }, [project]);
+
+    const membersFetch = async () => {
+        const memberFilter = {
+            sortBy: 'user.lastName',
+            sortDirectionAsc: true,
+            filters: [
+                {
+                    key: "status",
+                    operation: "EQUAL",
+                    value: "ACTIVE",
+                    values: []
+                },
+                {
+                    key: "memberFor",
+                    operation: "EQUAL",
+                    value: "PROJECT",
+                    values: []
+                }
+            ],
+        };
+
+        const response = await apiService.memberAPI.getPageByProject(project?.id, memberFilter)
+        if (response?.data)
+            setMembers(response?.data?.content);
+
+    }
 
     return (
         <Box>
             <Stack direction='row' spacing={3} alignItems="center">
                 <Stack flexGrow={1} direction='row' spacing={3} alignItems="center">
                     <Stack direction='row' spacing={2} alignItems='center'>
-                        <AccountTreeIcon />
+                        <CustomColorIconPicker />
                         <Typography
                             variant="h5"
                             fontWeight={650}
                         >
 
-                            Project name
+                            {project ? project.name : "Project name"}
                         </Typography>
                     </Stack>
 
@@ -32,94 +74,72 @@ const CustomHeader = () => {
                             '& .MuiAvatar-root': {
                                 width: 30,
                                 height: 30,
-                                fontSize: 12
+                                fontSize: 14
                             },
                         }}
                     >
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
-                        <Avatar sx={{
-                            width: 30,
-                            height: 30,
-                        }}>
-                            1
-                        </Avatar>
+                        {members?.map((member) => (
+                            <Avatar
+                                sx={{
+                                    width: 30,
+                                    height: 30,
+                                }}
+                                alt={member?.user?.lastName}
+                                src={member?.user?.avatarUrl}
+                            >
+                                {member?.user?.lastName.substring(0, 1)}
+                            </Avatar>
+                        ))}
                     </AvatarGroup>
-                    <IconButton
-                        size="small"
+                    <Button
+                        component={Link}
+                        to={`/project/${project?.id}/member`}
                         sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
+                            textTransform: 'none',
+                            borderRadius: 5
                         }}
+                        variant="contained"
+                        size="small"
+                        startIcon={
+                            <AddIcon size={16} />
+                        }
                     >
-                        <AddIcon />
-                    </IconButton>
+                        Add member
+                    </Button>
                 </Stack>
-
-                <Stack direction="row" spacing={2} alignItems="center">
-
-
+                <Stack direction='row' spacing={2}>
                     <Box>
-                        <TextField
-                            variant="filled"
-                            size="small"
-                            hiddenLabel
-                            placeholder="Search..."
-                            InputProps={{
-                                disableUnderline: true,
-                                sx: {
-                                    borderColor: "12px solid black",
-                                    borderRadius: 50
-                                },
-                                startAdornment:
-                                    <InputAdornment position="start">
-                                        <SearchIcon />
-                                    </InputAdornment>
-                                ,
-                                endAdornment:
-                                    <InputAdornment position="end">
-                                        <IconButton size="small">
-                                            <MicIcon />
-                                        </IconButton>
-                                    </InputAdornment>
-                                ,
+                        <Button
+                            size='small'
+                            variant="outlined"
+                            color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
+                            startIcon={<ShareIcon size={16} />}
+                            sx={{
+                                textTransform: 'none'
                             }}
-                        />
+                        >
+                            Share
+                        </Button>
                     </Box>
+                    <Box>
+                        <Button
+                            component={Link}
+                            to={`/project/${project?.id}/setting`}
+                            size='small'
+                            variant='contained'
+                            color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
+                            startIcon={<SettingIcon size={16} />}
+                            sx={{
+                                textTransform: 'none'
+                            }}
+                        >
+                            Setting
+                        </Button>
+                    </Box>
+                </Stack>
+                <Divider orientation="vertical" variant="middle" flexItem />
+                <Stack direction="row" spacing={2} alignItems="center">
+                    <CustomDarkModeSwitch />
                     <IconButton
                         size="small"
                         sx={{
@@ -133,7 +153,7 @@ const CustomHeader = () => {
                             },
                         }}
                     >
-                        <NotificationsIcon />
+                        <NotificationsIcon fontSize="small" />
                     </IconButton>
 
                     <IconButton
@@ -149,12 +169,12 @@ const CustomHeader = () => {
                             },
                         }}
                     >
-                        <ChatIcon />
+                        <ChatIcon fontSize="small" />
                     </IconButton>
                     <Avatar
                         sx={{
-                            width: 35,
-                            height: 35
+                            width: 30,
+                            height: 30
                         }}
                     >
                         H

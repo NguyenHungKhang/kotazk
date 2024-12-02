@@ -1,6 +1,7 @@
 package com.taskmanagement.kotazk.payload.request.task;
 
 import com.taskmanagement.kotazk.entity.TaskType;
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,12 +24,14 @@ public class TaskRequestDto {
     Long reporterId;
     Long statusId;
     Long priorityId;
-    Long timeEstimate;
+    Float timeEstimate;
     Long timeTracking;
-    Boolean isCompleted = false;
-    Timestamp startAt;
-    Timestamp endAt;
+    Boolean isCompleted;
+    String startAt;
+    String endAt;
     Long taskTypeId;
+    Long parentTaskId;
+    RePositionRequestDto rePositionReq;
     Set<Long> collaboratorIds = new HashSet<>();
-    Set<Long> labelIds = new HashSet<>();
+    Set<Long> labelIds;
 }

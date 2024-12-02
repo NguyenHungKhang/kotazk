@@ -36,8 +36,11 @@ public class Member {
     @Column(name = "system_required", nullable = false)
     private Boolean systemRequired;
 
+    @Column(name = "email")
+    private String email;
+
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Enumerated(EnumType.STRING)

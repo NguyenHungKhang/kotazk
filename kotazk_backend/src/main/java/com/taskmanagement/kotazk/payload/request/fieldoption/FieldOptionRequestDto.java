@@ -13,5 +13,5 @@ public class FieldOptionRequestDto {
     Long fieldId;
     String value;
     String description;
-    String isDefaultValue;
+    Boolean isDefaultValue;
 }

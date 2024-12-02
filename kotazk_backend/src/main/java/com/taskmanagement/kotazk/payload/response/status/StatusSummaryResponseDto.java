@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.payload.response.status;
 
+import com.taskmanagement.kotazk.payload.response.customization.CustomizationResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,9 +14,8 @@ import java.sql.Timestamp;
 @Builder
 public class StatusSummaryResponseDto {
     Long id;
-    Long projectId;
-    Long position;
     String name;
     String description;
+    CustomizationResponseDto customization;
 
 }

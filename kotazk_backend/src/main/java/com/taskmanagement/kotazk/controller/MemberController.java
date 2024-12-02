@@ -1,6 +1,7 @@
 package com.taskmanagement.kotazk.controller;
 
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.member.MemberInviteRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
@@ -18,9 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
+
+import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
 
 @RestController
-@RequestMapping("/member")
+@RequestMapping(DEFAULT_ENDPOINT_SECURE_PART + "/member")
 @RequiredArgsConstructor
 public class MemberController {
     @Autowired
@@ -32,11 +36,11 @@ public class MemberController {
         return memberService.create(memberRequest);
     }
 
-//    @PutMapping("/{id}")
-//    @ResponseStatus(HttpStatus.OK)
-//    public MemberResponseDto update(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
-//        return memberService.update(id, memberRequest);
-//    }
+    @PutMapping("/update-status/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberResponseDto updateStatus(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+        return memberService.updateStatus(memberRequest, id);
+    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
@@ -56,12 +60,36 @@ public class MemberController {
         return memberService.getOne(id);
     }
 
-    @PostMapping("/page")
+    @GetMapping("/current/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public PageResponse<MemberResponseDto> search(
-            @RequestParam(required = false) Long workspaceId,
-            @RequestParam(required = false) Long projectId,
-            @RequestBody SearchParamRequestDto searchParam) {
-        return memberService.getListPage(searchParam, workspaceId, projectId);
+    public MemberResponseDto getCurrentOne(@PathVariable Long projectId) {
+        return memberService.getCurrentOne(projectId);
+    }
+
+
+    @PostMapping("/page/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberResponseDto> getPageByProject(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long projectId
+    ) {
+        return memberService.getListPageByProject(searchParam, projectId);
+    }
+
+    @PostMapping("/invite-list")
+    @ResponseStatus(HttpStatus.OK)
+    public List<MemberResponseDto> inviteListMember(
+            @RequestBody MemberInviteRequestDto memberInviteRequestDto
+    ) {
+        return memberService.inviteList(memberInviteRequestDto);
+    }
+
+    @PostMapping("/page/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberResponseDto> getPageByWorkspace(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long workspaceId
+    ) {
+        return memberService.getListPageByWorkspace(searchParam, workspaceId);
     }
 }
