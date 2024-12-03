@@ -33,6 +33,8 @@ import WorkSpaceMember from "../pages/WorkSpaceMember";
 import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
 import Register from "../pages/Register";
 import OtpVerification from "../pages/OtpVerification";
+import ProfileSetting from "../pages/ProfileSetting";
+import ForgotPassword from "../pages/ForgotPassword";
 
 const pagesData = [
   {
@@ -53,6 +55,16 @@ const pagesData = [
   {
     path: "/OtpVerification",
     element: <OtpVerification />,
+    title: "playground"
+  },
+  {
+    path: "/ProfileSetting",
+    element: <ProfileSetting />,
+    title: "playground"
+  },
+  {
+    path: "/ForgotPassword",
+    element: <ForgotPassword />,
     title: "playground"
   },
   {

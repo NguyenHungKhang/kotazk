@@ -11,26 +11,26 @@ const AuthCheck = () => {
     // List of paths where we don't want to call the API
     const skipPaths = ['/login', '/register', '/OtpVerification'];
 
-    useEffect(() => {
-        if (!skipPaths.includes(location.pathname)) {
-            const checkUserAuth = async () => {
-                try {
-                    const response = await apiService.userAPI.getCurrentOne();
-                    if (response?.status == 401) {
-                        navigate('/login');
-                    } else {
-                        dispatch(setCurrentUser(response.data))
-                    }
-                } catch (error) {
-                    navigate('/login');
-                    console.log(error);
-                }
-            };
+    // useEffect(() => {
+    //     if (!skipPaths.includes(location.pathname)) {
+    //         const checkUserAuth = async () => {
+    //             try {
+    //                 const response = await apiService.userAPI.getCurrentOne();
+    //                 if (response?.status == 401) {
+    //                     navigate('/login');
+    //                 } else {
+    //                     dispatch(setCurrentUser(response.data))
+    //                 }
+    //             } catch (error) {
+    //                 navigate('/login');
+    //                 console.log(error);
+    //             }
+    //         };
 
-            checkUserAuth();
-        }
-    }, [location, navigate]);
-    return null;
+    //         checkUserAuth();
+    //     }
+    // }, [location, navigate]);
+    // return null;
 };
 
 export default AuthCheck;
