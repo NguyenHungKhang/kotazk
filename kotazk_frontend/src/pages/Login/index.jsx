@@ -139,7 +139,12 @@ const Login = () => {
                         </Box>
 
                         <Box display="flex" justifyContent="flex-end" mt={2} mb={3}>
-                            <Link href="#" variant="body2" color={theme.palette.primary.main}>
+                            <Link
+                                component="button"
+                                variant="body2"
+                                color={theme.palette.primary.main}
+                                onClick={() => navigate('/ForgotPassword')} // Navigate to the forgot password page
+                            >
                                 Forgot password?
                             </Link>
                         </Box>
