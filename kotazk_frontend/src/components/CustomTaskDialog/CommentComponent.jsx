@@ -11,6 +11,7 @@ import { setDeleteDialog } from "../../redux/actions/dialog.action";
 import { updateAndAddArray } from "../../utils/arrayUtil";
 import { addAndUpdateTaskCommentList, setCurrentTaskCommentList } from "../../redux/actions/taskComment.action";
 import { useSelector } from "react-redux";
+import { getAvatar } from "../../utils/avatarUtil";
 
 const CommentComponent = ({ task }) => {
     const comments = useSelector((state) => state.taskComment.currentTaskCommentList);
@@ -103,6 +104,8 @@ const CommentComponent = ({ task }) => {
                                     height: 30,
                                     width: 30
                                 }}
+                                alt={currentMember?.user?.lastName}
+                                src={getAvatar(currentMember?.user?.id, currentMember?.user?.avatarUrl)}
                             />
                         </Box>
                         <Box flexGrow={1} bgcolor={theme.palette.background.default}>
@@ -188,6 +191,7 @@ const CommentItem = ({ comment }) => {
                         height: 30,
                         width: 30
                     }}
+                    src={getAvatar(comment?.member?.user?.id, comment?.member?.user?.avatarUrl)}
                 />
             </Box>
             <Stack direction={'row'} spacing={2} alignItems={'center'}>

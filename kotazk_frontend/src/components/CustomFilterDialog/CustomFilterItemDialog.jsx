@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Stack, IconButton, Checkbox } from '@mui/material';
+import { Autocomplete, TextField, CircularProgress, Box, Stack, IconButton, Checkbox, Divider } from '@mui/material';
 import * as apiService from '../../api/index'
 import * as TablerIcons from '@tabler/icons-react'
 import { useSelector } from 'react-redux';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import dayjs from 'dayjs';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -22,7 +26,9 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
         { label: 'Priority', value: 'priority.id' },
         { label: 'Task Type', value: 'taskType.id' },
         { label: 'Assignee', value: 'assignee.id' },
-        { label: 'Completion', value: 'isCompleted' }
+        { label: 'Completion', value: 'isCompleted' },
+        { label: 'Start At', value: 'startAt' },
+        { label: 'End At', value: 'endAt' }
     ];
 
     useEffect(() => {
@@ -33,6 +39,8 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
                 initialOptions = filter.options.map(Number);
             else if (filter.field == "isCompleted")
                 initialOptions = filter.options.map(Boolean);
+            else if (filter.field == "startAt" || filter.field == "endAt")
+                initialOptions = filter.options.map(option => dayjs(option));
 
             setSelectedOptions(initialOptions);
         }
@@ -159,6 +167,17 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
         ));
     }
 
+    const onSaveTimeFieldToFilterList = (newValue) => {
+        setSelectedOptions([newValue]);
+        const newFilter = {
+            "field": selectedField,
+            "options": [newValue]
+        }
+        setFilterDialogs(prev => prev.map((item, i) =>
+            i === index ? newFilter : item
+        ));
+    }
+
     const handleRemove = () => {
         setFilterDialogs(prev => prev.filter((item, i) => i != index));
 
@@ -179,54 +198,74 @@ const CustomFilterItemDialog = ({ filter, index, setFilterDialogs }) => {
                 />
             </Box>
 
-            {/* Second Autocomplete for selecting options based on the chosen field */}
             <Box flexGrow={1}>
-                <Autocomplete
-                    multiple
-                    options={options}
-                    getOptionLabel={(option) => option.label}
-                    disableCloseOnSelect
-                    value={options.filter(option => selectedOptions.includes(option.value))} // Match options with selected ids
-                    onChange={(event, newValue) => { onSaveToFilterList(newValue); }} // Save only ids
-                    loading={loading}
-                    limitTags={1}
-                    ChipProps={{
-                        sx: {
-                            my: "0 !important"
-                        }
-                    }}
-                    size='small'
-                    renderInput={(params) => (
-                        <TextField
-                            {...params}
-                            size='small'
-                            variant="outlined"
-                            InputProps={{
-                                ...params.InputProps,
-                                endAdornment: (
-                                    <>
-                                        {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                        {params.InputProps.endAdornment}
-                                    </>
-                                ),
-                            }}
-                        />
-                    )}
-                    renderOption={(props, option, { selected }) => {
-                        const { key, ...optionProps } = props;
-                        return (
-                            <li key={key} {...optionProps}>
-                                <Checkbox
-                                    icon={icon}
-                                    checkedIcon={checkedIcon}
-                                    style={{ marginRight: 8 }}
-                                    checked={selected}
+                {selectedField != null ? (
+                    <>
+                        {selectedField == "startAt" || selectedField == "endAt" ?
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DateTimePicker
+                                    sx={{
+                                        width: '100%'
+                                    }}
+                                    value={selectedOptions?.[0]}
+                                    onChange={onSaveTimeFieldToFilterList}
+                                    renderInput={(params) => <TextField {...params} />}
+                                    slotProps={{ textField: { size: 'small' } }}
                                 />
-                                {option.label}
-                            </li>
-                        );
-                    }}
-                />
+                            </LocalizationProvider>
+                            :
+                            <Autocomplete
+                                multiple
+                                options={options}
+                                getOptionLabel={(option) => option.label}
+                                disableCloseOnSelect
+                                value={options.filter(option => selectedOptions.includes(option.value))} // Match options with selected ids
+                                onChange={(event, newValue) => { onSaveToFilterList(newValue); }} // Save only ids
+                                loading={loading}
+                                limitTags={1}
+                                ChipProps={{
+                                    sx: {
+                                        my: "0 !important"
+                                    }
+                                }}
+                                size='small'
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        size='small'
+                                        variant="outlined"
+                                        InputProps={{
+                                            ...params.InputProps,
+                                            endAdornment: (
+                                                <>
+                                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                    {params.InputProps.endAdornment}
+                                                </>
+                                            ),
+                                        }}
+                                    />
+                                )}
+                                renderOption={(props, option, { selected }) => {
+                                    const { key, ...optionProps } = props;
+                                    return (
+                                        <li key={key} {...optionProps}>
+                                            <Checkbox
+                                                icon={icon}
+                                                checkedIcon={checkedIcon}
+                                                style={{ marginRight: 8 }}
+                                                checked={selected}
+                                            />
+                                            {option.label}
+                                        </li>
+                                    );
+                                }}
+                            />
+                        }
+
+                    </>
+                ) :
+                    <Divider />
+                }
             </Box>
             <Box>
                 <IconButton

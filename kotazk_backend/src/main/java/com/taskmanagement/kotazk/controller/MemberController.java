@@ -1,11 +1,13 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.CustomResponse;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberInviteRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.member.MemberDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
@@ -82,6 +84,18 @@ public class MemberController {
             @RequestBody MemberInviteRequestDto memberInviteRequestDto
     ) {
         return memberService.inviteList(memberInviteRequestDto);
+    }
+
+    @GetMapping("/own-invitation")
+    @ResponseStatus(HttpStatus.OK)
+    public List<MemberDetailResponseDto> ownInvitation() {
+        return memberService.getOwnInvitation();
+    }
+
+    @PutMapping("/accept-invite/{memberId}")
+    @ResponseStatus(HttpStatus.OK)
+    public CustomResponse acceptInvite(@PathVariable Long memberId) {
+        return memberService.acceptInvite(memberId);
     }
 
     @PostMapping("/page/by-workspace/{workspaceId}")

@@ -1,4 +1,5 @@
 import { Avatar, Box, Typography, useTheme } from "@mui/material";
+import { getAvatar } from "../../utils/avatarUtil";
 
 const CustomMember = ({ member, isShowName = false }) => {
     const theme = useTheme();
@@ -16,7 +17,7 @@ const CustomMember = ({ member, isShowName = false }) => {
         >
             <Avatar
                 alt={member?.user?.lastName}
-                src={member?.user?.avatar != null ? member?.user?.avatar : member?.user?.lastName}
+                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
                 sx={{
                     width: 24,
                     height: 24,

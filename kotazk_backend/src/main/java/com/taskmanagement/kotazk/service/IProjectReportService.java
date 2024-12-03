@@ -16,7 +16,7 @@ public interface IProjectReportService {
     ProjectReportResponseDto update(Long id, ProjectReportRequestDto projectReportRequestDto);
     Boolean delete(Long id);
     Boolean softDelete(Long id);
-    RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId);
+    RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long sectionId);
     ProjectReportResponseDto getOne(Long id);
     PageResponse<ProjectReportResponseDto> getPageBySection(SearchParamRequestDto searchParam, Long sectionId);
     ProjectReportResponseDto previewChart(ProjectReportRequestDto projectReportRequestDto);

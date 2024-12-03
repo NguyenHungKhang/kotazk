@@ -7,6 +7,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+import * as apiService from '../../api/index';
 // import * as apiService from '../../api/index';
 
 const Register = () => {
@@ -34,16 +35,28 @@ const Register = () => {
             return;
         }
 
-        // setPasswordError(false); // Clear any previous error
+        setPasswordError(false);
 
-        // const data = { email, firstName, lastName, password };
-        // try {
-        //     await apiService.authAPI.register(data);
-        //     navigate('/workspace/');
-        // } catch (error) {
-        //     console.warn("Registration failed", error);
-        // }
+        const data =
+        {
+            "firstName": firstName,
+            "lastName": lastName,
+            "email": email,
+            "password": password,
+            "retypePassword": confirmPassword
+        };
+        try {
+            const response = await apiService.authAPI.register(data);
+            if (response?.data) {
+                if (response?.data?.success)
+                    navigate(`/OtpVerification?email=${email}`);
+            }
+        } catch (error) {
+            console.warn("Registration failed", error);
+            alert(error.message)
+        }
     };
+
 
     return (
         <Box
@@ -68,7 +81,7 @@ const Register = () => {
                     <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
                         Register
                     </Typography>
-                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 2 }}>
                         {/* Email Input */}
                         <Box fullWidth margin="normal" sx={{ mt: 4 }}>
                             <Typography variant="body1" gutterBottom>
@@ -212,6 +225,7 @@ const Register = () => {
                                 mt: 3,
                                 mb: 3,
                             }}
+                            onClick={() => handleSubmit()}
                         >
                             REGISTER
                         </Button>

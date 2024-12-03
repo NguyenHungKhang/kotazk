@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Autocomplete, TextField, CircularProgress, Box, Popover, Button, IconButton, useTheme, Badge, styled, Stack, Typography } from '@mui/material';
+import { Autocomplete, TextField, CircularProgress, Box, Popover, Button, IconButton, useTheme, Badge, styled, Stack, Typography, Divider } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomFilterItemDialog from './CustomFilterItemDialog';
 import { useSelector } from 'react-redux';
@@ -49,7 +49,6 @@ const CustomComponent = ({ section }) => {
 
 
     const setGlobalFilter = () => {
-        console.log(123)
         const globalFilters = filterDialogs.filter(f => f.field != null && f.options.length > 0);
         dispatch(setCurrentFilterList(globalFilters))
     }
@@ -117,13 +116,23 @@ const CustomComponent = ({ section }) => {
                     horizontal: 'left',
                 }}
             >
-                <Box sx={{ width: 500 }}>
+                <Box sx={{ width: 500, p: 2 }}>
                     <Box display="flex" flexDirection="column" gap={2} p={2}>
-                        <Box display="flex" justifyContent="flex-end">
+                        <Box display="flex" justifyContent="space-between" alignItems={'center'}>
+                            <Typography variant='h6'>
+                                Filter
+                            </Typography>
                             <Button onClick={handleClearAll} color="secondary" variant="text" size="small">
                                 Clear All
                             </Button>
                         </Box>
+                        {filterDialogs?.length == 0 && (
+                            <Divider>
+                                <Typography textAlign={'center'} color='textSecondary'>
+                                    <i>No filters are applied</i>
+                                </Typography>
+                            </Divider>
+                        )}
                         {filterDialogs?.map((filter, index) => (
                             <CustomFilterItemDialog key={index} filter={filter} setFilterDialogs={setFilterDialogs} index={index} />
                         ))}

@@ -12,12 +12,14 @@ import { useDispatch } from 'react-redux';
 import { setCurrentProjectList } from '../../redux/actions/project.action';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
 import { styled } from '@mui/material/styles';
+import { getWorkspaceCover } from '../../utils/coverUtil';
+import dayjs from 'dayjs';
 
 const ListProject = () => {
     const theme = useTheme();
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const projectList = useSelector((state) => state.project.currentProjectList);
-    const pinnedProject =projectList?.content?.filter(p => p.isPinned == true);
+    const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
     const [searchText, setSearchText] = useState("");
     const SearchIcon = TablerIcons["IconSearch"];
     const ExpandIcon = TablerIcons["IconCaretDownFilled"];
@@ -47,13 +49,41 @@ const ListProject = () => {
             .catch(err => console.warn(err))
     }
 
+    const getTimeOfDay = () => {
+        const currentHour = dayjs().hour(); // Get current hour (0-23)
+
+        if (currentHour >= 5 && currentHour < 12) {
+            return "Morning"; // 5:00 AM to 11:59 AM
+        } else if (currentHour >= 12 && currentHour < 18) {
+            return "Afternoon"; // 12:00 PM to 5:59 PM
+        } else {
+            return "Evening"; // 6:00 PM to 4:59 AM
+        }
+    };
 
     return (
         <Stack spacing={2} width={'100%'} height={'100%'}>
+            <Box sx={{ position: 'relative', width: '100%' }}>
+                <Box
+                    sx={{
+                        width: '100%',
+                        paddingTop: '10%',
+                        backgroundImage: `url(${getWorkspaceCover(workspace?.id, workspace?.cover)})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: 1,
+                        position: 'relative',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
+                />
+            </Box>
             <Card
                 sx={{
                     p: 4,
-                    height: '100%'
+                    height: '100%',
+                    overflow: 'auto'
                 }}
             >
                 <Stack direction='row' spacing={2} alignItems='center' mb={2}>
@@ -97,7 +127,7 @@ const ListProject = () => {
                         <Box width={'100%'}>
                             <Stack direction={'row'} alignItems={'center'} spacing={2} width={'100%'}>
                                 <Typography variant='h6' fontWeight={650}>
-                                    Pinned projects (0)
+                                    Pinned projects ({pinnedProject?.length})
                                 </Typography>
                                 <Box flexGrow={1}>
                                     <Divider />
@@ -163,13 +193,30 @@ const ListProject = () => {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Grid container spacing={4}>
-                            {projectList?.content?.map((project) => (
-                                <Grid item xs={12} sm={6} md={4} lg={3} xl={12 / 5} key={project.id}>
-                                    <CustomProjectCard project={project} theme={theme} />
-                                </Grid>
-                            ))}
-                        </Grid>
+                        {pinnedProject?.length > 0 ?
+                            <Grid container spacing={4}>
+                                {projectList?.content?.map((project) => (
+                                    <Grid item xs={12} sm={6} md={4} lg={3} xl={12 / 5} key={project.id}>
+                                        <CustomProjectCard project={project} theme={theme} />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                            :
+                            <Box
+                                width={307}
+                                height={173}
+                                display={'flex'}
+                                justifyContent={'center'}
+                                alignItems={'center'}
+                                border={"1px dashed"}
+                                borderColor={getCustomTwoModeColor(theme, theme.palette.grey[400], theme.palette.grey[700])}
+                                borderRadius={2}
+                            >
+                                <Typography variant='h6' color={getCustomTwoModeColor(theme, theme.palette.grey[400], theme.palette.grey[700])}>
+                                    There is no projects
+                                </Typography>
+                            </Box>
+                        }
                     </AccordionDetails>
                 </Accordion>
 

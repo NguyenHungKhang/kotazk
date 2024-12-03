@@ -17,6 +17,7 @@ import CustomLinechart from './CustomLinechart';
 import CustomPiechart from './CustomPiechart';
 import { setFullReportDialog } from '../../redux/actions/dialog.action';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import CustomNumberReport from './CustomNumberReport';
 
 export default function CustomFullChartDialog({ }) {
     // const [open, setOpen] = React.useState(false);
@@ -51,8 +52,8 @@ export default function CustomFullChartDialog({ }) {
             >
 
                 <Box
-                    width={1000}
-                    height={600}
+                    width={props?.type == "NUMBER" ? 500 : 1000}
+                    height={props?.type == "NUMBER" ? 300 :600}
                 >
                     {props?.type == "BAR_CHART" && (
                         <CustomBarchart chartData={props?.chartData} chartNamesAndColors={props?.chartNamesAndColors} xType={props?.xType} yType={props?.yType} />
@@ -68,6 +69,9 @@ export default function CustomFullChartDialog({ }) {
                     )}
                     {props?.type == "PIE" && (
                         <CustomPiechart chartData={props?.chartData} chartNamesAndColors={props?.chartNamesAndColors} xType={props?.xType} yType={props?.yType} />
+                    )}
+                    {props?.type == "NUMBER" && (
+                        <CustomNumberReport number={props?.numberValue} yType={props?.yType} isPreview={true} />
                     )}
                 </Box>
             </DialogContent>

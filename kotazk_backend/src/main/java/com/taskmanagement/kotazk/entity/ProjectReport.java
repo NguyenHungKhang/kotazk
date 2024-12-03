@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "project_report")
@@ -70,6 +71,9 @@ public class ProjectReport {
 
     @Column(name = "between")
     private Long between;
+
+    @OneToMany(mappedBy = "projectReport", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FilterSetting> filterSettings;
 
     @CreationTimestamp
     @Column(name = "created_at")

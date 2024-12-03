@@ -19,6 +19,7 @@ const AuthCheck = () => {
                     if (response?.status == 401) {
                         navigate('/login');
                     } else {
+                        
                         dispatch(setCurrentUser(response.data))
                     }
                 } catch (error) {

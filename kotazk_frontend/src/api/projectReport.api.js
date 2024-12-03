@@ -8,6 +8,8 @@ export const update = async (projectReportId, data) => await axiosInstance.put(`
 
 export const remove = async (projectReportId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${projectReportId}`);
 
+export const reposition = async (sectionId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/reposition-by-section/${sectionId}`, data);
+
 // export const getOne = async (projectId) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
 
 export const getPreviewChart = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/preview`, data);

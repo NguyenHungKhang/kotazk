@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
 import WorkSpaceMember from "../../pages/WorkSpaceMember";
 import CustomDialogForManage from "../CustomDialogForManage";
+import { getAvatar } from "../../utils/avatarUtil";
 
 const CustomWorkspaceHeader = () => {
     const theme = useTheme();
@@ -21,6 +22,7 @@ const CustomWorkspaceHeader = () => {
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const currentUser = useSelector((state) => state.user.currentUser);
     const [members, setMembers] = useState([]);
 
     const [open, setOpen] = useState(false);
@@ -46,7 +48,7 @@ const CustomWorkspaceHeader = () => {
                 {
                     key: "memberFor",
                     operation: "EQUAL",
-                    value: "PROJECT",
+                    value: "WORK_SPACE",
                     values: []
                 }
             ],
@@ -68,7 +70,6 @@ const CustomWorkspaceHeader = () => {
                             variant="h5"
                             fontWeight={650}
                         >
-
                             {workspace?.name}
                         </Typography>
                     </Stack>
@@ -90,8 +91,9 @@ const CustomWorkspaceHeader = () => {
                                     width: 30,
                                     height: 30,
                                 }}
+                                key={member?.id}
                                 alt={member?.user?.lastName}
-                                src={member?.user?.avatarUrl}
+                                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
                             >
                                 {member?.user?.lastName.substring(0, 1)}
                             </Avatar>
@@ -183,6 +185,8 @@ const CustomWorkspaceHeader = () => {
                             width: 30,
                             height: 30
                         }}
+                        alt={currentUser?.lastName}
+                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
                     >
                         H
                     </Avatar>

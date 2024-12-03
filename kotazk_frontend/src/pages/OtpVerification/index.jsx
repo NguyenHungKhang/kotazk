@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Typography, TextField, Button, Card, CardContent, Grid } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import * as apiService from '../../api/index';
 
 const OtpVerification = () => {
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const email = params.get('email');
+
     const [otp, setOtp] = useState(['', '', '', '']);
     const [error, setError] = useState(false);
     const theme = useTheme();
@@ -11,8 +16,6 @@ const OtpVerification = () => {
 
     const handleChange = (e, index) => {
         const value = e.target.value;
-        if (!/^\d*$/.test(value)) return; // Allow only numbers
-
         const newOtp = [...otp];
         newOtp[index] = value;
         setOtp(newOtp);
@@ -30,27 +33,38 @@ const OtpVerification = () => {
     };
 
     const handleSubmit = async (e) => {
-        // e.preventDefault();
+        try {
+            if (otp.length < 4)
+                alert("OTP need 4 digits");
 
-        // const otpCode = otp.join('');
-        // if (otpCode.length !== 4) {
-        //     setError(true);
-        //     return;
-        // }
+            const data = {
+                "email": email,
+                "otp": otp.join('')
+            }
 
-        // setError(false);
-
-        // try {
-        //     // Simulate OTP verification API call
-        //     const response = await apiService.authAPI.verifyOtp({ otp: otpCode });
-        //     if (response.success) {
-        //         navigate('/workspace'); // Redirect to workspace page after successful OTP verification
-        //     }
-        // } catch (err) {
-        //     console.warn('OTP verification failed', err);
-        //     setError(true);
-        // }
+            const response = await apiService.authAPI.active(data);
+            if (response?.data)
+                alert(response?.data?.message)
+        } catch (e) {
+            alert(e?.response?.data?.message)
+        }
     };
+
+    const handleResend = async (event) => {
+        const data =
+        {
+            "email": email,
+        };
+        try {
+            const response = await apiService.authAPI.resend(data);
+            if (response?.data) {
+                alert(response?.data?.message)
+            }
+        } catch (e) {
+            alert(e?.response?.data?.message)
+        }
+    };
+
 
     return (
         <Box
@@ -78,9 +92,9 @@ const OtpVerification = () => {
                         OTP Verification
                     </Typography>
                     <Typography variant="body2" textAlign="center" color="textSecondary">
-                        Enter the 4-digit OTP sent to your email.
+                        Active account: {email}
                     </Typography>
-                    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+                    <Box sx={{ mt: 2, mb: 4 }}>
                         <Grid container spacing={2} justifyContent="center">
                             {otp.map((value, index) => (
                                 <Grid item key={index}>
@@ -110,26 +124,30 @@ const OtpVerification = () => {
                                 Invalid OTP. Please try again.
                             </Typography>
                         )}
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            sx={{
-                                background: 'linear-gradient(to right, #36D1DC, #5B86E5)',
-                                color: 'white',
-                                borderRadius: 50,
-                                height: 48,
-                                mt: 4,
-                            }}
-                        >
-                            VERIFY
-                        </Button>
                     </Box>
+                    <Typography variant="body2" textAlign="center" color="textSecondary">
+                        Enter the 4-digit OTP sent to your email.
+                    </Typography>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                            background: 'linear-gradient(to right, #36D1DC, #5B86E5)',
+                            color: 'white',
+                            borderRadius: 50,
+                            height: 48,
+                            mt: 4,
+                        }}
+                        onClick={() => handleSubmit()}
+                    >
+                        VERIFY
+                    </Button>
                     <Typography
                         variant="body2"
                         textAlign="center"
                         sx={{ mt: 4, cursor: 'pointer' }}
-                        onClick={() => console.log('Resend OTP')}
+                        onClick={() => handleResend()}
                     >
                         Resend OTP
                     </Typography>

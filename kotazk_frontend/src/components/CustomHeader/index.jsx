@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
+import { getAvatar } from "../../utils/avatarUtil";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -19,6 +20,7 @@ const CustomHeader = () => {
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
     const project = useSelector((state) => state.project.currentProject);
+    const currentUser = useSelector((state) => state.user.currentUser);
     const [members, setMembers] = useState([]);
 
     useEffect(() => {
@@ -85,7 +87,7 @@ const CustomHeader = () => {
                                     height: 30,
                                 }}
                                 alt={member?.user?.lastName}
-                                src={member?.user?.avatarUrl}
+                                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
                             >
                                 {member?.user?.lastName.substring(0, 1)}
                             </Avatar>
@@ -176,6 +178,8 @@ const CustomHeader = () => {
                             width: 30,
                             height: 30
                         }}
+                        alt={currentUser?.lastName}
+                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
                     >
                         H
                     </Avatar>

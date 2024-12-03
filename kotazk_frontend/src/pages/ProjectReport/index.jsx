@@ -1,4 +1,4 @@
-import { Box, Button, Card, Divider, Grid2, IconButton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Card, Chip, Divider, Grid2, IconButton, Stack, Typography, useTheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import CustomLinechart from './CustomLinechart';
 import * as apiService from '../../api/index'
@@ -16,6 +16,7 @@ import { useDispatch } from 'react-redux';
 import { setProjectReports } from '../../redux/actions/projectReport.action';
 
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import CustomNumberReport from './CustomNumberReport';
 
 const ProjectReport = () => {
 
@@ -28,6 +29,9 @@ const ProjectReport = () => {
     const ExpandIcon = TablerIcons["IconArrowsMaximize"];
     const EditIcon = TablerIcons["IconPencil"];
     const RemoveIcon = TablerIcons["IconX"];
+    const FilterIcon = TablerIcons["IconFilter"];
+    const MoveLeftIcon = TablerIcons["IconChevronLeft"];
+    const MoveRightIcon = TablerIcons["IconChevronRight"];
 
     useEffect(() => {
         if (section)
@@ -57,6 +61,7 @@ const ProjectReport = () => {
                 chartNamesAndColors: pr.colorsAndNames,
                 xType: pr.xtype,
                 yType: pr.ytype,
+                numberValue: pr.numberValue
             }
         }
 
@@ -86,10 +91,53 @@ const ProjectReport = () => {
                 type: pr.type,
                 xType: pr.xtype,
                 yType: pr.ytype,
-                groupType: pr.groupedBy
+                groupType: pr.groupedBy,
+                filterSettings: pr.filterSettings,
+                numberValue: pr.numberValue
             } : null
         }));
     }
+
+    const onMovePosition = async (reportId, direction) => {
+        const index = projectReports.findIndex(report => report.id === reportId);
+
+        if (
+            index === -1 ||
+            (direction === "left" && index === 0) ||
+            (direction === "right" && index === projectReports.length - 1)
+        ) {
+            return { left: null, right: null }; // Return nulls if no move is possible
+        }
+
+        const swapIndex = direction === "left" ? index - 1 : index + 1;
+
+        const reorderedReports = [...projectReports];
+        [reorderedReports[index], reorderedReports[swapIndex]] = [
+            reorderedReports[swapIndex],
+            reorderedReports[index],
+        ];
+
+        dispatch(setProjectReports(reorderedReports));
+
+        // Get the new position of the current report
+        const newIndex = swapIndex;
+        const leftId = newIndex > 0 ? reorderedReports[newIndex - 1].id : null;
+        const rightId =
+            newIndex < reorderedReports.length - 1
+                ? reorderedReports[newIndex + 1].id
+                : null;
+
+        const data = {
+            "currentItemId": reportId,
+            "nextItemId": rightId,
+            "previousItemId": leftId
+
+        }
+
+        const response = await apiService.projectReport.reposition(section?.id, data);
+
+    };
+
 
     const onDragEnd = (result) => {
         const { destination, source } = result;
@@ -109,25 +157,35 @@ const ProjectReport = () => {
                     Add report
                 </Button>
             </Card>
-
             {/* Kéo thả các thẻ báo cáo */}
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="reports" direction="horizontal">
                     {(provided) => (
                         <Grid2 container spacing={2} width={'100%'} height={"100%"} {...provided.droppableProps} ref={provided.innerRef}>
                             {projectReports?.map((pr, index) => (
-                                <Draggable key={pr.id} draggableId={pr.id.toString()} index={index}>
+                                <Draggable isDragDisabled key={pr.id} draggableId={pr.id.toString()} index={index}>
                                     {(provided) => (
-                                        <Grid2 size={4} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                            <Card sx={{ width: '100%', height: '100%', maxHeight: 500 }}>
+                                        <Grid2 size={pr.type == "NUMBER" ? 3 : 6} ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                            <Card sx={{ width: '100%', height: '100%', maxHeight: pr.type == "NUMBER" ? 200 : 380 }}>
                                                 <Box px={4} py={2}>
                                                     <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                                                        <Box flexGrow={1}>
-                                                            <Typography variant='h6' fontWeight={650}>
-                                                                {pr.name}
-                                                            </Typography>
-                                                        </Box>
+                                                        <Typography variant='h6' flexGrow={1} fontWeight={650} noWrap
+                                                            sx={{
+                                                                whiteSpace: 'nowrap',      // Prevent text wrapping
+                                                                overflow: 'hidden',        // Hide overflowed text
+                                                                textOverflow: 'ellipsis',  // Add ellipsis (...)
+                                                            }}
+                                                        >
+                                                            {pr.name}
+                                                        </Typography>
                                                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                                                            <Chip icon={<FilterIcon size={18} />} label={`${pr?.filterSettings?.length == 0 ? "No " : pr?.filterSettings?.length} Filter${pr?.filterSettings?.length != 1 ? 's' : ''}`} />
+                                                            <IconButton size='small' onClick={() => onMovePosition(pr.id, "left")}>
+                                                                <MoveLeftIcon size={18} />
+                                                            </IconButton>
+                                                            <IconButton size='small' onClick={() => onMovePosition(pr.id, "right")}>
+                                                                <MoveRightIcon size={18} />
+                                                            </IconButton>
                                                             <IconButton size='small' onClick={() => handleExpand(pr)}>
                                                                 <ExpandIcon size={18} />
                                                             </IconButton>
@@ -141,12 +199,13 @@ const ProjectReport = () => {
                                                     </Stack>
                                                 </Box>
                                                 <Divider />
-                                                <Box width={'100%'} height={'100%'} maxHeight={300} p={2}>
+                                                <Box width={'100%'} height={'100%'} maxHeight={pr.type == "NUMBER" ? 150 : 300} p={2}>
                                                     {pr.type == "BAR_CHART" && <CustomBarchart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
                                                     {pr.type == "STACKED_BAR" && <CustomStackedBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
                                                     {pr.type == "LINE" && <CustomLinechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
                                                     {pr.type == "GROUPED_BAR" && <CustomGroupeddBar chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
                                                     {pr.type == "PIE" && <CustomPiechart chartData={pr.items} chartNamesAndColors={pr.colorsAndNames} xType={pr.xtype} yType={pr.ytype} />}
+                                                    {pr.type == "NUMBER" && <CustomNumberReport number={pr.numberValue} yType={pr.ytype} />}
                                                 </Box>
                                             </Card>
                                         </Grid2>
@@ -154,6 +213,7 @@ const ProjectReport = () => {
                                 </Draggable>
                             ))}
                             {provided.placeholder}
+                            <Grid2 height={380}></Grid2>
                         </Grid2>
                     )}
                 </Droppable>
