@@ -35,6 +35,7 @@ import Register from "../pages/Register";
 import OtpVerification from "../pages/OtpVerification";
 import ProfileSetting from "../pages/ProfileSetting";
 import ForgotPassword from "../pages/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword";
 
 const pagesData = [
   {
@@ -65,6 +66,11 @@ const pagesData = [
   {
     path: "/ForgotPassword",
     element: <ForgotPassword />,
+    title: "playground"
+  },
+  {
+    path: "/ResetPassword",
+    element: <ResetPassword />,
     title: "playground"
   },
   {
