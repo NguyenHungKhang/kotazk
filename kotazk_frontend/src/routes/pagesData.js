@@ -6,12 +6,6 @@ import CustomTaskDialog from "../components/CustomTaskDialog";
 import Home from "../pages/Home";
 import Kanban from "../pages/Kanban";
 import Login from "../pages/Login";
-<<<<<<< HEAD
-import WorkSpace1 from "../pages/Section";
-import WorkSpace from "../pages/Workspace";
-import TestSideBar from "../playgrounds/components/TestSideBar";
-import Register from "../pages/Register";
-=======
 import Project from "../pages/Project";
 import ProjectDashBoard from "../pages/ProjectDashBoard";
 import ProjectMember from "../pages/ProjectMember";
@@ -39,6 +33,8 @@ import WorkSpaceMember from "../pages/WorkSpaceMember";
 import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
 import Register from "../pages/Register";
 import OtpVerification from "../pages/OtpVerification";
+import ProfileSetting from "../pages/ProfileSetting";
+import ForgotPassword from "../pages/ForgotPassword";
 
 const pagesData = [
   {
@@ -54,19 +50,6 @@ const pagesData = [
   {
     path: "/register",
     element: <Register />,
-<<<<<<< HEAD
-    title: "playground"
-  },
-  {
-    path: "/work-space1",
-    element: <WorkSpace1 />,
-    title: "playground"
-  },
-  {
-    path: "/work-space",
-    element: <WorkSpace />,
-=======
->>>>>>> origin/develop
     title: "playground"
   },
   {

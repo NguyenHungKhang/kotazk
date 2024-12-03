@@ -2,46 +2,11 @@ import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Card, CardContent, InputAdornment, Link, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LockIcon from '@mui/icons-material/Lock';
-<<<<<<< HEAD
-import EmailIcon from '@mui/icons-material/Email';
-=======
 import PersonIcon from '@mui/icons-material/Person';
->>>>>>> origin/develop
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< HEAD
-
-const Register = () => {
-    const [username, setUsername] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const theme = useTheme();
-    const navigate = useNavigate();
-
-    const handleClickShowPassword = () => {
-        setShowPassword(!showPassword);
-    };
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        if (password === confirmPassword) {
-            console.log('Username:', username);
-            console.log('Email:', email);
-            console.log('Password:', password);
-            navigate('/login');
-        } else {
-            console.error('Passwords do not match');
-        }
-    };
-
-    const login = () => {
-        navigate('/login');
-    }
-=======
 // import * as apiService from '../../api/index';
 
 const Register = () => {
@@ -79,7 +44,6 @@ const Register = () => {
         //     console.warn("Registration failed", error);
         // }
     };
->>>>>>> origin/develop
 
     return (
         <Box
@@ -105,44 +69,6 @@ const Register = () => {
                         Register
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-<<<<<<< HEAD
-
-                        {/* Username Input */}
-                        <Box fullWidth margin="normal" sx={{ mt: 4 }}>
-                            <Typography variant="body1" gutterBottom>
-                                Username
-                            </Typography>
-                            <TextField
-                                fullWidth
-                                id="username"
-                                name="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="Type your username"
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <AccountCircleIcon />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                                variant="standard"
-                                sx={{
-                                    '& .MuiInput-underline:before': {
-                                        borderBottom: `1px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:hover:before': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:after': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                }}
-                            />
-                        </Box>
-
-=======
->>>>>>> origin/develop
                         {/* Email Input */}
                         <Box fullWidth margin="normal" sx={{ mt: 4 }}>
                             <Typography variant="body1" gutterBottom>
@@ -151,38 +77,17 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="email"
-<<<<<<< HEAD
-                                name="email"
-=======
->>>>>>> origin/develop
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="Type your email"
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
-<<<<<<< HEAD
-                                            <EmailIcon />
-=======
                                             <AccountCircleIcon />
->>>>>>> origin/develop
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
-<<<<<<< HEAD
-                                sx={{
-                                    '& .MuiInput-underline:before': {
-                                        borderBottom: `1px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:hover:before': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:after': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                }}
-=======
                             />
                         </Box>
 
@@ -227,7 +132,6 @@ const Register = () => {
                                     ),
                                 }}
                                 variant="standard"
->>>>>>> origin/develop
                             />
                         </Box>
 
@@ -239,10 +143,6 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="password"
-<<<<<<< HEAD
-                                name="password"
-=======
->>>>>>> origin/develop
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -255,35 +155,13 @@ const Register = () => {
                                     ),
                                     endAdornment: (
                                         <InputAdornment position="end">
-<<<<<<< HEAD
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={handleClickShowPassword}
-                                                edge="end"
-                                            >
-=======
                                             <IconButton onClick={handleClickShowPassword}>
->>>>>>> origin/develop
                                                 {showPassword ? <VisibilityOff /> : <Visibility />}
                                             </IconButton>
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
-<<<<<<< HEAD
-                                sx={{
-                                    '& .MuiInput-underline:before': {
-                                        borderBottom: `1px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:hover:before': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:after': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                }}
-=======
->>>>>>> origin/develop
                             />
                         </Box>
 
@@ -295,12 +173,7 @@ const Register = () => {
                             <TextField
                                 fullWidth
                                 id="confirmPassword"
-<<<<<<< HEAD
-                                name="confirmPassword"
-                                type={showPassword ? 'text' : 'password'}
-=======
                                 type={showConfirmPassword ? 'text' : 'password'}
->>>>>>> origin/develop
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm your password"
@@ -312,39 +185,13 @@ const Register = () => {
                                     ),
                                     endAdornment: (
                                         <InputAdornment position="end">
-<<<<<<< HEAD
-                                            <IconButton
-                                                aria-label="toggle password visibility"
-                                                onClick={handleClickShowPassword}
-                                                edge="end"
-                                            >
-                                                {showPassword ? <VisibilityOff /> : <Visibility />}
-=======
                                             <IconButton onClick={handleClickShowConfirmPassword}>
                                                 {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
->>>>>>> origin/develop
                                             </IconButton>
                                         </InputAdornment>
                                     ),
                                 }}
                                 variant="standard"
-<<<<<<< HEAD
-                                sx={{
-                                    '& .MuiInput-underline:before': {
-                                        borderBottom: `1px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:hover:before': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                    '& .MuiInput-underline:after': {
-                                        borderBottom: `2px solid ${theme.palette.text.primary}`,
-                                    },
-                                }}
-                            />
-                        </Box>
-
-                        {/* Register Button */}
-=======
                             />
                             {passwordError && (
                                 <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -353,7 +200,6 @@ const Register = () => {
                             )}
                         </Box>
 
->>>>>>> origin/develop
                         <Button
                             type="submit"
                             fullWidth
@@ -371,9 +217,6 @@ const Register = () => {
                         </Button>
 
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
-<<<<<<< HEAD
-                            Already have an account? <Link component="button" onClick={login} variant="body2" color={theme.palette.primary.main}>Login</Link>
-=======
                             Already have an account?{' '}
                             <Link
                                 component="button"
@@ -383,7 +226,6 @@ const Register = () => {
                             >
                                 Login
                             </Link>
->>>>>>> origin/develop
                         </Typography>
                     </Box>
                 </CardContent>
