@@ -4,11 +4,14 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
+import com.taskmanagement.kotazk.payload.request.filterSetting.FilterSettingRequestDto;
 import com.taskmanagement.kotazk.payload.request.projectReport.ProjectReportRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
+import com.taskmanagement.kotazk.payload.response.filterSetting.FilterSettingResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemNameAndColorResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportItemResponseDto;
@@ -49,6 +52,7 @@ public class ProjectReportService implements IProjectReportService {
     private IMemberService memberService = new MemberService();
     @Autowired
     private final BasicSpecificationUtil<ProjectReport> specificationUtil = new BasicSpecificationUtil<>();
+    private final BasicSpecificationUtil<Task> taskSpecificationUtil = new BasicSpecificationUtil<>();
     @Autowired
     private TimeUtil timeUtil;
 
@@ -74,22 +78,36 @@ public class ProjectReportService implements IProjectReportService {
         if (validatedprojectReportRequestDto == null)
             throw new CustomException("Invalid input");
 
-        ProjectReport newProjectReport = ProjectReport.builder()
-                .section(section)
-                .project(project)
-                .workspace(workSpace)
-                .name(validatedprojectReportRequestDto.getName())
-                .colorMode(validatedprojectReportRequestDto.getColorMode())
-                .xType(validatedprojectReportRequestDto.getXType())
-                .subXType(validatedprojectReportRequestDto.getSubXType())
-                .groupedBy(validatedprojectReportRequestDto.getGroupedBy())
-                .yType(validatedprojectReportRequestDto.getYType())
-                .fromWhen(validatedprojectReportRequestDto.getFromWhen())
-                .toWhen(validatedprojectReportRequestDto.getToWhen())
-                .between(validatedprojectReportRequestDto.getBetween())
-                .type(validatedprojectReportRequestDto.getType())
-                .position(RepositionUtil.calculateNewLastPosition(section.getProjectReports().size()))
-                .build();
+        ProjectReport newProjectReport = new ProjectReport();
+
+        newProjectReport.setSection(section);
+        newProjectReport.setProject(project);
+        newProjectReport.setWorkspace(workSpace);
+        newProjectReport.setName(validatedprojectReportRequestDto.getName());
+        newProjectReport.setColorMode(validatedprojectReportRequestDto.getColorMode());
+        newProjectReport.setXType(validatedprojectReportRequestDto.getXType());
+        newProjectReport.setSubXType(validatedprojectReportRequestDto.getSubXType());
+        newProjectReport.setGroupedBy(validatedprojectReportRequestDto.getGroupedBy());
+        newProjectReport.setYType(validatedprojectReportRequestDto.getYType());
+        newProjectReport.setFromWhen(validatedprojectReportRequestDto.getFromWhen());
+        newProjectReport.setToWhen(validatedprojectReportRequestDto.getToWhen());
+        newProjectReport.setBetween(validatedprojectReportRequestDto.getBetween());
+        newProjectReport.setType(validatedprojectReportRequestDto.getType());
+        newProjectReport.setPosition(RepositionUtil.calculateNewLastPosition(section.getProjectReports().size()));
+
+        if (projectReportRequestDto.getFilterSettings() != null) {
+            newProjectReport.setFilterSettings(projectReportRequestDto.getFilterSettings()
+                    .stream()
+                    .map(f -> {
+                        checkFilter(f, project, section);
+                        return FilterSetting.builder()
+                                .projectReport(newProjectReport)
+                                .field(f.getField())
+                                .values(f.getValues())
+                                .operator(f.getOperator())
+                                .build();
+                    }).toList());
+        }
 
         ProjectReport savedProjectReport = projectReportRepository.save(newProjectReport);
 
@@ -116,23 +134,38 @@ public class ProjectReportService implements IProjectReportService {
         if (validatedprojectReportRequestDto == null)
             throw new CustomException("Invalid input");
 
-        ProjectReport editedCurrentProject = ProjectReport.builder()
-                .id(projectReport.getId())
-                .section(section)
-                .project(project)
-                .workspace(workSpace)
-                .name(validatedprojectReportRequestDto.getName())
-                .colorMode(validatedprojectReportRequestDto.getColorMode())
-                .xType(validatedprojectReportRequestDto.getXType())
-                .subXType(validatedprojectReportRequestDto.getSubXType())
-                .groupedBy(validatedprojectReportRequestDto.getGroupedBy())
-                .yType(validatedprojectReportRequestDto.getYType())
-                .fromWhen(validatedprojectReportRequestDto.getFromWhen())
-                .toWhen(validatedprojectReportRequestDto.getToWhen())
-                .between(validatedprojectReportRequestDto.getBetween())
-                .type(validatedprojectReportRequestDto.getType())
-                .position(projectReport.getPosition())
-                .build();
+        ProjectReport editedCurrentProject = new ProjectReport();
+
+        editedCurrentProject.setId(projectReport.getId());
+        editedCurrentProject.setSection(section);
+        editedCurrentProject.setProject(project);
+        editedCurrentProject.setWorkspace(workSpace);
+        editedCurrentProject.setName(validatedprojectReportRequestDto.getName());
+        editedCurrentProject.setColorMode(validatedprojectReportRequestDto.getColorMode());
+        editedCurrentProject.setXType(validatedprojectReportRequestDto.getXType());
+        editedCurrentProject.setSubXType(validatedprojectReportRequestDto.getSubXType());
+        editedCurrentProject.setGroupedBy(validatedprojectReportRequestDto.getGroupedBy());
+        editedCurrentProject.setYType(validatedprojectReportRequestDto.getYType());
+        editedCurrentProject.setFromWhen(validatedprojectReportRequestDto.getFromWhen());
+        editedCurrentProject.setToWhen(validatedprojectReportRequestDto.getToWhen());
+        editedCurrentProject.setBetween(validatedprojectReportRequestDto.getBetween());
+        editedCurrentProject.setType(validatedprojectReportRequestDto.getType());
+        editedCurrentProject.setPosition(projectReport.getPosition());
+
+
+        if (projectReportRequestDto.getFilterSettings() != null) {
+            editedCurrentProject.setFilterSettings(projectReportRequestDto.getFilterSettings()
+                    .stream()
+                    .map(f -> {
+                        checkFilter(f, project, section);
+                        return FilterSetting.builder()
+                                .projectReport(editedCurrentProject)
+                                .field(f.getField())
+                                .values(f.getValues())
+                                .operator(f.getOperator())
+                                .build();
+                    }).toList());
+        }
 
         ProjectReport savedProjectReport = projectReportRepository.save(editedCurrentProject);
 
@@ -165,8 +198,47 @@ public class ProjectReportService implements IProjectReportService {
     }
 
     @Override
-    public RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long projectId) {
-        return null;
+    public RePositionResponseDto rePosition(RePositionRequestDto rePositionRequestDto, Long sectionId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Section section = sectionRepository.findById(sectionId)
+                .filter(p -> isAdmin || p.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Section", "id", sectionId));
+        Project project = section.getProject();
+        WorkSpace workSpace = project.getWorkSpace();
+
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = checkManageReport(currentUser, project);
+
+        if (!section.getType().equals(SectionType.REPORT))
+            throw new CustomException("This section is not a report section");
+
+        Long nextReportPosition = section.getProjectReports().stream()
+                .filter(pr -> pr.getId().equals(rePositionRequestDto.getNextItemId()))
+                .findFirst()
+                .map(ProjectReport::getPosition)
+                .orElse(null);
+
+        Long previousReportPosition =  section.getProjectReports().stream()
+                .filter(pr -> pr.getId().equals(rePositionRequestDto.getPreviousItemId()))
+                .findFirst()
+                .map(ProjectReport::getPosition)
+                .orElse(null);
+
+        ProjectReport currentReport = section.getProjectReports().stream()
+                .filter(pr -> pr.getId().equals(rePositionRequestDto.getCurrentItemId()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Project report", "id", rePositionRequestDto.getCurrentItemId()));
+
+        currentReport.setPosition(RepositionUtil.calculateNewPosition(previousReportPosition, nextReportPosition));
+
+        ProjectReport savedProjectReport = projectReportRepository.save(currentReport);
+
+        return RePositionResponseDto.builder()
+                .id(savedProjectReport.getId())
+                .newPosition(savedProjectReport.getPosition())
+                .build();
     }
 
     @Override
@@ -270,6 +342,20 @@ public class ProjectReportService implements IProjectReportService {
     // Utility func
 
     private void getProjectReportItems(ProjectReportResponseDto reportDto, Project project) {
+        if (reportDto.getType() == ProjectReportType.NUMBER) {
+            List<Task> taskForCount = makeWithFilterSettingDto(project, reportDto.getFilterSettings());
+            if (reportDto.getYType() == ProjectYTypeReport.TASK_COUNT)
+                reportDto.setNumberValue((double) taskForCount.size());
+            else {
+                double totalTimeEstimate = taskForCount.stream()
+                        .map(task -> task.getTimeEstimate() != null ? task.getTimeEstimate() : 0.0)
+                        .mapToDouble(Double::doubleValue)
+                        .sum();
+                reportDto.setNumberValue(totalTimeEstimate);
+            }
+            return;
+        }
+
         List<ProjectReportItemResponseDto> reportItems = new ArrayList<>();
         List<ProjectReportItemNameAndColorResponseDto> colorsAndNames = new ArrayList<>();
         boolean colorsGenerated = false;
@@ -278,11 +364,13 @@ public class ProjectReportService implements IProjectReportService {
             case STATUS -> project.getStatuses();
             case PRIORITY -> project.getPriorities();
             case TASK_TYPE -> project.getTaskTypes();
+            case ASSIGNEE, CREATOR -> project.getMembers();
+            case IS_COMPLETED -> List.of(true, false);
             default -> throw new IllegalArgumentException("Unsupported XType");
         };
 
         for (Object xObject : xObjects) {
-            List<Task> tasks = filterTasksByXType(project, xObject, reportDto.getXType());
+            List<Task> tasks = filterTasksByXType(project, xObject, reportDto.getXType(), reportDto.getFilterSettings());
             ProjectReportItemResponseDto itemDto = new ProjectReportItemResponseDto();
             List<?> groupedByObjects = reportDto.getGroupedBy() != null ? getGroupedByList(project, reportDto.getGroupedBy()) : null;
 
@@ -310,12 +398,15 @@ public class ProjectReportService implements IProjectReportService {
         reportDto.setItems(reportItems);
     }
 
-    private List<Task> filterTasksByXType(Project project, Object xObject, ProjectXTypeReport xType) {
-        return project.getTasks().stream()
+    private List<Task> filterTasksByXType(Project project, Object xObject, ProjectXTypeReport xType, List<FilterSettingResponseDto> filterSettingResponseDtos) {
+        return makeWithFilterSettingDto(project, filterSettingResponseDtos).stream()
                 .filter(task -> switch (xType) {
                     case STATUS -> task.getStatus() != null && task.getStatus().equals(xObject);
                     case PRIORITY -> task.getPriority() != null && task.getPriority().equals(xObject);
                     case TASK_TYPE -> task.getTaskType() != null && task.getTaskType().equals(xObject);
+                    case ASSIGNEE -> task.getAssignee() != null && task.getAssignee().equals(xObject);
+                    case CREATOR -> task.getCreator() != null && task.getCreator().equals(xObject);
+                    case IS_COMPLETED -> task.getIsCompleted() == xObject;
                     default -> false;
                 }).toList();
     }
@@ -324,15 +415,17 @@ public class ProjectReportService implements IProjectReportService {
         if (xObject instanceof Status s) return s.getName();
         if (xObject instanceof Priority p) return p.getName();
         if (xObject instanceof TaskType t) return t.getName();
+        if (xObject instanceof Member m) return m.getUser().getFirstName() + " " + m.getUser().getLastName();
+        if (xObject instanceof Boolean b) return b ? "Completed" : "Not complete";
         throw new IllegalArgumentException("Unsupported XObject type");
     }
 
     private void addColorAndName(List<ProjectReportItemNameAndColorResponseDto> colorsAndNames, Object xObject, ProjectReportResponseDto reportDto) {
 
-            ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
-            colorAndName.setName(getNameFromXObject(xObject));
-            colorAndName.setColor(getColorFromXObject(xObject));
-            colorsAndNames.add(colorAndName);
+        ProjectReportItemNameAndColorResponseDto colorAndName = new ProjectReportItemNameAndColorResponseDto();
+        colorAndName.setName(getNameFromXObject(xObject));
+        colorAndName.setColor(getColorFromXObject(xObject));
+        colorsAndNames.add(colorAndName);
 
     }
 
@@ -340,6 +433,8 @@ public class ProjectReportService implements IProjectReportService {
         if (xObject instanceof Status s) return s.getCustomization().getBackgroundColor();
         if (xObject instanceof Priority p) return p.getCustomization().getBackgroundColor();
         if (xObject instanceof TaskType t) return t.getCustomization().getBackgroundColor();
+        if (xObject instanceof Member m) return getColorBasedOnNumber(m.getId());
+        if (xObject instanceof Boolean b) return b ? "#87DD2C" : "#FFA000";
         throw new IllegalArgumentException("Unsupported XObject type for color");
     }
 
@@ -382,7 +477,7 @@ public class ProjectReportService implements IProjectReportService {
         List<ProjectReportItemNameAndColorResponseDto> result = new ArrayList<>();
 
         if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.STATUS)) {
-            for(Object o : groupedByObjects) {
+            for (Object o : groupedByObjects) {
                 Status s = (Status) o;
                 ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
                 current.setColor(s.getCustomization().getBackgroundColor());
@@ -390,7 +485,7 @@ public class ProjectReportService implements IProjectReportService {
                 result.add(current);
             }
         } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.TASK_TYPE)) {
-            for(Object o : groupedByObjects) {
+            for (Object o : groupedByObjects) {
                 TaskType t = (TaskType) o;
                 ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
                 current.setColor(t.getCustomization().getBackgroundColor());
@@ -398,27 +493,38 @@ public class ProjectReportService implements IProjectReportService {
                 result.add(current);
             }
         } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.PRIORITY)) {
-            for(Object o : groupedByObjects) {
+            for (Object o : groupedByObjects) {
                 Priority p = (Priority) o;
                 ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
                 current.setColor(p.getCustomization().getBackgroundColor());
                 current.setName(p.getName());
                 result.add(current);
             }
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.ASSIGNEE)) {
+            for (Object o : groupedByObjects) {
+                Member m = (Member) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor("#888");
+                current.setName(m.getUser().getFirstName() + " " + m.getUser().getLastName());
+                result.add(current);
             }
-//        else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.ASSIGNEE)) {
-//            groupedByTasks = tasks.stream().filter(t -> t.getAssignee() != null && Objects.equals(t.getAssignee().getId(), ((Member) o).getId())).collect(Collectors.toList());
-//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
-//            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
-//        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.CREATOR)) {
-//            groupedByTasks = tasks.stream().filter(t -> t.getCreator() != null && Objects.equals(t.getCreator().getId(), ((Member) o).getId())).collect(Collectors.toList());
-//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
-//            groupedData.put(((Member) o).getUser().getFirstName() + " " + ((Member) o).getUser().getLastName(), yObject);
-//        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.IS_COMPLETED)) {
-//            groupedByTasks = tasks.stream().filter(t -> Objects.equals(t.getIsCompleted(), ((Boolean) o))).collect(Collectors.toList());
-//            yObject = calculateYObject(projectReportResponseDto, groupedByTasks);
-//            groupedData.put(((Boolean) o) ? "Completed" : "Not complete", yObject);
-//        }
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.CREATOR)) {
+            for (Object o : groupedByObjects) {
+                Member m = (Member) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor(getColorBasedOnNumber(m.getId()));
+                current.setName(m.getUser().getFirstName() + " " + m.getUser().getLastName());
+                result.add(current);
+            }
+        } else if (projectReportResponseDto.getGroupedBy().equals(ProjectGroupByReport.IS_COMPLETED)) {
+            for (Object o : groupedByObjects) {
+                Boolean b = (Boolean) o;
+                ProjectReportItemNameAndColorResponseDto current = new ProjectReportItemNameAndColorResponseDto();
+                current.setColor(b ? "#87DD2C" : "#FFA000");
+                current.setName(b ? "Completed" : "Not complete");
+                result.add(current);
+            }
+        }
 
         return result;
     }
@@ -525,5 +631,65 @@ public class ProjectReportService implements IProjectReportService {
                 return null;
         }
 
+    }
+
+    private String getColorBasedOnNumber(long number) {
+        List<String> enhancedIconColors = List.of(
+                "#f53d3d", // Red
+                "#f53d9f", // Pink
+                "#8a3df5", // Purple
+                "#0d9af2", // Blue
+                "#47ebcd", // Green
+                "#FFDC49", // Yellow
+                "#FFA344", // Orange
+                "#f5743d", // Brown
+                "#979A9B"  // Grey
+        );
+
+        int index = (int) (Math.abs(number) % enhancedIconColors.size());
+        return enhancedIconColors.get(index);
+    }
+
+
+    private List<Task> makeWithFilterSettingDto(Project project, List<FilterSettingResponseDto> filterSettingResponseDtos) {
+        List<FilterCriteriaRequestDto> filterCriteriaRequestDtos = new ArrayList<>();
+        FilterCriteriaRequestDto projectFilterCriteriaRequestDto = new FilterCriteriaRequestDto();
+        projectFilterCriteriaRequestDto.setKey("project.id");
+        projectFilterCriteriaRequestDto.setOperation(FilterOperator.EQUAL);
+        projectFilterCriteriaRequestDto.setValue(String.valueOf(project.getId()));
+        filterCriteriaRequestDtos.add(projectFilterCriteriaRequestDto);
+
+        for (FilterSettingResponseDto fs : filterSettingResponseDtos) {
+            FilterCriteriaRequestDto filterCriteriaRequestDto = new FilterCriteriaRequestDto();
+            filterCriteriaRequestDto.setKey(fs.getField().getFieldName());
+            filterCriteriaRequestDto.setOperation(fs.getOperator());
+            if (fs.getField().equals(FilterField.START_AT) || fs.getField().equals(FilterField.END_AT)) {
+                filterCriteriaRequestDto.setValue(fs.getValues().get(0));
+            } else {
+                filterCriteriaRequestDto.setValues(fs.getValues());
+            }
+            filterCriteriaRequestDtos.add(filterCriteriaRequestDto);
+        }
+
+        return getTaskByFilter(filterCriteriaRequestDtos);
+    }
+
+    private List<Task> getTaskByFilter(List<FilterCriteriaRequestDto> filterCriteriaRequestDtos) {
+        Specification<Task> filterSpecification = taskSpecificationUtil.getSpecificationFromFilters(filterCriteriaRequestDtos);
+
+        Specification<Task> specification = filterSpecification;
+
+        List<Task> list = taskRepository.findAll(specification);
+        return list;
+    }
+
+    private Boolean checkFilter(FilterSettingRequestDto filterSettingRequestDto, Project project, Section section) {
+        if (filterSettingRequestDto.getField().equals(FilterField.STATUS.getFieldName()))
+            return project.getStatuses().stream().map(s -> s.getId()).toList().containsAll(filterSettingRequestDto.getValues().stream().map(v -> Long.parseLong(v)).toList());
+        else if (filterSettingRequestDto.getField().equals(FilterField.PRIORITY.getFieldName()))
+            return project.getPriorities().stream().map(p -> p.getId()).toList().containsAll(filterSettingRequestDto.getValues().stream().map(v -> Long.parseLong(v)).toList());
+        else if (filterSettingRequestDto.getField().equals(FilterField.TASK_TYPE.getFieldName()))
+            return project.getTaskTypes().stream().map(t -> t.getId()).toList().containsAll(filterSettingRequestDto.getValues().stream().map(v -> Long.parseLong(v)).toList());
+        return false;
     }
 }

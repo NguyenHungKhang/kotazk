@@ -1,6 +1,7 @@
 package com.taskmanagement.kotazk.payload.response.projectReport;
 
 import com.taskmanagement.kotazk.entity.enums.*;
+import com.taskmanagement.kotazk.payload.response.filterSetting.FilterSettingResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,8 @@ public class ProjectReportResponseDto {
     Timestamp updatedAt;
     Timestamp deletedAt;
 
+    Double numberValue;
+    List<FilterSettingResponseDto> filterSettings = new ArrayList<>();
     List<ProjectReportItemResponseDto> items = new ArrayList<>();
     List<ProjectReportItemNameAndColorResponseDto> colorsAndNames = new ArrayList<>();
 }

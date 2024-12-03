@@ -15,3 +15,7 @@ export const inviteList = async (data) => await axiosInstance.post(`${ORIGINAL_B
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
 
 export const getPageByWorkspace = async (workspaceId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-workspace/${workspaceId}`, data);
+
+export const getOwnInvitation = async () => await axiosInstance.get(`${ORIGINAL_BASE_URL}/own-invitation`);
+
+export const acceptMember = async (memberId) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/accept-invite/${memberId}`);

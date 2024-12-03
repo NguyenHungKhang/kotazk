@@ -338,13 +338,14 @@ public class WorkSpaceService implements IWorkSpaceService {
         return (Root<WorkSpace> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
             Join<WorkSpace, Member> memberJoin = root.join("members");
             Predicate userPredicate = criteriaBuilder.equal(memberJoin.get("user").get("id"), userId);
+            Predicate statusPredicate = criteriaBuilder.equal(memberJoin.get("status"), MemberStatus.ACTIVE);
             Join<Member, MemberRole> roleJoin = memberJoin.join("role");
             Predicate permissionsPredicate = criteriaBuilder.disjunction();
             for (WorkSpacePermission permission : permissions) {
                 Predicate singlePermissionPredicate = criteriaBuilder.isMember(permission, roleJoin.get("workSpacePermissions"));
                 permissionsPredicate = criteriaBuilder.or(permissionsPredicate, singlePermissionPredicate);
             }
-            return criteriaBuilder.and(userPredicate, permissionsPredicate);
+            return criteriaBuilder.and(userPredicate, statusPredicate, permissionsPredicate);
         };
     }
 }

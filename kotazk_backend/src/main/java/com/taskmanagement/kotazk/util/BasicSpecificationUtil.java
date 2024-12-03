@@ -1,6 +1,8 @@
 package com.taskmanagement.kotazk.util;
 
+import com.taskmanagement.kotazk.entity.Task;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
+import jakarta.persistence.Entity;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -166,8 +168,16 @@ public class BasicSpecificationUtil<T> {
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Invalid value for enum " + type.getSimpleName() + ": " + value, e);
             }
+        }  else if (type.isAnnotationPresent(Entity.class)) { // Kiểm tra nếu là Entity
+            try {
+                Object entity = type.getDeclaredConstructor().newInstance();
+                return entity;
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Failed to create entity: " + type.getSimpleName(), e);
+            }
+        } else {
+            throw new IllegalArgumentException("Unsupported type: " + type);
         }
-        throw new IllegalArgumentException("Unsupported type: " + type);
     }
 
     private Object castToRequiredType(Class fieldType, List<String> values) {

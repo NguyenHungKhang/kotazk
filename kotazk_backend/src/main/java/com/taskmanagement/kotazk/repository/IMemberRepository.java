@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,5 +21,6 @@ public interface IMemberRepository extends JpaRepository<Member, Long>, JpaSpeci
                                                      @Param("projectId") Long projectId,
                                                      @Param("workSpaceId") Long workSpaceId);
 
-
+    @Query("SELECT m FROM Member m WHERE m.email = :email")
+    List<Member> findByEmail(@Param("email") String email);
 }

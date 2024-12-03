@@ -1,9 +1,11 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.projectReport.ProjectReportRequestDto;
 import com.taskmanagement.kotazk.payload.request.status.StatusRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.projectReport.ProjectReportResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
@@ -36,8 +38,14 @@ public class ProjectReportController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public Boolean create(@PathVariable Long id) {
+    public Boolean delete(@PathVariable Long id) {
         return projectReportService.delete(id);
+    }
+
+    @PutMapping("/reposition-by-section/{sectionId}")
+    @ResponseStatus(HttpStatus.OK)
+    public RePositionResponseDto rePosition(@RequestBody RePositionRequestDto rePositionRequestDto, @PathVariable Long sectionId) {
+        return projectReportService.rePosition(rePositionRequestDto, sectionId);
     }
 
     @GetMapping("/{id}")

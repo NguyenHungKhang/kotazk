@@ -20,8 +20,13 @@ public class FilterSetting {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "section_id", nullable = false)
+    @JoinColumn(name = "section_id")
     private Section section;
+
+    @ManyToOne
+    @JoinColumn(name = "project_report_id")
+    private ProjectReport projectReport;
+
 
     @Enumerated(EnumType.STRING)
     @JoinColumn(name = "field_name", nullable = false)

@@ -10,13 +10,14 @@ import { useSelector } from 'react-redux';
 
 const filter = createFilterOptions();
 
-export default function AddProjectMember({ currentMembers, currentRoleMembers }) {
+export default function AddProjectMember() {
     const [value, setValue] = React.useState([]);
     const [members, setMembers] = React.useState([]);
     const [selectedMemberRole, setSelectedMemberRole] = React.useState(null);
     const [memberRoles, setMemberRoles] = React.useState([]);
     const [isOverideRole, setIsOverideRole] = React.useState(true);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const project = useSelector((state) => state.project.currentProject);
 
     const handleIsOverideRole = (event) => {
         setIsOverideRole(event.target.checked);
@@ -27,13 +28,11 @@ export default function AddProjectMember({ currentMembers, currentRoleMembers })
         }
     }, [workspace]);
 
-
     React.useEffect(() => {
-        if (currentRoleMembers) {
-            setMemberRoles(currentRoleMembers);
-            setSelectedMemberRole(currentRoleMembers.find(r => r.name == "Editor" && r.systemInitial == true)?.id);
+        if (project) {
+            fetchWorkspaceMemberRole();
         }
-    }, [currentRoleMembers]);
+    }, [project]);
 
     const fetchWorkspaceMember = async () => {
         try {
@@ -69,6 +68,30 @@ export default function AddProjectMember({ currentMembers, currentRoleMembers })
         }
     }
 
+    const fetchWorkspaceMemberRole = async () => {
+        try {
+
+            const data = {
+                "filters": [
+                    {
+                        "key": "roleFor",
+                        "operation": "EQUAL",
+                        "value": "PROJECT"
+                    }
+                ]
+            }
+
+            const response = await apiService.memberRoleAPI.getPageByProject(data, project.id)
+            if (response?.data) {
+                setMemberRoles(response?.data?.content);
+                setSelectedMemberRole(response?.data.content.find(r => r.name == "Editor" && r.systemInitial == true)?.id);
+            }
+
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
     const getAvatarText = (lastName) => {
         return lastName?.charAt(0).toUpperCase() || '?';
     };
@@ -93,6 +116,19 @@ export default function AddProjectMember({ currentMembers, currentRoleMembers })
     const handleRoleChange = (event) => {
         setSelectedMemberRole(event.target.value)
     };
+
+    const handleSave = async () => {
+        const data = {
+            projectId: project.id,
+            memberRoleId: selectedMemberRole,
+            items: value
+        };
+
+        const response = await apiService.memberAPI.inviteList(data);
+        if (response?.data) {
+            alert("OK")
+        }
+    }
 
     return (
         <Card
@@ -236,7 +272,7 @@ export default function AddProjectMember({ currentMembers, currentRoleMembers })
 
                     {/* Invite Button */}
                     <Box>
-                        <Button variant='contained' onClick={() => console.log(value)}>
+                        <Button variant='contained' onClick={() => handleSave()}>
                             Invite
                         </Button>
                     </Box>
@@ -247,8 +283,6 @@ export default function AddProjectMember({ currentMembers, currentRoleMembers })
                         onChange={handleIsOverideRole}
                         inputProps={{ 'aria-label': 'controlled' }}
                     />} label="Override a member's role in the project" />
-                    <FormControlLabel control={<Checkbox
-                    />} label="Add to workspace" />
                 </FormGroup>
             </Box>
         </Card>

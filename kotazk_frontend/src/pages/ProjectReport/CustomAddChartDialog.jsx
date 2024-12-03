@@ -19,6 +19,8 @@ import CustomLinechart from './CustomLinechart';
 import CustomPiechart from './CustomPiechart';
 import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/themeUtil';
 import { setAddAndUpdateReportDialog } from '../../redux/actions/dialog.action';
+import FilterList from './FilterList';
+import CustomNumberReport from './CustomNumberReport';
 
 const chartTypeData1 = [
     { label: "Bar chart", id: "BAR_CHART" },
@@ -26,12 +28,16 @@ const chartTypeData1 = [
     { label: "Stacked bar chart", id: "STACKED_BAR" },
     { label: "Line chart", id: "LINE" },
     { label: "Pie chart", id: "PIE" },
+    { label: "Number", id: "NUMBER" },
 ]
 
 const xTypeData1 = [
     { label: "Status", id: "STATUS" },
     { label: "Task type", id: "TASK_TYPE" },
     { label: "Priority", id: "PRIORITY" },
+    { label: "Assignee", id: "ASSIGNEE" },
+    { label: "Creator", id: "CREATOR" },
+    { label: "Completion", id: "IS_COMPLETED" },
 ]
 
 const yTypeData1 = [
@@ -43,6 +49,9 @@ const groupTypeData1 = [
     { label: "Status", id: "STATUS" },
     { label: "Task type", id: "TASK_TYPE" },
     { label: "Priority", id: "PRIORITY" },
+    { label: "Assignee", id: "ASSIGNEE" },
+    { label: "Creator", id: "CREATOR" },
+    { label: "Completion", id: "IS_COMPLETED" },
 ]
 
 export default function CustomAddChartDialog() {
@@ -56,6 +65,7 @@ export default function CustomAddChartDialog() {
     const [groupType, setGroupType] = React.useState(null);
     const [name, setName] = React.useState(null);
     const [previewChart, setPreviewChart] = React.useState(null);
+    const [filters, setFilters] = React.useState([]);
     const { open, props } = useSelector((state) => state.dialog.projectReportDialog);
     const section = useSelector((state) => state.section.currentSection);
     const dispatch = useDispatch();
@@ -73,7 +83,7 @@ export default function CustomAddChartDialog() {
 
     React.useEffect(() => {
         handlePreview();
-    }, [type, xType, yType, groupType])
+    }, [type, xType, yType, groupType, filters])
 
     const setToEdit = () => {
         setName(props.name);
@@ -103,6 +113,8 @@ export default function CustomAddChartDialog() {
                     setYTypeData(yTypeData1);
                     setGroupTypeData(groupTypeData1);
                     break;
+                case "NUMBER":
+                    setYTypeData(yTypeData1);
                 default:
                     break;
             }
@@ -182,7 +194,8 @@ export default function CustomAddChartDialog() {
             "type": type.id,
             "xType": xType?.id,
             "yType": yType?.id,
-            "groupedBy": groupType?.id
+            "groupedBy": groupType?.id,
+            "filterSettings": filters
         }
 
         if (props) {
@@ -228,12 +241,20 @@ export default function CustomAddChartDialog() {
                 setPreviewChart(null);
                 return;
             }
+
+        if (type?.id == "NUMBER")
+            if (yType == null) {
+                setPreviewChart(null);
+                return;
+            }
+
         const data = {
             "sectionId": section?.id,
             "type": type.id,
             "xType": xType?.id,
             "yType": yType?.id,
-            "groupedBy": groupType?.id
+            "groupedBy": groupType?.id,
+            "filterSettings": filters
         }
         const response = await apiService.projectReport.getPreviewChart(data);
         if (response?.data) {
@@ -311,6 +332,10 @@ export default function CustomAddChartDialog() {
                                 {previewChart?.type == "PIE" && (
                                     <CustomPiechart chartData={previewChart?.items} chartNamesAndColors={previewChart?.colorsAndNames} xType={previewChart?.xtype} yType={previewChart?.ytype} />
                                 )}
+                                {previewChart?.type == "NUMBER" && (
+                                    <CustomNumberReport number={previewChart?.numberValue} yType={previewChart?.ytype} isPreview={true} />
+                                )}
+
                                 {previewChart == null && (
                                     <Box width={'100%'}
                                         height={'100%'}
@@ -408,6 +433,14 @@ export default function CustomAddChartDialog() {
                                     />
                                 </Box>
                             )}
+                            <Divider flexItem
+                                sx={{
+                                    my: 2
+                                }}
+                            />
+
+                            <FilterList projectReport={props} currentFilters={filters} setCurrentFilters={setFilters} />
+
                         </Stack>
                     </Grid2>
                 </Grid2>

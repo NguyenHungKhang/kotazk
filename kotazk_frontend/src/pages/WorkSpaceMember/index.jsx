@@ -14,8 +14,6 @@ import AddWorkspaceMember from './AddWorkspaceMember';
 
 const WorkSpaceMember = () => {
     const theme = useTheme();
-    // const [selectedMembers, setSelectedMembers] = useState([]);
-    // const [roles, setRoles] = useState(memberRoles);
 
     const [memberRoles, setMemberRoles] = useState(null);
     const [foundedUser, setFoundedUser] = useState(null);
@@ -71,25 +69,21 @@ const WorkSpaceMember = () => {
                 ],
             };
 
-            // Run both API calls concurrently
             const [memberResponse, memberRoleResponse] = await Promise.all([
                 apiService.memberAPI.getPageByWorkspace(workSpace?.id, memberFilter),
                 apiService.memberRoleAPI.getPageByWorkspace(workSpace?.id, memberRoleFilter)
             ]);
 
-            // Handle member response
             if (memberResponse?.data?.content) {
                 setMembers(memberResponse?.data?.content);
             }
 
-            // Handle member role response
             if (memberRoleResponse?.data?.content) {
                 setMemberRoles(memberRoleResponse?.data?.content);
             }
 
         } catch (error) {
             console.error("Error fetching data:", error);
-            // Optionally handle the error, e.g., show a notification or fallback state
         }
     };
 
@@ -171,12 +165,9 @@ const MemberItem = ({ member, memberRoles }) => {
                 borderRadius: 2
             }}
         >
-            <Stack direction='row' spacing={2} alignItems="center"
-            >
-
+            <Stack direction='row' spacing={2} alignItems="center">
                 <Box width={'100%'} flexGrow={1}>
                     <Stack direction='row' spacing={2} alignItems='center'>
-
                         <Avatar src={member.avatarUrl}
                             sx={{
                                 width: 30,
@@ -210,7 +201,6 @@ const MemberItem = ({ member, memberRoles }) => {
                                 p: 0,
                                 m: 0
                             }}
-                        // variant="standard"
                         >
                             {
                                 memberRoles?.map((mr) => (

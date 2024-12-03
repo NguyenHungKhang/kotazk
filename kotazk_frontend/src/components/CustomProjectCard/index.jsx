@@ -8,6 +8,8 @@ import { useSelector } from 'react-redux';
 import { setCurrentProjectList } from '../../redux/actions/project.action';
 import { updateAndAddArray } from '../../utils/arrayUtil';
 import { useDispatch } from 'react-redux';
+import { getAvatar } from '../../utils/avatarUtil';
+import { getProjectCover } from '../../utils/coverUtil';
 
 const ProjectCard = ({ project, theme }) => {
     const PinIcon = TablerIcons["IconPin"];
@@ -51,7 +53,6 @@ const ProjectCard = ({ project, theme }) => {
             }}
         >
             <Box sx={{ position: 'relative', width: '100%' }}>
-                {/* Lớp phủ tối toàn bộ ảnh */}
                 <Box
                     className="overlay"
                     sx={{
@@ -60,10 +61,10 @@ const ProjectCard = ({ project, theme }) => {
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        backgroundColor: 'rgba(0, 0, 0, 0.2)', // Tối đi với mức độ 0.3
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
                         zIndex: 1,
-                        borderRadius: 2, // Bo góc cho ảnh
-                        transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
+                        borderRadius: 2,
+                        transition: 'background-color 0.3s ease-in-out',
                     }}
                 />
 
@@ -71,10 +72,10 @@ const ProjectCard = ({ project, theme }) => {
                     sx={{
                         width: '100%',
                         paddingTop: '56.25%', // Tỉ lệ 16:9
-                        backgroundImage: 'url("https://assets.justinmind.com/wp-content/uploads/2018/11/Lorem-Ipsum-alternatives-768x492.png")',
+                        backgroundImage: `url(${getProjectCover(project?.id, project?.cover)})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
-                        borderRadius: 2,
+                        borderRadius: 1,
                         position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
                     }}
                 >
@@ -135,25 +136,30 @@ const ProjectCard = ({ project, theme }) => {
                                 width: 30,
                                 height: 30,
                             }}
+                            alt={project.member.user.lastName}
+                            src={getAvatar(project.member.user.id, project.member.user.avatarUrl)}
                         >
                             {project.member.user.lastName.charAt(0)}
                         </Avatar>
                         <Box bgcolor={theme.palette.background.default} borderRadius={20}>
-                            <Chip label={project.status.toLowerCase()} size='small'
+                            <Chip
+                                label={project.status.toLowerCase()}
+                                size='small'
+                                color={project.status === 'ACTIVE' ? "success" : "error"}
                                 sx={{
-                                    bgcolor: alpha(theme.palette.success.main, 0.2),
-                                    color: theme.palette.success.main,
                                     textTransform: 'capitalize',
                                 }}
                             />
                         </Box>
                         <Box bgcolor={theme.palette.background.default} borderRadius={20}>
-                            <Chip label={project.visibility.toLowerCase()} size='small'
+                            <Chip
+                                label={project.visibility.toLowerCase()}
+                                size='small'
+                                color={project.visibility === 'PUBLIC' ? "info" : "error"}
                                 sx={{
-                                    bgcolor: project.visibility === 'PUBLIC' ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.error.main, 0.2),
-                                    color: project.visibility === 'PUBLIC' ? theme.palette.warning.main : theme.palette.error.main,
                                     textTransform: 'capitalize',
-                                }} />
+                                }}
+                            />
                         </Box>
                     </Stack>
                 </Box>

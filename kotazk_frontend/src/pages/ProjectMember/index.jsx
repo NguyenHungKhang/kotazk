@@ -12,34 +12,6 @@ import * as apiService from '../../api/index'
 import Invitation from "./Invition";
 import AddProjectMember from "./AddProjectMember";
 
-const dummyMemberData = [
-    {
-        id: 1,
-        name: 'John Doe',
-        user: {
-            firstName: "Khang",
-            lastName: "Nguyễn",
-            email: 'john.doe@example.com',
-        },
-        // avatarUrl: 'https://i.pravatar.cc/150?img=1',
-        role: {
-            id: 1,
-            name: 'Admin',
-        }
-    },
-];
-
-const dummyRoleData = [
-    {
-        id: 1,
-        name: 'Admin',
-    },
-    {
-        id: 2,
-        name: 'Editor',
-    },
-];
-
 
 const ProjectMember = () => {
     const theme = useTheme();

@@ -22,6 +22,7 @@ import * as TablerIcon from "@tabler/icons-react"
 import { getSecondBackgroundColor } from '../../utils/themeUtil';
 import { applyTaskFilters } from '../../utils/filterUtil';
 import { setAddTaskDialog } from '../../redux/actions/dialog.action';
+import dayjs from 'dayjs';
 
 function KanbanDropNDrag() {
   const theme = useTheme();
@@ -93,20 +94,39 @@ function KanbanDropNDrag() {
 
   const fetchTasks = async () => {
     const filterData = [
-      ...(currentFilterList?.map(f => ({
-        key: f.field,
-        operation: "IN",
-        values: f.options,
-      })) || []),
+      ...(currentFilterList?.flatMap((f) => {
+        if (f.field === "startAt") {
+          return {
+            key: f.field,
+            operation: "GREATER_THAN_OR_EQUAL",
+            value: dayjs(f.options?.[0]).valueOf(),
+          };
+        }
+        if (f.field === "endAt") {
+          return {
+            key: f.field,
+            operation: "LESS_THAN_OR_EQUAL",
+            value: dayjs(f.options?.[0]).valueOf(),
+          };
+        }
+        return {
+          key: f.field,
+          operation: "IN",
+          values: f.options,
+        };
+      }) || []),
       {
         key: "name",
         operation: "LIKE",
         value: taskSearchText,
       },
+      {
+        key: "parentTask",
+        operation: "IS_NULL",
+        value: null,
+      },
     ];
-
-
-
+    
     const data = {
       'sortBy': sortEntity,
       'sortDirectionAsc': sortAscDirection == "descending" ? false : true,

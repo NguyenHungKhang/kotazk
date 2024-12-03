@@ -8,6 +8,7 @@ import * as apiService from "../../api/index"
 import { Link, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCurrentProjectList } from "../../redux/actions/project.action";
+import { getAvatar } from "../../utils/avatarUtil";
 
 const SideBar = ({ open, setOpen }) => {
     const theme = useTheme();
@@ -15,6 +16,7 @@ const SideBar = ({ open, setOpen }) => {
     const [projects, setProjects] = useState([])
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const projectList = useSelector((state) => state.project.currentProjectList);
+    const currentUser = useSelector((state) => state.user.currentUser);
     const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
     const dispatch = useDispatch();
 
@@ -109,6 +111,8 @@ const SideBar = ({ open, setOpen }) => {
                                 width: 30,
                                 height: 30,
                             }}
+                            alt={currentUser?.lastName}
+                            src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
                         > H</Avatar>
                         {open && (
                             <Box>

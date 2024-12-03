@@ -66,6 +66,7 @@ const CustomStatusPicker = ({ currentStatus, taskId }) => {
 const CustomStatusOpenComponent = ({ onClick, status, setStatuses, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
     const currentMember = useSelector((state) => state.member.currentUserMember);
+    const project = useSelector((state) => state.project.currentProject);
 
     const handleFecthStatus = async () => {
         try {
@@ -76,7 +77,7 @@ const CustomStatusOpenComponent = ({ onClick, status, setStatuses, projectId, se
 
                 ]
             }
-            const response = await apiService.statusAPI.getPageByProject(projectId, data);
+            const response = await apiService.statusAPI.getPageByProject(project?.id, data);
             if (response?.data) {
                 setStatuses([...response?.data.content]);
             }

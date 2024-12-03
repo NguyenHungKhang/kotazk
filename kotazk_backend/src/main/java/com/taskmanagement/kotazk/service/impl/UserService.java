@@ -5,38 +5,45 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
+import com.taskmanagement.kotazk.entity.Member;
 import com.taskmanagement.kotazk.entity.User;
 import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.entity.enums.UserActiveStatus;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.CustomResponse;
+import com.taskmanagement.kotazk.payload.request.auth.UserActiveRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
 import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
 import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
+import com.taskmanagement.kotazk.repository.IMemberRepository;
 import com.taskmanagement.kotazk.repository.IUserRepository;
 import com.taskmanagement.kotazk.security.JwtToken;
 import com.taskmanagement.kotazk.service.IUserService;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.RandomStringGeneratorUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
 import io.jsonwebtoken.io.IOException;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class UserService implements IUserService {
     @Autowired
     private IUserRepository userRepository;
+    @Autowired
+    private IMemberRepository memberRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Autowired
@@ -46,17 +53,22 @@ public class UserService implements IUserService {
     private JwtToken jwtToken;
     @Autowired
     private RefreshTokenService refreshTokenService = new RefreshTokenService();
+
+    @Autowired
+    private SendEmailUtil sendEmailUtil;
+
     @Value("${app.googleClientId}")
     private String googleClientId;
+
     @Override
     public UserLoginResponseDto login(UserLoginRequestDto login) {
         User user = userRepository.findByEmail(login.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("user", "email", login.getEmail()));
 
-        if(!checkPassword(login.getPassword(), user.getHashedPassword()))
+        if (!checkPassword(login.getPassword(), user.getHashedPassword()))
             throw new CustomException("Wrong password!");
 
-        if(!user.getAccountStatus().equals(UserActiveStatus.ACTIVE))
+        if (!user.getAccountStatus().equals(UserActiveStatus.ACTIVE))
             throw new CustomException("Account have not activated!");
 
         return UserLoginResponseDto.builder()
@@ -65,7 +77,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserLoginResponseDto signup(UserSignupRequestDto signupRequest) throws java.io.IOException, InterruptedException {
+    public CustomResponse signup(UserSignupRequestDto signupRequest) throws java.io.IOException, InterruptedException, MessagingException {
         Optional<User> user = userRepository.findByEmail(signupRequest.getEmail());
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
@@ -82,14 +94,75 @@ public class UserService implements IUserService {
                 .hashedPassword(passwordEncoder.encode(signupRequest.getPassword()))
                 .accountStatus(UserActiveStatus.PENDING)
                 .activeToken(activeToken)
-                .activeDeadline(new Timestamp(currentTime.getTime() + (3 * 60 * 1000)))
+                .activeDeadline(new Timestamp(currentTime.getTime() + (10 * 60 * 1000)))
                 .role(Role.USER)
                 .build();
 
-        userRepository.save(newUser);
 
-        return null;
+        sendOtpEmail(signupRequest.getEmail(), activeToken);
+        userRepository.save(newUser);
+        CustomResponse customResponse = new CustomResponse();
+        customResponse.setMessage("Create account successful! Check your email to active account.");
+        customResponse.setSuccess(true);
+        return customResponse;
     }
+
+    @Override
+    public CustomResponse activeAccount(UserActiveRequestDto userActiveRequestDto) throws MessagingException {
+        Optional<User> user = userRepository.findByEmail(userActiveRequestDto.getEmail());
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        if (!user.isPresent())
+            throw new CustomException("User not founded");
+        if (user.get().getAccountStatus() == UserActiveStatus.ACTIVE)
+            throw new CustomException("Account already activated");
+        if (user.get().getActiveDeadline().before(currentTime))
+            throw new CustomException("OTP expired! Please click \"Resend OTP\" to send new OTP to your email");
+        if (user.get().getActiveToken().equals(userActiveRequestDto.getOtp()))
+            user.get().setAccountStatus(UserActiveStatus.ACTIVE);
+        else
+            throw new CustomException("OTP incorrect");
+
+        User savedUser = userRepository.save(user.get());
+
+        List<Member> members = memberRepository.findByEmail(savedUser.getEmail());
+        List<Member> savedMember = members.stream()
+                .map(m -> {
+                    m.setUser(savedUser);
+                    return m;
+                })
+                .toList();
+        memberRepository.saveAll(savedMember);
+
+        CustomResponse customResponse = new CustomResponse();
+        customResponse.setMessage("Account is activated.");
+        customResponse.setSuccess(true);
+
+        return customResponse;
+    }
+
+    @Override
+    public CustomResponse resendToken(String email) throws MessagingException {
+        Optional<User> user = userRepository.findByEmail(email);
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        if (!user.isPresent())
+            throw new CustomException("User not founded");
+        if (user.get().getAccountStatus() == UserActiveStatus.ACTIVE)
+            throw new CustomException("Account already activated");
+
+        Timestamp newDeadline = new Timestamp(currentTime.getTime() + (10 * 60 * 1000));
+        String activeToken = RandomStringGeneratorUtil.generateToken();
+        user.get().setActiveToken(activeToken);
+        user.get().setActiveDeadline(newDeadline);
+        User savedUser = userRepository.saveAndFlush(user.get());
+        sendOtpEmail(user.get().getEmail(), activeToken);
+        CustomResponse customResponse = new CustomResponse();
+        customResponse.setMessage("OTP already resent to your email");
+        customResponse.setSuccess(false);
+        return customResponse;
+    }
+
     @Override
     public Boolean logout() {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -100,6 +173,7 @@ public class UserService implements IUserService {
             throw new SecurityException("User does not have permission to logout this account.");
         }
     }
+
     @Override
     public String processOAuthPostLogin(String idToken) {
         User user = verifyIDToken(idToken);
@@ -163,5 +237,35 @@ public class UserService implements IUserService {
 
     public boolean checkPassword(String plainPassword, String hashedPassword) {
         return passwordEncoder.matches(plainPassword, hashedPassword);
+    }
+
+    public void sendOtpEmail(String email, String otp) throws MessagingException {
+        String to = email;
+        String subject = "Registration Successful - Confirm Your Kotazk Account";
+        String body = """
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                    <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                        <h1>Welcome to Kotazk!</h1>
+                    </div>
+                    <div style="padding: 20px;">
+                        <p>Hi there,</p>
+                        <p>Thank you for joining our platform! We’re thrilled to have you on board.</p>
+                        <p>Your OTP for account confirmation is:</p>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <span style="font-size: 24px; font-weight: bold; background-color: #f9f9f9; padding: 10px 20px; border: 1px dashed #3D42E9; color: #3D42E9; display: inline-block; border-radius: 5px;">
+                                """ + otp + """
+                            </span>
+                        </div>
+                        <p style="color: #555;">Please use this OTP within the next <strong>10 minutes</strong> to confirm your account.</p>
+                        <p>If you didn’t request this, please ignore this email or contact our support team.</p>
+                    </div>
+                    <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                        <p>© 2024 Kotazk. All rights reserved.</p>
+                        <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
+                    </div>
+                </div>
+                """;
+
+        sendEmailUtil.sendEmail(to, subject, body);
     }
 }

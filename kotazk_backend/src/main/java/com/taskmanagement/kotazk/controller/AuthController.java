@@ -3,7 +3,9 @@ package com.taskmanagement.kotazk.controller;
 import com.taskmanagement.kotazk.entity.RefreshToken;
 import com.taskmanagement.kotazk.entity.User;
 import com.taskmanagement.kotazk.payload.CustomResponse;
+import com.taskmanagement.kotazk.payload.request.auth.UserActiveRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
+import com.taskmanagement.kotazk.payload.request.auth.UserResendRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
 import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
 import com.taskmanagement.kotazk.repository.IUserRepository;
@@ -11,6 +13,7 @@ import com.taskmanagement.kotazk.security.JwtToken;
 import com.taskmanagement.kotazk.service.IUserService;
 import com.taskmanagement.kotazk.service.impl.RefreshTokenService;
 import com.taskmanagement.kotazk.service.impl.UserService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -47,8 +50,18 @@ public class AuthController {
 
     // signup
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequestDto signupRequest) throws IOException, InterruptedException {
-        return new ResponseEntity<UserLoginResponseDto>(userService.signup(signupRequest), HttpStatus.OK);
+    public ResponseEntity<?> signup(@Valid @RequestBody UserSignupRequestDto signupRequest) throws IOException, InterruptedException, MessagingException {
+        return new ResponseEntity<CustomResponse>( userService.signup(signupRequest), HttpStatus.OK);
+    }
+
+    @PostMapping("/active")
+    public ResponseEntity<?> active(@Valid @RequestBody UserActiveRequestDto userActiveRequestDto) throws MessagingException {
+        return new ResponseEntity<CustomResponse>(userService.activeAccount(userActiveRequestDto), HttpStatus.OK);
+    }
+
+    @PostMapping("/resend")
+    public ResponseEntity<?> resend(@Valid @RequestBody UserResendRequestDto userResendRequestDto) throws MessagingException {
+        return new ResponseEntity<CustomResponse>(userService.resendToken(userResendRequestDto.getEmail()), HttpStatus.OK);
     }
 
     // normal login

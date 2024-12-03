@@ -17,8 +17,11 @@ import { initialCurrentGroupByEntity } from "../../redux/actions/groupBy.action"
 import CustomSortDialog from "../CustomSortDialog";
 import { initialCurrentSortEntity } from "../../redux/actions/sort.action";
 import { setTaskSearchText } from "../../redux/actions/searchText.action";
+import { useLocation, useParams } from "react-router-dom";
 
 const CustomFilterBar = () => {
+    const location = useLocation();
+    const { projectId, sectionId } = useParams(); 
     const theme = useTheme();
     const section = useSelector((state) => state.section.currentSection)
     const userChangeFilterList = useSelector((state) => state.filter.userChangeFilterList);
@@ -26,27 +29,34 @@ const CustomFilterBar = () => {
     const userChangeSortEntity = useSelector((state) => state.sort.userChangeSortEntity);
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const InfoIcon = allIcons["IconInfoSquareRoundedFilled"];
+    const isSectionPage = location.pathname.startsWith("/project/") && sectionId;
 
     return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
         <Stack direction='row' spacing={2} alignItems={'center'}>
-            <SearchTextField />
-            <Tooltip placement="top" title="You can save section view if your member role has permision to manage section" arrow>
-                <InfoIcon size={20} color={theme.palette.text.secondary} />
-            </Tooltip>
-            {((userChangeFilterList || userChangeGroupByEntity || userChangeSortEntity) && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) && (
-                < CustomSaveSectionButton sectionId={section?.id} />
-            )}
+            {section?.type != "REPORT" && isSectionPage
+                &&
+                (
+                    <>
+                        <SearchTextField />
+                        <Tooltip placement="top" title="You can save section view if your member role has permision to manage section" arrow>
+                            <InfoIcon size={20} color={theme.palette.text.secondary} />
+                        </Tooltip>
+                        {((userChangeFilterList || userChangeGroupByEntity || userChangeSortEntity) && currentMember?.role?.projectPermissions?.includes("MANAGE_SECTION")) && (
+                            < CustomSaveSectionButton sectionId={section?.id} />
+                        )}
 
-            <CustomFilterDialog section={section} />
-            {(section?.type === "KANBAN" || section?.type === "LIST") && <CustomGroupedByDialog />}
+                        <CustomFilterDialog section={section} />
+                        {(section?.type === "KANBAN" || section?.type === "LIST") && <CustomGroupedByDialog />}
 
-            <CustomSortDialog />
-            {
-                currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
-                    <CustomAddTaskButton />
+                        <CustomSortDialog />
+                        {
+                            currentMember?.role?.projectPermissions?.includes("CREATE_TASKS") && (
+                                <CustomAddTaskButton />
+                            )
+                        }
+                    </>
                 )
             }
-
         </Stack>
     );
 }

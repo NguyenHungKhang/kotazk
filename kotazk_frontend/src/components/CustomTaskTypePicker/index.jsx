@@ -65,6 +65,7 @@ const CustomTaskTypePicker = ({ currentTaskType, taskId }) => {
 const CustomStatusOpenComponent = ({ onClick, taskType, setTaskTypes, projectId, setTarget, isFocusing }) => {
     const theme = useTheme();
     const currentMember = useSelector((state) => state.member.currentUserMember);
+    const project = useSelector((state) => state.project.currentProject);
 
     const listTaskTypeFetch = async () => {
         try {
@@ -75,7 +76,7 @@ const CustomStatusOpenComponent = ({ onClick, taskType, setTaskTypes, projectId,
 
                 ]
             }
-            const response = await apiService.taskTypeAPI.getPageByProject(projectId, data);
+            const response = await apiService.taskTypeAPI.getPageByProject(project?.id, data);
             if (response?.data) {
                 setTaskTypes(response?.data.content);
             }

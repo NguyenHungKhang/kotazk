@@ -27,6 +27,7 @@ import SubtaskComponent from './SubtaskComponent';
 import CustomTimeEstimateTextField from '../CustomTimeEstimateTextField';
 import TaskActivity from './TaskActivity';
 import CommentComponent from './CommentComponent';
+import DependencyComponent from './DependencyComponent';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="left" ref={ref} {...props} />;
@@ -451,6 +452,21 @@ const CustomTaskDialog = () => {
                         <CustomLabelPicker currentLabelList={task?.labels} taskId={task?.id} />
                     </Grid2>
                 </Grid2>
+
+                
+                {/* <Grid2 container spacing={2} mt={4}>
+                    <Grid2 item size={2}>
+                        <Stack direction='row' spacing={2} alignItems='center'>
+                            <LabelsIcon size={16} stroke={2} color={theme.palette.text.secondary} />
+                            <Typography pt={0.5} variant='body2' color={theme.palette.text.secondary}>
+                                Dependency
+                            </Typography>
+                        </Stack>
+                    </Grid2>
+                    <Grid2 item size={10}>
+                        <DependencyComponent taskId={task?.id}/>
+                    </Grid2>
+                </Grid2> */}
 
                 <Box mt={6}>
                     <Stack direction={'row'} spacing={2}>

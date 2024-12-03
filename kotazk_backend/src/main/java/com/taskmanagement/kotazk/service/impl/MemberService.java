@@ -4,11 +4,13 @@ import com.taskmanagement.kotazk.entity.*;
 import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
+import com.taskmanagement.kotazk.payload.CustomResponse;
 import com.taskmanagement.kotazk.payload.request.common.FilterCriteriaRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberInviteRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.member.MemberDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberService;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -164,55 +167,58 @@ public class MemberService implements IMemberService {
             if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) || memberRole.getProject().getId() != project.get().getId())
                 return null;
 
-            memberInviteRequestDto.getItems().stream()
+            List<Member> members = memberInviteRequestDto.getItems().stream()
                     .map(item -> {
                         Member member;
                         if (item.getId() != null) {
-                            member = project.get().getMembers().stream()
+
+                            Optional<Member> projectMember = project.get().getMembers().stream()
                                     .filter(pm -> pm.getId() == item.getId())
-                                    .findFirst()
-                                    .orElseThrow(() -> new CustomException("Invalid input"));
-                            if (member.getId() != project.get().getMember().getId()) {
+                                    .findFirst();
+
+                            Optional<Member> workspaceMember = project.get().getWorkSpace().getMembers().stream()
+                                    .filter(pm -> pm.getId() == item.getId())
+                                    .findFirst();
+                            if (projectMember.isPresent()) {
+                                member = projectMember.get();
+                                if (member.getId() != project.get().getMember().getId()) {
+                                    member.setRole(memberRole);
+                                }
+                            } else if (workspaceMember.isPresent()) {
+                                member = new Member();
+                                member.setEmail(workspaceMember.get().getEmail());
+                                member.setStatus(MemberStatus.INVITED);
+                                member.setUser(workspaceMember.get().getUser());
+                                member.setMemberFor(EntityBelongsTo.PROJECT);
+                                member.setProject(project.get());
+                                member.setWorkSpace(null);
                                 member.setRole(memberRole);
-                            }
+                                member.setSystemInitial(false);
+                                member.setSystemRequired(false);
+
+                            } else throw new CustomException("Invalid input!");
                         } else {
                             Optional<User> existUser = userRepository.findByEmail(item.getEmail());
-
                             member = new Member();
                             member.setEmail(item.getEmail());
                             member.setStatus(MemberStatus.INVITED);
                             member.setUser(existUser.isPresent() ? existUser.get() : null);
                             member.setMemberFor(EntityBelongsTo.PROJECT);
                             member.setProject(project.get());
-                            member.setWorkSpace(project.get().getWorkSpace());
+                            member.setWorkSpace(null);
                             member.setRole(memberRole);
                             member.setSystemInitial(false);
                             member.setSystemRequired(false);
-
-                            Member memberForWorkspace = new Member();
-                            memberForWorkspace.setEmail(item.getEmail());
-                            memberForWorkspace.setUser(existUser.isPresent() ? existUser.get() : null);
-                            memberForWorkspace.setStatus(MemberStatus.INVITED);
-                            memberForWorkspace.setMemberFor(EntityBelongsTo.WORK_SPACE);
-                            memberForWorkspace.setWorkSpace(project.get().getWorkSpace());
-                            memberForWorkspace.setRole(project.get().getWorkSpace().getMemberRoles().stream()
-                                    .filter(r -> r.getName() == "Editor" && r.getSystemInitial() == true)
-                                    .findFirst()
-                                    .orElseThrow(() -> new CustomException("Invalid input")));
-                            memberForWorkspace.setSystemInitial(false);
-                            memberForWorkspace.setSystemRequired(false);
-                            savedMembers.add(member);
                         }
-                        savedMembers.add(member);
-                        return null;
-                    });
+                        return member;
+                    }).toList();
+            savedMembers.addAll(members);
         } else if (workspace.isPresent()) {
             if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) || memberRole.getWorkSpace().getId() != workspace.get().getId())
                 return null;
             List<Member> members = memberInviteRequestDto.getItems().stream()
                     .map(item -> {
                         Member member;
-                        System.out.println(1.5);
                         if (item.getId() != null) {
                             member = workspace.get().getMembers().stream()
                                     .filter(pm -> pm.getId() == item.getId())
@@ -221,11 +227,8 @@ public class MemberService implements IMemberService {
                             if (member.getUser().getId() != workspace.get().getUser().getId()) {
                                 member.setRole(memberRole);
                             }
-                            System.out.println(2);
                         } else {
-                            System.out.println(3);
                             Optional<User> existUser = userRepository.findByEmail(item.getEmail());
-
                             member = new Member();
                             member.setEmail(item.getEmail());
                             member.setStatus(MemberStatus.INVITED);
@@ -236,14 +239,11 @@ public class MemberService implements IMemberService {
                             member.setRole(memberRole);
                             member.setSystemInitial(false);
                             member.setSystemRequired(false);
-
                         }
                         return member;
                     }).toList();
-
             savedMembers.addAll(members);
         }
-
         memberRepository.saveAll(savedMembers);
         return null;
     }
@@ -278,6 +278,52 @@ public class MemberService implements IMemberService {
 //        Member savedMember = memberRepository.save(currentMember);
 
         return null;
+    }
+
+    @Override
+    public CustomResponse acceptInvite(Long id) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Member currentMember = memberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
+
+        if (currentUser.getId() != currentMember.getUser().getId())
+            throw new CustomException("You cannot accept invite of another user!");
+
+        List<Member> saveMembers = new ArrayList<>();
+        currentMember.setStatus(MemberStatus.ACTIVE);
+        saveMembers.add(currentMember);
+
+        if (currentMember.getMemberFor() == EntityBelongsTo.PROJECT) {
+            Optional<Member> workspaceMember = currentMember.getProject().getWorkSpace().getMembers().stream().filter(m -> m.getUser().getId() == currentUser.getId()).findFirst();
+            if (workspaceMember.isPresent()) {
+                workspaceMember.get().setStatus(MemberStatus.ACTIVE);
+                saveMembers.add(workspaceMember.get());
+            } else {
+                Member newWorkspaceMember = new Member();
+                newWorkspaceMember.setEmail(currentMember.getEmail());
+                newWorkspaceMember.setStatus(MemberStatus.ACTIVE);
+                newWorkspaceMember.setUser(currentUser);
+                newWorkspaceMember.setMemberFor(EntityBelongsTo.WORK_SPACE);
+                newWorkspaceMember.setProject(null);
+                newWorkspaceMember.setWorkSpace(currentMember.getProject().getWorkSpace());
+                newWorkspaceMember.setRole(currentMember.getProject().getWorkSpace().getMemberRoles().stream()
+                        .filter(r -> r.getName() == "Editor" && r.getSystemInitial() == true)
+                        .findFirst()
+                        .orElseThrow(() -> new CustomException("Something wrong!")));
+                newWorkspaceMember.setSystemInitial(false);
+                newWorkspaceMember.setSystemRequired(false);
+                saveMembers.add(newWorkspaceMember);
+            }
+
+        }
+
+        memberRepository.saveAll(saveMembers);
+
+        CustomResponse customResponse = new CustomResponse();
+        customResponse.setSuccess(true);
+        customResponse.setMessage("Invitation accepted");
+
+        return customResponse;
     }
 
     @Override
@@ -459,6 +505,33 @@ public class MemberService implements IMemberService {
                 page.hasNext(),
                 page.hasPrevious()
         );
+    }
+
+    @Override
+    public List<MemberDetailResponseDto> getOwnInvitation() {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        FilterCriteriaRequestDto filterCriteriaRequestDto = new FilterCriteriaRequestDto();
+        filterCriteriaRequestDto.setKey("user.id");
+        filterCriteriaRequestDto.setOperation(FilterOperator.EQUAL);
+        filterCriteriaRequestDto.setValue(currentUser.getId().toString());
+
+        FilterCriteriaRequestDto activeFilterCriteriaRequestDto = new FilterCriteriaRequestDto();
+        activeFilterCriteriaRequestDto.setKey("status");
+        activeFilterCriteriaRequestDto.setOperation(FilterOperator.EQUAL);
+        activeFilterCriteriaRequestDto.setValue(MemberStatus.INVITED.toString());
+
+        List<FilterCriteriaRequestDto> filterCriteriaRequestDtos = new ArrayList<>();
+        filterCriteriaRequestDtos.add(filterCriteriaRequestDto);
+        filterCriteriaRequestDtos.add(activeFilterCriteriaRequestDto);
+
+        Specification<Member> specification = specificationUtil.getSpecificationFromFilters(filterCriteriaRequestDtos);
+
+        List<Member> list = memberRepository.findAll(specification);
+        List<MemberDetailResponseDto> dtoList = ModelMapperUtil.mapList(list, MemberDetailResponseDto.class);
+        return dtoList;
     }
 
     @Override

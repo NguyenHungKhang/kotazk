@@ -1,4 +1,4 @@
-import { Box, Card, Divider, Stack, Tabs, Tab, Typography, alpha, darken, useTheme, Grid2 } from "@mui/material";
+import { Box, Card, Divider, Stack, Tabs, Tab, Typography, alpha, darken, useTheme, Grid2, Paper } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import dayjs from "dayjs";
@@ -9,6 +9,7 @@ import CustomTaskType from "../../components/CustomTaskType";
 import CustomStatus from "../../components/CustomStatus";
 import { getCustomTwoModeColor } from "../../utils/themeUtil";
 import WeekTaskCalendar from "./WeekTaskCalendar";
+import { getProjectCover } from "../../utils/coverUtil";
 
 const ProjectDashBoard = () => {
     const theme = useTheme();
@@ -19,6 +20,7 @@ const ProjectDashBoard = () => {
     const [todayTasks, setTodayTasks] = useState([]);
     const [overdueTasks, setOverdueTasks] = useState([]);
     const [completedTasks, setCompletedTasks] = useState([]);
+    const [uncompletedTasks, setUncompletedTasks] = useState([]);
     const [tabIndex, setTabIndex] = useState(0);
 
     useEffect(() => {
@@ -26,6 +28,7 @@ const ProjectDashBoard = () => {
             todayTaskFetch();
             overdueTasksFetch();
             completedTaskFetch();
+            uncompletedTaskFetch();
         }
     }, [project, currentMember]);
 
@@ -45,6 +48,20 @@ const ProjectDashBoard = () => {
         const response = await apiService.taskAPI.getPageByProject(project.id, data);
         if (response?.data) {
             setTodayTasks(response?.data.content);
+        }
+    };
+
+    const uncompletedTaskFetch = async () => {
+        const data = {
+            filters: [
+                { key: "isCompleted", value: "false", operation: "EQUAL" },
+                { key: "assignee.id", value: currentMember.id.toString(), operation: "EQUAL" },
+            ],
+        };
+
+        const response = await apiService.taskAPI.getPageByProject(project.id, data);
+        if (response?.data) {
+            setUncompletedTasks(response?.data.content);
         }
     };
 
@@ -139,71 +156,204 @@ const ProjectDashBoard = () => {
 
 
     return (
-        <>
-            <Stack
-                sx={{
-                    height: "100%",
-                    bgcolor: alpha(theme.palette.background.paper, 0.6),
-                    p: 2,
-                    overflow: "auto",
-                }}
-            >
-                <Card sx={{ p: 4, mb: 2 }}>
-                    <Typography variant="h6" textAlign="center">
-                        {dayjs().format("dddd, MMMM DD YYYY")}
-                    </Typography>
-                    <Typography variant="h4" fontWeight={650} textAlign="center">
-                        Good {getTimeOfDay()}, Khang!
-                    </Typography>
-                </Card>
-                <Grid2 container spacing={2} height={'100%'}>
-                    <Grid2 size={6}>
-                        <Card sx={{ height: "100%" }}>
-                            <Typography
-                                variant="h6"
-                                fontWeight={'bold'}
-                                p={2}
-                            >
-                                My tasks
+        <Stack
+            sx={{
+                height: "100%",
+                overflow: "auto",
+            }}
+            spacing={2}
+        >
+            <Grid2 container spacing={2}>
+                <Grid2 size={3} height={'fit-content'} >
+                    <Paper
+                        sx={{
+                            p: 2,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: alpha(theme.palette.info.main, 0.2),
+                                p: 2,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="h1" fontWeight={500} color="info" textAlign={'center'}>
+                                {todayTasks.length}
                             </Typography>
-                            <Tabs
-                                value={tabIndex}
-                                onChange={(event, newIndex) => setTabIndex(newIndex)}
-                                // sx={{ borderBottom: 1, borderColor: "divider" }}
-                                sx={{
-                                    minHeight: 0,
-                                    "& .MuiTab-root": {
-                                        fontSize: 14,
-                                        textTransform: 'none',
-                                        p: 2,
-                                        minHeight: 0,
-                                        height: 'fit-content'
-                                    }
-                                }}
-                            >
-                                <Tab label="Today Tasks" sx={{ fontSize: 14, textTransform: 'none' }} />
-                                <Tab label="Overdue Tasks" />
-                                <Tab label="Completed Tasks" />
-                            </Tabs>
-                            <Divider />
-                            <Stack my={2} px={4}>
-                                {tabIndex === 0 && renderTasks(todayTasks)}
-                                {tabIndex === 1 && renderTasks(overdueTasks)}
-                                {tabIndex === 2 && renderTasks(completedTasks)}
-                            </Stack>
-                        </Card>
-                    </Grid2>
-                    <Grid2 size={6}>
-                        <Card sx={{ height: "100%" }}>
-                            <WeekTaskCalendar tasks={todayTasks} />
-                        </Card>
-                    </Grid2>
+                            <Typography variant="h6" textAlign={'center'}>
+                                Today tasks
+                            </Typography>
+                        </Box>
+                    </Paper>
                 </Grid2>
+                <Grid2 size={3} height={'fit-content'}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: alpha(theme.palette.error.main, 0.2),
+                                p: 2,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="h1" fontWeight={500} color="error" textAlign={'center'}>
+                                {overdueTasks.length}
+                            </Typography>
+                            <Typography variant="h6" textAlign={'center'}>
+                                Overdue tasks
+                            </Typography>
+                        </Box>
+                    </Paper>
+                </Grid2>
+                <Grid2 size={3} height={'fit-content'}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: alpha(theme.palette.success.main, 0.2),
+                                p: 2,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="h1" fontWeight={500} color="success" textAlign={'center'}>
+                                {completedTasks.length}
+                            </Typography>
+                            <Typography variant="h6" textAlign={'center'}>
+                                Completed tasks
+                            </Typography>
+                        </Box>
+                    </Paper>
+                </Grid2>
+                <Grid2 size={3} height={'fit-content'}>
+                    <Paper
+                        sx={{
+                            p: 2,
+                            boxShadow: 0
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: alpha(theme.palette.warning.main, 0.2),
+                                p: 2,
+                                borderRadius: 2
+                            }}
+                        >
+                            <Typography variant="h1" fontWeight={500} color="warning" textAlign={'center'}>
+                                {uncompletedTasks.length}
+                            </Typography>
+                            <Typography variant="h6" textAlign={'center'}>
+                                Uncompleted tasks
+                            </Typography>
+                        </Box>
+                    </Paper>
+                </Grid2>
+            </Grid2>
+            <Grid2 container spacing={2} height={'100%'}>
+                <Grid2 size={6}>
+                    <Card sx={{ height: "100%", p: 4, boxShadow: 0, borderRadius: 2 }}>
+                        <Typography
+                            variant="h6"
+                            fontWeight={'bold'}
+                            p={2}
+                        >
+                            My tasks
+                        </Typography>
+                        <Tabs
+                            value={tabIndex}
+                            onChange={(event, newIndex) => setTabIndex(newIndex)}
+                            // sx={{ borderBottom: 1, borderColor: "divider" }}
+                            sx={{
+                                minHeight: 0,
+                                "& .MuiTab-root": {
+                                    fontSize: 14,
+                                    textTransform: 'none',
+                                    p: 2,
+                                    minHeight: 0,
+                                    height: 'fit-content'
+                                }
+                            }}
+                        >
+                            <Tab label={
+                                <Box
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: alpha(theme.palette.info.main, 0.2),
+                                        p: 2
+                                    }}
+                                >
+                                    <Typography color="info" fontWeight={650}>
+                                        Today Tasks
+                                    </Typography>
+                                </Box>
+                            } />
+                            <Tab label={
+                                <Box
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: alpha(theme.palette.error.main, 0.2),
+                                        p: 2
+                                    }}
+                                >
+                                    <Typography color="error" fontWeight={650}>
+                                        Overdue Tasks
+                                    </Typography>
+                                </Box>
+                            } />
+                            <Tab label={
+                                <Box
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: alpha(theme.palette.success.main, 0.2),
+                                        p: 2
+                                    }}
+                                >
+                                    <Typography color="success" fontWeight={650}>
+                                        Completed Tasks
+                                    </Typography>
+                                </Box>
+                            } />
+                            <Tab label={
+                                <Box
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: alpha(theme.palette.warning.main, 0.2),
+                                        p: 2
+                                    }}
+                                >
+                                    <Typography color="warning" fontWeight={650}>
+                                        Uncompleted Tasks
+                                    </Typography>
+                                </Box>
+                            } />
+                        </Tabs>
+                        <Divider />
+                        <Stack my={2} px={4} sx={{ height: "100%" }}>
+                            {tabIndex === 0 && renderTasks(todayTasks)}
+                            {tabIndex === 1 && renderTasks(overdueTasks)}
+                            {tabIndex === 2 && renderTasks(completedTasks)}
+                            {tabIndex === 3 && renderTasks(uncompletedTasks)}
+                        </Stack>
+                    </Card>
+                </Grid2>
+                <Grid2 size={6}>
+                    <Card sx={{ height: "100%", p: 4, boxShadow: 0, borderRadius: 2 }}>
+                        <WeekTaskCalendar tasks={todayTasks} />
+                    </Card>
+                </Grid2>
+            </Grid2>
 
-
-            </Stack>
             <CustomTaskDialog />
-        </>
+        </Stack>
+
     );
 };
 

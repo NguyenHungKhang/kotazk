@@ -16,10 +16,7 @@ import java.util.List;
 public class TimeUtil {
 
     public Timestamp getCurrentUTCTimestamp() {
-        // Get the current time in UTC
         Instant now = Instant.now();
-
-        // Convert Instant to Timestamp
         return Timestamp.from(now);
     }
 
