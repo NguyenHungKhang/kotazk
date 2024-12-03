@@ -2,14 +2,22 @@ import React, { useState } from 'react';
 import { Box, TextField, Button, Typography, Card, CardContent, InputAdornment, Link, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LockIcon from '@mui/icons-material/Lock';
+<<<<<<< HEAD
+import FacebookIcon from '@mui/icons-material/Facebook';
+import TwitterIcon from '@mui/icons-material/Twitter';
+=======
 // import FacebookIcon from '@mui/icons-material/Facebook';
 // import TwitterIcon from '@mui/icons-material/Twitter';
+>>>>>>> origin/develop
 import GoogleIcon from '@mui/icons-material/Google';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
+=======
 import * as apiService from '../../api/index'
+>>>>>>> origin/develop
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -17,6 +25,18 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const theme = useTheme();
     const navigate = useNavigate();
+<<<<<<< HEAD
+
+    const handleClickShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        console.log('Email:', email);
+        console.log('Password:', password);
+        navigate('/work-space');
+=======
 
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword);
@@ -31,6 +51,7 @@ const Login = () => {
         await apiService.authAPI.login(data)
             .then(response => navigate('/workspace/'))
             .catch(error => console.warn("error"));
+>>>>>>> origin/develop
     };
 
     return (
@@ -40,8 +61,13 @@ const Login = () => {
             alignItems="center"
             sx={{
                 height: '100vh',
+<<<<<<< HEAD
+                background: theme.palette.mode === 'dark' 
+                    ? 'linear-gradient(135deg, #3a3a3a, #1e1e1e)' 
+=======
                 background: theme.palette.mode === 'dark'
                     ? 'linear-gradient(135deg, #3a3a3a, #1e1e1e)'
+>>>>>>> origin/develop
                     : 'linear-gradient(135deg, #667eea, #764ba2)',
             }}
         >
@@ -126,7 +152,11 @@ const Login = () => {
                                 variant="standard"
                                 sx={{
                                     '& .MuiInput-underline:before': {
+<<<<<<< HEAD
+                                        borderBottom: `1px solid ${theme.palette.text.primary}`, // Update based on text color
+=======
                                         borderBottom: `1px solid ${theme.palette.text.primary}`,
+>>>>>>> origin/develop
                                     },
                                     '& .MuiInput-underline:hover:before': {
                                         borderBottom: `2px solid ${theme.palette.text.primary}`,
@@ -138,6 +168,10 @@ const Login = () => {
                             />
                         </Box>
 
+<<<<<<< HEAD
+                        {/* Forgot Password Link */}
+=======
+>>>>>>> origin/develop
                         <Box display="flex" justifyContent="flex-end" mt={2} mb={3}>
                             <Link
                                 component="button"
@@ -149,6 +183,10 @@ const Login = () => {
                             </Link>
                         </Box>
 
+<<<<<<< HEAD
+                        {/* Login Button */}
+=======
+>>>>>>> origin/develop
                         <Button
                             type="submit"
                             fullWidth
@@ -170,12 +208,20 @@ const Login = () => {
                             Or Sign Up Using
                         </Typography>
                         <Box display="flex" justifyContent="center" mt={2}>
+<<<<<<< HEAD
+                            <IconButton sx={{ mx: 1, backgroundColor: '#3b5998', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
+=======
                             {/* <IconButton sx={{ mx: 1, backgroundColor: '#3b5998', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
+>>>>>>> origin/develop
                                 <FacebookIcon />
                             </IconButton>
                             <IconButton sx={{ mx: 1, backgroundColor: '#1DA1F2', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
                                 <TwitterIcon />
+<<<<<<< HEAD
+                            </IconButton>
+=======
                             </IconButton> */}
+>>>>>>> origin/develop
                             <IconButton sx={{ mx: 1, backgroundColor: '#DB4437', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
                                 <GoogleIcon />
                             </IconButton>
@@ -183,6 +229,9 @@ const Login = () => {
 
                         {/* Sign Up Link */}
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
+<<<<<<< HEAD
+                            Or Sign Up Using <Link href="#" variant="body2" color={theme.palette.primary.main}>SIGN UP</Link>
+=======
                             Or Sign Up Using{' '}
                             <Link
                                 component="button"
@@ -192,6 +241,7 @@ const Login = () => {
                             >
                                 SIGN UP
                             </Link>
+>>>>>>> origin/develop
                         </Typography>
                     </Box>
                 </CardContent>

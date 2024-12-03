@@ -13,6 +13,7 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import { Stack } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Products', 'Pricing', 'Blog'];
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
@@ -20,6 +21,7 @@ const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 function HomeNavBar() {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
+    const navigate = useNavigate();
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -36,6 +38,9 @@ function HomeNavBar() {
         setAnchorElUser(null);
     };
 
+    const handleLogin = () => {
+        navigate('/login');
+    }
     return (
         <AppBar
             component="nav"
@@ -177,6 +182,7 @@ function HomeNavBar() {
                                 color: 'black',
                                 bgcolor: 'white !important'
                             }}
+                            onClick={handleLogin}
                         >
                             Login
                         </Button>
