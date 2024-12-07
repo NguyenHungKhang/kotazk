@@ -14,6 +14,7 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.member.MemberDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
+import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.util.List;
@@ -21,7 +22,7 @@ import java.util.List;
 public interface IMemberService {
     MemberResponseDto create(MemberRequestDto member);
     MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id);
-    List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto);
+    List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) throws MessagingException;
     MemberResponseDto revoke(Long id);
     CustomResponse acceptInvite(Long id);
     Boolean delete(Long id);

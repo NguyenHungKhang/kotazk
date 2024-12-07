@@ -8,6 +8,7 @@ import com.taskmanagement.kotazk.payload.request.common.RePositionRequestDto;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.project.ProjectRequestDto;
+import com.taskmanagement.kotazk.payload.response.attachment.AttachmentResponseDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectDetailsResponseDto;
@@ -27,7 +28,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,6 +60,8 @@ public class ProjectService implements IProjectService {
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<Project> specificationUtil = new BasicSpecificationUtil<>();
+    @Autowired
+    private FileUtil fileUtil;
 
     @Override
     public ProjectResponseDto initialProject(ProjectRequestDto projectDto) {
@@ -181,6 +186,35 @@ public class ProjectService implements IProjectService {
         if (project.getIsPinned() != null) currentProject.setIsPinned(project.getIsPinned());
 
         Project savedProject = projectRepository.save(currentProject);
+        return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
+    }
+
+    @Override
+    public ProjectResponseDto uploadCover(MultipartFile file, Long id) throws IOException {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", id));
+
+        Member currentMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                project.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                new ArrayList<>(),
+                true
+        );
+
+        if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
+            throw new CustomException("This user do not have permission to add attachment in this task");
+
+
+        String url = project.getCover();
+        if (url != null)
+            fileUtil.deleteFile(url);
+
+        String fileUrl = fileUtil.uploadFile(file, "cover-project-" + project.getId() + "-" + UUID.randomUUID().toString());
+        project.setCover(fileUrl);
+        Project savedProject = projectRepository.save(project);
+
         return ModelMapperUtil.mapOne(savedProject, ProjectResponseDto.class);
     }
 

@@ -4,12 +4,16 @@ import { Box, Button, Stack, Typography, useTheme } from "@mui/material";
 import { getProjectCover } from '../../utils/coverUtil';
 import * as TablerIcons from '@tabler/icons-react';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import * as apiService from '../../api/index';
+import { useDispatch } from 'react-redux';
+import { setCurrentProject } from '../../redux/actions/project.action';
 
 const CustomCoverUploader = ({ project }) => {
     const [file, setFile] = useState(null);
     const fileTypes = ["JPG", "PNG", "GIF"];
     const UploadIcon = TablerIcons["IconPhotoUp"];
     const theme = useTheme();
+    const dispatch = useDispatch();
 
     const handleChange = (file) => {
         setFile(file);
@@ -26,6 +30,31 @@ const CustomCoverUploader = ({ project }) => {
         return getProjectCover(project?.id, project?.cover);
     };
 
+    const [uploadInProgress, setUploadInProgress] = useState(false);
+    const [uploadPercent, setUploadPercent] = useState(0);
+
+    const handleSaveFile = async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            setUploadInProgress(true);
+            setUploadPercent(0);
+
+            const response = await apiService.projectAPI.uploadCover(file, project?.id)
+
+            if (response?.data) {
+                dispatch(setCurrentProject(response?.data))
+
+            }
+        } catch (err) {
+            console.error('Upload failed', err);
+        } finally {
+            setUploadInProgress(false);
+            setUploadPercent(0); // Reset progress after completion or failure
+        }
+    };
+
     return (
         <Box sx={{ textAlign: "center", margin: "0 auto" }}>
             {/* Upload Controls */}
@@ -35,7 +64,7 @@ const CustomCoverUploader = ({ project }) => {
                         Remove
                     </Button>
                 ) : (
-                    <FileUploader handleChange={handleChange} name="cover" types={fileTypes}>
+                    <FileUploader handleChange={handleSaveFile} name="cover" types={fileTypes}>
                         <Box sx={{ position: "relative", width: "100%" }}>
                             <Box
                                 className="overlay"

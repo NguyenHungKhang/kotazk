@@ -35,11 +35,6 @@ public class TaskComment {
     @JoinColumn(name = "user_id")
     private User user;
 
-//    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<Attachment> attachments;
-//
-//    @OneToMany(mappedBy = "taskComment", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<Folder> folders;
 
     @CreationTimestamp
     @Column(name = "created_at")

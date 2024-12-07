@@ -15,11 +15,9 @@ import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailRespo
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 import com.taskmanagement.kotazk.repository.ICustomizationRepository;
 import com.taskmanagement.kotazk.repository.IMemberRepository;
+import com.taskmanagement.kotazk.repository.INotificationRepository;
 import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
-import com.taskmanagement.kotazk.service.ICustomizationService;
-import com.taskmanagement.kotazk.service.IMemberRoleService;
-import com.taskmanagement.kotazk.service.IMemberService;
-import com.taskmanagement.kotazk.service.IWorkSpaceService;
+import com.taskmanagement.kotazk.service.*;
 import com.taskmanagement.kotazk.util.*;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +52,10 @@ public class WorkSpaceService implements IWorkSpaceService {
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
+    @Autowired
+    INotificationService notificationService = new NotificationService();
+    @Autowired
+    private INotificationRepository notificationRepository;
 
     @Override
     public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpaceDto) {
@@ -80,10 +82,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .name(workSpaceDto.getName())
                 .user(currentUser)
                 .description(workSpaceDto.getDescription())
-                .status(WorkSpaceStatus.ACTIVE)
-                .visibility(workSpaceDto.getVisibility())
                 .key(generateUniqueKey())
-                .customization(customization)
                 .memberRoles(new HashSet<>(memberRoles))
                 .members(Collections.singletonList(member))
                 .build();
@@ -93,35 +92,10 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         WorkSpace saveWorkSpace = workSpaceRepository.save(newWorkSpace);
 
+        createNotificationForAllMembers(saveWorkSpace, "Workspace has been created", "Workspace has been created by user " + currentUser.getEmail(), "/workspace/" + saveWorkSpace.getId());
+
         return ModelMapperUtil.mapOne(saveWorkSpace, WorkSpaceDetailResponseDto.class);
     }
-
-//    @Override
-//    public WorkSpace create(WorkSpaceRequestDto workSpace) {
-//        User currentUser = SecurityUtil.getCurrentUser();
-//        WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
-//        newWorkSpace.setId(null);
-//        newWorkSpace.setUser(currentUser);
-//        if (workSpace.getCustomization() != null) {
-//            Customization customization = Customization.builder()
-//                    .avatar(workSpace.getCustomization().getAvatar())
-//                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-//                    .fontColor(workSpace.getCustomization().getFontColor())
-//                    .icon(workSpace.getCustomization().getIcon())
-//                    .build();
-//
-//            Customization savedCustomization = customizationRepository.save(customization);
-//            newWorkSpace.setCustomization(savedCustomization);
-//        } else newWorkSpace.setCustomization(null);
-//
-//        String key = null;
-//        do {
-//            key = RandomStringGeneratorUtil.generateKey();
-//        } while (workSpaceRepository.findByKey(key).isPresent());
-//        newWorkSpace.setKey(key);
-//
-//        return workSpaceRepository.save(newWorkSpace);
-//    }
 
     @Override
     public WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace) {
@@ -133,17 +107,14 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         Optional.ofNullable(workSpace.getName()).ifPresent(currentWorkSpace::setName);
         Optional.ofNullable(workSpace.getDescription()).ifPresent(currentWorkSpace::setDescription);
-        Optional.ofNullable(workSpace.getVisibility()).ifPresent(currentWorkSpace::setVisibility);
-        Optional.ofNullable(workSpace.getStatus()).ifPresent(currentWorkSpace::setStatus);
-
-        Optional.ofNullable(workSpace.getCustomization()).ifPresent(customization -> {
-            Optional.ofNullable(customization.getAvatar()).ifPresent(currentWorkSpace.getCustomization()::setAvatar);
-            Optional.ofNullable(customization.getBackgroundColor()).ifPresent(currentWorkSpace.getCustomization()::setBackgroundColor);
-            Optional.ofNullable(customization.getFontColor()).ifPresent(currentWorkSpace.getCustomization()::setFontColor);
-            Optional.ofNullable(customization.getIcon()).ifPresent(currentWorkSpace.getCustomization()::setIcon);
-        });
 
         WorkSpace savedWorkspace =  workSpaceRepository.save(currentWorkSpace);
+
+        createNotificationForAllMembers(savedWorkspace,
+                "Workspace has been updated",
+                "Workspace has been updated by user " + currentUser.getEmail(),
+                "/workspace/" + savedWorkspace.getId());
+
         return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
     }
 
@@ -159,8 +130,13 @@ public class WorkSpaceService implements IWorkSpaceService {
                 true
         );
 
+        createNotificationForAllMembers(currentWorkSpace,
+                "Workspace has been updated",
+                "Workspace has been updated by user " + currentUser.getEmail(),
+                null);
 
         workSpaceRepository.deleteById(currentWorkSpace.getId());
+
         return true;
     }
 
@@ -199,8 +175,6 @@ public class WorkSpaceService implements IWorkSpaceService {
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not archive this work space!");
 
-        currentWorkSpace.setArchivedAt(currentTime);
-
         workSpaceRepository.save(currentWorkSpace);
         return true;
     }
@@ -217,8 +191,6 @@ public class WorkSpaceService implements IWorkSpaceService {
                 Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
                 true
         );
-
-        currentWorkSpace.setArchivedAt(null);
 
         workSpaceRepository.save(currentWorkSpace);
         return true;
@@ -347,5 +319,18 @@ public class WorkSpaceService implements IWorkSpaceService {
             }
             return criteriaBuilder.and(userPredicate, statusPredicate, permissionsPredicate);
         };
+    }
+
+    private void createNotificationForAllMembers(WorkSpace workSpace, String title, String message, String actionUrl)  {
+        List<Notification> notifications = workSpace.getMembers().stream().map(m -> {
+            Notification notification = new Notification();
+            notification.setUser(m.getUser());
+            notification.setTitle(title);
+            notification.setMessage(message);
+            notification.setActionUrl(actionUrl);
+            return notification;
+        }).toList();
+
+        notificationRepository.saveAll(notifications);
     }
 }

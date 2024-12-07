@@ -31,10 +31,6 @@ public class Attachment {
     @JoinColumn(name = "task_comment_id")
     private TaskComment taskComment;
 
-    @ManyToOne
-    @JoinColumn(name = "folder_id")
-    private Folder folder;
-
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
@@ -56,9 +52,6 @@ public class Attachment {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private AttachmentType type;
-
-    @OneToMany(mappedBy = "attachment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Setting> settings;
 
     @CreationTimestamp
     @Column(name = "created_at")

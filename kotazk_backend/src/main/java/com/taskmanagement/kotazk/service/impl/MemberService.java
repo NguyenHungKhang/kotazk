@@ -14,10 +14,8 @@ import com.taskmanagement.kotazk.payload.response.member.MemberDetailResponseDto
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberService;
-import com.taskmanagement.kotazk.util.BasicSpecificationUtil;
-import com.taskmanagement.kotazk.util.ModelMapperUtil;
-import com.taskmanagement.kotazk.util.SecurityUtil;
-import com.taskmanagement.kotazk.util.TimeUtil;
+import com.taskmanagement.kotazk.util.*;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -49,6 +47,8 @@ public class MemberService implements IMemberService {
     private IProjectRepository projectRepository;
     @Autowired
     private TimeUtil timeUtil;
+    @Autowired
+    private SendEmailUtil sendEmailUtil;
     @Autowired
     BasicSpecificationUtil<Member> specificationUtil = new BasicSpecificationUtil<>();
 
@@ -156,7 +156,7 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) {
+    public List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) throws MessagingException {
         User currentUser = SecurityUtil.getCurrentUser();
         Optional<Project> project = projectRepository.findById(memberInviteRequestDto.getProjectId());
         Optional<WorkSpace> workspace = workSpaceRepository.findById(memberInviteRequestDto.getWorkspaceId());
@@ -245,6 +245,15 @@ public class MemberService implements IMemberService {
             savedMembers.addAll(members);
         }
         memberRepository.saveAll(savedMembers);
+
+        List<String> emails = savedMembers.stream().map(m -> m.getEmail()).toList();
+
+        if(!emails.isEmpty()) {
+            if (project.isPresent()) sendProjectInvitationEmail(emails, project.get().getName(), project.get().getMember().getUser().getEmail());
+            else if (workspace.isPresent()) sendWorkspaceInvitationEmail(emails, workspace.get().getName(), workspace.get().getUser().getEmail());
+        }
+
+
         return null;
     }
 
@@ -307,9 +316,11 @@ public class MemberService implements IMemberService {
                 newWorkspaceMember.setProject(null);
                 newWorkspaceMember.setWorkSpace(currentMember.getProject().getWorkSpace());
                 newWorkspaceMember.setRole(currentMember.getProject().getWorkSpace().getMemberRoles().stream()
-                        .filter(r -> r.getName() == "Editor" && r.getSystemInitial() == true)
+                        .filter(r ->  Objects.equals(r.getName(), "Editor") && r.getSystemInitial() == true && r.getRoleFor() == EntityBelongsTo.WORK_SPACE)
                         .findFirst()
-                        .orElseThrow(() -> new CustomException("Something wrong!")));
+                        .orElseThrow(() -> {
+                            throw new CustomException("Something wrong!");
+                        }));
                 newWorkspaceMember.setSystemInitial(false);
                 newWorkspaceMember.setSystemRequired(false);
                 saveMembers.add(newWorkspaceMember);
@@ -661,6 +672,72 @@ public class MemberService implements IMemberService {
         }
 //        System.out.println(errorMessage);
         return null;
+    }
+
+    public void sendProjectInvitationEmail(List<String> emails, String projectName, String ownerEmail) throws MessagingException {
+        String subject = "You're Invited to Join the Project: " + projectName;
+        String body = """
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                    <h1>Project Invitation - Kotazk</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Hi there,</p>
+                    <p>You’ve been invited to collaborate on the project <strong>""" + projectName + """
+                    </strong>!</p>
+                    <p>This project is managed by <strong>""" + ownerEmail + """
+                    </strong>, who believes your participation is vital for its success.</p>
+                    <p>To accept this invitation and start collaborating:</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="https://kotazk.com/invite/accept?project=""" + projectName + """
+                &email=""" + ownerEmail + """
+                            style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                            Join Project
+                        </a>
+                    </div>
+                    <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                </div>
+                <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                    <p>© 2024 Kotazk. All rights reserved.</p>
+                    <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
+                </div>
+            </div>
+            """;
+
+        sendEmailUtil.sendEmail(emails, subject, body);
+    }
+
+    public void sendWorkspaceInvitationEmail(List<String> emails, String workspaceName, String ownerEmail) throws MessagingException {
+        String subject = "You're Invited to Join the Workspace: " + workspaceName;
+        String body = """
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                    <h1>Workspace Invitation - Kotazk</h1>
+                </div>
+                <div style="padding: 20px;">
+                    <p>Hi there,</p>
+                    <p>You’ve been invited to collaborate in the workspace <strong>""" + workspaceName + """
+                    </strong>!</p>
+                    <p>This workspace is managed by <strong>""" + ownerEmail + """
+                    </strong>, who believes your participation is crucial for its success.</p>
+                    <p>To accept this invitation and start collaborating:</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <a href="https://kotazk.com/invite/accept?workspace=""" + workspaceName + """
+                &email=""" + ownerEmail + """
+                           style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                            Join Workspace
+                        </a>
+                    </div>
+                    <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                </div>
+                <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                    <p>© 2024 Kotazk. All rights reserved.</p>
+                    <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
+                </div>
+            </div>
+            """;
+
+        sendEmailUtil.sendEmail(emails, subject, body);
     }
 
 

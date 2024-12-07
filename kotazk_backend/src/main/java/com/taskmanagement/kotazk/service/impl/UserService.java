@@ -6,7 +6,10 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.taskmanagement.kotazk.entity.Member;
+import com.taskmanagement.kotazk.entity.Project;
 import com.taskmanagement.kotazk.entity.User;
+import com.taskmanagement.kotazk.entity.enums.MemberStatus;
+import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
 import com.taskmanagement.kotazk.entity.enums.Role;
 import com.taskmanagement.kotazk.entity.enums.UserActiveStatus;
 import com.taskmanagement.kotazk.exception.CustomException;
@@ -16,6 +19,7 @@ import com.taskmanagement.kotazk.payload.request.auth.UserActiveRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
 import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
+import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
 import com.taskmanagement.kotazk.repository.IMemberRepository;
 import com.taskmanagement.kotazk.repository.IUserRepository;
@@ -30,12 +34,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.GeneralSecurityException;
 import java.sql.Timestamp;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -53,7 +56,8 @@ public class UserService implements IUserService {
     private JwtToken jwtToken;
     @Autowired
     private RefreshTokenService refreshTokenService = new RefreshTokenService();
-
+    @Autowired
+    private FileUtil fileUtil;
     @Autowired
     private SendEmailUtil sendEmailUtil;
 
@@ -105,6 +109,24 @@ public class UserService implements IUserService {
         customResponse.setMessage("Create account successful! Check your email to active account.");
         customResponse.setSuccess(true);
         return customResponse;
+    }
+
+    @Override
+    public UserResponseDto uploadAvatar(MultipartFile file) throws java.io.IOException {
+        User currentUser = SecurityUtil.getCurrentUser();
+
+        User existUser = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("user", "id", currentUser.getId()));
+
+        String url = existUser.getAvatar();
+        if (url != null)
+            fileUtil.deleteFile(url);
+
+        String fileUrl = fileUtil.uploadFile(file, "avatar-user-" + existUser.getId() + "-" + UUID.randomUUID().toString());
+        existUser.setAvatar(fileUrl);
+        User savedUser = userRepository.save(existUser);
+
+        return ModelMapperUtil.mapOne(savedUser, UserResponseDto.class);
     }
 
     @Override
@@ -165,7 +187,7 @@ public class UserService implements IUserService {
 
     @Override
     public Boolean logout() {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = SecurityUtil.getCurrentUser();
         if (currentUser != null) {
             refreshTokenService.deleteByUserId(currentUser.getId());
             return true;
@@ -266,6 +288,6 @@ public class UserService implements IUserService {
                 </div>
                 """;
 
-        sendEmailUtil.sendEmail(to, subject, body);
+        sendEmailUtil.sendEmail(Collections.singletonList(to), subject, body);
     }
 }

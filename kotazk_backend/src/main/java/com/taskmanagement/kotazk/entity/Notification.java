@@ -1,6 +1,5 @@
 package com.taskmanagement.kotazk.entity;
 
-import com.taskmanagement.kotazk.entity.enums.EntityBelongsTo;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,35 +8,35 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "team")
+@Table(name = "notification")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Team {
+public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "work_space_id", nullable = false)
-    private WorkSpace workspace;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "project_id")
-    private Project project;
+    @Column(name = "title", nullable = false)
+    private String title;
 
-    @ManyToOne
-    @JoinColumn(name = "customization_id", nullable = false)
-    private Customization customization;
+    @Column(name = "message", nullable = false)
+    private String message;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "is_read", nullable = false)
+    private Boolean  isRead = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "team_for", nullable = false)
-    private EntityBelongsTo teamFor;
+    @Column(name = "is_check", nullable = false)
+    private Boolean isCheck = false;
+
+    @Column(name = "action_url")
+    private String actionUrl;
 
     @CreationTimestamp
     @Column(name = "created_at")

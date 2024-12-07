@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Divider, IconButton, Skeleton, Stack, Typography, useTheme } from '@mui/material';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import AddSectionDialog from './AddSectionDialog';
@@ -15,6 +15,7 @@ export default function CustomTab() {
     const theme = useTheme();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const location = useLocation();
     const sections = useSelector((state) => state.section.currentSectionList);
     const { sectionId } = useParams();
     const project = useSelector((state) => state.project.currentProject);
@@ -88,10 +89,10 @@ export default function CustomTab() {
                                         py: 1,
                                         borderRadius: 1,
                                         textDecoration: 'none',
-                                        backgroundColor: sectionId == null ? theme.palette.primary.main : 'transparent',
-                                        color: sectionId == null ? theme.palette.primary.contrastText : theme.palette.text.primary,
+                                        backgroundColor: sectionId == null && location === `/project/${project?.id}/` ? theme.palette.primary.main : 'transparent',
+                                        color: sectionId == null && location === `/project/${project?.id}/` ? theme.palette.primary.contrastText : theme.palette.text.primary,
                                         '&:hover': {
-                                            backgroundColor: sectionId == null
+                                            backgroundColor: sectionId && location === `/project/${project?.id}/` == null
                                                 ? theme.palette.primary.dark
                                                 : theme.palette.action.hover,
                                         },

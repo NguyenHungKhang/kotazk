@@ -14,6 +14,7 @@ import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.impl.MemberRoleService;
 import com.taskmanagement.kotazk.service.impl.MemberService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +83,7 @@ public class MemberController {
     @ResponseStatus(HttpStatus.OK)
     public List<MemberResponseDto> inviteListMember(
             @RequestBody MemberInviteRequestDto memberInviteRequestDto
-    ) {
+    ) throws MessagingException {
         return memberService.inviteList(memberInviteRequestDto);
     }
 

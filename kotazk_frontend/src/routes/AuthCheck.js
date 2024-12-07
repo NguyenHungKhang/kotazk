@@ -24,7 +24,6 @@ const AuthCheck = () => {
                     }
                 } catch (error) {
                     navigate('/login');
-                    console.log(error);
                 }
             };
 

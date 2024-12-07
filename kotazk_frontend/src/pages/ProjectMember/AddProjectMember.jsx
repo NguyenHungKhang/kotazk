@@ -7,6 +7,8 @@ import Chip from '@mui/material/Chip';
 import { Box, Button, Select, MenuItem, InputLabel, FormControl, Checkbox, FormGroup, FormControlLabel, Card, Typography, Divider } from '@mui/material';
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
 
 const filter = createFilterOptions();
 
@@ -18,6 +20,7 @@ export default function AddProjectMember() {
     const [isOverideRole, setIsOverideRole] = React.useState(true);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const project = useSelector((state) => state.project.currentProject);
+    const [inviting, setInviting] = useState(false);
 
     const handleIsOverideRole = (event) => {
         setIsOverideRole(event.target.checked);
@@ -118,15 +121,21 @@ export default function AddProjectMember() {
     };
 
     const handleSave = async () => {
-        const data = {
-            projectId: project.id,
-            memberRoleId: selectedMemberRole,
-            items: value
-        };
+        try {
+            setInviting(true)
+            const data = {
+                projectId: project.id,
+                memberRoleId: selectedMemberRole,
+                items: value
+            };
 
-        const response = await apiService.memberAPI.inviteList(data);
-        if (response?.data) {
-            alert("OK")
+            const response = await apiService.memberAPI.inviteList(data);
+            if (response?.data) {
+                alert("OK")
+            }
+            setInviting(false)
+        } catch (e) {
+            alert(e);
         }
     }
 
@@ -272,9 +281,9 @@ export default function AddProjectMember() {
 
                     {/* Invite Button */}
                     <Box>
-                        <Button variant='contained' onClick={() => handleSave()}>
+                        <LoadingButton variant='contained' onClick={() => handleSave()} loading={inviting} disabled={value?.length == 0}>
                             Invite
-                        </Button>
+                        </LoadingButton>
                     </Box>
                 </Stack>
                 <FormGroup>

@@ -6,11 +6,15 @@ import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.IUserService;
 import com.taskmanagement.kotazk.service.impl.MemberService;
 import com.taskmanagement.kotazk.service.impl.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_SECURE_PART;
 
@@ -20,6 +24,12 @@ import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_ENDPOINT_S
 public class UserController {
     @Autowired
     IUserService userService = new UserService();
+
+    @PutMapping("/upload-avatar")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto getCurrentOne(@Valid @RequestBody MultipartFile file) throws IOException {
+        return userService.uploadAvatar(file);
+    }
 
     @GetMapping("/by-email")
     @ResponseStatus(HttpStatus.OK)

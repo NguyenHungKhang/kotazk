@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { Box, Button, Stack, alpha, useTheme, Typography, Avatar, List, ListItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
+import { Box, Button, Stack, alpha, useTheme, Typography, Avatar, List, ListItem, ListItemIcon, ListItemText, Divider, ListItemAvatar } from "@mui/material";
 import { IconLayoutDashboardFilled, IconSettingsFilled, IconUsers, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
 import { useSelector } from "react-redux";
 import CustomProjectColorIconPicker from "../CustomProjectColorIconPicker";
 import * as apiService from "../../api/index"
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCurrentProjectList } from "../../redux/actions/project.action";
 import { getAvatar } from "../../utils/avatarUtil";
+import { getProjectCover } from "../../utils/coverUtil";
 
 const SideBar = ({ open, setOpen }) => {
     const theme = useTheme();
@@ -19,6 +20,7 @@ const SideBar = ({ open, setOpen }) => {
     const currentUser = useSelector((state) => state.user.currentUser);
     const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (workspace != null)
@@ -68,7 +70,7 @@ const SideBar = ({ open, setOpen }) => {
                             position: 'relative',
                         }}
                     >
-                        <Stack direction='row' spacing={2} alignItems='center'>
+                        <Stack direction='row' spacing={2} alignItems='center' onClick={() => navigate("/workspace")}>
                             <Avatar
                                 src="https://i.pinimg.com/474x/55/26/85/5526851366d0b5c204c2b63cf1305578.jpg"
                                 sx={{
@@ -112,7 +114,7 @@ const SideBar = ({ open, setOpen }) => {
                                 height: 30,
                             }}
                             alt={currentUser?.lastName}
-                            src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
+                            src={getAvatar(currentUser?.id, currentUser?.avatar)}
                         > H</Avatar>
                         {open && (
                             <Box>
@@ -172,7 +174,19 @@ const SideBar = ({ open, setOpen }) => {
                                 to={`/project/${project.id}`}
                             >
                                 <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
-                                    <CustomProjectColorIconPicker />
+                                    <Box sx={{ position: 'relative', width: 30 }}>
+                                        <Box
+                                            sx={{
+                                                width: '100%',
+                                                paddingTop: '56.25%', // Tỉ lệ 16:9
+                                                backgroundImage: `url(${getProjectCover(project?.id, project?.cover)})`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                borderRadius: 1,
+                                                position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
+                                            }}
+                                        />
+                                    </Box>
                                 </ListItemIcon>
                                 {open && (
                                     <ListItemText
@@ -203,8 +217,23 @@ const SideBar = ({ open, setOpen }) => {
                                 to={`/project/${project.id}`}
                             >
                                 <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
-                                    <CustomProjectColorIconPicker />
+                                    <Box sx={{ position: 'relative', width: 30 }}>
+                                        <Box
+                                            sx={{
+                                                width: '100%',
+                                                paddingTop: '56.25%', // Tỉ lệ 16:9
+                                                backgroundImage: `url(${getProjectCover(project?.id, project?.cover)})`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                borderRadius: 1,
+                                                position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
+                                            }}
+                                        />
+                                    </Box>
                                 </ListItemIcon>
+                                {/* <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                  
+                                </ListItemIcon> */}
                                 {open && (
                                     <ListItemText
                                         primary={

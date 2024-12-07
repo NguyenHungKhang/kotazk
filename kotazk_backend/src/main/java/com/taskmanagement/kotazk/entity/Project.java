@@ -31,6 +31,9 @@ public class Project {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @Column(name = "cover")
+    private String cover;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -83,9 +86,6 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
     private List<ActivityLog> activityLogs;
-
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Setting> settings;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")

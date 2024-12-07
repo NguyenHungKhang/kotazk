@@ -17,6 +17,8 @@ import { getWorkspaceCover } from '../../utils/coverUtil';
 import { getAvatar } from '../../utils/avatarUtil';
 import { useNavigate } from 'react-router-dom';
 import CustomMainPageHeader from '../../components/CustomMainPageHeader';
+import workspaceListImages from '../../assets/workspace-list.png';
+import dayjs from 'dayjs';
 
 // const workspaces =
 // {
@@ -34,7 +36,8 @@ const WorkspaceList = () => {
     const currentUser = useSelector((state) => state.user.currentUser);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
+    const accessedWorkspaces = workspaces?.content;
+    const myWorkspace = workspaces?.content?.filter(ws => ws.user.id == currentUser?.id);
     useEffect(() => {
         initialFetch();
     }, [dispatch])
@@ -54,6 +57,19 @@ const WorkspaceList = () => {
     const handleNavigate = (wsId) => {
         navigate(`/workspace/${wsId}`);
     }
+
+
+    const getTimeOfDay = () => {
+        const currentHour = dayjs().hour(); // Get current hour (0-23)
+
+        if (currentHour >= 5 && currentHour < 12) {
+            return "Morning"; // 5:00 AM to 11:59 AM
+        } else if (currentHour >= 12 && currentHour < 18) {
+            return "Afternoon"; // 12:00 PM to 5:59 PM
+        } else {
+            return "Evening"; // 6:00 PM to 4:59 AM
+        }
+    };
 
     return workspaces != null && (
 
@@ -83,39 +99,59 @@ const WorkspaceList = () => {
                 </Paper>
 
                 {/* Main Content */}
-                <Paper style={{ padding: '24px', height: '100%' }}>
+                <Paper sx={{ padding: 2, bgcolor: getTimeOfDay() == "Evening" ? "#3c75fa" : "#f0f4ff", color: theme.palette.getContrastText(getTimeOfDay() == "Evening" ? "#3c75fa" : "#f0f4ff") }}>
                     {/* Search Bar with Background Image */}
-                    <Box
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        marginBottom={4}
-                        style={{
-                            backgroundImage: `url('https://cellphones.com.vn/sforum/wp-content/uploads/2023/08/hinh-nen-desktop-5.jpg')`, // Replace 'path_to_image' with your image URL
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            width: '100%',
-                            height: '200px', // Adjust height as needed
-                            borderRadius: '12px',
-                            padding: '16px'
-                        }}
-                    >
-                        <TextField
-                            placeholder="Search"
-                            variant="outlined"
-                            fullWidth
-                            InputProps={{
-                                startAdornment: <SearchIcon />,
-                            }}
-                            style={{ maxWidth: 600, backgroundColor: '#fff', borderRadius: '8px' }} // White background for input
-                        />
-                    </Box>
+                    <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                        <Box
+                            component={'img'}
+                            height={280}
+                            borderRadius={6}
+                            p={4}
+                            src={getTimeOfDay() == "Evening" ? "https://i.pinimg.com/originals/99/12/af/9912af0ae2745b5bf82f024a33b5e274.gif" : "https://i.pinimg.com/originals/85/9b/84/859b844d4cb109594eb93c6dfd11e4d1.gif"} />
+                        <Box>
+                            <Typography variant='h2' fontWeight={650}>
+                                Good {getTimeOfDay()}, {currentUser?.lastName + " " + currentUser?.firstName}!
+                            </Typography>
+                            <Typography mt={2}>
+                                We're thrilled to have you on board! Get started by exploring your dashboard to manage tasks and projects. Connect with your team to collaborate and make progress together. Don't forget to personalize your profile and set your preferences.
+                            </Typography>
+                            <Typography>
+                                If you ever need help, our support team is just a click away. We're excited to see the amazing things you'll accomplish here!
+                            </Typography>
+                            <TextField
+                                placeholder="Search workspace"
+                                fullWidth
+                                InputProps={{
+                                    startAdornment: <SearchIcon sx={{ mr: 2 }} />,
+                                    style: {
+                                        backgroundColor: getTimeOfDay() === "Evening" ? "#000000" : "#ffffff",
+                                        color: getTimeOfDay() === "Evening" ? "#ffffff" : "#000000", // Change text color (white for Evening, black for Day)
+                                    },
+                                }}
+                                InputLabelProps={{
+                                    style: {
+                                        color: getTimeOfDay() === "Evening" ? "#ffffff" : "#000000", // Change label color based on time of day
+                                    },
+                                }}
+                                sx={{
+                                    maxWidth: 600,
+                                    mt: 2,
+                                    bgcolor: getTimeOfDay() === "Evening" ? "#3c75fa" : "#f0f4ff", // Background color for the input
+                                    color: getTimeOfDay() === "Evening" ? "#ffffff" : "#000000", // Text color for the input
+                                    borderRadius: 1, // Optional: to add rounded corners
+                                }}
+                            />
 
+                        </Box>
+                    </Stack>
+                </Paper>
+
+                <Paper style={{ padding: '24px', height: '100%' }}>
                     <Typography variant="h6" style={{ margin: '16px 0' }}>
                         My Workspaces
                     </Typography>
                     <Grid container spacing={2}>
-                        {workspaces?.content?.slice(0, 3).map((ws, index) => (
+                        {myWorkspace?.map((ws, index) => (
                             <Grid item xs={12} sm={3} md={2} key={index}>
                                 <Card
                                     onClick={() => handleNavigate(ws.id)}
@@ -203,7 +239,114 @@ const WorkspaceList = () => {
                                                         height: 30,
                                                     }}
                                                     alt={ws.user.lastName}
-                                                    src={getAvatar(ws.user.id, ws.user.avatarUrl)}
+                                                    src={getAvatar(ws.user.id, ws.user.avatar)}
+                                                >
+                                                    {ws.user.lastName.charAt(0)}
+                                                </Avatar>
+                                                <Typography color='#fff' fontWeight={500}>
+                                                    {ws.user.lastName + " " + ws.user.firstName}
+                                                </Typography>
+                                            </Stack>
+                                        </Box>
+                                    </Box>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+
+                    <Typography variant="h6" style={{ margin: '16px 0' }}>
+                        Accessed Workspaces
+                    </Typography>
+                    <Grid container spacing={2}>
+                        {accessedWorkspaces?.map((ws, index) => (
+                            <Grid item xs={12} sm={3} md={2} key={index}>
+                                <Card
+                                    onClick={() => handleNavigate(ws.id)}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
+                                        '&:hover .overlay': {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
+                                        },
+                                        '&:hover .projectName': {
+                                            textDecoration: 'underline'
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ position: 'relative', width: '100%' }}>
+                                        <Box
+                                            className="overlay"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: 0,
+                                                left: 0,
+                                                width: '100%',
+                                                height: '100%',
+                                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                                zIndex: 1,
+                                                borderRadius: 1,
+                                                transition: 'background-color 0.3s ease-in-out',
+                                            }}
+                                        />
+
+                                        <Box
+                                            sx={{
+                                                width: '100%',
+                                                paddingTop: '56.25%', // Tỉ lệ 16:9
+                                                backgroundImage: `url(${getWorkspaceCover(ws?.id, ws?.cover)})`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                borderRadius: 1,
+                                                position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
+                                            }}
+                                        >
+                                            {/* Thông tin project ở trên ảnh */}
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    width: '100%'
+                                                }}
+                                            >
+                                                <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
+                                                    <Box flexGrow={1}>
+                                                        <Typography
+                                                            className='projectName'
+                                                            variant="h6"
+                                                            fontWeight={650}
+                                                            color="white"
+                                                        >
+                                                            {ws.name}
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            </Box>
+
+                                            {/* Stack ở dưới cùng của ảnh */}
+                                            <Stack
+                                                direction='row'
+                                                spacing={2}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    bottom: 0,
+                                                    left: 0,
+                                                    width: '100%',
+                                                    p: 2,
+                                                    zIndex: 2,  // Đảm bảo Stack nằm trên lớp phủ
+                                                    alignItems: 'center',
+                                                }}
+                                            >
+                                                <Avatar
+                                                    sx={{
+                                                        width: 30,
+                                                        height: 30,
+                                                    }}
+                                                    alt={ws.user.lastName}
+                                                    src={getAvatar(ws.user.id, ws.user.avatar)}
                                                 >
                                                     {ws.user.lastName.charAt(0)}
                                                 </Avatar>
@@ -219,7 +362,7 @@ const WorkspaceList = () => {
                     </Grid>
                 </Paper>
             </Stack>
-        </Box>
+        </Box >
     );
 };
 

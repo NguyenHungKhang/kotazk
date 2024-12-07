@@ -59,12 +59,6 @@ public class Status {
     @OrderBy("position")
     private List<Task> tasks;
 
-    @OneToMany(mappedBy = "fromStatus", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.LAZY)
-    private Set<Transition> transitionFromStatuses;
-
-    @OneToMany(mappedBy = "toStatus", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Transition> transitionToStatuses;
-
     @CreationTimestamp
     @Column(name = "created_at")
     private Timestamp createdAt;

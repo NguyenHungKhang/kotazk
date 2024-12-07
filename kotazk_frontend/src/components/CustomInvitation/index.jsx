@@ -27,6 +27,7 @@ const CustomInvitation = () => {
     const [members, setMembers] = useState([]);
     const CheckIcon = TablerIcons["IconCheck"];
     const RejectIcon = TablerIcons["IconX"];
+    const InviteIcon = TablerIcons["IconMailSpark"];
 
     useEffect(() => {
         if (currentUser) {
@@ -50,7 +51,12 @@ const CustomInvitation = () => {
     return (
         <div>
             {/* Button to open the dialog */}
-            <Button variant="contained" color="primary" onClick={handleOpen}>
+            <Button variant="contained" color="primary" onClick={handleOpen} size='small'
+            sx={{
+                borderRadius: 20
+            }}
+            startIcon={<InviteIcon size={18}/>}
+            >
                 Invitation
             </Button>
 
@@ -125,9 +131,9 @@ const CustomInvitation = () => {
                                                 <Box>
                                                     <Typography>
                                                         {
-                                                            member.memberFor == "WORK_SPACE" ?
-                                                                member.workSpace.user.firstName + " " + member.workSpace.user.lastName :
-                                                                member.project.member.user.firstName + " " + member.project.member.user.lastName
+                                                            member?.memberFor == "WORK_SPACE" ?
+                                                                member?.workSpace?.user?.firstName + " " + member?.workSpace?.user?.lastName :
+                                                                member?.project?.member?.user?.firstName + " " + member?.project?.member?.user?.lastName
                                                         }
                                                     </Typography>
                                                 </Box>

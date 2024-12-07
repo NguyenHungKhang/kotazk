@@ -13,7 +13,7 @@ const RoleTableHeader = ({ roles, editedFlag, handleSavePermissionList, handleOp
     const theme = useTheme();
     return (
         <TableHead>
-            <TableCell sx={{ width: 600, position: 'sticky', left: 0, zIndex: 3, borderRight: `4px solid grey` }}>
+            <TableCell sx={{ width: 400, position: 'sticky', left: 0, zIndex: 3, borderRight: `4px solid grey` }}>
                 <Typography fontWeight={500}>Permission</Typography>
             </TableCell>
             {roles?.map(role => (

@@ -15,6 +15,9 @@ import * as apiService from "../../api/index"
 import WorkSpaceMember from "../../pages/WorkSpaceMember";
 import CustomDialogForManage from "../CustomDialogForManage";
 import { getAvatar } from "../../utils/avatarUtil";
+import CustomNavbarAvatar from "../CustomNavbarAvatar";
+import CustomAddWorkspaceDialog from "../CustomAddWorkspaceDialog";
+import CustomInvitation from "../CustomInvitation";
 
 const CustomMainPageHeader = () => {
     const theme = useTheme();
@@ -51,6 +54,8 @@ const CustomMainPageHeader = () => {
 
                 </Box>
                 <Stack direction="row" spacing={2} alignItems="center">
+                    <CustomInvitation />
+                    <CustomAddWorkspaceDialog />
                     <CustomDarkModeSwitch />
                     <IconButton
                         size="small"
@@ -67,32 +72,7 @@ const CustomMainPageHeader = () => {
                     >
                         <NotificationsIcon fontSize="small" />
                     </IconButton>
-
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <ChatIcon fontSize="small" />
-                    </IconButton>
-                    <Avatar
-                        sx={{
-                            width: 30,
-                            height: 30
-                        }}
-                        alt={currentUser?.lastName}
-                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
-                    >
-                        H
-                    </Avatar>
+                   <CustomNavbarAvatar />
                 </Stack>
             </Stack>
             <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />

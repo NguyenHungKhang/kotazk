@@ -42,18 +42,6 @@ public class Task {
     private Member assignee;
 
     @ManyToOne
-    @JoinColumn(name = "reporter_id")
-    private Member reporter;
-
-    @ManyToMany
-    @JoinTable(
-            name = "task_collaborator",
-            joinColumns = @JoinColumn(name = "task_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<Member> collaborators;
-
-    @ManyToOne
     @JoinColumn(name = "task_type_id", nullable = false)
     private TaskType taskType;
 
@@ -64,7 +52,8 @@ public class Task {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 65535)
+    @Lob
     private String description;
 
     @Column(name = "position", nullable = false)
@@ -85,8 +74,6 @@ public class Task {
     @Column(name = "time_estimate")
     private Float timeEstimate; // count as minute;
 
-    @Column(name = "time_tracking")
-    private Long timeTracking; // count as minute;
 
     @Column(name = "start_at")
     private Timestamp startAt;
@@ -98,14 +85,8 @@ public class Task {
     private Boolean isCompleted = false;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TaskRecord> taskRecords;
-
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")
     private List<Attachment> attachments;
-
-    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Folder> folders;
 
     @OneToMany(mappedBy = "parentTask", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position")

@@ -59,7 +59,6 @@ const CustomHeader = () => {
             <Stack direction='row' spacing={3} alignItems="center">
                 <Stack flexGrow={1} direction='row' spacing={3} alignItems="center">
                     <Stack direction='row' spacing={2} alignItems='center'>
-                        <CustomColorIconPicker />
                         <Typography
                             variant="h5"
                             fontWeight={650}
@@ -87,7 +86,7 @@ const CustomHeader = () => {
                                     height: 30,
                                 }}
                                 alt={member?.user?.lastName}
-                                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
+                                src={getAvatar(member?.user?.id, member?.user?.avatar)}
                             >
                                 {member?.user?.lastName.substring(0, 1)}
                             </Avatar>
@@ -179,7 +178,7 @@ const CustomHeader = () => {
                             height: 30
                         }}
                         alt={currentUser?.lastName}
-                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
+                        src={getAvatar(currentUser?.id, currentUser?.avatar)}
                     >
                         H
                     </Avatar>

@@ -1,8 +1,6 @@
 package com.taskmanagement.kotazk.repository;
 
 import com.taskmanagement.kotazk.entity.Attachment;
-import com.taskmanagement.kotazk.entity.Field;
-import com.taskmanagement.kotazk.entity.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 

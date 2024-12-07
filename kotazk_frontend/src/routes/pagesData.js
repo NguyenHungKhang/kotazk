@@ -58,12 +58,12 @@ const pagesData = [
     title: "playground"
   },
   {
-    path: "/ProfileSetting",
+    path: "/profile",
     element: <ProfileSetting />,
     title: "playground"
   },
   {
-    path: "/ForgotPassword",
+    path: "/forgot-password",
     element: <ForgotPassword />,
     title: "playground"
   },

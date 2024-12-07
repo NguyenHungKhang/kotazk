@@ -8,6 +8,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import * as apiService from '../../api/index';
+import { LoadingButton } from '@mui/lab';
 // import * as apiService from '../../api/index';
 
 const Register = () => {
@@ -19,6 +20,7 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordError, setPasswordError] = useState(false);
+    const [registering, setRegistering] = useState(false);
 
     const theme = useTheme();
     const navigate = useNavigate();
@@ -36,7 +38,7 @@ const Register = () => {
         }
 
         setPasswordError(false);
-
+        setRegistering(true);
         const data =
         {
             "firstName": firstName,
@@ -46,6 +48,7 @@ const Register = () => {
             "retypePassword": confirmPassword
         };
         try {
+
             const response = await apiService.authAPI.register(data);
             if (response?.data) {
                 if (response?.data?.success)
@@ -55,6 +58,8 @@ const Register = () => {
             console.warn("Registration failed", error);
             alert(error.message)
         }
+
+        setRegistering(false);
     };
 
 
@@ -78,7 +83,7 @@ const Register = () => {
                 backgroundColor: theme.palette.background.paper,
             }}>
                 <CardContent>
-                    <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
+                    <Typography variant="h4" fontWeight={650} textAlign="center" gutterBottom>
                         Register
                     </Typography>
                     <Box sx={{ mt: 2 }}>
@@ -213,7 +218,8 @@ const Register = () => {
                             )}
                         </Box>
 
-                        <Button
+                        <LoadingButton
+                            loading={registering}
                             type="submit"
                             fullWidth
                             variant="contained"
@@ -228,8 +234,7 @@ const Register = () => {
                             onClick={() => handleSubmit()}
                         >
                             REGISTER
-                        </Button>
-
+                        </LoadingButton>
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
                             Already have an account?{' '}
                             <Link
