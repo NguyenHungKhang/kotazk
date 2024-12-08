@@ -34,7 +34,9 @@ const CustomManagePriority = ({ handleClose, isDialog }) => {
     const AddIcon = TablerIcons["IconPlus"];
     const CloseIcon = TablerIcons["IconX"];
     const [isChange, setIsChange] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
+    const managePriorityPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_PRIORITY");
 
     useEffect(() => {
         if (project)
@@ -158,7 +160,7 @@ const CustomManagePriority = ({ handleClose, isDialog }) => {
                                 ref={provided.innerRef}
                             >
                                 {items?.map((priority, index) => (
-                                    <Draggable key={priority.id} draggableId={priority.id.toString()} index={index}>
+                                    <Draggable isDragDisabled={!managePriorityPermission} key={priority.id} draggableId={priority.id.toString()} index={index}>
                                         {(provided, snapshot) => (
 
                                             <Paper
@@ -179,9 +181,11 @@ const CustomManagePriority = ({ handleClose, isDialog }) => {
 
 
                                                 >
-                                                    <Box {...provided.dragHandleProps} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                        <DragIcon size={20} stroke={2} />
-                                                    </Box>
+                                                    {managePriorityPermission && (
+                                                        <Box {...provided.dragHandleProps} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            <DragIcon size={20} stroke={2} />
+                                                        </Box>
+                                                    )}
                                                     <PriorityListItem priority={priority} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
                                                 </Stack>
                                             </Paper>
@@ -207,6 +211,7 @@ const CustomManagePriority = ({ handleClose, isDialog }) => {
                             justifyContent: 'flex-start'
                         }}
                         startIcon={<AddIcon size={18} stroke={2} />}
+                        disabled={!managePriorityPermission}
                     >
                         Add status
                     </Button>
@@ -214,7 +219,7 @@ const CustomManagePriority = ({ handleClose, isDialog }) => {
             </Box>
             <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
-                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange || !managePriorityPermission}>
                         Save
                     </Button>
                 </Box>
@@ -230,6 +235,9 @@ const PriorityListItem = ({ priority, setItems, itemIndex, isChange, setIsChange
     const EditIcon = TablerIcons["IconEdit"];
     const [name, setName] = useState(priority.name);
     const [backgroundColor, setBackgroundColor] = useState(priority?.customization?.backgroundColor);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const managePriorityPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_PRIORITY");
 
     useEffect(() => {
         if (priority != null) {
@@ -281,12 +289,18 @@ const PriorityListItem = ({ priority, setItems, itemIndex, isChange, setIsChange
                     spacing={4}
                     alignItems='center'>
                     <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorPickerDialog color={backgroundColor} setColor={setBackgroundColor} />
+                        <CustomColorPickerDialog color={backgroundColor} setColor={setBackgroundColor} readOnly={!managePriorityPermission} />
                         <CustomBasicTextField
                             size="small"
                             margin="dense"
                             defaultValue={name}
                             fullWidth
+                            slotProps={{
+                                input: {
+                                    readOnly: !managePriorityPermission,
+                                }
+                            }}
+                            onChan
                             onChange={(e) => {
                                 setName(e.target.value);
                                 setIsChange(true);
@@ -296,7 +310,7 @@ const PriorityListItem = ({ priority, setItems, itemIndex, isChange, setIsChange
                     </Stack>
                 </Stack>
             </Box>
-            {!priority.systemRequired &&
+            {(!priority.systemRequired && managePriorityPermission) &&
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />

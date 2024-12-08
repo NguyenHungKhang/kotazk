@@ -11,6 +11,9 @@ import { useSelector } from 'react-redux';
 
 const RoleTableHeader = ({ roles, editedFlag, handleSavePermissionList, handleOpenDeleteDialog, handleSaveName, name, setName }) => {
     const theme = useTheme();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const roleManagePermission = currentMember?.role?.projectPermissions?.includes("MANAGE_ROLE");
     return (
         <TableHead>
             <TableCell sx={{ width: 400, position: 'sticky', left: 0, zIndex: 3, borderRight: `4px solid grey` }}>
@@ -21,11 +24,14 @@ const RoleTableHeader = ({ roles, editedFlag, handleSavePermissionList, handleOp
                     <RoleHeaderCell roles={roles} role={role} editedFlag={editedFlag} handleSavePermissionList={handleSavePermissionList} handleOpenDeleteDialog={handleOpenDeleteDialog} />
                 </TableCell>
             ))}
-            <TableCell width={150}>
-                <Stack direction={'row'} justifyContent={'center'}>
-                    <AddRoleDialog saveMethod={handleSaveName} name={name} setName={setName} />
-                </Stack>
-            </TableCell>
+            {roleManagePermission && (
+                <TableCell width={150}>
+                    <Stack direction={'row'} justifyContent={'center'}>
+                        <AddRoleDialog saveMethod={handleSaveName} name={name} setName={setName} />
+                    </Stack>
+                </TableCell>
+            )}
+
         </TableHead>
     );
 };
@@ -38,6 +44,9 @@ const RoleHeaderCell = ({ roles, role, editedFlag, handleSavePermissionList, han
     const MoveRight = TablerIcon["IconChevronRight"];
     const dispatch = useDispatch();
     const project = useSelector((state) => state.project.currentProject)
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const roleManagePermission = currentMember?.role?.projectPermissions?.includes("MANAGE_ROLE");
 
     const [name, setName] = useState(null);
     const [editeNameFlag, setEditNameFlag] = useState(false);
@@ -91,22 +100,25 @@ const RoleHeaderCell = ({ roles, role, editedFlag, handleSavePermissionList, han
     }
 
     return (
-        <Grid2 container alignItems={'center'}>
-            <Grid2 item size={2}>
-                <Stack direction={'row'} spacing={1} justifyContent={'flex-start'}>
-                    {!role.systemRequired && (
-                        <Button size='small' color='info' variant='contained' sx={{ p: 1, minWidth: 0 }} onClick={() => reposition("left")} disabled={roles[3].id === role.id}>
-                            <MoveLeft size={18} />
-                        </Button>
-                    )}
-                    {!role.systemRequired && editedFlag?.includes(role.id) && (
-                        <Button size='small' color='success' variant='contained' onClick={() => handleSavePermissionList(role)} sx={{ p: 1, minWidth: 0 }}>
-                            <SaveIcon size={18} />
-                        </Button>
+        <Grid2 container alignItems={'center'} justifyContent={'center'}>
+            {roleManagePermission && (
+                <Grid2 item size={2}>
+                    <Stack direction={'row'} spacing={1} justifyContent={'flex-start'}>
+                        {!role.systemRequired && (
+                            <Button size='small' color='info' variant='contained' sx={{ p: 1, minWidth: 0 }} onClick={() => reposition("left")} disabled={roles[3].id === role.id}>
+                                <MoveLeft size={18} />
+                            </Button>
+                        )}
+                        {!role.systemRequired && editedFlag?.includes(role.id) && (
+                            <Button size='small' color='success' variant='contained' onClick={() => handleSavePermissionList(role)} sx={{ p: 1, minWidth: 0 }}>
+                                <SaveIcon size={18} />
+                            </Button>
 
-                    )}
-                </Stack>
-            </Grid2>
+                        )}
+                    </Stack>
+                </Grid2>
+            )}
+
             <Grid2 item size={8}>
                 <Stack direction={'row'} spacing={2} justifyContent={'center'} alignItems={'center'}>
                     {role.systemRequired ?
@@ -118,7 +130,7 @@ const RoleHeaderCell = ({ roles, role, editedFlag, handleSavePermissionList, han
                         </>
                         :
                         <>
-                            {editeNameFlag ?
+                            {(editeNameFlag && roleManagePermission) ?
                                 <>
                                     <CustomBasicTextField
                                         size='small'
@@ -152,22 +164,25 @@ const RoleHeaderCell = ({ roles, role, editedFlag, handleSavePermissionList, han
                     }
                 </Stack>
             </Grid2>
-            <Grid2 item size={2}>
-                <Stack direction={'row'} spacing={1} justifyContent={'flex-end'}>
-                    {!role.systemRequired && (
-                        <>
+            {roleManagePermission && (
+                <Grid2 item size={2}>
+                    <Stack direction={'row'} spacing={1} justifyContent={'flex-end'}>
+                        {!role.systemRequired && (
+                            <>
 
-                            <Button size='small' color='error' variant='contained' onClick={() => handleOpenDeleteDialog(role)} sx={{ p: 1, minWidth: 0 }}>
-                                <RemoveIcon size={18} />
-                            </Button>
-                            <Button size='small' color='info' variant='contained' sx={{ p: 1, minWidth: 0 }} onClick={() => reposition("right")} disabled={roles.at(-1).id === role.id}>
-                                <MoveRight size={18} />
-                            </Button>
-                        </>
+                                <Button size='small' color='error' variant='contained' onClick={() => handleOpenDeleteDialog(role)} sx={{ p: 1, minWidth: 0 }}>
+                                    <RemoveIcon size={18} />
+                                </Button>
+                                <Button size='small' color='info' variant='contained' sx={{ p: 1, minWidth: 0 }} onClick={() => reposition("right")} disabled={roles.at(-1).id === role.id}>
+                                    <MoveRight size={18} />
+                                </Button>
+                            </>
 
-                    )}
-                </Stack>
-            </Grid2>
+                        )}
+                    </Stack>
+                </Grid2>
+            )}
+
         </Grid2>
     );
 }

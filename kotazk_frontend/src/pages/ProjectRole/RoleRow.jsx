@@ -2,9 +2,13 @@ import React from 'react';
 import { TableCell, TableRow, Typography, Stack, useTheme } from '@mui/material';
 import PermissionCheckbox from './PermissionCheckbox';
 import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import { useSelector } from 'react-redux';
 
 const RoleRow = ({ item, roles, permissionsState, handleCheckboxChange }) => {
     const theme = useTheme();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const roleManagePermission = currentMember?.role?.projectPermissions?.includes("MANAGE_ROLE");
     return (
         <TableRow key={item.key}>
             <TableCell sx={{ position: 'sticky', left: 0, bgcolor: getCustomTwoModeColor(theme, "#fff", "#1e1e1e"), zIndex: 1, borderRight: `4px solid grey` }}>
@@ -21,9 +25,12 @@ const RoleRow = ({ item, roles, permissionsState, handleCheckboxChange }) => {
                     />
                 </TableCell>
             ))}
-            <TableCell>
-                <Stack alignItems={'center'} justifyContent={'center'}>-</Stack>
-            </TableCell>
+            {roleManagePermission && (
+                <TableCell>
+                    <Stack alignItems={'center'} justifyContent={'center'}>-</Stack>
+                </TableCell>
+            )}
+
         </TableRow>
     );
 }

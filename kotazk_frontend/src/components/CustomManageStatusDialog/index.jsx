@@ -33,6 +33,9 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
     const AddIcon = TablerIcons["IconPlus"];
     const CloseIcon = TablerIcons["IconX"];
     const [isChange, setIsChange] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageStatusPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_STATUS");
 
     useEffect(() => {
         if (project)
@@ -129,6 +132,9 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
                 }
 
             </Stack>
+            <Typography color="textSecondary" my={2}>
+                The Status field indicates the current state or progress of an item, task, or process on the website. It allows users to track the progress of various activities, whether they are ongoing, completed, pending, or in need of attention.
+            </Typography>
             <Stack
                 my={2}
                 direction="row"
@@ -157,7 +163,7 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
                                 ref={provided.innerRef}
                             >
                                 {items?.map((status, index) => (
-                                    <Draggable key={status.id} draggableId={status.id.toString()} index={index}>
+                                    <Draggable isDragDisabled={!manageStatusPermission} key={status.id} draggableId={status.id.toString()} index={index}>
                                         {(provided, snapshot) => (
                                             <Paper
                                                 sx={{
@@ -177,9 +183,11 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
 
 
                                                 >
-                                                    <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                        <DragIcon size={20} stroke={2} />
-                                                    </Box>
+                                                    {manageStatusPermission && (
+                                                        <Box {...provided.dragHandleProps} sx={{ p: 2, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            <DragIcon size={20} stroke={2} />
+                                                        </Box>
+                                                    )}
                                                     <StatusListItem status={status} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
 
                                                 </Stack>
@@ -206,6 +214,7 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
                             justifyContent: 'flex-start'
                         }}
                         startIcon={<AddIcon size={18} stroke={2} />}
+                        disabled={!manageStatusPermission}
                     >
                         Add status
                     </Button>
@@ -213,7 +222,7 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
             </Box>
             <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
-                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange || !manageStatusPermission}>
                         Save
                     </Button>
                 </Box>
@@ -231,6 +240,9 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
     const [isFromAny, setIsFromAny] = useState(status.isFromAny);
     const [isCompletedStatus, setIsCompletedStatus] = useState(status.isCompletedStatus);
     const [customization, setCustomization] = useState(status.customization);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageStatusPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_STATUS");
 
     useEffect(() => {
         if (status != null) {
@@ -304,12 +316,17 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                 spacing={4}
                 alignItems='center'>
                     <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={statusIconsList} customization={customization} setCustomization={setCustomization} />
+                        <CustomColorIconPicker changeable={true} icons={statusIconsList} customization={customization} setCustomization={setCustomization} readOnly={!manageStatusPermission} />
                         <CustomBasicTextField
                             size="small"
                             margin="dense"
                             defaultValue={name}
                             fullWidth
+                            slotProps={{
+                                input: {
+                                    readOnly: !manageStatusPermission
+                                }
+                            }}
                             onChange={(e) => {
                                 setName(e.target.value);
                                 setIsChange(true);
@@ -317,9 +334,9 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                             }
                         />
                     </Stack>
-                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} setIsChange={setIsChange} />
-                    <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} />
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} />
+                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} setIsChange={setIsChange} disabled={!manageStatusPermission} />
+                    {/* <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} /> */}
+                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} disabled={!manageStatusPermission} />
                 </Stack>
             </Box>
             {status.systemRequired == false ?
@@ -338,30 +355,31 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
     );
 }
 
-function IsFromAnyButton({ selected, setSelected, setIsChange }) {
+// function IsFromAnyButton({ selected, setSelected, setIsChange, readOnly }) {
 
-    return (
-        <ToggleButton
-            value="check"
-            color="info"
-            selected={selected}
-            onChange={() => {
-                setSelected(!selected);
-                setIsChange != null && setIsChange(true);
-            }}
-            sx={{
-                textTransform: 'none',
-                py: 1
-            }}
-            size="small"
-        >
-            Flexible status
-        </ToggleButton>
-    );
-}
+//     return (
+//         <ToggleButton
+//             value="check"
+//             color="info"
+//             selected={selected}
+//             onChange={() => {
+//                 setSelected(!selected);
+//                 setIsChange != null && setIsChange(true);
+//             }}
+//             sx={{
+//                 textTransform: 'none',
+//                 py: 1
+//             }}
+//             size="small"
+//             disabled
+//         >
+//             Flexible status
+//         </ToggleButton>
+//     );
+// }
 
 
-function IsFromStartButton({ selected, setSelected, setIsChange }) {
+function IsFromStartButton({ selected, setSelected, setIsChange, disabled = false }) {
     return (
         <ToggleButton
             value="check"
@@ -376,13 +394,14 @@ function IsFromStartButton({ selected, setSelected, setIsChange }) {
                 py: 1
             }}
             size="small"
+            disabled={disabled}
         >
             Started status
         </ToggleButton>
     );
 }
 
-function IsCompletedButton({ selected, setSelected, setIsChange }) {
+function IsCompletedButton({ selected, setSelected, setIsChange, disabled = false }) {
     return (
         <ToggleButton
             value="check"
@@ -397,6 +416,7 @@ function IsCompletedButton({ selected, setSelected, setIsChange }) {
                 py: 1
             }}
             size="small"
+            disabled={disabled}
         >
             Completed status
         </ToggleButton>

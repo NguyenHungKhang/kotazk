@@ -26,6 +26,9 @@ const CustomManageLabel = ({ handleClose, isDialog }) => {
     const AddIcon = TablerIcons["IconPlus"];
     const CloseIcon = TablerIcons["IconX"];
     const [isChange, setIsChange] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageLabelPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_LABEL");
 
     useEffect(() => {
         if (project)
@@ -127,27 +130,30 @@ const CustomManageLabel = ({ handleClose, isDialog }) => {
                     flexWrap='wrap'
                     useFlexGap
                 >
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center'
-                        }}
-                    >
-                        <Button
-                            size="small"
-                            onClick={() => addNewItem()}
-                            color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
-                            fullWidth
-                            startIcon={<AddIcon size={18} stroke={2} />}
+                    {manageLabelPermission && (
+                        <Box
                             sx={{
-                                border: '1px dashed',
-                                borderRadius: 2,
-                                width: '250px'
+                                display: 'flex',
+                                alignItems: 'center'
                             }}
                         >
-                            Add Lable
-                        </Button>
-                    </Box>
+                            <Button
+                                size="small"
+                                onClick={() => addNewItem()}
+                                color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
+                                fullWidth
+                                startIcon={<AddIcon size={18} stroke={2} />}
+                                sx={{
+                                    border: '1px dashed',
+                                    borderRadius: 2,
+                                    width: '250px'
+                                }}
+                            >
+                                Add Lable
+                            </Button>
+                        </Box>
+                    )}
+
                     {items?.map((label, index) =>
                         <LabelListItem key={label?.id} label={label} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
                     )}
@@ -157,7 +163,7 @@ const CustomManageLabel = ({ handleClose, isDialog }) => {
             <Divider sx={{ my: 2 }} />
             <Stack direction={'row'} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
-                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange || !manageLabelPermission}>
                         Save
                     </Button>
                 </Box>
@@ -176,6 +182,9 @@ const LabelListItem = ({ label, setItems, itemIndex, isChange, setIsChange }) =>
     const [customization, setCustomization] = useState(label.customization);
     const [backgroundColor, setBackgroundColor] = useState(label?.customization?.backgroundColor);
     const [textLength, setTextLength] = useState(0);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageLabelPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_LABEL");
 
     useEffect(() => {
         if (label != null) {
@@ -231,7 +240,7 @@ const LabelListItem = ({ label, setItems, itemIndex, isChange, setIsChange }) =>
             }}
         >
             <Stack direction='row' spacing={1} alignItems='center'>
-                <CustomColorPickerDialog color={backgroundColor} setColor={setBackgroundColor} />
+                <CustomColorPickerDialog color={backgroundColor} setColor={setBackgroundColor} readOnly={!manageLabelPermission} />
                 <Stack>
                     <Box display={'flex'} justifyContent={'center'} alignItems={'center'}>
                         <CustomBasicTextField
@@ -251,6 +260,7 @@ const LabelListItem = ({ label, setItems, itemIndex, isChange, setIsChange }) =>
                                     color: backgroundColor && theme.palette.getContrastText(backgroundColor),
                                     height: 30,
                                 },
+                                readOnly: !manageLabelPermission
                             }}
                             onChange={(e) => {
                                 setName(e.target.value);
@@ -272,9 +282,12 @@ const LabelListItem = ({ label, setItems, itemIndex, isChange, setIsChange }) =>
                     bgcolor={"#fff"}
                     borderRadius={2}
                 >
-                    <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
-                        <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
-                    </IconButton>
+                    {manageLabelPermission && (
+                        <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
+                            <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />
+                        </IconButton>
+                    )}
+
                 </Box>
             </Stack>
 
