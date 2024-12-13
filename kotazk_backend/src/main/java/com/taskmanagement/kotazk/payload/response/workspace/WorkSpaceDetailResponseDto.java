@@ -19,10 +19,10 @@ import lombok.NoArgsConstructor;
 public class WorkSpaceDetailResponseDto {
     Long id;
     String name;
-    CustomizationRequestDto customization;
     UserResponseDto user;
     String description;
     String key;
+    String cover;
     Visibility visibility;
     WorkSpaceStatus status;
 }

@@ -63,12 +63,17 @@ public class MemberController {
         return memberService.getOne(id);
     }
 
-    @GetMapping("/current/{projectId}")
+    @GetMapping("/current/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public MemberResponseDto getCurrentOne(@PathVariable Long projectId) {
-        return memberService.getCurrentOne(projectId);
+    public MemberResponseDto getCurrentOneByProject(@PathVariable Long projectId) {
+        return memberService.getCurrentOneByProject(projectId);
     }
 
+    @GetMapping("/current/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberResponseDto getCurrentOneByWorkspace(@PathVariable Long workspaceId) {
+        return memberService.getCurrentOneByWorkspace(workspaceId);
+    }
 
     @PostMapping("/page/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)

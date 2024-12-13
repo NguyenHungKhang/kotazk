@@ -19,6 +19,8 @@ import { useNavigate } from 'react-router-dom';
 import CustomMainPageHeader from '../../components/CustomMainPageHeader';
 import workspaceListImages from '../../assets/workspace-list.png';
 import dayjs from 'dayjs';
+import { getCustomTwoModeColor } from '../../utils/themeUtil';
+import UserTaskDashBoard from './UserTaskDashBoard';
 
 // const workspaces =
 // {
@@ -55,7 +57,7 @@ const WorkspaceList = () => {
     }
 
     const handleNavigate = (wsId) => {
-        navigate(`/workspace/${wsId}`);
+        navigate(`/workspace/${wsId}/dashboard`);
     }
 
 
@@ -78,6 +80,7 @@ const WorkspaceList = () => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
+                overflowY: 'auto',
                 // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
                 background: theme.palette.mode === 'dark'
                     ? 'linear-gradient(135deg, #522580, #223799)'
@@ -87,6 +90,7 @@ const WorkspaceList = () => {
             }}
         >
             <Stack spacing={2} height={'100%'}>
+
                 <Paper
                     sx={{
                         px: 4,
@@ -118,7 +122,7 @@ const WorkspaceList = () => {
                             <Typography>
                                 If you ever need help, our support team is just a click away. We're excited to see the amazing things you'll accomplish here!
                             </Typography>
-                            <TextField
+                            {/* <TextField
                                 placeholder="Search workspace"
                                 fullWidth
                                 InputProps={{
@@ -140,227 +144,259 @@ const WorkspaceList = () => {
                                     color: getTimeOfDay() === "Evening" ? "#ffffff" : "#000000", // Text color for the input
                                     borderRadius: 1, // Optional: to add rounded corners
                                 }}
-                            />
+                            /> */}
 
                         </Box>
                     </Stack>
                 </Paper>
+                <Box
+                    sx={{
+                        overflowY: 'auto',
+                        flexGrow: 1
+                    }}
+                >
+                    <Box
+                        sx={{
+                            height: 600,
+                            mb: 2
+                        }}
+                    >
+                        <UserTaskDashBoard />
+                    </Box>
 
-                <Paper style={{ padding: '24px', height: '100%' }}>
-                    <Typography variant="h6" style={{ margin: '16px 0' }}>
-                        My Workspaces
-                    </Typography>
-                    <Grid container spacing={2}>
-                        {myWorkspace?.map((ws, index) => (
-                            <Grid item xs={12} sm={3} md={2} key={index}>
-                                <Card
-                                    onClick={() => handleNavigate(ws.id)}
-                                    sx={{
-                                        cursor: 'pointer',
-                                        transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
-                                        '&:hover .overlay': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
-                                        },
-                                        '&:hover .projectName': {
-                                            textDecoration: 'underline'
-                                        }
-                                    }}
-                                >
-                                    <Box sx={{ position: 'relative', width: '100%' }}>
-                                        <Box
-                                            className="overlay"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                                                zIndex: 1,
-                                                borderRadius: 1,
-                                                transition: 'background-color 0.3s ease-in-out',
-                                            }}
-                                        />
 
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                paddingTop: '56.25%', // Tỉ lệ 16:9
-                                                backgroundImage: `url(${getWorkspaceCover(ws?.id, ws?.cover)})`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                borderRadius: 1,
-                                                position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
-                                            }}
-                                        >
-                                            {/* Thông tin project ở trên ảnh */}
+                    <Paper style={{ padding: '24px', height: '100%' }}>
+                        <Typography variant="h6" style={{ margin: '16px 0' }}>
+                            My Workspaces
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {myWorkspace?.length == 0 && (
+                                <Box px={2} py={4} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
+                                    <Typography color='textSecondary'>
+                                        <i>No Workspaces</i>
+                                    </Typography>
+                                </Box>
+                            )}
+                            {myWorkspace?.map((ws, index) => (
+                                <Grid item xs={12} sm={3} md={2} key={index}>
+                                    <Card
+                                        onClick={() => handleNavigate(ws.id)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
+                                            '&:hover .overlay': {
+                                                backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
+                                            },
+                                            '&:hover .projectName': {
+                                                textDecoration: 'underline'
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{ position: 'relative', width: '100%' }}>
                                             <Box
+                                                className="overlay"
                                                 sx={{
                                                     position: 'absolute',
                                                     top: 0,
                                                     left: 0,
-                                                    zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
-                                                    p: 2,
-                                                    borderRadius: 2,
-                                                    width: '100%'
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                                    zIndex: 1,
+                                                    borderRadius: 1,
+                                                    transition: 'background-color 0.3s ease-in-out',
+                                                }}
+                                            />
+
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    paddingTop: '56.25%', // Tỉ lệ 16:9
+                                                    backgroundImage: `url(${getWorkspaceCover(ws?.id, ws?.cover)})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    borderRadius: 1,
+                                                    position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
                                                 }}
                                             >
-                                                <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
-                                                    <Box flexGrow={1}>
-                                                        <Typography
-                                                            className='projectName'
-                                                            variant="h6"
-                                                            fontWeight={650}
-                                                            color="white"
-                                                        >
-                                                            {ws.name}
-                                                        </Typography>
-                                                    </Box>
+                                                {/* Thông tin project ở trên ảnh */}
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
+                                                        p: 2,
+                                                        borderRadius: 2,
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
+                                                        <Box flexGrow={1}>
+                                                            <Typography
+                                                                className='projectName'
+                                                                variant="h6"
+                                                                fontWeight={650}
+                                                                color="white"
+                                                            >
+                                                                {ws.name}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Box>
+
+                                                {/* Stack ở dưới cùng của ảnh */}
+                                                <Stack
+                                                    direction='row'
+                                                    spacing={2}
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        bottom: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        p: 2,
+                                                        zIndex: 2,  // Đảm bảo Stack nằm trên lớp phủ
+                                                        alignItems: 'center',
+                                                    }}
+                                                >
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 30,
+                                                            height: 30,
+                                                        }}
+                                                        alt={ws.user.lastName}
+                                                        src={getAvatar(ws.user.id, ws.user.avatar)}
+                                                    >
+                                                        {ws.user.lastName.charAt(0)}
+                                                    </Avatar>
+                                                    <Typography color='#fff' fontWeight={500}>
+                                                        {ws.user.lastName + " " + ws.user.firstName}
+                                                    </Typography>
                                                 </Stack>
                                             </Box>
-
-                                            {/* Stack ở dưới cùng của ảnh */}
-                                            <Stack
-                                                direction='row'
-                                                spacing={2}
-                                                sx={{
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 0,
-                                                    width: '100%',
-                                                    p: 2,
-                                                    zIndex: 2,  // Đảm bảo Stack nằm trên lớp phủ
-                                                    alignItems: 'center',
-                                                }}
-                                            >
-                                                <Avatar
-                                                    sx={{
-                                                        width: 30,
-                                                        height: 30,
-                                                    }}
-                                                    alt={ws.user.lastName}
-                                                    src={getAvatar(ws.user.id, ws.user.avatar)}
-                                                >
-                                                    {ws.user.lastName.charAt(0)}
-                                                </Avatar>
-                                                <Typography color='#fff' fontWeight={500}>
-                                                    {ws.user.lastName + " " + ws.user.firstName}
-                                                </Typography>
-                                            </Stack>
                                         </Box>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
 
-                    <Typography variant="h6" style={{ margin: '16px 0' }}>
-                        Accessed Workspaces
-                    </Typography>
-                    <Grid container spacing={2}>
-                        {accessedWorkspaces?.map((ws, index) => (
-                            <Grid item xs={12} sm={3} md={2} key={index}>
-                                <Card
-                                    onClick={() => handleNavigate(ws.id)}
-                                    sx={{
-                                        cursor: 'pointer',
-                                        transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
-                                        '&:hover .overlay': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
-                                        },
-                                        '&:hover .projectName': {
-                                            textDecoration: 'underline'
-                                        }
-                                    }}
-                                >
-                                    <Box sx={{ position: 'relative', width: '100%' }}>
-                                        <Box
-                                            className="overlay"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                backgroundColor: 'rgba(0, 0, 0, 0.2)',
-                                                zIndex: 1,
-                                                borderRadius: 1,
-                                                transition: 'background-color 0.3s ease-in-out',
-                                            }}
-                                        />
-
-                                        <Box
-                                            sx={{
-                                                width: '100%',
-                                                paddingTop: '56.25%', // Tỉ lệ 16:9
-                                                backgroundImage: `url(${getWorkspaceCover(ws?.id, ws?.cover)})`,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                borderRadius: 1,
-                                                position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
-                                            }}
-                                        >
-                                            {/* Thông tin project ở trên ảnh */}
+                        <Typography variant="h6" style={{ margin: '16px 0' }}>
+                            Accessed Workspaces
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {accessedWorkspaces?.length == 0 && (
+                                <Box px={2} py={4} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
+                                    <Typography color='textSecondary'>
+                                        <i>No Workspaces</i>
+                                    </Typography>
+                                </Box>
+                            )}
+                            {accessedWorkspaces?.map((ws, index) => (
+                                <Grid item xs={12} sm={3} md={2} key={index}>
+                                    <Card
+                                        onClick={() => handleNavigate(ws.id)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.3s ease-in-out', // Hiệu ứng chuyển tiếp
+                                            '&:hover .overlay': {
+                                                backgroundColor: 'rgba(0, 0, 0, 0.4)', // Tối hơn khi hover
+                                            },
+                                            '&:hover .projectName': {
+                                                textDecoration: 'underline'
+                                            }
+                                        }}
+                                    >
+                                        <Box sx={{ position: 'relative', width: '100%' }}>
                                             <Box
+                                                className="overlay"
                                                 sx={{
                                                     position: 'absolute',
                                                     top: 0,
                                                     left: 0,
-                                                    zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
-                                                    p: 2,
-                                                    borderRadius: 2,
-                                                    width: '100%'
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                                                    zIndex: 1,
+                                                    borderRadius: 1,
+                                                    transition: 'background-color 0.3s ease-in-out',
+                                                }}
+                                            />
+
+                                            <Box
+                                                sx={{
+                                                    width: '100%',
+                                                    paddingTop: '56.25%', // Tỉ lệ 16:9
+                                                    backgroundImage: `url(${getWorkspaceCover(ws?.id, ws?.cover)})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    borderRadius: 1,
+                                                    position: 'relative', // Để stack có thể định vị tuyệt đối bên trong
                                                 }}
                                             >
-                                                <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
-                                                    <Box flexGrow={1}>
-                                                        <Typography
-                                                            className='projectName'
-                                                            variant="h6"
-                                                            fontWeight={650}
-                                                            color="white"
-                                                        >
-                                                            {ws.name}
-                                                        </Typography>
-                                                    </Box>
+                                                {/* Thông tin project ở trên ảnh */}
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 0,
+                                                        left: 0,
+                                                        zIndex: 2,  // Đảm bảo nội dung nằm trên lớp phủ
+                                                        p: 2,
+                                                        borderRadius: 2,
+                                                        width: '100%'
+                                                    }}
+                                                >
+                                                    <Stack direction={'row'} spacing={1} alignItems={'center'} width={'100%'}>
+                                                        <Box flexGrow={1}>
+                                                            <Typography
+                                                                className='projectName'
+                                                                variant="h6"
+                                                                fontWeight={650}
+                                                                color="white"
+                                                            >
+                                                                {ws.name}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Box>
+
+                                                {/* Stack ở dưới cùng của ảnh */}
+                                                <Stack
+                                                    direction='row'
+                                                    spacing={2}
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        bottom: 0,
+                                                        left: 0,
+                                                        width: '100%',
+                                                        p: 2,
+                                                        zIndex: 2,  // Đảm bảo Stack nằm trên lớp phủ
+                                                        alignItems: 'center',
+                                                    }}
+                                                >
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 30,
+                                                            height: 30,
+                                                        }}
+                                                        alt={ws.user.lastName}
+                                                        src={getAvatar(ws.user.id, ws.user.avatar)}
+                                                    >
+                                                        {ws.user.lastName.charAt(0)}
+                                                    </Avatar>
+                                                    <Typography color='#fff' fontWeight={500}>
+                                                        {ws.user.lastName + " " + ws.user.firstName}
+                                                    </Typography>
                                                 </Stack>
                                             </Box>
-
-                                            {/* Stack ở dưới cùng của ảnh */}
-                                            <Stack
-                                                direction='row'
-                                                spacing={2}
-                                                sx={{
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 0,
-                                                    width: '100%',
-                                                    p: 2,
-                                                    zIndex: 2,  // Đảm bảo Stack nằm trên lớp phủ
-                                                    alignItems: 'center',
-                                                }}
-                                            >
-                                                <Avatar
-                                                    sx={{
-                                                        width: 30,
-                                                        height: 30,
-                                                    }}
-                                                    alt={ws.user.lastName}
-                                                    src={getAvatar(ws.user.id, ws.user.avatar)}
-                                                >
-                                                    {ws.user.lastName.charAt(0)}
-                                                </Avatar>
-                                                <Typography color='#fff' fontWeight={500}>
-                                                    {ws.user.lastName + " " + ws.user.firstName}
-                                                </Typography>
-                                            </Stack>
                                         </Box>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
-                </Paper>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Paper>
+
+                </Box>
+
             </Stack>
         </Box >
     );

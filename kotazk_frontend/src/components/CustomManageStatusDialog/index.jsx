@@ -56,7 +56,6 @@ const CustomManageStatus = ({ handleClose, isDialog }) => {
     }
 
 
-
     const onDragEnd = (result) => {
         const { destination, source } = result;
 

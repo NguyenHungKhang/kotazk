@@ -1,6 +1,8 @@
 const initialState = {
     currentUserMember: null,
+    currentWorkspaceMember: null,
     currentProjectMemberList: null,
+    currentWorkspaceMemberList: null
 }
 
 const MemberReducer = (state = initialState, action) => {
@@ -14,6 +16,11 @@ const MemberReducer = (state = initialState, action) => {
             return {
                 ...state,
                 currentUserMember: action.payload
+            };
+        case 'SET_CURRENT_WORKSPACE_MEMBER':
+            return {
+                ...state,
+                currentWorkspaceMember: action.payload
             };
         default:
             return state;

@@ -9,3 +9,12 @@ export const getDetailById = async (workspaceId) => await axiosInstance.get(`${O
 export const getPageSumary = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/summary`, data);
 
 export const getPageDetail = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/detail`, data);
+
+export const uploadCover = async (file, workspaceId) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return axiosInstance.put(`${ORIGINAL_BASE_URL}/upload-cover/${workspaceId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+};

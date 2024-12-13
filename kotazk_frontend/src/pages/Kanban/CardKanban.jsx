@@ -46,6 +46,9 @@ const CardKanban = ({ task, isDragging }) => {
     const SubtaskIcon = allIcons["IconSubtask"];
     const TimeEstimateIcon = allIcons["IconHourglass"];
 
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+    const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
+
     const openTaskDialog = () => {
         const taskDialogData = {
             task: task,
@@ -66,6 +69,8 @@ const CardKanban = ({ task, isDragging }) => {
 
 
     const handleCompleteTask = async () => {
+        if (!editTaskPermission)
+            return;
         const data = {
             "isCompleted": !task?.isCompleted,
         }
@@ -145,7 +150,10 @@ const CardKanban = ({ task, isDragging }) => {
                             ))}
 
                         </Stack>
-                        <CardKanbanMenu task={task} />
+                        {editTaskPermission && (
+                            <CardKanbanMenu task={task} />
+                        )}
+
                     </Stack>
                 }
 
@@ -169,7 +177,7 @@ const CardKanban = ({ task, isDragging }) => {
                     <Typography variant='body2' fontWeight='bold' noWrap flexGrow={1}>
                         {task?.name}
                     </Typography>
-                    {task?.labels?.length <= 0 &&
+                    {(task?.labels?.length <= 0 && editTaskPermission) &&
                         <CardKanbanMenu task={task} />
                     }
                 </Stack>
@@ -226,7 +234,7 @@ const CardKanban = ({ task, isDragging }) => {
                         mt: 2
                     }}
                 >
-                      {
+                    {
                         task?.timeEstimate &&
 
                         <FieldBoxForKanbanCard px={2} py={1}>

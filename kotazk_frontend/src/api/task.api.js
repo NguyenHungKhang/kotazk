@@ -12,4 +12,8 @@ export const getOne = async (taskId) => await axiosInstance.get(`${ORIGINAL_BASE
 
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
 
+export const getPageByWorkspace = async (workspaceId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-workspace/${workspaceId}`, data);
+
+export const getPageByUser = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-user`, data);
+
 export const getTodayTask = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/today/by-project/${projectId}`);

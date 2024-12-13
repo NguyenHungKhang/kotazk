@@ -40,6 +40,12 @@ function KanbanDropNDrag() {
   const sortAscDirection = useSelector((state) => state.sort.currentSortDirection);
   const taskSearchText = useSelector((state) => state.searchText.taskSearchText)
   const dispatch = useDispatch();
+  const currentMember = useSelector((state) => state.member.currentUserMember);
+  const createTaskPermission = currentMember?.role?.projectPermissions?.includes("CREATE_TASKS");
+  const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
+  const deleteTaskPermission = currentMember?.role?.projectPermissions?.includes("DELETE_TASKS");
+  const scheduleTaskPermission = currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS");
+  const assignTaskPermission = currentMember?.role?.projectPermissions?.includes("ASSIGN_TASKS");
 
   useEffect(() => {
     if (project) {
@@ -126,7 +132,7 @@ function KanbanDropNDrag() {
         value: null,
       },
     ];
-    
+
     const data = {
       'sortBy': sortEntity,
       'sortDirectionAsc': sortAscDirection == "descending" ? false : true,
@@ -329,6 +335,11 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
   const currentMember = useSelector((state) => state.member.currentUserMember);
   const dispatch = useDispatch();
 
+
+  const createTaskPermission = currentMember?.role?.projectPermissions?.includes("CREATE_TASKS");
+  const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
+  const assignTaskPermission = currentMember?.role?.projectPermissions?.includes("ASSIGN_TASKS");
+
   const addTask = () => {
     console.log({
       open: true,
@@ -409,17 +420,20 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
                     borderColor: theme.palette.mode === "light" ? theme.palette.grey[300] : theme.palette.grey[800]
                   }}
                 >
-                  <IconButton
-                    onClick={() => addTask()}
-                    size='small'
-                    sx={{
-                      p: 2,
-                      width: '100%',
-                      borderRadius: 2
-                    }}
-                  >
-                    <AddIcon fontSize='small' />
-                  </IconButton>
+                  {createTaskPermission && (
+                    <IconButton
+                      onClick={() => addTask()}
+                      size='small'
+                      sx={{
+                        p: 2,
+                        width: '100%',
+                        borderRadius: 2
+                      }}
+                    >
+                      <AddIcon fontSize='small' />
+                    </IconButton>
+                  )}
+
                 </Card>
               ))}
 
@@ -446,7 +460,7 @@ function StoreList({ id, name, projectId, items, isFromStart, isFromAny, groupBy
             >
               <Stack spacing={1}>
                 {items?.map((task, index) => (
-                  <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
+                  <Draggable isDragDisabled={(!(groupBy != "assignee"  && editTaskPermission) || (groupBy == "assignee" && assignTaskPermission))} draggableId={task.id.toString()} index={index} key={task.id}>
                     {(provided, snapshot) => (
                       <div
                         {...provided.dragHandleProps}

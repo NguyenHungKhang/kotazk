@@ -34,7 +34,8 @@ import java.util.*;
 @Service
 @Transactional
 public class MemberService implements IMemberService {
-
+    @Autowired
+    private ITaskRepository taskRepository;
     @Autowired
     private IMemberRepository memberRepository;
     @Autowired
@@ -365,6 +366,12 @@ public class MemberService implements IMemberService {
         if (currentMember.getSystemRequired().equals(true))
             throw new CustomException("This member cannot be deleted");
 
+//        List<Task> updatedTasks = currentMember.getAssigneeTasks().stream().map(t -> {
+//            t.setAssignee(null);
+//            return t;
+//        }).toList();
+//
+//        taskRepository.saveAll(updatedTasks);
         memberRepository.deleteById(currentMember.getId());
         return true;
     }
@@ -418,16 +425,31 @@ public class MemberService implements IMemberService {
     }
 
     @Override
-    public MemberResponseDto getCurrentOne(Long projectId) {
+    public MemberResponseDto getCurrentOneByProject(Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
         Member member = project.getMembers().stream()
-                .filter(m -> m.getUser().getId() == currentUser.getId())
+                .filter(m -> m.getUser().getId() == currentUser.getId() && m.getMemberFor() == EntityBelongsTo.PROJECT && m.getStatus() == MemberStatus.ACTIVE)
                 .findFirst()
                 .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), project.getName())));
+
+        return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
+    }
+
+    @Override
+    public MemberResponseDto getCurrentOneByWorkspace(Long workspaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", workspaceId));
+        Member member = workSpace.getMembers().stream()
+                .filter(m -> m.getUser().getId() == currentUser.getId() && m.getMemberFor() == EntityBelongsTo.WORK_SPACE && m.getStatus() == MemberStatus.ACTIVE)
+                .findFirst()
+                .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), workSpace.getName())));
 
         return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
     }

@@ -32,7 +32,7 @@ const Project = ({ children }) => {
     const breadcrumbData = [
         {
             "label": workspace?.name,
-            "href": `/workspace/${workspace?.id}`
+            "href": `/workspace/${workspace?.id}/projects`
         },
         {
             "label": project?.name,
@@ -47,7 +47,7 @@ const Project = ({ children }) => {
 
     const getCurrentUser = async () => {
         try {
-            const res = await apiService.memberAPI.getCurrentOne(projectId);
+            const res = await apiService.memberAPI.getCurrentOneByProject(projectId);
             if (res?.data) {
                 dispatch(setCurrentUserMember(res?.data))
             }

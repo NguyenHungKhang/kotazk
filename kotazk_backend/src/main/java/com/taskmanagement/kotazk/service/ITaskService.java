@@ -6,6 +6,7 @@ import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
+import com.taskmanagement.kotazk.payload.response.task.UserTaskResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
 
@@ -16,5 +17,7 @@ public interface ITaskService {
     Boolean softDelete(Long id);
     TaskResponseDto getOne(Long id);
     PageResponse<TaskResponseDto> getPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<UserTaskResponseDto> getPageByUser(SearchParamRequestDto searchParam);
+    PageResponse<TaskResponseDto> getPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId);
     PageResponse<TaskResponseDto> getToday(Long projectId);
 }

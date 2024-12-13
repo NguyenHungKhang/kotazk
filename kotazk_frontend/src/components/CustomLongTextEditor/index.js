@@ -7,7 +7,7 @@ import TextStyle from '@tiptap/extension-text-style'
 import { EditorContent, EditorProvider, useCurrentEditor, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import React, { useEffect, useState } from 'react'
-import { getSecondBackgroundColor } from '../../utils/themeUtil'
+import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/themeUtil'
 import * as TablerIcons from '@tabler/icons-react'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useSelector } from 'react-redux'
@@ -286,7 +286,7 @@ const extensions = [
     }),
 ]
 
-export const CustomLongTextEditor = ({ content, setContent, saveContent }) => {
+export const CustomLongTextEditor = ({ content, setContent, saveContent, readOnly }) => {
     const [editable, setEditable] = useState(false);
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const editor = useEditor({
@@ -313,20 +313,30 @@ export const CustomLongTextEditor = ({ content, setContent, saveContent }) => {
     }, [editable, editor])
 
     const handleClick = () => {
-        setEditable(true)
+        if (!readOnly)
+            setEditable(true)
     };
 
     return (
-        <Box p={2} bgcolor={getSecondBackgroundColor(theme)} borderRadius={2}>
+        <Box
+            p={editable ? 2 : 0}
+            // bgcolor={getSecondBackgroundColor(theme)} borderRadius={2}
+            borderRadius={2}
+            border={editable && '1px solid'}
+        >
             {editable && <MenuBar editor={editor} />}
-            <Box onClick={handleClick}>
+            <Box    
+                onClick={handleClick}
+            >
                 <EditorContent
                     editor={editor}
                     style={{
-                        backgroundColor: theme.palette.background.default,
+                       backgroundColor: editable && getCustomTwoModeColor(theme, "#F5F5F5", theme.palette.background.paper),
+                        border: '1px solid',
+                        borderColor: getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[700]),
                         borderRadius: 4,
                         padding: 8,
-                        minHeight: '100px'
+                        minHeight: '100px',
                     }}
                 />
             </Box>

@@ -20,6 +20,7 @@ export default function CustomTab() {
     const { sectionId } = useParams();
     const project = useSelector((state) => state.project.currentProject);
     const currentMember = useSelector((state) => state.member.currentUserMember);
+    const pathname = window.location.pathname;
 
     const handleNavigate = (section) => {
         navigate(`/project/${project?.id}/section/${section?.id}`);
@@ -80,7 +81,7 @@ export default function CustomTab() {
                             >
                                 <Box
                                     component={Link}
-                                    to={`/project/${project?.id}/`}
+                                    to={`/project/${project?.id}`}
                                     sx={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -89,10 +90,10 @@ export default function CustomTab() {
                                         py: 1,
                                         borderRadius: 1,
                                         textDecoration: 'none',
-                                        backgroundColor: sectionId == null && location === `/project/${project?.id}/` ? theme.palette.primary.main : 'transparent',
-                                        color: sectionId == null && location === `/project/${project?.id}/` ? theme.palette.primary.contrastText : theme.palette.text.primary,
+                                        backgroundColor: sectionId == null && pathname == `/project/${project?.id}` ? theme.palette.primary.main : 'transparent',
+                                        color: sectionId == null && pathname == `/project/${project?.id}` ? theme.palette.primary.contrastText : theme.palette.text.primary,
                                         '&:hover': {
-                                            backgroundColor: sectionId && location === `/project/${project?.id}/` == null
+                                            backgroundColor: sectionId == null && pathname == `/project/${project?.id}`
                                                 ? theme.palette.primary.dark
                                                 : theme.palette.action.hover,
                                         },

@@ -30,11 +30,13 @@ import DnDGrid from "../playgrounds/components/DndGrid";
 import ListWorkspace from "../playgrounds/components/TestDnDLap";
 import EmailChipInput from "../playgrounds/components/EmailChipInput";
 import WorkSpaceMember from "../pages/WorkSpaceMember";
-import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
+import WorkspaceDashBoard from "../pages/WorkSpaceProjectList";
 import Register from "../pages/Register";
 import OtpVerification from "../pages/OtpVerification";
 import ProfileSetting from "../pages/ProfileSetting";
 import ForgotPassword from "../pages/ForgotPassword";
+import WorkspaceSetting from "../pages/WorkspaceSetting";
+import UserWorkspaceTaskDashBoard from "../pages/WorkspaceDashboard";
 
 const pagesData = [
   {
@@ -73,8 +75,18 @@ const pagesData = [
     title: "workspace"
   },
   {
-    path: "/workspace/:workspaceId",
+    path: "/workspace/:workspaceId/dashboard",
+    element: <Workspace ><UserWorkspaceTaskDashBoard /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/projects",
     element: <Workspace ><WorkspaceDashBoard /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/setting",
+    element: <Workspace ><WorkspaceSetting /> </Workspace>,
     title: "workspace"
   },
   {

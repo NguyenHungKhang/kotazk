@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.management.relation.RoleStatus;
 import java.io.IOException;
@@ -56,13 +57,12 @@ public class WorkSpaceService implements IWorkSpaceService {
     INotificationService notificationService = new NotificationService();
     @Autowired
     private INotificationRepository notificationRepository;
+    @Autowired
+    private FileUtil fileUtil;
 
     @Override
     public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpaceDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-
-        Customization customization = null;
-        if (workSpaceDto.getCustomization() != null) customization = customizationService.createBuilder(workSpaceDto.getCustomization());
 
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(true);
         Optional<MemberRole> memberRole = memberRoles.stream()
@@ -114,6 +114,35 @@ public class WorkSpaceService implements IWorkSpaceService {
                 "Workspace has been updated",
                 "Workspace has been updated by user " + currentUser.getEmail(),
                 "/workspace/" + savedWorkspace.getId());
+
+        return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
+    }
+
+    @Override
+    public WorkSpaceDetailResponseDto uploadCover(MultipartFile file, Long workspaceId) throws IOException {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace", "id", workspaceId));
+
+        Member currentMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                new ArrayList<>(),
+                true
+        );
+
+        if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
+            throw new CustomException("This user do not have permission to add attachment in this task");
+
+
+        String url = workSpace.getCover();
+        if (url != null)
+            fileUtil.deleteFile(url);
+
+        String fileUrl = fileUtil.uploadFile(file, "cover-workspace-" + workSpace.getId() + "-" + UUID.randomUUID().toString());
+        workSpace.setCover(fileUrl);
+        WorkSpace savedWorkspace = workSpaceRepository.save(workSpace);
 
         return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
     }

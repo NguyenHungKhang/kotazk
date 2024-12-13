@@ -13,11 +13,14 @@ import {
     useTheme,
     Paper,
     IconButton,
+    Badge,
 } from '@mui/material';
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 import * as TablerIcons from '@tabler/icons-react';
+import { useDispatch } from 'react-redux';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
 
 const CustomInvitation = () => {
     const [open, setOpen] = useState(false);
@@ -28,6 +31,7 @@ const CustomInvitation = () => {
     const CheckIcon = TablerIcons["IconCheck"];
     const RejectIcon = TablerIcons["IconX"];
     const InviteIcon = TablerIcons["IconMailSpark"];
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (currentUser) {
@@ -42,8 +46,19 @@ const CustomInvitation = () => {
     }
 
     const handleAccept = async (memberId) => {
-        const response = await apiService.memberAPI.acceptMember(memberId);
-        if (response?.data?.success) await fetchInvitations();
+        try {
+            const response = await apiService.memberAPI.acceptMember(memberId);
+            if (response?.data?.success) {
+                dispatch(setSnackbar({
+                    content: "Invitation is accepted",
+                    open: true
+
+                }));
+                await fetchInvitations();
+            };
+        } catch (e) {
+            alert(e);
+        }
     }
 
     const handleOpen = () => setOpen(true);
@@ -51,15 +66,17 @@ const CustomInvitation = () => {
     return (
         <div>
             {/* Button to open the dialog */}
-            <Button variant="contained" color="primary" onClick={handleOpen} size='small'
-            sx={{
-                borderRadius: 20
-            }}
-            startIcon={<InviteIcon size={18}/>}
-            >
-                Invitation
-            </Button>
 
+            <Badge badgeContent={members?.length} color="secondary">
+                <Button variant="contained" color="primary" onClick={handleOpen} size='small'
+                    sx={{
+                        borderRadius: 20
+                    }}
+                    startIcon={<InviteIcon size={18} />}
+                >
+                    Invitation
+                </Button>
+            </Badge>
             {/* Dialog Component */}
             <Dialog
                 open={open}

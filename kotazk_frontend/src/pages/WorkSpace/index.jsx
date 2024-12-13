@@ -12,6 +12,7 @@ import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import CustomWorkspaceHeader from "../../components/CustomWorkspaceHeader";
+import { setCurrentWorkspaceMember } from "../../redux/actions/member.action";
 
 const Workspace = ({ children }) => {
     const theme = useTheme();
@@ -20,16 +21,31 @@ const Workspace = ({ children }) => {
     const [open, setOpen] = useState(true);
     // const [workspace, setWorkspace] = useState(null);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+
+
     const breadcrumbData = [
         {
             "label": workspace?.name,
         },
     ]
 
+    const getCurrentUser = async () => {
+        try {
+            const res = await apiService.memberAPI.getCurrentOneByWorkspace(workspaceId);
+            if (res?.data) {
+                dispatch(setCurrentWorkspaceMember(res?.data))
+            }
+        } catch (err) {
+            console.error('Error fetching current member details:', err);
+        }
+    };
+
     useEffect(() => {
-        if (workspaceId != null)
+        if (workspaceId != null) {
             initalFetch();
-    }, [, workspaceId])
+            getCurrentUser();
+        }
+    }, [workspaceId])
 
     const initalFetch = async () => {
         await apiService.workspaceAPI.getDetailById(workspaceId)
@@ -43,8 +59,8 @@ const Workspace = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
-                background: theme.palette.mode === 'dark'
+                backgroundImage: workspace?.cover ? `url(${workspace?.cover})` : null,
+                background: workspace?.cover ? null : theme.palette.mode === 'dark'
                     ? 'linear-gradient(135deg, #522580, #223799)'
                     : 'linear-gradient(135deg, #667eea, #764ba2)',
                 backgroundSize: 'cover',

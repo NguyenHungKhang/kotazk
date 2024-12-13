@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { Box, Button, Stack, alpha, useTheme, Typography, Avatar, List, ListItem, ListItemIcon, ListItemText, Divider, ListItemAvatar } from "@mui/material";
-import { IconLayoutDashboardFilled, IconSettingsFilled, IconUsers, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
+import { IconLayoutDashboardFilled, IconSettingsFilled, IconSitemapFilled, IconUsers, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
 import { useSelector } from "react-redux";
 import CustomProjectColorIconPicker from "../CustomProjectColorIconPicker";
 import * as apiService from "../../api/index"
@@ -19,6 +19,11 @@ const SideBar = ({ open, setOpen }) => {
     const projectList = useSelector((state) => state.project.currentProjectList);
     const currentUser = useSelector((state) => state.user.currentUser);
     const pinnedProject = projectList?.content?.filter(p => p.isPinned == true);
+    const pathname = window.location.pathname;
+    const isWorkspace = /^\/workspace\/\d+\/dashboard$/.test(pathname);
+    const isWorkspaceSetting = /^\/workspace\/\d+\/setting$/.test(pathname);
+    const isWorkspaceProjects = /^\/workspace\/\d+\/projects$/.test(pathname);
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -129,31 +134,93 @@ const SideBar = ({ open, setOpen }) => {
                     </Stack>
                     <Divider flexItem />
                     <List sx={{ width: '100%' }}>
-                        {Menus.map((Menu, index) => (
-                            <ListItem
-                                key={index}
-                                sx={{
-                                    py: 0.5,
-                                    mt: Menu.gap ? 4 : 1,
-                                    borderRadius: 1,
-                                    bgcolor: index === 0 ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                                    '&:hover': {
-                                        bgcolor: alpha(theme.palette.primary.main, 0.1),
+                        <ListItem
+                            sx={{
+                                py: 0.5,
+                                mt: 1,
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                bgcolor: isWorkspace == true ? theme.palette.primary.main : 'transparent',
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                }
+                            }}
+                            button
+                            onClick={() => navigate(`/workspace/${workspace?.id}/dashboard`)}
+                        >
+                            <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                <IconLayoutDashboardFilled size={20} color={isWorkspace == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}/>
+                            </ListItemIcon>
+                            {open && (
+                                <ListItemText
+                                    primary={
+                                        <Typography noWrap color={isWorkspace == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                            Dashboard
+                                        </Typography>
                                     }
-                                }}
-                                button
-                            >
-                                <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
-                                    {Menu.icon}
-                                </ListItemIcon>
-                                {open && (
-                                    <ListItemText
-                                        primary={Menu.title}
-                                        sx={{ ml: 2 }}
-                                    />
-                                )}
-                            </ListItem>
-                        ))}
+                                    sx={{ ml: 2 }}
+                                />
+                            )}
+                        </ListItem>
+
+                        <ListItem
+                            sx={{
+                                py: 0.5,
+                                mt: 1,
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                bgcolor: isWorkspaceProjects == true ? theme.palette.primary.main : 'transparent',
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                }
+                            }}
+                            button
+                            onClick={() => navigate(`/workspace/${workspace?.id}/projects`)}
+                        >
+                            <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                <IconSitemapFilled size={20} color={isWorkspaceProjects == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}/>
+                            </ListItemIcon>
+                            {open && (
+                                <ListItemText
+                                    primary={
+                                        <Typography noWrap color={isWorkspaceProjects == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                            Projects
+                                        </Typography>
+                                    }
+                                    sx={{ ml: 2 }}
+                                />
+                            )}
+                        </ListItem>
+
+                        <ListItem
+                            sx={{
+                                py: 0.5,
+                                mt: 1,
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                bgcolor: isWorkspaceSetting == true ? theme.palette.primary.main : 'transparent',
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                }
+                            }}
+                            button
+                            onClick={() => navigate(`/workspace/${workspace?.id}/setting`)}
+                        >
+                            <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                <IconSettingsFilled size={20} color={isWorkspaceSetting == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}/>
+                            </ListItemIcon>
+                            {open && (
+                                <ListItemText
+                                    primary={
+                                        <Typography noWrap color={isWorkspaceSetting == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                            Setting
+                                        </Typography>
+                                    }
+                                    sx={{ ml: 2 }}
+                                />
+                            )}
+                        </ListItem>
+
                         {pinnedProject?.length > 0 &&
                             <Divider flexItem textAlign="left" sx={{ my: 1 }}><strong>Pinned</strong></Divider>
                         }

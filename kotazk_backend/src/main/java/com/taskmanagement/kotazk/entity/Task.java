@@ -33,12 +33,12 @@ public class Task {
     @JoinColumn(name = "parent_task_id")
     private Task parentTask;
 
-    @ManyToOne
-    @JoinColumn(name = "creator_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id", nullable = true)
     private Member creator;
 
-    @ManyToOne
-    @JoinColumn(name = "assignee_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id", nullable = true)
     private Member assignee;
 
     @ManyToOne

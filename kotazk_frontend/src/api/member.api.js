@@ -8,7 +8,9 @@ export const updateStatus = async (memberId, data) => await axiosInstance.put(`$
 
 export const remove = async (memberId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${memberId}`);
 
-export const getCurrentOne = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/${projectId}`);
+export const getCurrentOneByProject = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/by-project/${projectId}`);
+
+export const getCurrentOneByWorkspace = async (workspaceId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/by-workspace/${workspaceId}`);
 
 export const inviteList = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/invite-list`, data);
 

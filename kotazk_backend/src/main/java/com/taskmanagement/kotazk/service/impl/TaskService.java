@@ -12,6 +12,7 @@ import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
+import com.taskmanagement.kotazk.payload.response.task.UserTaskResponseDto;
 import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.ITaskService;
@@ -37,6 +38,8 @@ import static com.taskmanagement.kotazk.config.ConstantConfig.DEFAULT_POSITION_S
 public class TaskService implements ITaskService {
     @Autowired
     private IProjectRepository projectRepository;
+    @Autowired
+    private IWorkSpaceRepository workSpaceRepository;
     @Autowired
     private ITaskRepository taskRepository;
     @Autowired
@@ -70,6 +73,9 @@ public class TaskService implements ITaskService {
         );
 
         List<ActivityLog> activityLogs = new ArrayList<>();
+
+        System.out.println(currentMember.getId());
+        System.out.println(!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.CREATE_TASKS));
 
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.CREATE_TASKS))
             throw new CustomException("This user do not have permission to create task in this project");
@@ -406,6 +412,97 @@ public class TaskService implements ITaskService {
     }
 
     @Override
+    public PageResponse<UserTaskResponseDto> getPageByUser(SearchParamRequestDto searchParam) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+//        Project project = projectRepository.findById(projectId)
+//                .filter(p -> isAdmin || p.getDeletedAt() == null)
+//                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+//        WorkSpace workSpace = Optional.of(project.getWorkSpace())
+//                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+//                .orElseThrow(() -> new ResourceNotFoundException("WorkSpace", "id", project.getWorkSpace().getId()));
+
+//        Member currentMember = null;
+//        if (!isAdmin)
+//            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, project, null);
+
+
+        Specification<Task> projectSpecification = (Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Task, User> userJoin = root.join("assignee").join("user");
+            return criteriaBuilder.equal(userJoin.get("id"), currentUser.getId());
+        };
+
+        Specification<Task> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
+
+        Specification<Task> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
+
+        Page<Task> page = taskRepository.findAll(specification, pageable);
+        List<UserTaskResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), UserTaskResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
+    public PageResponse<TaskResponseDto> getPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        WorkSpace workspace = workSpaceRepository.findById(workspaceId)
+                .filter(ws -> isAdmin || ws.getDeletedAt() == null)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace", "id", workspaceId));
+
+        Member currentMember = null;
+        if (!isAdmin)
+            currentMember = memberService.checkProjectAndWorkspaceBrowserPermission(currentUser, null, workspace);
+
+
+        Specification<Task> projectSpecification = (Root<Task> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Task, WorkSpace> workSpaceJoin = root.join("project").join("workSpace");
+            return criteriaBuilder.equal(workSpaceJoin.get("id"), workspace.getId());
+        };
+
+        Specification<Task> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "createdAt"));
+
+        Specification<Task> specification = Specification.where(projectSpecification)
+                .and(filterSpecification);
+
+        Page<Task> page = taskRepository.findAll(specification, pageable);
+        List<TaskResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), TaskResponseDto.class);
+
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
     public PageResponse<TaskResponseDto> getToday(Long projectId) {
         User currentUser = SecurityUtil.getCurrentUser();
         Long userId = currentUser.getId();
@@ -455,6 +552,7 @@ public class TaskService implements ITaskService {
 
     // Utility methods
     private Member checkAssignee(Member currentMember, Project project, Long assigneeId) {
+        if(assigneeId == null) return null;
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.ASSIGN_TASKS) &&
                 !currentMember.getRole().getWorkSpacePermissions().contains(WorkSpacePermission.MODIFY_ALL_PROJECT)
         ) throw new CustomException("User don't have permission to assign member tasks");

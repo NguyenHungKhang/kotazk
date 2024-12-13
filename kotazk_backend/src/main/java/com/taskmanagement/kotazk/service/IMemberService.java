@@ -28,7 +28,8 @@ public interface IMemberService {
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
-    MemberResponseDto getCurrentOne(Long projectId);
+    MemberResponseDto getCurrentOneByProject(Long projectId);
+    MemberResponseDto getCurrentOneByWorkspace(Long projectId);
     PageResponse<MemberResponseDto> getListPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId);
     PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId);
     List<MemberDetailResponseDto> getOwnInvitation();

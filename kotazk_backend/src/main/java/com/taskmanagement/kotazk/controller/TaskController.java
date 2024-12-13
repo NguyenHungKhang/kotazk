@@ -8,6 +8,7 @@ import com.taskmanagement.kotazk.payload.request.task.TaskRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.task.TaskResponseDto;
+import com.taskmanagement.kotazk.payload.response.task.UserTaskResponseDto;
 import com.taskmanagement.kotazk.service.ITaskService;
 import com.taskmanagement.kotazk.service.impl.TaskService;
 import jakarta.validation.Valid;
@@ -57,6 +58,19 @@ public class TaskController {
     @ResponseStatus(HttpStatus.OK)
     public PageResponse<TaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long projectId) {
         return taskService.getPageByProject(searchParam, projectId);
+    }
+
+    @PostMapping("/page/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<TaskResponseDto> getDetailPageByWorkspace(@Valid @RequestBody SearchParamRequestDto searchParam, @PathVariable Long workspaceId) {
+        return taskService.getPageByWorkspace(searchParam, workspaceId);
+    }
+
+
+    @PostMapping("/page/by-user")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<UserTaskResponseDto> getDetailPage(@Valid @RequestBody SearchParamRequestDto searchParam) {
+        return taskService.getPageByUser(searchParam);
     }
 
     @GetMapping("/today/by-project/{projectId}")

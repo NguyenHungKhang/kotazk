@@ -128,7 +128,7 @@ const CustomTaskDialog = () => {
 
     const handleAccessParentTask = async (taskId) => {
         const response = await apiService.taskAPI.getOne(taskId)
-        if(response?.data) {
+        if (response?.data) {
             const data = {
                 task: response?.data,
                 open: true
@@ -453,7 +453,7 @@ const CustomTaskDialog = () => {
                     </Grid2>
                 </Grid2>
 
-                
+
                 {/* <Grid2 container spacing={2} mt={4}>
                     <Grid2 item size={2}>
                         <Stack direction='row' spacing={2} alignItems='center'>
@@ -528,7 +528,15 @@ const NameInput = ({ currentName, onBlur }) => {
 
     React.useEffect(() => {
         setName(currentName);
-    }, [currentName])
+    }, [currentName]);
+
+    const handleBlur = () => {
+        if (!name || name.trim() === '') {
+            setName(currentName);
+        } else {
+            onBlur(name);
+        }
+    };
     return (
         <CustomBasicTextField
             required
@@ -546,7 +554,7 @@ const NameInput = ({ currentName, onBlur }) => {
                 }
             }}
             onChange={(e) => setName(e.target.value)}
-            onBlur={() => onBlur(name)}
+            onBlur={() => handleBlur()}
 
         />
     );
@@ -554,6 +562,8 @@ const NameInput = ({ currentName, onBlur }) => {
 
 const DescComponent = ({ currentDescription, saveDesc }) => {
     const [description, setDescription] = React.useState();
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+    const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
 
     React.useEffect(() => {
         setDescription(currentDescription);
@@ -565,7 +575,7 @@ const DescComponent = ({ currentDescription, saveDesc }) => {
     }
 
     return (
-        <CustomLongTextEditor content={currentDescription} setContent={setDescription} saveContent={handleSaveDesc} />
+        <CustomLongTextEditor content={currentDescription} setContent={setDescription} saveContent={handleSaveDesc} readOnly={!editTaskPermission} />
     );
 }
 

@@ -13,6 +13,8 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
 import { getAvatar } from "../../utils/avatarUtil";
+import CustomDialogForManage from "../CustomDialogForManage";
+import ProjectMember from "../../pages/ProjectMember";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -22,6 +24,9 @@ const CustomHeader = () => {
     const project = useSelector((state) => state.project.currentProject);
     const currentUser = useSelector((state) => state.user.currentUser);
     const [members, setMembers] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [maxWidth, setMaxWidth] = useState("log");
+    const [children, setChildren] = useState(<ProjectMember />);
 
     useEffect(() => {
         if (project)
@@ -92,7 +97,7 @@ const CustomHeader = () => {
                             </Avatar>
                         ))}
                     </AvatarGroup>
-                    <Button
+                    {/* <Button
                         component={Link}
                         to={`/project/${project?.id}/member`}
                         sx={{
@@ -106,7 +111,7 @@ const CustomHeader = () => {
                         }
                     >
                         Add member
-                    </Button>
+                    </Button> */}
                 </Stack>
                 <Stack direction='row' spacing={2}>
                     <Box>
@@ -114,10 +119,11 @@ const CustomHeader = () => {
                             size='small'
                             variant="outlined"
                             color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                            startIcon={<ShareIcon size={16} />}
+                            startIcon={<ShareIcon size={16} />} 
                             sx={{
                                 textTransform: 'none'
                             }}
+                            onClick={() => {setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
                         >
                             Share
                         </Button>
@@ -184,6 +190,7 @@ const CustomHeader = () => {
                     </Avatar>
                 </Stack>
             </Stack>
+            <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />
         </Box>
     );
 }

@@ -12,10 +12,10 @@ import { getCustomTwoModeColor } from "../../utils/themeUtil";
 import { getProjectCover } from "../../utils/coverUtil";
 import CustomWeekTaskCalendar from "../../components/CustomWeekTaskCalendar";
 
-const UserWorkspaceTaskDashBoard = () => {
+const UserTaskDashBoard = () => {
     const theme = useTheme();
     const dispatch = useDispatch();
-    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const project = useSelector((state) => state.project.currentProject);
     const currentUser = useSelector((state) => state.user.currentUser);
 
     const [todayTasks, setTodayTasks] = useState([]);
@@ -25,13 +25,13 @@ const UserWorkspaceTaskDashBoard = () => {
     const [tabIndex, setTabIndex] = useState(0);
 
     useEffect(() => {
-        if (currentUser && workspace) {
+        if (currentUser) {
             todayTaskFetch();
             overdueTasksFetch();
             completedTaskFetch();
             uncompletedTaskFetch();
         }
-    }, [currentUser, workspace]);
+    }, [currentUser]);
 
     const todayTaskFetch = async () => {
         console.log(123)
@@ -47,7 +47,7 @@ const UserWorkspaceTaskDashBoard = () => {
             ],
         };
 
-        const response = await apiService.taskAPI.getPageByWorkspace(workspace?.id, data);
+        const response = await apiService.taskAPI.getPageByUser(data);
         if (response?.data) {
             setTodayTasks(response?.data.content);
         }
@@ -61,7 +61,7 @@ const UserWorkspaceTaskDashBoard = () => {
             ],
         };
 
-        const response = await apiService.taskAPI.getPageByWorkspace(workspace?.id, data);
+        const response = await apiService.taskAPI.getPageByUser(data);
         if (response?.data) {
             setUncompletedTasks(response?.data.content);
         }
@@ -76,7 +76,7 @@ const UserWorkspaceTaskDashBoard = () => {
             ],
         };
 
-        const response = await apiService.taskAPI.getPageByWorkspace(workspace?.id, data);
+        const response = await apiService.taskAPI.getPageByUser(data);
         if (response?.data) {
             setOverdueTasks(response?.data.content);
         }
@@ -90,7 +90,7 @@ const UserWorkspaceTaskDashBoard = () => {
             ],
         };
 
-        const response = await apiService.taskAPI.getPageByWorkspace(workspace?.id, data);
+        const response = await apiService.taskAPI.getPageByUser(data);
         if (response?.data) {
             setCompletedTasks(response?.data.content);
         }
@@ -123,6 +123,12 @@ const UserWorkspaceTaskDashBoard = () => {
                 <Stack direction="row" spacing={2} alignItems="center">
                     <Box flexGrow={1}>
                         <Typography>{task.name}</Typography>
+                    </Box>
+                    <Box>
+                        <Chip label={task?.project?.workSpace?.name} size="small" />
+                    </Box>
+                    <Box>
+/
                     </Box>
                     <Box>
                         <Chip label={task?.project?.name} size="small" />
@@ -363,4 +369,4 @@ const UserWorkspaceTaskDashBoard = () => {
     );
 };
 
-export default UserWorkspaceTaskDashBoard;
+export default UserTaskDashBoard;

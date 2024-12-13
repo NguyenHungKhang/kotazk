@@ -140,16 +140,15 @@ export default function AddProjectMember() {
     }
 
     return (
-        <Card
+        <Box
             sx={{
                 width: '100%'
             }}
         >
-            <Typography variant='h6' fontWeight={650} p={4}>
-                Invite Member
-            </Typography>
-            <Divider />
             <Box p={4}>
+                <Typography fontWeight={650} variant='h6'>
+                    Invite with email
+                </Typography>
                 <Stack direction={'row'} spacing={2} alignItems="center" width={'100%'}>
                     <Box flexGrow={1}>
                         <Autocomplete
@@ -230,7 +229,7 @@ export default function AddProjectMember() {
                                                 </Avatar>}
                                             {option.id ?
                                                 <span>
-                                                    {option.firstName}{option.lastName} - {option.email}
+                                                    {option.firstName} {option.lastName} - {option.email}
                                                 </span>
                                                 :
                                                 <Typography color='info'>
@@ -286,14 +285,7 @@ export default function AddProjectMember() {
                         </LoadingButton>
                     </Box>
                 </Stack>
-                <FormGroup>
-                    <FormControlLabel control={<Checkbox
-                        checked={isOverideRole}
-                        onChange={handleIsOverideRole}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                    />} label="Override a member's role in the project" />
-                </FormGroup>
             </Box>
-        </Card>
+        </Box>
     );
 }

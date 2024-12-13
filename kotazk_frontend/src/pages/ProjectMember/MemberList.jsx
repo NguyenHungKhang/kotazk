@@ -12,7 +12,7 @@ import EmailChipInput from '../../playgrounds/components/EmailChipInput';
 import AddProjectMember from './AddProjectMember';
 
 
-const MemberList = () => {
+const MemberList = ({ handleClose, isDialog }) => {
     const theme = useTheme();
 
     const [memberRoles, setMemberRoles] = useState(null);
@@ -23,6 +23,7 @@ const MemberList = () => {
     const workSpace = useSelector((state) => state.workspace.currentWorkspace)
     const [searchText, setSearchText] = useState("");
     const RefreshIcon = TablerIcons["IconRefresh"];
+    const AccessibleIcon = TablerIcons["IconAccessible"];
     const [memberStatus, setMemberStatus] = React.useState('ACTIVE');
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const manageMemberPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_MEMBER");
@@ -91,9 +92,6 @@ const MemberList = () => {
 
     return (
         <Stack spacing={2}>
-            {manageMemberPermission && (
-                <AddProjectMember currentMembers={members} currentRoleMembers={memberRoles} />
-            )}
 
             <Card
                 sx={{
@@ -101,11 +99,36 @@ const MemberList = () => {
                     boxShadow: 0
                 }}
             >
-                <Typography fontWeight={650} variant='h6' p={4}>
-                    Members
-                </Typography>
+                <Stack direction={'row'} spacing={2} alignItems={'center'} p={4}>
+                    <AccessibleIcon size={25} />
+                    <Typography fontWeight={650} variant='h6'>
+                        Accessible Member
+                    </Typography>
+                    {
+                        isDialog && (
+                            <Box>
+                                <IconButton onClick={handleClose}>
+                                    <CloseIcon size={18} stroke={2} />
+                                </IconButton>
+                            </Box>
+                        )
+                    }
+                </Stack>
+
                 <Divider />
+                {manageMemberPermission && (
+                    <>
+                        <AddProjectMember currentMembers={members} currentRoleMembers={memberRoles} />
+                        <Divider />
+                    </>
+
+                )}
+
+
                 <Box p={4}>
+                    <Typography fontWeight={650} variant='h6' >
+                        Members
+                    </Typography>
                     <Stack direction={'column'} height={'100%'} >
                         <Box p={2} flexGrow={1} height={'100%'}>
                             <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
@@ -117,17 +140,20 @@ const MemberList = () => {
                                         onChange={(e) => setSearchText(e.target.value)}
                                     />
                                 </Box>
-                                <ToggleButtonGroup
-                                    color="primary"
-                                    size='small'
-                                    value={memberStatus}
-                                    exclusive
-                                    onChange={handleChangeMemberStatus}
-                                    aria-label="Platform"
-                                >
-                                    <ToggleButton size='small' value="ACTIVE" sx={{ textTransform: 'none' }}>Active</ToggleButton>
-                                    <ToggleButton size='small' value="INVITED" sx={{ textTransform: 'none' }}>Invited</ToggleButton>
-                                </ToggleButtonGroup>
+                                {manageMemberPermission && (
+                                    <ToggleButtonGroup
+                                        color="primary"
+                                        size='small'
+                                        value={memberStatus}
+                                        exclusive
+                                        onChange={handleChangeMemberStatus}
+                                        aria-label="Platform"
+                                    >
+                                        <ToggleButton size='small' value="ACTIVE" sx={{ textTransform: 'none' }}>Active</ToggleButton>
+                                        <ToggleButton size='small' value="INVITED" sx={{ textTransform: 'none' }}>Invited</ToggleButton>
+                                    </ToggleButtonGroup>
+                                )}
+
                             </Stack>
 
                             <Stack spacing={1}>
