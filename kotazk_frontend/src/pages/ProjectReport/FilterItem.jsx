@@ -25,7 +25,7 @@ const FilterItem = ({ filter, index, setFilters }) => {
         { label: 'Status', value: 'status.id' },
         { label: 'Priority', value: 'priority.id' },
         { label: 'Task Type', value: 'taskType.id' },
-        { label: 'Assignee', value: 'assignee.id' },
+        { label: 'Assignee', value: 'assignee.user.id' },
         { label: 'Completion', value: 'isCompleted' },
         { label: 'Start At', value: 'startAt' },
         { label: 'End At', value: 'endAt' }
@@ -35,7 +35,7 @@ const FilterItem = ({ filter, index, setFilters }) => {
         if (filter) {
             setSelectedField(filter.field);
             let initialOptions = [];
-            if (filter.field == "status.id" || filter.field == "taskType.id" || filter.field == "priority.id" || filter.field == "assignee.id")
+            if (filter.field == "status.id" || filter.field == "taskType.id" || filter.field == "priority.id" || filter.field == "assignee.user.id")
                 initialOptions = filter.options.map(Number);
             else if (filter.field == "isCompleted")
                 initialOptions = filter.options.map(Boolean);
@@ -60,7 +60,7 @@ const FilterItem = ({ filter, index, setFilters }) => {
                 case 'taskType.id':
                     response = await fetchTaskTypeOptions();
                     break;
-                case 'assignee.id':
+                case 'assignee.user.id':
                     response = await fetchMemberOptions();
                     break;
                 case 'isCompleted':
@@ -128,7 +128,7 @@ const FilterItem = ({ filter, index, setFilters }) => {
         if (response?.data) {
             return [{ "label": "No assignee", "value": 0 }, ...response.data.content.map(i => ({
                 "label": i.user.firstName + ' ' + i.user.lastName,
-                "value": i.id
+                "value": i.user.id
             }))]
         } else return [];
     };

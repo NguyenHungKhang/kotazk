@@ -58,6 +58,8 @@ public class StatusService implements IStatusService {
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<Status> specificationUtil = new BasicSpecificationUtil<>();
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
 
     @Override
     public List<Status> initialStatus() {
@@ -245,6 +247,16 @@ public class StatusService implements IStatusService {
                 .flatMap(st -> st.getTasks().stream())
                 .collect(Collectors.toList());
 
+        Status defaultStatus = project.getStatuses().stream().filter(tt -> Objects.equals(tt.getName(), "To do") && tt.getSystemInitial() == true).findFirst().get();
+
+        deletedStatuses.forEach(taskType -> {
+            List<Task> tasks = taskType.getTasks();
+            if (tasks != null) {
+                tasks.forEach(task -> task.setStatus(defaultStatus));
+            }
+            taskRepository.saveAll(tasks);
+        });
+
         List<String> idStatusToDelete = deletedStatuses.stream().map(s -> s.getId().toString()).toList();
 
         statuses.stream()
@@ -279,6 +291,9 @@ public class StatusService implements IStatusService {
         project.getStatuses().clear();
         project.getStatuses().addAll(statuses);
         List<Status> savedStatuses = projectRepository.save(project).getStatuses();
+
+        ActivityLog activityLog = activityLogStatusTemplate(project, currentUser, String.format("update project's status"));
+        activityLogRepository.save(activityLog);
 
         return ModelMapperUtil.mapList(savedStatuses, StatusResponseDto.class);
     }
@@ -703,5 +718,18 @@ public class StatusService implements IStatusService {
         }
 
         statusRepository.saveAll(orderedStatuses);
+    }
+
+    private ActivityLog activityLogStatusTemplate(Project project, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setProject(project);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " ("+ user.getEmail() +")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(ActivityLogType.PROJECT_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
     }
 }

@@ -21,6 +21,7 @@ import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/the
 import { setAddAndUpdateReportDialog } from '../../redux/actions/dialog.action';
 import FilterList from './FilterList';
 import CustomNumberReport from './CustomNumberReport';
+import CustomTextFieldWithValidation from '../../components/CustomTextFieldWithValidation';
 
 const chartTypeData1 = [
     { label: "Bar chart", id: "BAR_CHART" },
@@ -63,6 +64,7 @@ export default function CustomAddChartDialog() {
     const [xType, setXType] = React.useState(null);
     const [yType, setYType] = React.useState(null);
     const [groupType, setGroupType] = React.useState(null);
+    const [nameError, setNameError] = React.useState(false);
     const [name, setName] = React.useState(null);
     const [previewChart, setPreviewChart] = React.useState(null);
     const [filters, setFilters] = React.useState([]);
@@ -354,12 +356,20 @@ export default function CustomAddChartDialog() {
                         <Stack spacing={2}>
                             <Box>
                                 <Typography>Chart name</Typography>
-                                <TextField
-                                    size='small'
-                                    placeholder='Enter report name'
+                                <CustomTextFieldWithValidation
+                                    id="name"
+                                    name="name"
+                                    size="small"
+                                    placeholder='Enter project name'
                                     fullWidth
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
+                                    setFormError={setNameError}
+                                    maxLength={50}
+                                    required
+                                    validationRegex={/^[A-Za-z0-9À-ÿ ]*$/}
+                                    regexErrorText="Only letters, numbers, and spaces are allowed."
+                                    defaultHelperText="Enter the chart name. Only letters, numbers, and spaces are allowed."
                                 />
                             </Box>
 

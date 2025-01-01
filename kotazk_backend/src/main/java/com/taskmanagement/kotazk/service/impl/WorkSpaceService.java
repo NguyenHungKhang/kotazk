@@ -10,16 +10,12 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.request.memberrole.MemberRoleRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.notification.NotificationResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
-import com.taskmanagement.kotazk.repository.ICustomizationRepository;
-import com.taskmanagement.kotazk.repository.IMemberRepository;
-import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
-import com.taskmanagement.kotazk.service.ICustomizationService;
-import com.taskmanagement.kotazk.service.IMemberRoleService;
-import com.taskmanagement.kotazk.service.IMemberService;
-import com.taskmanagement.kotazk.service.IWorkSpaceService;
+import com.taskmanagement.kotazk.repository.*;
+import com.taskmanagement.kotazk.service.*;
 import com.taskmanagement.kotazk.util.*;
 import jakarta.persistence.criteria.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +24,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.management.relation.RoleStatus;
 import java.io.IOException;
@@ -54,13 +52,20 @@ public class WorkSpaceService implements IWorkSpaceService {
     private TimeUtil timeUtil;
     @Autowired
     private final BasicSpecificationUtil<WorkSpace> specificationUtil = new BasicSpecificationUtil<>();
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    INotificationService notificationService = new NotificationService();
+    @Autowired
+    private INotificationRepository notificationRepository;
+    @Autowired
+    private FileUtil fileUtil;
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
 
     @Override
     public WorkSpaceDetailResponseDto initialWorkSpace(WorkSpaceRequestDto workSpaceDto) {
         User currentUser = SecurityUtil.getCurrentUser();
-
-        Customization customization = null;
-        if (workSpaceDto.getCustomization() != null) customization = customizationService.createBuilder(workSpaceDto.getCustomization());
 
         List<MemberRole> memberRoles = memberRoleService.initialMemberRole(true);
         Optional<MemberRole> memberRole = memberRoles.stream()
@@ -80,10 +85,7 @@ public class WorkSpaceService implements IWorkSpaceService {
                 .name(workSpaceDto.getName())
                 .user(currentUser)
                 .description(workSpaceDto.getDescription())
-                .status(WorkSpaceStatus.ACTIVE)
-                .visibility(workSpaceDto.getVisibility())
                 .key(generateUniqueKey())
-                .customization(customization)
                 .memberRoles(new HashSet<>(memberRoles))
                 .members(Collections.singletonList(member))
                 .build();
@@ -93,35 +95,13 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         WorkSpace saveWorkSpace = workSpaceRepository.save(newWorkSpace);
 
+        ActivityLog taskActivityLog = activityLogWorkspaceTemplate(saveWorkSpace, currentUser, String.format("create this workspace"));
+        activityLogRepository.save(taskActivityLog);
+
+        createNotificationForAllMembers(currentUser, saveWorkSpace, "Workspace has been created", "Workspace has been created by user " + currentUser.getEmail(), "/workspace/" + saveWorkSpace.getId());
+
         return ModelMapperUtil.mapOne(saveWorkSpace, WorkSpaceDetailResponseDto.class);
     }
-
-//    @Override
-//    public WorkSpace create(WorkSpaceRequestDto workSpace) {
-//        User currentUser = SecurityUtil.getCurrentUser();
-//        WorkSpace newWorkSpace = ModelMapperUtil.mapOne(workSpace, WorkSpace.class);
-//        newWorkSpace.setId(null);
-//        newWorkSpace.setUser(currentUser);
-//        if (workSpace.getCustomization() != null) {
-//            Customization customization = Customization.builder()
-//                    .avatar(workSpace.getCustomization().getAvatar())
-//                    .backgroundColor(workSpace.getCustomization().getBackgroundColor())
-//                    .fontColor(workSpace.getCustomization().getFontColor())
-//                    .icon(workSpace.getCustomization().getIcon())
-//                    .build();
-//
-//            Customization savedCustomization = customizationRepository.save(customization);
-//            newWorkSpace.setCustomization(savedCustomization);
-//        } else newWorkSpace.setCustomization(null);
-//
-//        String key = null;
-//        do {
-//            key = RandomStringGeneratorUtil.generateKey();
-//        } while (workSpaceRepository.findByKey(key).isPresent());
-//        newWorkSpace.setKey(key);
-//
-//        return workSpaceRepository.save(newWorkSpace);
-//    }
 
     @Override
     public WorkSpaceDetailResponseDto update(Long id, WorkSpaceRequestDto workSpace) {
@@ -131,19 +111,60 @@ public class WorkSpaceService implements IWorkSpaceService {
 
         Member currentMember = checkWorkspaceSettingPermission(currentUser.getId(), currentWorkSpace.getId());
 
-        Optional.ofNullable(workSpace.getName()).ifPresent(currentWorkSpace::setName);
-        Optional.ofNullable(workSpace.getDescription()).ifPresent(currentWorkSpace::setDescription);
-        Optional.ofNullable(workSpace.getVisibility()).ifPresent(currentWorkSpace::setVisibility);
-        Optional.ofNullable(workSpace.getStatus()).ifPresent(currentWorkSpace::setStatus);
+        List<ActivityLog> activityLogs = new ArrayList<>();
 
-        Optional.ofNullable(workSpace.getCustomization()).ifPresent(customization -> {
-            Optional.ofNullable(customization.getAvatar()).ifPresent(currentWorkSpace.getCustomization()::setAvatar);
-            Optional.ofNullable(customization.getBackgroundColor()).ifPresent(currentWorkSpace.getCustomization()::setBackgroundColor);
-            Optional.ofNullable(customization.getFontColor()).ifPresent(currentWorkSpace.getCustomization()::setFontColor);
-            Optional.ofNullable(customization.getIcon()).ifPresent(currentWorkSpace.getCustomization()::setIcon);
-        });
+        String oldName = workSpace.getName();
+
+        if(workSpace.getName() != null) {
+            currentWorkSpace.setName(workSpace.getName());
+            ActivityLog wokspaceActivityLog = activityLogWorkspaceTemplate(currentWorkSpace, currentUser, String.format("changed workspace name to \"%s\"", workSpace.getName()));
+            activityLogs.add(wokspaceActivityLog);
+        }
+
+        if(workSpace.getDescription() != null) {
+            currentWorkSpace.setDescription(workSpace.getDescription());
+            ActivityLog wokspaceActivityLog = activityLogWorkspaceTemplate(currentWorkSpace, currentUser, String.format("changed workspace description"));
+            activityLogs.add(wokspaceActivityLog);
+        }
 
         WorkSpace savedWorkspace =  workSpaceRepository.save(currentWorkSpace);
+        activityLogRepository.saveAll(activityLogs);
+        createNotificationForAllMembers(currentUser, savedWorkspace,
+                "Workspace has been updated",
+                "Workspace \"" + oldName + "\" has been updated by user " + currentUser.getEmail(),
+                "/workspace/" + savedWorkspace.getId() + "/dashboard");
+
+        return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
+    }
+
+    @Override
+    public WorkSpaceDetailResponseDto uploadCover(MultipartFile file, Long workspaceId) throws IOException {
+        User currentUser = SecurityUtil.getCurrentUser();
+        WorkSpace workSpace = workSpaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace", "id", workspaceId));
+
+        Member currentMember = memberService.checkProjectMember(
+                currentUser.getId(),
+                workSpace.getId(),
+                Collections.singletonList(MemberStatus.ACTIVE),
+                new ArrayList<>(),
+                true
+        );
+
+        if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.MODIFY_PROJECT))
+            throw new CustomException("This user do not have permission to add attachment in this task");
+
+
+        String url = workSpace.getCover();
+        if (url != null)
+            fileUtil.deleteFile(url);
+
+        String fileUrl = fileUtil.uploadFile(file, "cover-workspace-" + workSpace.getId() + "-" + UUID.randomUUID().toString());
+        workSpace.setCover(fileUrl);
+        WorkSpace savedWorkspace = workSpaceRepository.save(workSpace);
+        ActivityLog taskActivityLog = activityLogWorkspaceTemplate(savedWorkspace, currentUser, String.format("uploaded workspace cover."));
+        activityLogRepository.save(taskActivityLog);
+
         return ModelMapperUtil.mapOne(savedWorkspace, WorkSpaceDetailResponseDto.class);
     }
 
@@ -159,8 +180,13 @@ public class WorkSpaceService implements IWorkSpaceService {
                 true
         );
 
+        createNotificationForAllMembers(currentUser, currentWorkSpace,
+                "Workspace has been deleted",
+                "Workspace \"" + currentWorkSpace.getName() + "\" has been deleted by user " + currentUser.getEmail(),
+                null);
 
         workSpaceRepository.deleteById(currentWorkSpace.getId());
+
         return true;
     }
 
@@ -199,8 +225,6 @@ public class WorkSpaceService implements IWorkSpaceService {
         if (!currentUser.getId().equals(currentWorkSpace.getUser().getId()))
             throw new CustomException("User can not archive this work space!");
 
-        currentWorkSpace.setArchivedAt(currentTime);
-
         workSpaceRepository.save(currentWorkSpace);
         return true;
     }
@@ -217,8 +241,6 @@ public class WorkSpaceService implements IWorkSpaceService {
                 Collections.singletonList(WorkSpacePermission.WORKSPACE_SETTING),
                 true
         );
-
-        currentWorkSpace.setArchivedAt(null);
 
         workSpaceRepository.save(currentWorkSpace);
         return true;
@@ -347,5 +369,38 @@ public class WorkSpaceService implements IWorkSpaceService {
             }
             return criteriaBuilder.and(userPredicate, statusPredicate, permissionsPredicate);
         };
+    }
+
+    private void createNotificationForAllMembers(User currentUser, WorkSpace workSpace, String title, String message, String actionUrl) {
+        List<Notification> notifications = workSpace.getMembers().stream().filter(m -> m.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)).map(m -> {
+            Notification notification = new Notification();
+            notification.setUser(m.getUser()); // Ensure User is fully initialized
+            notification.setTitle(title);
+            notification.setMessage(message);
+            notification.setActionUrl(actionUrl);
+            return notification;
+        }).toList();
+
+        List<Notification> savedNotification = notificationRepository.saveAll(notifications);
+
+        // Ensure that relationships are fully loaded if needed
+        savedNotification.stream().filter(n -> n.getUser().getId() == currentUser.getId()).forEach(notification -> {
+            // Map Notification to NotificationResponseDto
+            NotificationResponseDto responseDto = ModelMapperUtil.mapOne(notification, NotificationResponseDto.class);
+            messagingTemplate.convertAndSend("/topic/notifications", responseDto);
+        });
+    }
+
+    private ActivityLog activityLogWorkspaceTemplate(WorkSpace workSpace, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setWorkSpace(workSpace);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " ("+ user.getEmail() +")");
+        activityLogTemplate.setSystemInitial(true);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(ActivityLogType.WORKSPACE_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
     }
 }

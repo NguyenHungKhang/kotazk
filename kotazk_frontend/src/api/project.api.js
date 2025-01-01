@@ -13,3 +13,13 @@ export const getDetailsById = async (projectId) => await axiosInstance.get(`${OR
 export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/`, data);
 
 export const update = async (projectId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${projectId}`, data);
+
+
+export const uploadCover = async (file, projectId) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return axiosInstance.put(`${ORIGINAL_BASE_URL}/upload-cover/${projectId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+};

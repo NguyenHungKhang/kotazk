@@ -7,6 +7,10 @@ import Chip from '@mui/material/Chip';
 import { Box, Button, Select, MenuItem, InputLabel, FormControl, Checkbox, FormGroup, FormControlLabel, Card, Typography, Divider } from '@mui/material';
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
+import { useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
 
 const filter = createFilterOptions();
 
@@ -18,6 +22,8 @@ export default function AddProjectMember() {
     const [isOverideRole, setIsOverideRole] = React.useState(true);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const project = useSelector((state) => state.project.currentProject);
+    const [inviting, setInviting] = useState(false);
+    const dispatch = useDispatch();
 
     const handleIsOverideRole = (event) => {
         setIsOverideRole(event.target.checked);
@@ -118,29 +124,42 @@ export default function AddProjectMember() {
     };
 
     const handleSave = async () => {
-        const data = {
-            projectId: project.id,
-            memberRoleId: selectedMemberRole,
-            items: value
-        };
+        try {
+            setInviting(true)
+            const data = {
+                projectId: project.id,
+                memberRoleId: selectedMemberRole,
+                items: value
+            };
 
-        const response = await apiService.memberAPI.inviteList(data);
-        if (response?.data) {
-            alert("OK")
+            const response = await apiService.memberAPI.inviteList(data);
+            if (response?.status == 200) {
+                dispatch(setSnackbar({
+                    open: true,
+                    content: "Invited succesful!"
+                }))
+            }
+            setInviting(false);
+            setValue([]);
+        } catch (e) {
+            alert(e);
+            setValue([]);
         }
     }
 
     return (
-        <Card
+        <Box
             sx={{
                 width: '100%'
             }}
         >
-            <Typography variant='h6' fontWeight={650} p={4}>
-                Invite Member
-            </Typography>
-            <Divider />
             <Box p={4}>
+                <Typography fontWeight={650} variant='h6'>
+                    Invite with email
+                </Typography>
+                <Typography color='textSecondary' mb={2}>
+                    When inviting members, the system will automatically skip any member who has already been invited
+                </Typography>
                 <Stack direction={'row'} spacing={2} alignItems="center" width={'100%'}>
                     <Box flexGrow={1}>
                         <Autocomplete
@@ -221,7 +240,7 @@ export default function AddProjectMember() {
                                                 </Avatar>}
                                             {option.id ?
                                                 <span>
-                                                    {option.firstName}{option.lastName} - {option.email}
+                                                    {option.firstName} {option.lastName} - {option.email}
                                                 </span>
                                                 :
                                                 <Typography color='info'>
@@ -272,19 +291,12 @@ export default function AddProjectMember() {
 
                     {/* Invite Button */}
                     <Box>
-                        <Button variant='contained' onClick={() => handleSave()}>
+                        <LoadingButton variant='contained' onClick={() => handleSave()} loading={inviting} disabled={value?.length == 0}>
                             Invite
-                        </Button>
+                        </LoadingButton>
                     </Box>
                 </Stack>
-                <FormGroup>
-                    <FormControlLabel control={<Checkbox
-                        checked={isOverideRole}
-                        onChange={handleIsOverideRole}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                    />} label="Override a member's role in the project" />
-                </FormGroup>
             </Box>
-        </Card>
+        </Box>
     );
 }

@@ -15,6 +15,7 @@ import * as apiService from "../../api/index"
 import WorkSpaceMember from "../../pages/WorkSpaceMember";
 import CustomDialogForManage from "../CustomDialogForManage";
 import { getAvatar } from "../../utils/avatarUtil";
+import CustomNotificationList from "../CustomNotificationList";
 
 const CustomWorkspaceHeader = () => {
     const theme = useTheme();
@@ -65,7 +66,7 @@ const CustomWorkspaceHeader = () => {
             <Stack direction='row' spacing={3} alignItems="center">
                 <Stack flexGrow={1} direction='row' spacing={3} alignItems="center">
                     <Stack direction='row' spacing={2} alignItems='center'>
-                        <CustomColorIconPicker />
+                        {/* <CustomColorIconPicker /> */}
                         <Typography
                             variant="h5"
                             fontWeight={650}
@@ -93,7 +94,7 @@ const CustomWorkspaceHeader = () => {
                                 }}
                                 key={member?.id}
                                 alt={member?.user?.lastName}
-                                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
+                                src={getAvatar(member?.user?.id, member?.user?.avatar)}
                             >
                                 {member?.user?.lastName.substring(0, 1)}
                             </Avatar>
@@ -149,44 +150,14 @@ const CustomWorkspaceHeader = () => {
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">
                     <CustomDarkModeSwitch />
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <NotificationsIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <ChatIcon fontSize="small" />
-                    </IconButton>
+                    <CustomNotificationList />
                     <Avatar
                         sx={{
                             width: 30,
                             height: 30
                         }}
                         alt={currentUser?.lastName}
-                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
+                        src={getAvatar(currentUser?.id, currentUser?.avatar)}
                     >
                         H
                     </Avatar>

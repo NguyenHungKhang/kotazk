@@ -36,7 +36,9 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
     const AddIcon = TablerIcons["IconPlus"];
     const CloseIcon = TablerIcons["IconX"];
     const [isChange, setIsChange] = useState(false);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
 
+    const manageTaskTypePermission = currentMember?.role?.projectPermissions?.includes("MANAGE_TASK_TYPE");
 
     useEffect(() => {
         if (project)
@@ -147,9 +149,9 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                 }}
             >
                 <Typography
-                sx={{
-                    mb: 2
-                }}
+                    sx={{
+                        mb: 2
+                    }}
                 >
                     Options
                 </Typography>
@@ -161,7 +163,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                                 ref={provided.innerRef}
                             >
                                 {items?.map((taskType, index) => (
-                                    <Draggable key={taskType.id} draggableId={taskType.id.toString()} index={index}>
+                                    <Draggable isDragDisabled={!manageTaskTypePermission} key={taskType.id} draggableId={taskType.id.toString()} index={index}>
                                         {(provided, snapshot) => (
 
                                             <Paper
@@ -179,12 +181,13 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                                                     direction="row"
                                                     spacing={2}
                                                     alignItems='stretch'
-
-
                                                 >
-                                                    <Box {...provided.dragHandleProps} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                        <DragIcon size={20} stroke={2} />
-                                                    </Box>
+                                                    {manageTaskTypePermission && (
+                                                        <Box {...provided.dragHandleProps} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            <DragIcon size={20} stroke={2} />
+                                                        </Box>
+                                                    )}
+
                                                     <TaskTypeListItem taskType={taskType} setItems={setItems} itemIndex={index} isChange={isChange} setIsChange={setIsChange} />
                                                 </Stack>
                                             </Paper>
@@ -210,6 +213,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
                             justifyContent: 'flex-start'
                         }}
                         startIcon={<AddIcon size={18} stroke={2} />}
+                        disabled={!manageTaskTypePermission}
                     >
                         Add status
                     </Button>
@@ -217,7 +221,7 @@ const CustomManageTaskType = ({ handleClose, isDialog }) => {
             </Box>
             <Stack direction={'row'} mt={2} justifyContent={'flex-end'} width={'100%'}>
                 <Box>
-                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange}>
+                    <Button size="small" variant='contained' color='primary' onClick={() => handleSave()} disabled={!isChange || !manageTaskTypePermission}>
                         Save
                     </Button>
                 </Box>
@@ -233,6 +237,9 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
     const EditIcon = TablerIcons["IconEdit"];
     const [name, setName] = useState(taskType.name);
     const [customization, setCustomization] = useState(taskType.customization);
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageTaskTypePermission = currentMember?.role?.projectPermissions?.includes("MANAGE_TASK_TYPE");
 
     useEffect(() => {
         if (taskType != null) {
@@ -275,12 +282,17 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
                 spacing={4}
                 alignItems='center'>
                     <Stack direction='row' spacing={1} flexGrow={1} alignItems='center'>
-                        <CustomColorIconPicker changeable={true} icons={taskTypeIconsList} customization={customization} setCustomization={setCustomization} />
+                        <CustomColorIconPicker changeable={true} icons={taskTypeIconsList} customization={customization} setCustomization={setCustomization} readOnly={!manageTaskTypePermission} />
                         <CustomBasicTextField
                             size="small"
                             margin="dense"
                             defaultValue={name}
                             fullWidth
+                            slotProps={{
+                                input: {
+                                    readOnly: !manageTaskTypePermission && taskType.systemRequired,
+                                }
+                            }}
                             onChange={(e) => {
                                 setName(e.target.value);
                                 setIsChange(true);
@@ -290,7 +302,7 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
                     </Stack>
                 </Stack>
             </Box>
-            {!taskType.systemRequired &&
+            {(!taskType.systemRequired && manageTaskTypePermission) &&
                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <IconButton size="small" onClick={(e) => handleOpenDeleteDialog(e)}>
                         <DeleteIcon size={20} stroke={2} color={theme.palette.error.main} />

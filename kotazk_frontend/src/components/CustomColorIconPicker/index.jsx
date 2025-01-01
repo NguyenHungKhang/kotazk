@@ -4,12 +4,12 @@ import * as allIcons from "@tabler/icons-react";
 import React, { useEffect, useState } from 'react';
 import CustomColorPicker from '../CustomColorPicker';
 
-const CustomColorIconPicker = ({ changeable, icons, customization, setCustomization }) => {
+const CustomColorIconPicker = ({ changeable, icons, customization, setCustomization, readOnly = false }) => {
     const theme = useTheme();
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedIcon, setSelectedIcon] = useState(customization?.icon != null ? customization?.icon : icons[0]);
     const [selectedColor, setSelectedColor] = useState(customization?.backgroundColor != null ? customization?.backgroundColor : "#0d9af2");
-    const [tempIcon, setTempIcon] = useState( selectedIcon);
+    const [tempIcon, setTempIcon] = useState(selectedIcon);
     const [tempColor, setTempColor] = useState(selectedColor);
     const [iconsList, setIconsList] = useState(icons);
 
@@ -62,14 +62,17 @@ const CustomColorIconPicker = ({ changeable, icons, customization, setCustomizat
         <div>
 
             <IconButton
-                onClick={handleClick}
+                onClick={(e) => {
+                    if (!readOnly)
+                        handleClick(e)
+                }}
                 sx={{
                     backgroundColor: selectedColor,
                     borderRadius: 2,
                     p: 1,
                     color: theme.palette.getContrastText(selectedColor),
                     '&:hover': {
-                        backgroundColor: changeable ? alpha(selectedColor, 0.5) : selectedColor,
+                        backgroundColor: changeable && !readOnly ? alpha(selectedColor, 0.5) : selectedColor,
                     },
                 }}
             >

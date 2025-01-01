@@ -3,13 +3,15 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import dayjs from "dayjs";
 import * as apiService from "../../api/index";
-import { setTaskDialog } from "../../redux/actions/dialog.action";
+import { setAlertDialog, setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
 import CustomTaskType from "../../components/CustomTaskType";
 import CustomStatus from "../../components/CustomStatus";
 import { getCustomTwoModeColor } from "../../utils/themeUtil";
 import WeekTaskCalendar from "./WeekTaskCalendar";
 import { getProjectCover } from "../../utils/coverUtil";
+import { setCurrentProject } from "../../redux/actions/project.action";
+import { setCurrentUserMember } from "../../redux/actions/member.action";
 
 const ProjectDashBoard = () => {
     const theme = useTheme();
@@ -22,6 +24,7 @@ const ProjectDashBoard = () => {
     const [completedTasks, setCompletedTasks] = useState([]);
     const [uncompletedTasks, setUncompletedTasks] = useState([]);
     const [tabIndex, setTabIndex] = useState(0);
+    const tasks = useSelector((state) => state.task.currentTaskList)
 
     useEffect(() => {
         if (project && currentMember) {
@@ -30,7 +33,7 @@ const ProjectDashBoard = () => {
             completedTaskFetch();
             uncompletedTaskFetch();
         }
-    }, [project, currentMember]);
+    }, [project, currentMember, tasks]);
 
     const todayTaskFetch = async () => {
         const data = {
@@ -94,10 +97,25 @@ const ProjectDashBoard = () => {
         }
     };
 
-    const openTaskDialog = (task) => {
-        dispatch(setTaskDialog({ task, open: true }));
-    };
 
+    const openTaskDialog = async (task) => {
+        try {
+            dispatch(setTaskDialog({ task, open: true }));
+        } catch (e) {
+            dispatch(setAlertDialog({
+                open: true,
+                props: {
+                    title: "Access Denied",
+                    content: `You do not have permission to modify this task.
+                    <br/><br/>
+                    Please contact the workspace administrator if you believe this is a mistake.`,
+                    actionUrl: null
+                },
+                type: "error",
+            }))
+        }
+
+    };
     const renderTasks = (tasks) => {
         return tasks.map((task, index) => (
             <Box

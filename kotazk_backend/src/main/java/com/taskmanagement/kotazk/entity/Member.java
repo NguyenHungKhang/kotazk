@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -58,9 +59,35 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;
 
+    @OneToMany(mappedBy = "assignee")
+    private List<Task> assigneeTasks;
+
+    @OneToMany(mappedBy = "creator")
+    private List<Task> creatorTasks;
+
+    @OneToMany(mappedBy = "member")
+    private List<Attachment> attachment;
+
     @CreationTimestamp
     @Column(name = "joined_at")
-    private Timestamp joinedAt; // Thời gian tham gia
+    private Timestamp joinedAt;
+
+    @PreRemove
+    public void removeTasks() {
+        if (this.assigneeTasks != null) {
+            // Iterate through the list of tasks and set their assignee to null
+            for (Task task : this.assigneeTasks) {
+                task.setAssignee(null); // Remove the association with the assignee
+            }
+        }
+
+        if (this.creatorTasks != null) {
+            // Iterate through the list of tasks and set their assignee to null
+            for (Task task : this.creatorTasks) {
+                task.setCreator(null); // Remove the association with the assignee
+            }
+        }
+    }
 
     @CreationTimestamp
     @Column(name = "created_at")

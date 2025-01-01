@@ -14,6 +14,7 @@ import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.impl.MemberRoleService;
 import com.taskmanagement.kotazk.service.impl.MemberService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +39,15 @@ public class MemberController {
         return memberService.create(memberRequest);
     }
 
+    @PutMapping("/update-role/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberResponseDto updateRole(@RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+        return memberService.updateRole(memberRequest, id);
+    }
+
     @PutMapping("/update-status/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public MemberResponseDto updateStatus(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+    public MemberResponseDto updateStatus(@RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
         return memberService.updateStatus(memberRequest, id);
     }
 
@@ -62,12 +69,17 @@ public class MemberController {
         return memberService.getOne(id);
     }
 
-    @GetMapping("/current/{projectId}")
+    @GetMapping("/current/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
-    public MemberResponseDto getCurrentOne(@PathVariable Long projectId) {
-        return memberService.getCurrentOne(projectId);
+    public MemberResponseDto getCurrentOneByProject(@PathVariable Long projectId) {
+        return memberService.getCurrentOneByProject(projectId);
     }
 
+    @GetMapping("/current/by-workspace/{workspaceId}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberResponseDto getCurrentOneByWorkspace(@PathVariable Long workspaceId) {
+        return memberService.getCurrentOneByWorkspace(workspaceId);
+    }
 
     @PostMapping("/page/by-project/{projectId}")
     @ResponseStatus(HttpStatus.OK)
@@ -78,11 +90,20 @@ public class MemberController {
         return memberService.getListPageByProject(searchParam, projectId);
     }
 
+    @PostMapping("/page/assignable/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberResponseDto> getAssignablePageByProject(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long projectId
+    ) {
+        return memberService.getAssignableListPageByProject(searchParam, projectId);
+    }
+
     @PostMapping("/invite-list")
     @ResponseStatus(HttpStatus.OK)
     public List<MemberResponseDto> inviteListMember(
             @RequestBody MemberInviteRequestDto memberInviteRequestDto
-    ) {
+    ) throws MessagingException {
         return memberService.inviteList(memberInviteRequestDto);
     }
 

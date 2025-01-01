@@ -30,11 +30,16 @@ import DnDGrid from "../playgrounds/components/DndGrid";
 import ListWorkspace from "../playgrounds/components/TestDnDLap";
 import EmailChipInput from "../playgrounds/components/EmailChipInput";
 import WorkSpaceMember from "../pages/WorkSpaceMember";
-import WorkspaceDashBoard from "../pages/WorkSpaceDashBoard";
+import WorkspaceDashBoard from "../pages/WorkSpaceProjectList";
 import Register from "../pages/Register";
 import OtpVerification from "../pages/OtpVerification";
 import ProfileSetting from "../pages/ProfileSetting";
 import ForgotPassword from "../pages/ForgotPassword";
+import WorkspaceSetting from "../pages/WorkspaceSetting";
+import UserWorkspaceTaskDashBoard from "../pages/WorkspaceDashboard";
+import WorkspaceRole from "../pages/WorkspaceRole";
+import WorkspaceActivityLog from "../pages/WorkspaceActivityLog";
+import ProjectActivityLog from "../pages/ProjectActivityLog";
 
 const pagesData = [
   {
@@ -58,12 +63,12 @@ const pagesData = [
     title: "playground"
   },
   {
-    path: "/ProfileSetting",
+    path: "/profile",
     element: <ProfileSetting />,
     title: "playground"
   },
   {
-    path: "/ForgotPassword",
+    path: "/forgot-password",
     element: <ForgotPassword />,
     title: "playground"
   },
@@ -73,8 +78,29 @@ const pagesData = [
     title: "workspace"
   },
   {
-    path: "/workspace/:workspaceId",
+    path: "/workspace/:workspaceId/dashboard",
+    element: <Workspace ><UserWorkspaceTaskDashBoard /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/projects",
     element: <Workspace ><WorkspaceDashBoard /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/setting",
+    element: <Workspace ><WorkspaceSetting /> </Workspace>,
+    title: "workspace"
+  },
+
+  {
+    path: "/workspace/:workspaceId/activity-log",
+    element: <Workspace ><WorkspaceActivityLog /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/setting/role",
+    element: <Workspace ><WorkspaceRole /> </Workspace>,
     title: "workspace"
   },
   {
@@ -101,6 +127,11 @@ const pagesData = [
     path: "/project/:projectId/role",
     element: <Project><ProjectRole /></Project>,
     title: "Project Member"
+  },
+  {
+    path: "/project/:projectId/activity-log",
+    element: <Project><ProjectActivityLog /></Project>,
+    title: "Project Activity Log"
   },
   {
     path: "/project/:projectId/section/:sectionId",

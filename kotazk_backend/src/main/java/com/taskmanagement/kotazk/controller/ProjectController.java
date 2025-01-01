@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -43,6 +44,12 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.OK)
     public ProjectResponseDto update(@Valid @RequestBody ProjectRequestDto projectRequest,  @PathVariable Long id) {
         return projectService.update(id, projectRequest);
+    }
+
+    @PutMapping("/upload-cover/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public ProjectResponseDto uploadCover(@Valid @RequestBody MultipartFile file, @PathVariable Long id) throws IOException {
+        return projectService.uploadCover(file, id);
     }
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

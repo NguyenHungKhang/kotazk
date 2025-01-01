@@ -13,5 +13,6 @@ public class ProjectSummaryResponseDto {
     Long id;
     String name;
     Boolean isPinned;
+    String cover;
     Long position;
 }

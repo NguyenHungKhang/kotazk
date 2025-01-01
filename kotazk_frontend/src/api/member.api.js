@@ -6,13 +6,19 @@ export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_
 
 export const updateStatus = async (memberId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/update-status/${memberId}`, data);
 
+export const updateRole = async (memberId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/update-role/${memberId}`, data);
+
 export const remove = async (memberId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${memberId}`);
 
-export const getCurrentOne = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/${projectId}`);
+export const getCurrentOneByProject = async (projectId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/by-project/${projectId}`);
+
+export const getCurrentOneByWorkspace = async (workspaceId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current/by-workspace/${workspaceId}`);
 
 export const inviteList = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/invite-list`, data);
 
 export const getPageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-project/${projectId}`, data);
+
+export const getAssignablePageByProject = async (projectId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/assignable/by-project/${projectId}`, data);
 
 export const getPageByWorkspace = async (workspaceId, data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/by-workspace/${workspaceId}`, data);
 

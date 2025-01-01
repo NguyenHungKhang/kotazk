@@ -12,6 +12,7 @@ import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusSummaryResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
+import com.taskmanagement.kotazk.repository.IActivityLogRepository;
 import com.taskmanagement.kotazk.repository.IPriorityRepository;
 import com.taskmanagement.kotazk.repository.IProjectRepository;
 import com.taskmanagement.kotazk.repository.ITaskRepository;
@@ -56,12 +57,18 @@ public class PriorityService implements IPriorityService {
     private final BasicSpecificationUtil<Priority> specificationUtil = new BasicSpecificationUtil<>();
     @Autowired
     private TimeUtil timeUtil;
-
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
     @Override
     public List<Priority> initialPriority() {
-//        Customization taskCustomization = new Customization();
-//        taskCustomization.setIcon("IconAssembly");
-//        taskCustomization.setBackgroundColor("#0d9af2");
+        Customization highCustomization = new Customization();
+        highCustomization.setBackgroundColor("#f53d3d");
+
+        Customization mediumCustomization = new Customization();
+        highCustomization.setBackgroundColor("#FFDC49");
+
+        Customization lowCustomization = new Customization();
+        highCustomization.setBackgroundColor("#0d9af2");
 //
 //        Customization subtaskCustomization = new Customization();
 //        subtaskCustomization.setIcon("IconSubtask");
@@ -71,9 +78,9 @@ public class PriorityService implements IPriorityService {
 //        milestoneCustomization.setIcon("IconAssemblyFilled");
 //        milestoneCustomization.setBackgroundColor("#47ebcd");
         return List.of(
-                createDefaultInitialPriority("High", RepositionUtil.calculateNewLastPosition(2)),
-                createDefaultInitialPriority("Medium", RepositionUtil.calculateNewLastPosition(1)),
-                createDefaultInitialPriority("Low", RepositionUtil.calculateNewLastPosition(0))
+                createDefaultInitialPriority("High", highCustomization, RepositionUtil.calculateNewLastPosition(2)),
+                createDefaultInitialPriority("Medium", mediumCustomization, RepositionUtil.calculateNewLastPosition(1)),
+                createDefaultInitialPriority("Low",  lowCustomization, RepositionUtil.calculateNewLastPosition(0))
         );
     }
 
@@ -195,6 +202,14 @@ public class PriorityService implements IPriorityService {
                 })
                 .toList();
 
+        deletedPriorities.forEach(priority -> {
+            List<Task> tasks = priority.getTasks();
+            if (tasks != null) {
+                tasks.forEach(task -> task.setPriority(null));
+            }
+            taskRepository.saveAll(tasks);
+        });
+
         List<String> idTaskTypesToDelete = deletedPriorities.stream().map(p -> p.getId().toString()).toList();
 
         project.getSections().forEach(section -> {
@@ -219,6 +234,10 @@ public class PriorityService implements IPriorityService {
         project.getPriorities().clear();
         project.getPriorities().addAll(priorities);
         List<Priority> savedPriorities = projectRepository.save(project).getPriorities();
+
+        ActivityLog activityLog = activityLogPriorityTemplate(project, currentUser, String.format("update project's priorities"));
+        activityLogRepository.save(activityLog);
+
         return ModelMapperUtil.mapList(savedPriorities, PriorityResponseDto.class);
     }
 
@@ -365,9 +384,10 @@ public class PriorityService implements IPriorityService {
 
     // Utility methods
 
-    private Priority createDefaultInitialPriority(String name, Long position) {
+    private Priority createDefaultInitialPriority(String name, Customization customization, Long position) {
         return Priority.builder()
                 .name(name)
+                .customization(customization)
                 .position(position)
                 .systemInitial(true)
                 .systemRequired(true)
@@ -509,4 +529,16 @@ public class PriorityService implements IPriorityService {
         priorityRepository.saveAll(orderedPriorities);
     }
 
+    private ActivityLog activityLogPriorityTemplate(Project project, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setProject(project);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " ("+ user.getEmail() +")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(ActivityLogType.PROJECT_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
+    }
 }

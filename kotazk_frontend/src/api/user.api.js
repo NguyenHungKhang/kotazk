@@ -6,3 +6,13 @@ export const getOneByEmail = async (email) => await axiosInstance.get(`${ORIGINA
 
 export const getCurrentOne = async (email) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/current`);
 
+export const update = async (data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/`, data);
+
+export const uploadAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    return axiosInstance.put(`${ORIGINAL_BASE_URL}/upload-avatar`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+};

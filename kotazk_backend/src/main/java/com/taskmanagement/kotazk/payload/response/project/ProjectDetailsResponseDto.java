@@ -31,6 +31,7 @@ public class ProjectDetailsResponseDto {
     Long id;
     WorkSpaceSummaryResponseDto workSpace;
     MemberResponseDto member;
+    String cover;
     String name;
     Boolean isPinned;
     Long position;

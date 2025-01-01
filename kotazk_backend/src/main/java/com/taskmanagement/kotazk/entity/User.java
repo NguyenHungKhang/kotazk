@@ -70,14 +70,14 @@ public class User implements UserDetails {
     @Column(name = "reset_password_token")
     private String resetPasswordToken;
 
+    @Column(name = "changed_name_at")
+    private Timestamp changedNameAt;
+
     @Column(name = "reset_password_deadline")
     private Timestamp resetPasswordDeadline;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ActivityLog> activityLogs;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Goal> goals;
 
     @Column(name = "deleted_at")
     private Timestamp deletedAt;

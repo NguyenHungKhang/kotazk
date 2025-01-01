@@ -89,6 +89,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex, WebRequest request) {
+        ex.printStackTrace();
         final ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(Instant.now())
                 .error("Custom Error")

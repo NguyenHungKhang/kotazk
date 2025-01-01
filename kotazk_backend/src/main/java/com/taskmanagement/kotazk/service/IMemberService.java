@@ -14,22 +14,26 @@ import com.taskmanagement.kotazk.payload.request.member.MemberRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.member.MemberDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
+import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.util.List;
 
 public interface IMemberService {
     MemberResponseDto create(MemberRequestDto member);
+    MemberResponseDto updateRole(MemberRequestDto memberRequestDto, Long id);
     MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id);
-    List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto);
+    List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) throws MessagingException;
     MemberResponseDto revoke(Long id);
     CustomResponse acceptInvite(Long id);
     Boolean delete(Long id);
     Boolean softDelete(Long id) throws IOException, InterruptedException;
     MemberResponseDto getOne(Long id);
-    MemberResponseDto getCurrentOne(Long projectId);
+    MemberResponseDto getCurrentOneByProject(Long projectId);
+    MemberResponseDto getCurrentOneByWorkspace(Long projectId);
     PageResponse<MemberResponseDto> getListPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId);
     PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<MemberResponseDto> getAssignableListPageByProject(SearchParamRequestDto searchParam, Long projectId);
     List<MemberDetailResponseDto> getOwnInvitation();
     Member checkProjectMember(
             Long userId,

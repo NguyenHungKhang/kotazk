@@ -19,6 +19,7 @@ public class ProjectResponseDto {
     WorkSpaceSummaryResponseDto workSpace;
     MemberResponseDto member;
     String name;
+    String cover;
     Boolean isPinned;
     Long position;
     String description;

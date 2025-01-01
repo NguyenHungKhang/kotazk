@@ -16,6 +16,4 @@ public class WorkSpaceSummaryResponseDto {
     String name;
     String description;
     String key;
-    Visibility visibility;
-    WorkSpaceStatus status;
 }

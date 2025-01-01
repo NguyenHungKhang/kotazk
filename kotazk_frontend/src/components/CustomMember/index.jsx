@@ -17,7 +17,7 @@ const CustomMember = ({ member, isShowName = false }) => {
         >
             <Avatar
                 alt={member?.user?.lastName}
-                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
+                src={getAvatar(member?.user?.id, member?.user?.avatar)}
                 sx={{
                     width: 24,
                     height: 24,

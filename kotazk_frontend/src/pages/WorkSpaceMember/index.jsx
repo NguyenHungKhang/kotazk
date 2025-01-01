@@ -10,18 +10,29 @@ import { useDispatch } from 'react-redux';
 import { setDeleteDialog } from '../../redux/actions/dialog.action';
 import EmailChipInput from '../../playgrounds/components/EmailChipInput';
 import AddWorkspaceMember from './AddWorkspaceMember';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
 
 
-const WorkSpaceMember = () => {
+const WorkSpaceMember = ({ handleClose, isDialog }) => {
     const theme = useTheme();
 
     const [memberRoles, setMemberRoles] = useState(null);
-    const [foundedUser, setFoundedUser] = useState(null);
-    const [searchUser, setSearchUser] = useState(null);
+    const [pagination, setPagination] = useState({
+        hasNext: false,
+        hasPrevious: false,
+        pageNumber: 0,
+        pageSize: 0,
+        totalElements: 0,
+        totalPages: 0
+    });
     const [members, setMembers] = useState([]);
     const workSpace = useSelector((state) => state.workspace.currentWorkspace)
     const [searchText, setSearchText] = useState("");
+    const CloseIcon = TablerIcons["IconX"];
+    const AccessibleIcon = TablerIcons["IconAccessible"];
     const RefreshIcon = TablerIcons["IconRefresh"];
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
+    const manageMemberPermission = currentMember?.role?.workSpacePermissions?.includes("MANAGE_MEMBER");
 
     const [memberStatus, setMemberStatus] = React.useState('ACTIVE');
 
@@ -38,13 +49,14 @@ const WorkSpaceMember = () => {
     const initialFetch = async () => {
         try {
             const memberFilter = {
+                pageSize: 6,
                 filters: [
-                    // {
-                    //     key: "user.email",
-                    //     operation: "LIKE",
-                    //     value: searchText,
-                    //     values: []
-                    // },
+                    {
+                        key: "user.email",
+                        operation: "LIKE",
+                        value: searchText,
+                        values: []
+                    },
                     {
                         key: "status",
                         operation: "EQUAL",
@@ -59,22 +71,22 @@ const WorkSpaceMember = () => {
             };
 
             const memberRoleFilter = {
-                filters: [
-                    // {
-                    //     key: "project.id",
-                    //     operation: "EQUAL",
-                    //     value: project?.id,
-                    //     values: []
-                    // }
-                ],
+                "filters": [
+                    {
+                        "key": "roleFor",
+                        "operation": "EQUAL",
+                        "value": "WORK_SPACE"
+                    }
+                ]
             };
-
             const [memberResponse, memberRoleResponse] = await Promise.all([
                 apiService.memberAPI.getPageByWorkspace(workSpace?.id, memberFilter),
                 apiService.memberRoleAPI.getPageByWorkspace(workSpace?.id, memberRoleFilter)
             ]);
 
             if (memberResponse?.data?.content) {
+                const { cotnent, ...pagination } = memberResponse?.data;
+                setPagination(pagination);
                 setMembers(memberResponse?.data?.content);
             }
 
@@ -87,61 +99,159 @@ const WorkSpaceMember = () => {
         }
     };
 
+    const handlePagination = async (event, value) => {
+        try {
+            const memberFilter = {
+                pageNum: value - 1,
+                pageSize: pagination.pageSize,
+                filters: [
+                    {
+                        key: "user.email",
+                        operation: "LIKE",
+                        value: searchText,
+                        values: []
+                    },
+                    {
+                        key: "status",
+                        operation: "EQUAL",
+                        value: memberStatus,
+                    },
+                    {
+                        key: "memberFor",
+                        operation: "EQUAL",
+                        value: "WORK_SPACE",
+                    }
+                ],
+            };
+
+            const [memberResponse] = await Promise.all([
+                apiService.memberAPI.getPageByWorkspace(workSpace?.id, memberFilter),
+            ]);
+
+            if (memberResponse?.data) {
+                const { content, ...pagination } = memberResponse?.data;
+                setPagination(pagination);
+                setMembers(content);
+            }
+
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
+
+
     return (
         <Stack spacing={2}>
-            <AddWorkspaceMember currentMembers={members} currentRoleMembers={memberRoles} />
+
             <Card
                 sx={{
                     height: '100% !important',
-                    p: 4,
                     boxShadow: 0
                 }}
             >
-                <Stack direction={'column'} height={'100%'} >
-                    <Box p={2}>
-                        <TextField
-                            size='small'
-                            fullWidth
-                            placeholder='Typing email for searching'
-                            onChange={(e) => setSearchText(e.target.value)}
-                        />
-                    </Box>
-                    <Box p={2} flexGrow={1} height={'100%'}>
-                        <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
-                            <Typography fontWeight={650} variant='h6'>
-                                Members
-                            </Typography>
-                            <ToggleButtonGroup
-                                color="primary"
-                                size='small'
-                                value={memberStatus}
-                                exclusive
-                                onChange={handleChangeMemberStatus}
-                                aria-label="Platform"
-                            >
-                                <ToggleButton size='small' value="ACTIVE" sx={{ textTransform: 'none' }}>Active</ToggleButton>
-                                <ToggleButton size='small' value="INVITED" sx={{ textTransform: 'none' }}>Invited</ToggleButton>
-                            </ToggleButtonGroup>
-                        </Stack>
-
-                        <Stack spacing={1}>
-                            {members?.map((member) => (
-                                <MemberItem key={member.id} member={member} memberRoles={memberRoles} />
-                            ))}
-                        </Stack>
-                    </Box>
-                    <Box display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
-                        <Pagination count={10} variant="outlined" shape="rounded" />
-                    </Box>
+                <Stack direction={'row'} spacing={2} alignItems={'center'} p={4}>
+                    <AccessibleIcon size={25} />
+                    <Typography fontWeight={650} variant='h6' flexGrow={1}>
+                        Accessible Member
+                    </Typography>
+                    {
+                        isDialog && (
+                            <Box>
+                                <IconButton onClick={handleClose}>
+                                    <CloseIcon size={18} stroke={2} />
+                                </IconButton>
+                            </Box>
+                        )
+                    }
                 </Stack>
+
+                <Divider />
+                {manageMemberPermission && (
+                    <>
+                        <AddWorkspaceMember currentMembers={members} currentRoleMembers={memberRoles} />
+                        <Divider />
+                    </>
+
+                )}
+
+
+                <Box p={4}>
+                    <Typography fontWeight={650} variant='h6' >
+                        Members
+                    </Typography>
+                    <Stack direction={'column'} height={'100%'} >
+                        <Box p={2} flexGrow={1} height={'100%'}>
+                            <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
+                                <Box flexGrow={1}>
+                                    <TextField
+                                        size='small'
+                                        fullWidth
+                                        placeholder='Typing name or email for searching'
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                    />
+                                </Box>
+                                {manageMemberPermission && (
+                                    <ToggleButtonGroup
+                                        color="primary"
+                                        size='small'
+                                        value={memberStatus}
+                                        exclusive
+                                        onChange={handleChangeMemberStatus}
+                                        aria-label="Platform"
+                                    >
+                                        <ToggleButton size='small' value="ACTIVE" sx={{ textTransform: 'none' }}>Active</ToggleButton>
+                                        <ToggleButton size='small' value="INVITED" sx={{ textTransform: 'none' }}>Invited</ToggleButton>
+                                    </ToggleButtonGroup>
+                                )}
+
+                            </Stack>
+
+                            <Stack spacing={1}>
+                                {members?.map((member) => (
+                                    <MemberItem key={member.id} member={member} memberRoles={memberRoles} initialFetch={initialFetch} />
+                                ))}
+                            </Stack>
+                        </Box>
+                        <Box display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
+                            <Pagination count={pagination.totalPages} page={pagination.pageNumber + 1} variant="outlined" shape="rounded" onChange={handlePagination} />
+                        </Box>
+                    </Stack>
+                </Box>
             </Card>
         </Stack>
     );
 };
 
-const MemberItem = ({ member, memberRoles }) => {
+const MemberItem = ({ member, memberRoles, initialFetch }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
+    const manageMemberPermission = currentMember?.role?.workSpacePermissions?.includes("MANAGE_MEMBER");
+
+    const handleStatusChange = async (event) => {
+        if (event.target.value == member?.memberRoleId)
+            return;
+
+        const data = {
+            memberRoleId: event.target.value
+        }
+
+        try {
+            const response = await apiService.memberAPI.updateRole(member?.id, data);
+            if (response?.data) {
+                dispatch(setSnackbar({
+                    open: true,
+                    content: "Update member successful!"
+                }))
+                initialFetch()
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
+
+
+    }
 
     const handleOpenDeleteDialog = (event) => {
         event.stopPropagation();
@@ -196,7 +306,9 @@ const MemberItem = ({ member, memberRoles }) => {
                     <Box>
                         <Select
                             value={member.role.id}
+                            readOnly={!manageMemberPermission}
                             size='small'
+                            onChange={(e) => handleStatusChange(e)}
                             sx={{
                                 p: 0,
                                 m: 0
@@ -209,17 +321,20 @@ const MemberItem = ({ member, memberRoles }) => {
                             }
                         </Select>
                     </Box>
-                    <Box>
-                        <Stack direction="row" spacing={1}>
-                            <IconButton
-                                onClick={(e) => handleOpenDeleteDialog(e)}
-                                size='small'
-                                color="secondary"
-                            >
-                                <DeleteIcon fontSize='small' />
-                            </IconButton>
-                        </Stack>
-                    </Box>
+                    {manageMemberPermission && (
+                        <Box>
+                            <Stack direction="row" spacing={1}>
+                                <IconButton
+                                    onClick={(e) => handleOpenDeleteDialog(e)}
+                                    size='small'
+                                    color="secondary"
+                                >
+                                    <DeleteIcon fontSize='small' />
+                                </IconButton>
+                            </Stack>
+                        </Box>
+                    )}
+
                 </Stack>
             </Stack>
         </Box>

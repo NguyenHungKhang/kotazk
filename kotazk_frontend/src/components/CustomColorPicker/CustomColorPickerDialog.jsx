@@ -3,7 +3,7 @@ import { Popover, Button, Box, IconButton, useTheme } from '@mui/material';
 import CustomColorPicker from '.';
 import * as TablerIcons from '@tabler/icons-react';
 
-const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
+const CustomColorPickerDialog = ({ color = "#0d9af2", setColor, readOnly = false }) => {
     const [anchorEl, setAnchorEl] = useState(null);
     const ColorIcon = TablerIcons["IconPalette"];
     const theme = useTheme();
@@ -27,7 +27,10 @@ const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
         <div>
             {/* Trigger Block to open the Popover */}
             <Box
-                onClick={handleOpen}
+                onClick={(e) => {
+                    if (!readOnly)
+                        handleOpen(e);
+                }}
                 sx={{
                     width: 30,   // Width of the color block
                     height: 30,  // Height of the color block
@@ -39,10 +42,10 @@ const CustomColorPickerDialog = ({ color = "#0d9af2", setColor }) => {
                     alignItems: 'center'
                 }}
             >
-                <IconButton size='small' 
-                sx={{
-                    p: 0
-                }}
+                <IconButton size='small'
+                    sx={{
+                        p: 0
+                    }}
                 >
                     <ColorIcon color={theme.palette.getContrastText(color)} />
                 </IconButton>

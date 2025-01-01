@@ -1,5 +1,5 @@
 import { Avatar, Box, Button, Card, IconButton, LinearProgress, Stack, Typography, useTheme } from "@mui/material"
-import { getSecondBackgroundColor } from "../../utils/themeUtil";
+import { getCustomTwoModeColor, getSecondBackgroundColor } from "../../utils/themeUtil";
 import * as TablerIcons from '@tabler/icons-react'
 import CustomBasicTextField from "../CustomBasicTextField";
 import { useState } from "react";
@@ -66,6 +66,13 @@ const SubtaskComponent = ({ subtasks, parentTask, projectId }) => {
 
 
                 <Stack direction={'column'} spacing={1}>
+                    {subtasks?.length == 0 && (
+                        <Box width={'100%'} p={2} border={'1px solid'} borderRadius={2} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
+                            <Typography color='textSecondary' textAlign={'center'}>
+                                <i>No subtasks</i>
+                            </Typography>
+                        </Box>
+                    )}
                     {subtasks?.map((subtask, index) => (
                         <SubtaskItem key={index} subtask={subtask} parentTask={parentTask} />
                     ))}
@@ -200,6 +207,11 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
     }
 
     const handleSaveName = async () => {
+        if (!name || name?.trim() == "") {
+            setName(subtask?.name)
+            return;
+        }
+
         const data = {
             'name': name,
         }
@@ -293,6 +305,7 @@ const SubtaskItem = ({ subtask, parentTask, projectId }) => {
                     <CustomBasicTextField
                         size="small"
                         defaultValue={subtask?.name}
+                        value={name}
                         placeholder="Name of task..."
                         onChange={(e) => setName(e.target.value)}
                         onBlur={() => handleSaveName()}

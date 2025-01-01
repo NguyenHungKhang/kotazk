@@ -1,4 +1,4 @@
-import { Box, Button, Card, Chip, Divider, Grid2, IconButton, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Card, Chip, Divider, Grid2, IconButton, Paper, Stack, Typography, useTheme } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import CustomLinechart from './CustomLinechart';
 import * as apiService from '../../api/index'
@@ -8,7 +8,7 @@ import CustomBarchart from './CustomBarchart';
 import CustomStackedBar from './CustomStackedBar';
 import CustomGroupeddBar from './CustomGroupedBar';
 import CustomPiechart from './CustomPiechart';
-import { getSecondBackgroundColor } from '../../utils/themeUtil';
+import { getCustomTwoModeColor, getSecondBackgroundColor } from '../../utils/themeUtil';
 import CustomAddChartDialog from './CustomAddChartDialog';
 import CustomFullChartDialog from './CustomFullChartDialog';
 import { setAddAndUpdateReportDialog, setDeleteDialog, setFullReportDialog } from '../../redux/actions/dialog.action';
@@ -32,6 +32,10 @@ const ProjectReport = () => {
     const FilterIcon = TablerIcons["IconFilter"];
     const MoveLeftIcon = TablerIcons["IconChevronLeft"];
     const MoveRightIcon = TablerIcons["IconChevronRight"];
+    const ReportIcon = TablerIcons["IconChartHistogram"];
+    const currentMember = useSelector((state) => state.member.currentUserMember);
+
+    const manageReportPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_REPORT");
 
     useEffect(() => {
         if (section)
@@ -152,11 +156,39 @@ const ProjectReport = () => {
 
     return projectReports == null ? <>Loading...</> : (
         <Box height={'100%'} width={'100%'} overflow={'auto'}>
-            <Card sx={{ mb: 2, p: 2 }}>
-                <Button onClick={() => handleOpenAddAndEditDialog(null)}>
-                    Add report
-                </Button>
-            </Card>
+            {manageReportPermission && (
+                <Paper
+                    onClick={() => handleOpenAddAndEditDialog(null)}
+                    sx={{
+                        boxShadow: 0,
+                        mb: 2,
+                        p: 4,
+                        border: '2px dashed',
+                        cursor: "pointer",
+                        transition: 'all .5s',
+                        "&:hover": {
+                            bgcolor: getCustomTwoModeColor(theme, theme.palette.grey[200], theme.palette.grey[900]),
+                        }
+                    }}
+                >
+                    <Stack direction={'row'} spacing={4}>
+
+                        <ReportIcon size={70} />
+
+                        <Box>
+                            <Typography variant='h4' fontWeight={650}>
+                                Add report
+                            </Typography>
+                            <Typography color='textSencodary'>
+                                The Add Report feature allows users to create and submit detailed reports regarding their tasks, projects, or overall performance. This feature is essential for tracking progress, documenting achievements, and providing valuable insights to stakeholders or team members.
+                            </Typography>
+                        </Box>
+                    </Stack>
+
+
+                </Paper>
+            )}
+
             {/* Kéo thả các thẻ báo cáo */}
             <DragDropContext onDragEnd={onDragEnd}>
                 <Droppable droppableId="reports" direction="horizontal">
@@ -180,21 +212,31 @@ const ProjectReport = () => {
                                                         </Typography>
                                                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                                                             <Chip icon={<FilterIcon size={18} />} label={`${pr?.filterSettings?.length == 0 ? "No " : pr?.filterSettings?.length} Filter${pr?.filterSettings?.length != 1 ? 's' : ''}`} />
-                                                            <IconButton size='small' onClick={() => onMovePosition(pr.id, "left")}>
-                                                                <MoveLeftIcon size={18} />
-                                                            </IconButton>
-                                                            <IconButton size='small' onClick={() => onMovePosition(pr.id, "right")}>
-                                                                <MoveRightIcon size={18} />
-                                                            </IconButton>
+                                                            {manageReportPermission && (
+                                                                <>
+                                                                    <IconButton size='small' onClick={() => onMovePosition(pr.id, "left")}>
+                                                                        <MoveLeftIcon size={18} />
+                                                                    </IconButton>
+                                                                    <IconButton size='small' onClick={() => onMovePosition(pr.id, "right")}>
+                                                                        <MoveRightIcon size={18} />
+                                                                    </IconButton>
+                                                                </>
+                                                            )}
+
                                                             <IconButton size='small' onClick={() => handleExpand(pr)}>
                                                                 <ExpandIcon size={18} />
                                                             </IconButton>
-                                                            <IconButton size='small' onClick={() => handleOpenAddAndEditDialog(pr)}>
-                                                                <EditIcon size={18} />
-                                                            </IconButton>
-                                                            <IconButton color='error' size='small' onClick={() => handleOpenDeleteDialog(pr)}>
-                                                                <RemoveIcon size={18} />
-                                                            </IconButton>
+                                                            {manageReportPermission && (
+                                                                <>
+                                                                    <IconButton size='small' onClick={() => handleOpenAddAndEditDialog(pr)}>
+                                                                        <EditIcon size={18} />
+                                                                    </IconButton>
+                                                                    <IconButton color='error' size='small' onClick={() => handleOpenDeleteDialog(pr)}>
+                                                                        <RemoveIcon size={18} />
+                                                                    </IconButton>
+                                                                </>
+                                                            )}
+
                                                         </Stack>
                                                     </Stack>
                                                 </Box>

@@ -24,7 +24,12 @@ const initialState = {
         title: null,
         deleteType: null,
         deleteProps: null
-    }
+    },    
+    alertDialog: {
+        open: false,
+        type: null,
+        props: null,
+    },
 };
 
 const DialogReducer = (state = initialState, action) => {
@@ -73,6 +78,15 @@ const DialogReducer = (state = initialState, action) => {
                     deleteProps: action.payload.deleteProps != null ? action.payload.deleteProps : state.deleteDialog.deleteProps,
                 }
             };
+            case 'SET_ALERT_DIALOG':
+                return {
+                    ...state,
+                    alertDialog: {
+                        open: action.payload.open != null ? action.payload.open : state.deleteDialog.open,
+                        type: action.payload.type,
+                        props: action.payload.props
+                    },
+                };
         default:
             return state;
     }

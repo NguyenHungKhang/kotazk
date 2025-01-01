@@ -5,13 +5,16 @@ import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import { blueGrey, deepPurple, indigo } from "@mui/material/colors";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import ListProject from "./ListWorkspace";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import * as apiService from '../../api/index';
 import { useDispatch } from "react-redux";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import CustomWorkspaceHeader from "../../components/CustomWorkspaceHeader";
+import { setCurrentWorkspaceMember } from "../../redux/actions/member.action";
+import { setAlertDialog } from "../../redux/actions/dialog.action";
+import { setCurrentProject } from "../../redux/actions/project.action";
 
 const Workspace = ({ children }) => {
     const theme = useTheme();
@@ -20,21 +23,63 @@ const Workspace = ({ children }) => {
     const [open, setOpen] = useState(true);
     // const [workspace, setWorkspace] = useState(null);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const navigate = useNavigate();
+
+
     const breadcrumbData = [
         {
             "label": workspace?.name,
         },
     ]
 
+    const getCurrentUser = async () => {
+        try {
+            const res = await apiService.memberAPI.getCurrentOneByWorkspace(workspaceId);
+            if (res?.data) {
+                dispatch(setCurrentWorkspaceMember(res?.data))
+                if (!res?.data?.role?.workSpacePermissions?.includes("BROWSE_WORKSPACE"))
+                    dispatch(setAlertDialog({
+                        open: true,
+                        props: {
+                            title: "Access Denied",
+                            content: `You do not have permission to access this workspace.
+                        <br/><br/>
+                        Please contact the workspace administrator if you believe this is a mistake.`,
+                            actionUrl: `/workspace`
+                        },
+                        type: "error",
+                    }))
+            }
+        } catch (err) {
+            console.error('Error fetching current member details:', err);
+        }
+    };
+
     useEffect(() => {
-        if (workspaceId != null)
+        if (workspaceId != null) {
+            dispatch(setCurrentProject(null))
+            dispatch(setCurrentWorkspace(null))
             initalFetch();
-    }, [, workspaceId])
+            getCurrentUser();
+        }
+    }, [workspaceId])
 
     const initalFetch = async () => {
         await apiService.workspaceAPI.getDetailById(workspaceId)
             .then(res => { console.log(res); dispatch(setCurrentWorkspace(res.data)); })
-            .catch(err => console.log(err))
+            .catch(err => {
+                dispatch(setAlertDialog({
+                    open: true,
+                    props: {
+                        title: "Access Denied",
+                        content: `You do not have permission to access this workspace.
+                        <br/><br/>
+                        Please contact the workspace administrator if you believe this is a mistake.`,
+                        actionUrl: `/workspace`
+                    },
+                    type: "error",
+                }))
+            })
     }
 
     return (
@@ -43,8 +88,8 @@ const Workspace = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
-                background: theme.palette.mode === 'dark'
+                backgroundImage: workspace?.cover ? `url(${workspace?.cover})` : null,
+                background: workspace?.cover ? null : theme.palette.mode === 'dark'
                     ? 'linear-gradient(135deg, #522580, #223799)'
                     : 'linear-gradient(135deg, #667eea, #764ba2)',
                 backgroundSize: 'cover',

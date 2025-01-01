@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.sql.Timestamp;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -17,4 +19,7 @@ public class UserResponseDto {
     String bio;
     String avatar;
     String email;
+    Timestamp changedNameAt;
+    Timestamp createdAt;
+    Timestamp modifiedAt;
 }

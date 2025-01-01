@@ -13,6 +13,9 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
 import { getAvatar } from "../../utils/avatarUtil";
+import CustomDialogForManage from "../CustomDialogForManage";
+import ProjectMember from "../../pages/ProjectMember";
+import CustomNotificationList from "../CustomNotificationList";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -22,6 +25,9 @@ const CustomHeader = () => {
     const project = useSelector((state) => state.project.currentProject);
     const currentUser = useSelector((state) => state.user.currentUser);
     const [members, setMembers] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [maxWidth, setMaxWidth] = useState("log");
+    const [children, setChildren] = useState(<ProjectMember />);
 
     useEffect(() => {
         if (project)
@@ -59,7 +65,6 @@ const CustomHeader = () => {
             <Stack direction='row' spacing={3} alignItems="center">
                 <Stack flexGrow={1} direction='row' spacing={3} alignItems="center">
                     <Stack direction='row' spacing={2} alignItems='center'>
-                        <CustomColorIconPicker />
                         <Typography
                             variant="h5"
                             fontWeight={650}
@@ -87,13 +92,13 @@ const CustomHeader = () => {
                                     height: 30,
                                 }}
                                 alt={member?.user?.lastName}
-                                src={getAvatar(member?.user?.id, member?.user?.avatarUrl)}
+                                src={getAvatar(member?.user?.id, member?.user?.avatar)}
                             >
                                 {member?.user?.lastName.substring(0, 1)}
                             </Avatar>
                         ))}
                     </AvatarGroup>
-                    <Button
+                    {/* <Button
                         component={Link}
                         to={`/project/${project?.id}/member`}
                         sx={{
@@ -107,7 +112,7 @@ const CustomHeader = () => {
                         }
                     >
                         Add member
-                    </Button>
+                    </Button> */}
                 </Stack>
                 <Stack direction='row' spacing={2}>
                     <Box>
@@ -119,6 +124,7 @@ const CustomHeader = () => {
                             sx={{
                                 textTransform: 'none'
                             }}
+                            onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
                         >
                             Share
                         </Button>
@@ -142,49 +148,20 @@ const CustomHeader = () => {
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">
                     <CustomDarkModeSwitch />
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <NotificationsIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <ChatIcon fontSize="small" />
-                    </IconButton>
+                    <CustomNotificationList />
                     <Avatar
                         sx={{
                             width: 30,
                             height: 30
                         }}
                         alt={currentUser?.lastName}
-                        src={getAvatar(currentUser?.id, currentUser?.avatarUrl)}
+                        src={getAvatar(currentUser?.id, currentUser?.avatar)}
                     >
                         H
                     </Avatar>
                 </Stack>
             </Stack>
+            <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />
         </Box>
     );
 }

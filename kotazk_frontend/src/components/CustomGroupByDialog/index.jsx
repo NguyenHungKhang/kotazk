@@ -175,16 +175,6 @@ export default function CustomGroupedByDialog() {
                         </ListItemIcon>
                         <ListItemText inset>Completion</ListItemText>
                     </MenuItem>
-                    <Divider />
-                    {section?.type === "LIST" &&
-                        <MenuItem onClick={() => handleSelect('Clear')}>
-                            <Stack direction={'row'} spacing={2}>
-                                <DeleteIcon size={18} color={theme.palette.error.main} />
-                                <Typography variant='body1' color='error'>Clear</Typography>
-                            </Stack>
-
-                        </MenuItem>
-                    }
                 </MenuList>
             </StyledMenu>
         </>

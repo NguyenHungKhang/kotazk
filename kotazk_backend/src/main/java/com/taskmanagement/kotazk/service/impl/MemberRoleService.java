@@ -12,9 +12,8 @@ import com.taskmanagement.kotazk.payload.request.memberrole.RepositionMemberRole
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.memberrole.MemberRoleResponseDto;
-import com.taskmanagement.kotazk.repository.IMemberRoleRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.IWorkSpaceRepository;
+import com.taskmanagement.kotazk.payload.response.notification.NotificationResponseDto;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.IMemberRoleService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.util.*;
@@ -28,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,9 +50,17 @@ public class MemberRoleService implements IMemberRoleService {
     @Autowired
     private IProjectRepository projectRepository;
     @Autowired
+    private IMemberRepository memberRepository;
+    @Autowired
     private IMemberService memberService = new MemberService();
     @Autowired
+    private INotificationRepository notificationRepository;
+    @Autowired
     private TimeUtil timeUtil;
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
     BasicSpecificationUtil<MemberRole> specificationUtil = new BasicSpecificationUtil<>();
@@ -64,6 +72,7 @@ public class MemberRoleService implements IMemberRoleService {
         Project project = null;
         Member currentMember = null;
         Long postion = null;
+        ActivityLog activityLog = new ActivityLog();
 
         if (memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE)) {
             if (memberRole.getWorkSpaceId() != null) {
@@ -76,7 +85,7 @@ public class MemberRoleService implements IMemberRoleService {
                         Collections.singletonList(WorkSpacePermission.MANAGE_ROLE),
                         true
                 );
-                postion = calculateNewLastPosition(workSpace.getMemberRoles().size());
+                postion = calculateNewLastPosition(workSpace.getMemberRoles().stream().filter(mr -> mr.getRoleFor().equals(EntityBelongsTo.WORK_SPACE)).toList().size());
             }
         } else if (memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT)) {
             if (memberRole.getProjectId() != null) {
@@ -95,7 +104,6 @@ public class MemberRoleService implements IMemberRoleService {
         } else
             throw new CustomException("Invalid Input!");
 
-        System.out.println(postion);
 
         MemberRole newMemberRole = MemberRole.builder()
                 .workSpace(workSpace)
@@ -111,6 +119,9 @@ public class MemberRoleService implements IMemberRoleService {
                 .build();
 
         MemberRole savedMemberRole = memberRoleRepository.save(newMemberRole);
+
+        activityLog = activityLogMemberRoleTemplate(savedMemberRole, currentUser, String.format("created new role \"%s\"", savedMemberRole.getName()));
+        activityLogRepository.save(activityLog);
 
         return ModelMapperUtil.mapOne(savedMemberRole, MemberRoleResponseDto.class);
     }
@@ -134,6 +145,8 @@ public class MemberRoleService implements IMemberRoleService {
                 .ifPresent(currentMemberRole::setWorkSpacePermissions);
 
         MemberRole savedMemberRole = memberRoleRepository.save(currentMemberRole);
+        ActivityLog activityLog = activityLogMemberRoleTemplate(savedMemberRole, currentUser, String.format("updated role \"%s\"", currentMemberRole.getName()));
+        activityLogRepository.save(activityLog);
 
         return ModelMapperUtil.mapOne(savedMemberRole, MemberRoleResponseDto.class);
     }
@@ -149,6 +162,18 @@ public class MemberRoleService implements IMemberRoleService {
 
         if (currentMemberRole.getSystemRequired().equals(true))
             throw new CustomException("This role cannot be deleted");
+
+        ActivityLog activityLog = activityLogMemberRoleTemplate(currentMemberRole, currentUser, String.format("deleted role \"%s\"", currentMemberRole.getName()));
+        activityLogRepository.save(activityLog);
+
+        Set<Member> members = currentMemberRole.getMember();
+        MemberRole defaultRole = currentMemberRole.getProject().getMemberRoles().stream().filter(r -> Objects.equals(r.getName(), "Guest") && r.getSystemInitial()).findFirst().get();
+        members.forEach(m -> {
+            if (m != null) {
+                m.setRole(defaultRole);
+            }
+            memberRepository.save(m);
+        });
 
         memberRoleRepository.deleteById(currentMemberRole.getId());
         return true;
@@ -338,8 +363,8 @@ public class MemberRoleService implements IMemberRoleService {
                         searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
 
         Specification<MemberRole> workspaceSpecification = (Root<MemberRole> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
-            Join<MemberRole, WorkSpace> projectJoin = root.join("workSpace");
-            return criteriaBuilder.equal(projectJoin.get("id"), workSpace.getId());
+            Join<MemberRole, WorkSpace> workSpaceJoin = root.join("workSpace");
+            return criteriaBuilder.equal(workSpaceJoin.get("id"), workSpace.getId());
         };
 
         Specification<MemberRole> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
@@ -438,4 +463,37 @@ public class MemberRoleService implements IMemberRoleService {
         return null;
     }
 
+    private ActivityLog activityLogMemberRoleTemplate(MemberRole memberRole, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setWorkSpace(memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) ? memberRole.getWorkSpace() : null);
+        activityLogTemplate.setProject(memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ? memberRole.getProject() : null);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " (" + user.getEmail() + ")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) ? ActivityLogType.PROJECT_HISTORY : ActivityLogType.WORKSPACE_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
+    }
+
+//    private void createNotificationForAllMembers(User currentUser, WorkSpace workSpace, String title, String message, String actionUrl) {
+//        List<Notification> notifications = workSpace.getMembers().stream().filter(m -> m.getMemberFor().equals(EntityBelongsTo.WORK_SPACE)).map(m -> {
+//            Notification notification = new Notification();
+//            notification.setUser(m.getUser()); // Ensure User is fully initialized
+//            notification.setTitle(title);
+//            notification.setMessage(message);
+//            notification.setActionUrl(actionUrl);
+//            return notification;
+//        }).toList();
+//
+//        List<Notification> savedNotification = notificationRepository.saveAll(notifications);
+//
+//        // Ensure that relationships are fully loaded if needed
+//        savedNotification.stream().filter(n -> n.getUser().getId() == currentUser.getId()).forEach(notification -> {
+//            // Map Notification to NotificationResponseDto
+//            NotificationResponseDto responseDto = ModelMapperUtil.mapOne(notification, NotificationResponseDto.class);
+//            messagingTemplate.convertAndSend("/topic/notifications", responseDto);
+//        });
+//    }
 }

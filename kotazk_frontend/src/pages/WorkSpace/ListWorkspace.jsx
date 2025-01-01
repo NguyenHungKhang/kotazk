@@ -23,6 +23,9 @@ const ListProject = () => {
     const [searchText, setSearchText] = useState("");
     const SearchIcon = TablerIcons["IconSearch"];
     const ExpandIcon = TablerIcons["IconCaretDownFilled"];
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
+
+    const createProjectPermission = currentMember?.role?.workSpacePermissions?.includes("CREATE_PROJECT");
 
     const dispatch = useDispatch();
 
@@ -63,7 +66,7 @@ const ListProject = () => {
 
     return (
         <Stack spacing={2} width={'100%'} height={'100%'}>
-            <Box sx={{ position: 'relative', width: '100%' }}>
+            {/* <Box sx={{ position: 'relative', width: '100%' }}>
                 <Box
                     sx={{
                         width: '100%',
@@ -78,7 +81,7 @@ const ListProject = () => {
                         alignItems: 'center'
                     }}
                 />
-            </Box>
+            </Box> */}
             <Card
                 sx={{
                     p: 4,
@@ -88,9 +91,12 @@ const ListProject = () => {
             >
                 <Stack direction='row' spacing={2} alignItems='center' mb={2}>
                     <Stack direction='row' spacing={2} alignItems='center' flexGrow={1}>
-                        <Box>
-                            <CustomSaveProjectDialog />
-                        </Box>
+                        {createProjectPermission && (
+                            <Box>
+                                <CustomSaveProjectDialog />
+                            </Box>
+                        )}
+
                         <Box flexGrow={1}>
                             <TextField
                                 size='small'
@@ -193,7 +199,7 @@ const ListProject = () => {
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails>
-                        {pinnedProject?.length > 0 ?
+                        {projectList?.content?.length > 0 ?
                             <Grid container spacing={4}>
                                 {projectList?.content?.map((project) => (
                                     <Grid item xs={12} sm={6} md={4} lg={3} xl={12 / 5} key={project.id}>

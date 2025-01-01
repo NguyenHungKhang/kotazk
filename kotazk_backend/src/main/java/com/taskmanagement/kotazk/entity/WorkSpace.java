@@ -27,26 +27,18 @@ public class WorkSpace {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "customization_id")
-    private Customization customization;
+    @Column(name = "cover")
+    private String cover;
 
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 65535)
+    @Lob
     private String description;
 
     @Column(name = "key", unique = true, nullable = false)
     private String key;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "visibility", nullable = false)
-    private Visibility visibility;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "space_status", nullable = false)
-    private WorkSpaceStatus status;
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     @OrderBy("position")
@@ -65,12 +57,6 @@ public class WorkSpace {
 
     @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
     private List<ActivityLog> activityLogs;
-
-    @OneToMany(mappedBy = "workSpace", cascade = CascadeType.ALL)
-    private Set<Setting> settings;
-
-    @Column(name = "archive_at")
-    private Timestamp archivedAt;
 
     @CreationTimestamp
     @Column(name = "created_at")

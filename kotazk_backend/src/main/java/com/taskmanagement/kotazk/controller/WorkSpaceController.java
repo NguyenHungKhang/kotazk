@@ -3,15 +3,19 @@ package com.taskmanagement.kotazk.controller;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
 import com.taskmanagement.kotazk.payload.request.workspace.WorkSpaceRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
+import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceDetailResponseDto;
 import com.taskmanagement.kotazk.payload.response.workspace.WorkSpaceSummaryResponseDto;
+import com.taskmanagement.kotazk.service.INotificationService;
 import com.taskmanagement.kotazk.service.IWorkSpaceService;
+import com.taskmanagement.kotazk.service.impl.NotificationService;
 import com.taskmanagement.kotazk.service.impl.WorkSpaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -32,6 +36,12 @@ public class WorkSpaceController {
     @ResponseStatus(HttpStatus.OK)
     public WorkSpaceDetailResponseDto update(@RequestBody WorkSpaceRequestDto workSpaceRequest, @PathVariable Long id) {
         return workSpaceService.update(id, workSpaceRequest);
+    }
+
+    @PutMapping("/upload-cover/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public WorkSpaceDetailResponseDto uploadCover(@Valid @RequestBody MultipartFile file, @PathVariable Long id) throws IOException {
+        return workSpaceService.uploadCover(file, id);
     }
 
     @DeleteMapping("/{id}")

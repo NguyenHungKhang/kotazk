@@ -80,7 +80,7 @@ const CustomAssigneeOpenComponent = ({ onClick, assignee, setMembers, projectId,
                     }
                 ]
             }
-            const response = await apiService.memberAPI.getPageByProject(projectId, data);
+            const response = await apiService.memberAPI.getAssignablePageByProject(projectId, data);
             if (response?.data) {
                 setMembers(response?.data.content);
             }

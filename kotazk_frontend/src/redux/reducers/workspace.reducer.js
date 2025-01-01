@@ -1,6 +1,7 @@
 const initialState = {
     currentWorkspaceList: null,
-    currentWorkspace: null
+    currentWorkspace: null,
+    currentFetchedIdWorkspace: false
 }
 
 const WorkspaceReducer = (state = initialState, action) => {
@@ -8,7 +9,8 @@ const WorkspaceReducer = (state = initialState, action) => {
         case 'SET_CURRENT_WORKSPACE':
             return {
                 ...state,
-                currentWorkspace: action.payload
+                currentWorkspace: action.payload,
+                currentFetchedIdWorkspace: action.payload?.id
             };
         case 'SET_CURRENT_WORKSPACE_LIST':
             return {

@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, InputAdornment, Skeleton, Stack, TextField, Tooltip, darken, useTheme } from "@mui/material";
+import { Box, Button, ButtonGroup, Fab, InputAdornment, Skeleton, Stack, TextField, Tooltip, darken, useTheme } from "@mui/material";
 import LayersIcon from '@mui/icons-material/Layers';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -21,7 +21,7 @@ import { useLocation, useParams } from "react-router-dom";
 
 const CustomFilterBar = () => {
     const location = useLocation();
-    const { projectId, sectionId } = useParams(); 
+    const { projectId, sectionId } = useParams();
     const theme = useTheme();
     const section = useSelector((state) => state.section.currentSection)
     const userChangeFilterList = useSelector((state) => state.filter.userChangeFilterList);
@@ -54,6 +54,25 @@ const CustomFilterBar = () => {
                                 <CustomAddTaskButton />
                             )
                         }
+                        <Stack direction={'row'}>
+                            <Box
+                                border={"1px solid"}
+                                borderColor={theme.palette.info.main}
+                                p={1}
+                                sx={{
+                                    borderRadius: "4px 0 0 4px"
+                                }}
+                            >
+                                50
+                            </Box>
+                            <Button variant="contained" size="small" color="info"
+                                sx={{
+                                    borderRadius: "0 4px 4px 0"
+                                }}
+                            >
+                                Load Tasks
+                            </Button>
+                        </Stack>
                     </>
                 )
             }

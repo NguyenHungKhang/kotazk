@@ -13,12 +13,22 @@ import { addAndUpdateTaskCommentList, setCurrentTaskCommentList } from "../../re
 import { useSelector } from "react-redux";
 import { getAvatar } from "../../utils/avatarUtil";
 
+const commentNumInLoad = 5;
+
 const CommentComponent = ({ task }) => {
     const comments = useSelector((state) => state.taskComment.currentTaskCommentList);
     const theme = useTheme();
-    const LoadMoreIcon = TablerIcons["IconChevronsRight"];
+    const LoadMoreIcon = TablerIcons["IconRefresh"];
     const SendIcon = TablerIcons["IconSend2"];
     const [content, setContent] = useState(null);
+    const [pagination, setPagination] = useState({
+        hasNext: false,
+        hasPrevious: false,
+        pageNumber: 0,
+        pageSize: 0,
+        totalElements: 0,
+        totalPages: 0
+    });
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const dispatch = useDispatch();
 
@@ -29,15 +39,35 @@ const CommentComponent = ({ task }) => {
 
     const commentsFetch = async () => {
         const data = {
-            "sortDirectionAsc": true,
+            "pageSize": commentNumInLoad,
             "filters": []
         }
 
         const response = await apiService.taskComment.getPageByTask(task?.id, data);
-        if (response?.data)
-            dispatch(setCurrentTaskCommentList(response?.data?.content));
+        if (response?.data) {
+            const { content, ...pagination } = response?.data;
+            setPagination(pagination);
+            dispatch(setCurrentTaskCommentList(content));
+        }
+
     }
 
+    const handlePagination = async () => {
+        if (!pagination.hasNext) return;
+
+        const data = {
+            "pageNum": 0,
+            "pageSize": pagination.pageSize + commentNumInLoad,
+            "filters": []
+        }
+
+        const response = await apiService.taskComment.getPageByTask(task?.id, data);
+        if (response?.data) {
+            const { content, ...pagination } = response?.data;
+            setPagination(pagination);
+            dispatch(setCurrentTaskCommentList(content));
+        }
+    }
 
     const handleKeyDown = (event) => {
         if (event.key === "Enter" && event.shiftKey) {
@@ -76,13 +106,31 @@ const CommentComponent = ({ task }) => {
                     borderRadius: 2,
                 }}
             >
-                <Button endIcon={<LoadMoreIcon size={18} />} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}>
-                    Load more comment
-                </Button>
-                <Stack spacing={2} mt={2}>
-                    {comments?.map((comment) => (
-                        <CommentItem key={comment.id} comment={comment} />
-                    ))}
+                {pagination?.hasNext && (
+                    <Button startIcon={<LoadMoreIcon size={18} />} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} onClick={() => handlePagination()} fullWidth
+                    sx={{
+                        mb: 2
+                    }}
+                    >
+                        Load more comments...
+                    </Button>
+                )}
+
+                <Stack spacing={2}>
+                    {(comments && comments?.length > 0) ? (
+                        <>
+                            {[...comments]?.reverse().map((comment) => (
+                                <CommentItem key={comment.id} comment={comment} />
+                            ))}
+                        </>
+                    ) :
+                        <Box width={'100%'} p={2}>
+                            <Typography color='textSecondary'>
+                                <i>No comments</i>
+                            </Typography>
+                        </Box>
+                    }
+
                 </Stack>
 
             </Box>
@@ -105,7 +153,7 @@ const CommentComponent = ({ task }) => {
                                     width: 30
                                 }}
                                 alt={currentMember?.user?.lastName}
-                                src={getAvatar(currentMember?.user?.id, currentMember?.user?.avatarUrl)}
+                                src={getAvatar(currentMember?.user?.id, currentMember?.user?.avatar)}
                             />
                         </Box>
                         <Box flexGrow={1} bgcolor={theme.palette.background.default}>
@@ -191,7 +239,7 @@ const CommentItem = ({ comment }) => {
                         height: 30,
                         width: 30
                     }}
-                    src={getAvatar(comment?.member?.user?.id, comment?.member?.user?.avatarUrl)}
+                    src={getAvatar(comment?.member?.user?.id, comment?.member?.user?.avatar)}
                 />
             </Box>
             <Stack direction={'row'} spacing={2} alignItems={'center'}>

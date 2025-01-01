@@ -16,11 +16,12 @@ import { setCurrentStatusList } from "../../redux/actions/status.action";
 import { setCurrentTaskTypeList } from "../../redux/actions/taskType.action";
 import { setCurrentPriorityList } from "../../redux/actions/priority.action";
 import { setCurrentLabelList } from "../../redux/actions/label.action";
-import { setCurrentProjectMemberList, setCurrentUserMember } from "../../redux/actions/member.action";
+import { setCurrentProjectMemberList, setCurrentUserMember, setCurrentWorkspaceMember } from "../../redux/actions/member.action";
 import CustomAddTaskDialog from "../../components/CustomAddTaskDialog";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
 import { setSectionList } from "../../redux/actions/section.action";
 import { setTaskSearchText } from "../../redux/actions/searchText.action";
+import { setAlertDialog } from "../../redux/actions/dialog.action";
 
 const Project = ({ children }) => {
     const theme = useTheme();
@@ -32,7 +33,7 @@ const Project = ({ children }) => {
     const breadcrumbData = [
         {
             "label": workspace?.name,
-            "href": `/workspace/${workspace?.id}`
+            "href": `/workspace/${workspace?.id}/projects`
         },
         {
             "label": project?.name,
@@ -40,21 +41,70 @@ const Project = ({ children }) => {
     ]
     useEffect(() => {
         if (projectId != null) {
+            dispatch(setCurrentProject(null))
+            dispatch(setCurrentWorkspace(null))
             fetchInitial();
             getCurrentUser();
         }
     }, [projectId])
 
+    useEffect(() => {
+        if (project && workspace) {
+            getCurrentUser();
+        }
+    }, [project, workspace])
+
     const getCurrentUser = async () => {
         try {
-            const res = await apiService.memberAPI.getCurrentOne(projectId);
+            const res = await apiService.memberAPI.getCurrentOneByProject(projectId);
             if (res?.data) {
                 dispatch(setCurrentUserMember(res?.data))
+            } else {
+                alert(123);
             }
         } catch (err) {
-            console.error('Error fetching current member details:', err);
-        }
-    };
+            try {
+                if (err?.status == 404) {
+                    const res = await apiService.memberAPI.getCurrentOneByWorkspace(workspace?.id);
+                    if (res?.data) {
+                        dispatch(setCurrentWorkspaceMember(res?.data))
+                        if (project?.visibility == "PUBLIC")
+                            dispatch(setAlertDialog({
+                                open: true,
+                                props: {
+                                    title: "You are not a member",
+                                    content: `You are not member of this project. But you are member of workspace and have permission for access project.`,
+                                    actionUrl: null
+                                },
+                                type: "info",
+                            }))
+                        else
+                            dispatch(setAlertDialog({
+                                open: true,
+                                props: {
+                                    title: "You are not a member",
+                                    content: `You are not member of this project and do not have permission to access this project.`,
+                                    actionUrl: `/workspace/${workspace?.id}`
+                                },
+                                type: 'error',
+                            }))
+                    }
+                }
+            } catch (e) {
+                dispatch(setAlertDialog({
+                    open: true,
+                    props: {
+                        title: "Access Denied",
+                        content: `You do not have permission to access this project and workspace.
+                        <br/><br/>
+                        Please contact the workspace administrator if you believe this is a mistake.`,
+                        actionUrl: '/workspace'
+                    },
+                    type: "error",
+                }))
+            }
+        };
+    }
 
     const fetchInitial = async () => {
         try {
@@ -76,7 +126,17 @@ const Project = ({ children }) => {
             dispatch(setSectionList(sections));
             dispatch(setTaskSearchText(""));
         } catch (err) {
-            console.error('Error fetching project details:', err);
+            dispatch(setAlertDialog({
+                open: true,
+                props: {
+                    title: "Access Denied",
+                    content: `You do not have permission to access this project.
+                    <br/><br/>
+                    Please contact the workspace administrator if you believe this is a mistake.`,
+                    actionUrl: '/workspace'
+                },
+                type: "error",
+            }))
         }
     };
 
@@ -87,8 +147,8 @@ const Project = ({ children }) => {
             height={"100vh"}
             width={"100vw !important"}
             sx={{
-                // backgroundImage: `url('https://i.pinimg.com/736x/d1/de/5e/d1de5ede98e95b2a8cc7e71a84f506a2.jpg')`,
-                background: theme.palette.mode === 'dark'
+                backgroundImage: project?.cover ? `url(${project?.cover})` : null,
+                background: project?.cover ? null : theme.palette.mode === 'dark'
                     ? 'linear-gradient(135deg, #522580, #223799)'
                     : 'linear-gradient(135deg, #667eea, #764ba2)',
                 backgroundSize: 'cover',
@@ -130,11 +190,11 @@ const Project = ({ children }) => {
                     <Box
                         flexGrow={1}
                         sx={{
-                          
+
                             overflow: 'hidden',
                             width: open ? '86vw' : '95vw',
                             transition: 'width 0.3s',
-                           
+
                         }}
                     >
                         {children}
