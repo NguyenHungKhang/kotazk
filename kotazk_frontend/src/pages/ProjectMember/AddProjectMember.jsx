@@ -9,6 +9,8 @@ import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useDispatch } from 'react-redux';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
 
 const filter = createFilterOptions();
 
@@ -21,6 +23,7 @@ export default function AddProjectMember() {
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const project = useSelector((state) => state.project.currentProject);
     const [inviting, setInviting] = useState(false);
+    const dispatch = useDispatch();
 
     const handleIsOverideRole = (event) => {
         setIsOverideRole(event.target.checked);
@@ -130,12 +133,17 @@ export default function AddProjectMember() {
             };
 
             const response = await apiService.memberAPI.inviteList(data);
-            if (response?.data) {
-                alert("OK")
+            if (response?.status == 200) {
+                dispatch(setSnackbar({
+                    open: true,
+                    content: "Invited succesful!"
+                }))
             }
-            setInviting(false)
+            setInviting(false);
+            setValue([]);
         } catch (e) {
             alert(e);
+            setValue([]);
         }
     }
 
@@ -148,6 +156,9 @@ export default function AddProjectMember() {
             <Box p={4}>
                 <Typography fontWeight={650} variant='h6'>
                     Invite with email
+                </Typography>
+                <Typography color='textSecondary' mb={2}>
+                    When inviting members, the system will automatically skip any member who has already been invited
                 </Typography>
                 <Stack direction={'row'} spacing={2} alignItems="center" width={'100%'}>
                     <Box flexGrow={1}>

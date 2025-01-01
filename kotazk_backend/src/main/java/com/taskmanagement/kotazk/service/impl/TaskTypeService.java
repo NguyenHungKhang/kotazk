@@ -12,10 +12,7 @@ import com.taskmanagement.kotazk.payload.response.common.RePositionResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
 import com.taskmanagement.kotazk.payload.response.status.StatusResponseDto;
 import com.taskmanagement.kotazk.payload.response.tasktype.TaskTypeResponseDto;
-import com.taskmanagement.kotazk.repository.IFilterSettingRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
-import com.taskmanagement.kotazk.repository.ITaskRepository;
-import com.taskmanagement.kotazk.repository.ITaskTypeRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.IMemberService;
 import com.taskmanagement.kotazk.service.ITaskTypeService;
@@ -59,7 +56,8 @@ public class TaskTypeService implements ITaskTypeService {
     private final BasicSpecificationUtil<TaskType> specificationUtil = new BasicSpecificationUtil<>();
     @Autowired
     private TimeUtil timeUtil;
-
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
     @Override
     public List<TaskType> initialTaskType() {
         Customization taskCustomization = new Customization();
@@ -221,6 +219,16 @@ public class TaskTypeService implements ITaskTypeService {
                 .flatMap(tt -> tt.getTasks().stream())
                 .toList();
 
+        TaskType defaultTaskType = project.getTaskTypes().stream().filter(tt -> Objects.equals(tt.getName(), "Task") && tt.getSystemInitial() == true).findFirst().get();
+
+        deletedTaskTypes.forEach(taskType -> {
+            List<Task> tasks = taskType.getTasks();
+            if (tasks != null) {
+                tasks.forEach(task -> task.setTaskType(defaultTaskType));
+            }
+            taskRepository.saveAll(tasks);
+        });
+
         List<String> idTaskTypesToDelete = deletedTaskTypes.stream().map(t -> t.getId().toString()).toList();
 
         taskTypes.stream()
@@ -254,7 +262,10 @@ public class TaskTypeService implements ITaskTypeService {
         project.getTaskTypes().clear();
         project.getTaskTypes().addAll(taskTypes);
         List<TaskType> savedTaskTypes = projectRepository.save(project).getTaskTypes();
-//        filterSettingRepository.saveAll(filterSettings);
+
+        ActivityLog activityLog = activityLogTaskTypeTemplate(project, currentUser, String.format("update project's task types"));
+        activityLogRepository.save(activityLog);
+
         return ModelMapperUtil.mapList(savedTaskTypes, TaskTypeResponseDto.class);
     }
 
@@ -607,6 +618,19 @@ public class TaskTypeService implements ITaskTypeService {
         }
 
         taskTypeRepository.saveAll(orderedTaskTypes);
+    }
+
+    private ActivityLog activityLogTaskTypeTemplate(Project project, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setProject(project);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " ("+ user.getEmail() +")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(ActivityLogType.PROJECT_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
     }
 
 }

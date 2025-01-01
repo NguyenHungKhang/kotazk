@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { Box, Button, Stack, alpha, useTheme, Typography, Avatar, List, ListItem, ListItemIcon, ListItemText, Divider, ListItemAvatar } from "@mui/material";
-import { IconLayoutDashboardFilled, IconSettingsFilled, IconSitemapFilled, IconUsers, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
+import { IconLayoutDashboardFilled, IconSettingsFilled, IconSitemapFilled, IconLogs, IconVectorBezier2, IconCloudLock } from "@tabler/icons-react";
 import { useSelector } from "react-redux";
 import CustomProjectColorIconPicker from "../CustomProjectColorIconPicker";
 import * as apiService from "../../api/index"
@@ -23,6 +23,7 @@ const SideBar = ({ open, setOpen }) => {
     const isWorkspace = /^\/workspace\/\d+\/dashboard$/.test(pathname);
     const isWorkspaceSetting = /^\/workspace\/\d+\/setting$/.test(pathname);
     const isWorkspaceProjects = /^\/workspace\/\d+\/projects$/.test(pathname);
+    const isWorkspaceActivityLog = /^\/workspace\/\d+\/activity-log$/.test(pathname);
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -37,8 +38,7 @@ const SideBar = ({ open, setOpen }) => {
         const data = {
             "sortBy": "name",
             "sortDirectionAsc": true,
-            "filters": [
-            ]
+            "filters": []
         }
         await apiService.projectAPI.getPageByWorkspace(workspace.id, data)
             .then(res => { dispatch(setCurrentProjectList(res.data)); })
@@ -46,10 +46,6 @@ const SideBar = ({ open, setOpen }) => {
     }
 
 
-    const Menus = [
-        { title: "Dashboard", icon: <IconLayoutDashboardFilled size={20} /> },
-        { title: "Setting", icon: <IconSettingsFilled size={20} /> },
-    ];
 
     return (
         <Box
@@ -214,6 +210,35 @@ const SideBar = ({ open, setOpen }) => {
                                     primary={
                                         <Typography noWrap color={isWorkspaceSetting == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
                                             Setting
+                                        </Typography>
+                                    }
+                                    sx={{ ml: 2 }}
+                                />
+                            )}
+                        </ListItem>
+
+                        <ListItem
+                            sx={{
+                                py: 0.5,
+                                mt: 1,
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                bgcolor: isWorkspaceActivityLog == true ? theme.palette.primary.main : 'transparent',
+                                '&:hover': {
+                                    bgcolor: alpha(theme.palette.primary.main, 0.5),
+                                }
+                            }}
+                            button
+                            onClick={() => navigate(`/workspace/${workspace?.id}/activity-log`)}
+                        >
+                            <ListItemIcon sx={{ minWidth: 0, justifyContent: 'center' }}>
+                                <IconLogs size={20} color={isWorkspaceActivityLog == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}/>
+                            </ListItemIcon>
+                            {open && (
+                                <ListItemText
+                                    primary={
+                                        <Typography noWrap color={isWorkspaceActivityLog == true ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary}>
+                                            Activity Log
                                         </Typography>
                                     }
                                     sx={{ ml: 2 }}

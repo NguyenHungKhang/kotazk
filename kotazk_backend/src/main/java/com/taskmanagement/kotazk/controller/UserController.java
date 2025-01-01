@@ -1,5 +1,6 @@
 package com.taskmanagement.kotazk.controller;
 
+import com.taskmanagement.kotazk.payload.request.user.UpdateBasicInfoUserRequestDto;
 import com.taskmanagement.kotazk.payload.response.member.MemberResponseDto;
 import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
 import com.taskmanagement.kotazk.service.IMemberService;
@@ -25,9 +26,15 @@ public class UserController {
     @Autowired
     IUserService userService = new UserService();
 
+    @PutMapping("/")
+    @ResponseStatus(HttpStatus.OK)
+    public UserResponseDto update(@Valid @RequestBody UpdateBasicInfoUserRequestDto updateBasicInfoUserRequestDto) {
+        return userService.uploadBasicInfo(updateBasicInfoUserRequestDto);
+    }
+
     @PutMapping("/upload-avatar")
     @ResponseStatus(HttpStatus.OK)
-    public UserResponseDto getCurrentOne(@Valid @RequestBody MultipartFile file) throws IOException {
+    public UserResponseDto getFile(@Valid @RequestBody MultipartFile file) throws IOException {
         return userService.uploadAvatar(file);
     }
 

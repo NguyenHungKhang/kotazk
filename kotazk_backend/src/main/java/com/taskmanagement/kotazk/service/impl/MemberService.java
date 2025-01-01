@@ -52,6 +52,8 @@ public class MemberService implements IMemberService {
     private SendEmailUtil sendEmailUtil;
     @Autowired
     BasicSpecificationUtil<Member> specificationUtil = new BasicSpecificationUtil<>();
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
 
     @Override
     public MemberResponseDto create(MemberRequestDto memberRequestDto) {
@@ -125,6 +127,40 @@ public class MemberService implements IMemberService {
     }
 
     @Override
+    public MemberResponseDto updateRole(MemberRequestDto memberRequestDto, Long id) {
+        User currentUser = SecurityUtil.getCurrentUser();
+
+        Member currentMember = memberRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Member", "id", id));
+        MemberRole memberRole = memberRoleRepository.findById(memberRequestDto.getMemberRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", memberRequestDto.getMemberRoleId()));
+
+        Member member = null;
+        if (currentMember.getMemberFor().equals(EntityBelongsTo.PROJECT))
+            member = checkProjectMember(
+                    currentUser.getId(),
+                    currentMember.getProject().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(ProjectPermission.MANAGE_MEMBER),
+                    true
+            );
+        else if (currentMember.getMemberFor().equals(EntityBelongsTo.WORK_SPACE))
+            member = checkWorkSpaceMember(
+                    currentUser.getId(),
+                    currentMember.getWorkSpace().getId(),
+                    Collections.singletonList(MemberStatus.ACTIVE),
+                    Collections.singletonList(WorkSpacePermission.MANAGE_MEMBER),
+                    true
+            );
+
+        currentMember.setRole(memberRole);
+
+        Member savedMember = memberRepository.save(currentMember);
+
+        return ModelMapperUtil.mapOne(savedMember, MemberResponseDto.class);
+    }
+
+    @Override
     public MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id) {
         User currentUser = SecurityUtil.getCurrentUser();
 
@@ -164,11 +200,22 @@ public class MemberService implements IMemberService {
         MemberRole memberRole = memberRoleRepository.findById(memberInviteRequestDto.getMemberRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException("Member role", "id", memberInviteRequestDto.getMemberRoleId()));
         List<Member> savedMembers = new ArrayList<>();
+        List<ActivityLog> activityLogs = new ArrayList<>();
+
         if (project.isPresent()) {
             if (!memberRole.getRoleFor().equals(EntityBelongsTo.PROJECT) || memberRole.getProject().getId() != project.get().getId())
                 return null;
 
             List<Member> members = memberInviteRequestDto.getItems().stream()
+                    .filter(item -> {
+                        if (item.getId() != null) {
+
+                            Optional<Member> projectMember = project.get().getMembers().stream()
+                                    .filter(pm -> Objects.equals(pm.getId(), item.getId()) || Objects.equals(pm.getEmail(), item.getEmail()))
+                                    .findFirst();
+                            return projectMember.isEmpty();
+                        } else return true;
+                    })
                     .map(item -> {
                         Member member;
                         if (item.getId() != null) {
@@ -211,13 +258,23 @@ public class MemberService implements IMemberService {
                             member.setSystemInitial(false);
                             member.setSystemRequired(false);
                         }
+
+                        activityLogs.add(activityLogMemberTemplate(member, currentUser, String.format("invited user \"%s\" with role \"%s\"", item.getEmail(), memberRole.getName())));
                         return member;
+
                     }).toList();
             savedMembers.addAll(members);
         } else if (workspace.isPresent()) {
             if (!memberRole.getRoleFor().equals(EntityBelongsTo.WORK_SPACE) || memberRole.getWorkSpace().getId() != workspace.get().getId())
                 return null;
             List<Member> members = memberInviteRequestDto.getItems().stream()
+                    .filter(item -> {
+
+                        Optional<Member> workspaceMember = workspace.get().getMembers().stream()
+                                .filter(wm -> wm.getId() == item.getId())
+                                .findFirst();
+                        return workspaceMember.isEmpty();
+                    })
                     .map(item -> {
                         Member member;
                         if (item.getId() != null) {
@@ -241,20 +298,22 @@ public class MemberService implements IMemberService {
                             member.setSystemInitial(false);
                             member.setSystemRequired(false);
                         }
+                        activityLogs.add(activityLogMemberTemplate(member, currentUser, String.format("invited user \"%s\" with role \"s\"", item.getEmail(), memberRole.getName())));
                         return member;
                     }).toList();
             savedMembers.addAll(members);
         }
         memberRepository.saveAll(savedMembers);
-
         List<String> emails = savedMembers.stream().map(m -> m.getEmail()).toList();
 
-        if(!emails.isEmpty()) {
-            if (project.isPresent()) sendProjectInvitationEmail(emails, project.get().getName(), project.get().getMember().getUser().getEmail());
-            else if (workspace.isPresent()) sendWorkspaceInvitationEmail(emails, workspace.get().getName(), workspace.get().getUser().getEmail());
+        if (!emails.isEmpty()) {
+            if (project.isPresent())
+                sendProjectInvitationEmail(emails, project.get().getName(), project.get().getMember().getUser().getEmail());
+            else if (workspace.isPresent())
+                sendWorkspaceInvitationEmail(emails, workspace.get().getName(), workspace.get().getUser().getEmail(), workspace.get().getId());
         }
 
-
+        activityLogRepository.saveAll(activityLogs);
         return null;
     }
 
@@ -317,7 +376,7 @@ public class MemberService implements IMemberService {
                 newWorkspaceMember.setProject(null);
                 newWorkspaceMember.setWorkSpace(currentMember.getProject().getWorkSpace());
                 newWorkspaceMember.setRole(currentMember.getProject().getWorkSpace().getMemberRoles().stream()
-                        .filter(r ->  Objects.equals(r.getName(), "Editor") && r.getSystemInitial() == true && r.getRoleFor() == EntityBelongsTo.WORK_SPACE)
+                        .filter(r -> Objects.equals(r.getName(), "Editor") && r.getSystemInitial() == true && r.getRoleFor() == EntityBelongsTo.WORK_SPACE)
                         .findFirst()
                         .orElseThrow(() -> {
                             throw new CustomException("Something wrong!");
@@ -334,6 +393,9 @@ public class MemberService implements IMemberService {
         CustomResponse customResponse = new CustomResponse();
         customResponse.setSuccess(true);
         customResponse.setMessage("Invitation accepted");
+
+        ActivityLog activityLog = activityLogMemberTemplate(currentMember, currentUser, String.format("accepted invitation"));
+        activityLogRepository.save(activityLog);
 
         return customResponse;
     }
@@ -434,7 +496,7 @@ public class MemberService implements IMemberService {
         Member member = project.getMembers().stream()
                 .filter(m -> m.getUser().getId() == currentUser.getId() && m.getMemberFor() == EntityBelongsTo.PROJECT && m.getStatus() == MemberStatus.ACTIVE)
                 .findFirst()
-                .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), project.getName())));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "member", "in this project"));
 
         return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
     }
@@ -449,7 +511,7 @@ public class MemberService implements IMemberService {
         Member member = workSpace.getMembers().stream()
                 .filter(m -> m.getUser().getId() == currentUser.getId() && m.getMemberFor() == EntityBelongsTo.WORK_SPACE && m.getStatus() == MemberStatus.ACTIVE)
                 .findFirst()
-                .orElseThrow(() -> new CustomException(String.format("User %s is not a member of project %s", currentUser.getLastName(), workSpace.getName())));
+                .orElseThrow(() -> new ResourceNotFoundException("User", "member", "in this workspace"));
 
         return ModelMapperUtil.mapOne(member, MemberResponseDto.class);
     }
@@ -526,6 +588,53 @@ public class MemberService implements IMemberService {
 
         Specification<Member> specification = Specification.where(projectSpecification)
                 .and(filterSpecification);
+
+        Page<Member> page = memberRepository.findAll(specification, pageable);
+        List<MemberResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberResponseDto.class);
+        return new PageResponse<>(
+                dtoList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious()
+        );
+    }
+
+    @Override
+    public PageResponse<MemberResponseDto> getAssignableListPageByProject(SearchParamRequestDto searchParam, Long projectId) {
+        User currentUser = SecurityUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", "id", projectId));
+        WorkSpace workSpace = project.getWorkSpace();
+        Member currentMember = checkProjectAndWorkspaceBrowserPermission(currentUser, project, workSpace);
+
+        Pageable pageable = PageRequest.of(
+                searchParam.getPageNum(),
+                searchParam.getPageSize(),
+                Sort.by(searchParam.getSortDirectionAsc() ? Sort.Direction.ASC : Sort.Direction.DESC,
+                        searchParam.getSortBy() != null ? searchParam.getSortBy() : "created_at"));
+
+        Specification<Member> projectSpecification = (Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Member, Project> projectJoin = root.join("project");
+            return criteriaBuilder.equal(projectJoin.get("id"), project.getId());
+        };
+
+        Specification<Member> assignableSpecification = (Root<Member> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
+            Join<Member, MemberRole> roleJoin = root.join("role");
+            Join<MemberRole, ProjectPermission> permissionJoin = roleJoin.join("projectPermissions");
+            return criteriaBuilder.equal(permissionJoin, ProjectPermission.ASSIGNABLE_USER);
+        };
+
+        Specification<Member> filterSpecification = specificationUtil.getSpecificationFromFilters(searchParam.getFilters());
+
+        Specification<Member> specification = Specification.where(projectSpecification)
+                .and(filterSpecification)
+                .and(assignableSpecification);
 
         Page<Member> page = memberRepository.findAll(specification, pageable);
         List<MemberResponseDto> dtoList = ModelMapperUtil.mapList(page.getContent(), MemberResponseDto.class);
@@ -699,68 +808,81 @@ public class MemberService implements IMemberService {
     public void sendProjectInvitationEmail(List<String> emails, String projectName, String ownerEmail) throws MessagingException {
         String subject = "You're Invited to Join the Project: " + projectName;
         String body = """
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-                <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
-                    <h1>Project Invitation - Kotazk</h1>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Hi there,</p>
-                    <p>You’ve been invited to collaborate on the project <strong>""" + projectName + """
-                    </strong>!</p>
-                    <p>This project is managed by <strong>""" + ownerEmail + """
-                    </strong>, who believes your participation is vital for its success.</p>
-                    <p>To accept this invitation and start collaborating:</p>
-                    <div style="text-align: center; margin: 20px 0;">
-                        <a href="https://kotazk.com/invite/accept?project=""" + projectName + """
-                &email=""" + ownerEmail + """
-                            style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
-                            Join Project
-                        </a>
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                    <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                        <h1>Project Invitation - Kotazk</h1>
                     </div>
-                    <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                    <div style="padding: 20px;">
+                        <p>Hi there,</p>
+                        <p>You’ve been invited to collaborate on the project <strong>""" + projectName + """
+                </strong>!</p>
+                <p>This project is managed by <strong>""" + ownerEmail + """
+                </strong>, who believes your participation is vital for its success.</p>
+                <p>To accept this invitation and start collaborating:</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="https://kotazk.com/invite/accept?project=""" + projectName + """
+                &email=""" + ownerEmail + """
+                                style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                                Join Project
+                            </a>
+                        </div>
+                        <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                    </div>
+                    <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                        <p>© 2024 Kotazk. All rights reserved.</p>
+                        <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
+                    </div>
                 </div>
-                <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-                    <p>© 2024 Kotazk. All rights reserved.</p>
-                    <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
-                </div>
-            </div>
-            """;
+                """;
 
         sendEmailUtil.sendEmail(emails, subject, body);
     }
 
-    public void sendWorkspaceInvitationEmail(List<String> emails, String workspaceName, String ownerEmail) throws MessagingException {
+    public void sendWorkspaceInvitationEmail(List<String> emails, String workspaceName, String ownerEmail, Long workspaceId) throws MessagingException {
         String subject = "You're Invited to Join the Workspace: " + workspaceName;
         String body = """
-            <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-                <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
-                    <h1>Workspace Invitation - Kotazk</h1>
-                </div>
-                <div style="padding: 20px;">
-                    <p>Hi there,</p>
-                    <p>You’ve been invited to collaborate in the workspace <strong>""" + workspaceName + """
-                    </strong>!</p>
-                    <p>This workspace is managed by <strong>""" + ownerEmail + """
-                    </strong>, who believes your participation is crucial for its success.</p>
-                    <p>To accept this invitation and start collaborating:</p>
-                    <div style="text-align: center; margin: 20px 0;">
-                        <a href="https://kotazk.com/invite/accept?workspace=""" + workspaceName + """
-                &email=""" + ownerEmail + """
-                           style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
-                            Join Workspace
-                        </a>
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 600px; margin: auto; border: 1px solid #eaeaea; border-radius: 10px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                    <div style="background-color: #3D42E9; color: white; padding: 15px 20px; text-align: center; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                        <h1>Workspace Invitation - Kotazk</h1>
                     </div>
-                    <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                    <div style="padding: 20px;">
+                        <p>Hi there,</p>
+                        <p>You’ve been invited to collaborate in the workspace <strong>""" + workspaceName + """
+                </strong>!</p>
+                <p>This workspace is managed by <strong>""" + ownerEmail + """
+                </strong>, who believes your participation is crucial for its success.</p>
+                <p>To accept this invitation and start collaborating:</p>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="https://localhost:3000/workspace/""" + workspaceId + """
+                &email=""" + ownerEmail + """
+                               style="display: inline-block; background-color: #3D42E9; color: white; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 5px;">
+                                Join Workspace
+                            </a>
+                        </div>
+                        <p>If you believe this was sent to you by mistake, please ignore this email or contact our support team.</p>
+                    </div>
+                    <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
+                        <p>© 2024 Kotazk. All rights reserved.</p>
+                        <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
+                    </div>
                 </div>
-                <div style="background-color: #f1f1f1; padding: 10px 20px; text-align: center; font-size: 14px; color: #777; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;">
-                    <p>© 2024 Kotazk. All rights reserved.</p>
-                    <p><a href="https://kotazk.com" style="color: #3D42E9; text-decoration: none;">Visit our website</a> | <a href="mailto:support@kotazk.com" style="color: #3D42E9; text-decoration: none;">Contact Support</a></p>
-                </div>
-            </div>
-            """;
+                """;
 
         sendEmailUtil.sendEmail(emails, subject, body);
     }
 
+    private ActivityLog activityLogMemberTemplate(Member member, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setWorkSpace(member.getMemberFor().equals(EntityBelongsTo.WORK_SPACE) ? member.getWorkSpace() : null);
+        activityLogTemplate.setProject(member.getMemberFor().equals(EntityBelongsTo.PROJECT) ? member.getProject() : null);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " (" + user.getEmail() + ")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(member.getMemberFor().equals(EntityBelongsTo.PROJECT) ? ActivityLogType.PROJECT_HISTORY : ActivityLogType.WORKSPACE_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
+    }
 
 }

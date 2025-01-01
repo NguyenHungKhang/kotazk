@@ -28,6 +28,7 @@ export default function StickyHeadTable() {
     const { workspaceId } = useParams();
     const [projectListResponse, setProjectListResponse] = useState();
 
+
     useEffect(() => {
         const initialFetch = async () => {
             const data = {

@@ -168,14 +168,14 @@ function HomeNavBar() {
                         </Menu>
                     </Box> */}
                     <Stack direction='row' spacing={2} sx={{ flexGrow: 0 }}>
-                        <Button variant='outlined'
+                        {/* <Button variant='outlined'
                             sx={{
                                 color: 'white',
                                 borderColor: 'white !important'
                             }}
                         >
                             Signup
-                        </Button>
+                        </Button> */}
                         <Button
                             variant='contained'
                             sx={{

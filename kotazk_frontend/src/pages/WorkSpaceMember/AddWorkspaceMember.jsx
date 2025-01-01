@@ -7,6 +7,7 @@ import Chip from '@mui/material/Chip';
 import { Box, Button, Select, MenuItem, InputLabel, FormControl, Checkbox, FormGroup, FormControlLabel, Card, Typography, Divider } from '@mui/material';
 import * as apiService from '../../api/index'
 import { useSelector } from 'react-redux';
+import { LoadingButton } from '@mui/lab';
 
 const filter = createFilterOptions();
 
@@ -17,6 +18,7 @@ export default function AddWorkspaceMember() {
     const [memberRoles, setMemberRoles] = React.useState([]);
     const [isOverideRole, setIsOverideRole] = React.useState(true);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const [inviting, setInviting] = React.useState(false);
 
     const handleIsOverideRole = (event) => {
         setIsOverideRole(event.target.checked);
@@ -78,29 +80,34 @@ export default function AddWorkspaceMember() {
     };
 
     const handleSave = async () => {
-        const data = {
-            workspaceId: workspace.id,
-            memberRoleId: selectedMemberRole,
-            items: value
-        };
+        try {
+            setInviting(true)
+            const data = {
+                workspaceId: workspace.id,
+                memberRoleId: selectedMemberRole,
+                items: value
+            };
 
-        const response = await apiService.memberAPI.inviteList(data);
-        if (response?.data) {
-            alert("OK")
+            const response = await apiService.memberAPI.inviteList(data);
+            if (response?.data) {
+                alert("OK")
+            }
+            setInviting(false)
+        } catch (e) {
+            alert(e);
         }
     }
 
     return (
-        <Card
+        <Box
             sx={{
                 width: '100%'
             }}
         >
-            <Typography variant='h6' fontWeight={650} p={4}>
-                Invite Member
-            </Typography>
-            <Divider />
             <Box p={4}>
+                <Typography fontWeight={650} variant='h6'>
+                    Invite with email
+                </Typography>
                 <Stack direction={'row'} spacing={2} alignItems="center" width={'100%'}>
                     <Box flexGrow={1}>
                         <Autocomplete
@@ -181,11 +188,11 @@ export default function AddWorkspaceMember() {
                                                 </Avatar>}
                                             {option.id ?
                                                 <span>
-                                                    {option.firstName}{option.lastName} - {option.email}
+                                                    {option.firstName} {option.lastName} - {option.email}
                                                 </span>
                                                 :
                                                 <Typography color='info'>
-                                                    Add email: {option.email}
+                                                    Add new email: {option.email}
                                                 </Typography>
                                             }
                                         </Stack>
@@ -232,19 +239,12 @@ export default function AddWorkspaceMember() {
 
                     {/* Invite Button */}
                     <Box>
-                        <Button variant='contained' onClick={() => handleSave()}>
+                        <LoadingButton variant='contained' onClick={() => handleSave()} loading={inviting} disabled={value?.length == 0}>
                             Invite
-                        </Button>
+                        </LoadingButton>
                     </Box>
                 </Stack>
-                <FormGroup>
-                    <FormControlLabel control={<Checkbox
-                        checked={isOverideRole}
-                        onChange={handleIsOverideRole}
-                        inputProps={{ 'aria-label': 'controlled' }}
-                    />} label="Override a member's role in the workspace" />
-                </FormGroup>
             </Box>
-        </Card>
+        </Box>
     );
 }

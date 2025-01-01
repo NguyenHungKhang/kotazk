@@ -65,9 +65,12 @@ public class Member {
     @OneToMany(mappedBy = "creator")
     private List<Task> creatorTasks;
 
+    @OneToMany(mappedBy = "member")
+    private List<Attachment> attachment;
+
     @CreationTimestamp
     @Column(name = "joined_at")
-    private Timestamp joinedAt; // Thời gian tham gia
+    private Timestamp joinedAt;
 
     @PreRemove
     public void removeTasks() {

@@ -1,27 +1,23 @@
-//package com.taskmanagement.kotazk.config;
-//
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.web.socket.config.annotation.EnableWebSocket;
-//import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-//import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-//import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
-//
-//@Configuration
-//@EnableWebSocket
-//public class WebSocketConfig implements WebSocketConfigurer {
-//
-//    private final NotificationWebSocketHandler notificationWebSocketHandler;
-//
-//    // Constructor injection of NotificationWebSocketHandler
-//    public WebSocketConfig(NotificationWebSocketHandler notificationWebSocketHandler) {
-//        this.notificationWebSocketHandler = notificationWebSocketHandler;
-//    }
-//
-//    @Override
-//    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-//        registry.addHandler(notificationWebSocketHandler, "/ws/notifications")
-//                .addInterceptors(new HttpSessionHandshakeInterceptor())
-//                .setAllowedOrigins("*");  // Adjust CORS settings as needed
-//    }
-//}
+package com.taskmanagement.kotazk.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Specify allowed origins as per your needs or use patterns
+        registry.addEndpoint("/ws").setAllowedOriginPatterns("http://localhost:3000").withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(org.springframework.messaging.simp.config.MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/topic"); // Broker destination
+        config.setApplicationDestinationPrefixes("/app"); // Application's prefix
+    }
+}

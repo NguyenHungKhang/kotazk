@@ -23,6 +23,7 @@ import { getCustomTwoModeColor } from '../../utils/themeUtil';
 import { useTheme } from '@mui/material';
 import { setSection, setSectionList } from '../../redux/actions/section.action';
 import { useNavigate } from 'react-router-dom';
+import { setCurrentWorkspace } from '../../redux/actions/workspace.action';
 
 
 export default function CustomDeleteDialog({ deleteAction }) {
@@ -83,6 +84,9 @@ export default function CustomDeleteDialog({ deleteAction }) {
         } else if (deleteType == "DELETE_SECTION" && deleteProps != null) {
             const sectionId = deleteProps.sectionId;
             await handleDeleteSection(sectionId);
+        } else if (deleteType == "DELETE_WORKSPACE" && deleteProps != null) {
+            const workspaceId = deleteProps.workspaceId;
+            await handleDeleteWorkspace(workspaceId);
         }
         dispatch(setDeleteDialog({ open: false }));
     }
@@ -99,6 +103,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
 
                 dispatch(setSnackbar({
                     content: "Task deleted successful!",
+                    type: "success",
                     open: true
                 }))
             }
@@ -131,6 +136,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
 
                 dispatch(setSnackbar({
                     content: "Subtask deleted successful!",
+                    type: "success",
                     open: true
                 }))
             }
@@ -155,6 +161,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 await dispatch(setCurrentStatusList(statuses.filter(s => s.id != statusId)));
                 await dispatch(setSnackbar({
                     content: "Status deleted successful!",
+                    type: "success",
                     open: true
                 }))
             }
@@ -178,6 +185,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 await dispatch(setCurrentTaskTypeList(taskTypes.filter(tt => tt.id != taskTypeId)));
                 await dispatch(setSnackbar({
                     content: "Task type deleted successful!",
+                    type: "success",
                     open: true
                 }))
             }
@@ -204,6 +212,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(setCurrentPriorityList(updatedPriorities));
                 dispatch(setSnackbar({
                     content: "Priority deleted successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -227,6 +236,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(setCurrentLabelList(updatedLabels));
                 dispatch(setSnackbar({
                     content: "Label deleted successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -267,6 +277,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
 
                 dispatch(setSnackbar({
                     content: "Member deleted successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -282,6 +293,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(delteMemberRole(roleId));
                 dispatch(setSnackbar({
                     content: "Member role delete successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -297,6 +309,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(deleteProjectReport(projectReportId));
                 dispatch(setSnackbar({
                     content: "Project report role delete successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -313,6 +326,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(removeItemTaskCommentList(taskCommentId));
                 dispatch(setSnackbar({
                     content: "Task comment delete successfully!",
+                    type: "success",
                     open: true
                 }));
             }
@@ -327,7 +341,7 @@ export default function CustomDeleteDialog({ deleteAction }) {
             const index = sections.findIndex(s => s.id == sectionId);
             if (index > 0) {
                 setSection(sections[index - 1]);
-                navigate(`/project/${project?.id}/section/${sections[index-1].id}`)
+                navigate(`/project/${project?.id}/section/${sections[index - 1].id}`)
             } else if (index == 0) {
                 if (sections.length > 1) {
                     setSection(sections[1]);
@@ -344,11 +358,30 @@ export default function CustomDeleteDialog({ deleteAction }) {
                 dispatch(setSectionList(finalSections))
                 dispatch(setSnackbar({
                     content: "Section delete successfully!",
+                    type: "success",
                     open: true
                 }));
             }
         } catch (error) {
             console.error('Failed to delete section:', error);
+        }
+    };
+
+    const handleDeleteWorkspace = async (workspaceId) => {
+        try {
+            const response = await apiService.workspaceAPI.remove(workspaceId);
+            if (response?.data) {
+
+                dispatch(setSnackbar({
+                    content: "Workspace delete successfully!",
+                    type: "success",
+                    open: true
+                }));
+                navigate(`/workspace`)
+                dispatch(setCurrentWorkspace(null));
+            }
+        } catch (error) {
+            console.error('Failed to delete workspace:', error);
         }
     };
 

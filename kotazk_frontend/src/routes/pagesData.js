@@ -37,6 +37,9 @@ import ProfileSetting from "../pages/ProfileSetting";
 import ForgotPassword from "../pages/ForgotPassword";
 import WorkspaceSetting from "../pages/WorkspaceSetting";
 import UserWorkspaceTaskDashBoard from "../pages/WorkspaceDashboard";
+import WorkspaceRole from "../pages/WorkspaceRole";
+import WorkspaceActivityLog from "../pages/WorkspaceActivityLog";
+import ProjectActivityLog from "../pages/ProjectActivityLog";
 
 const pagesData = [
   {
@@ -89,6 +92,17 @@ const pagesData = [
     element: <Workspace ><WorkspaceSetting /> </Workspace>,
     title: "workspace"
   },
+
+  {
+    path: "/workspace/:workspaceId/activity-log",
+    element: <Workspace ><WorkspaceActivityLog /> </Workspace>,
+    title: "workspace"
+  },
+  {
+    path: "/workspace/:workspaceId/setting/role",
+    element: <Workspace ><WorkspaceRole /> </Workspace>,
+    title: "workspace"
+  },
   {
     path: "/workspace/:workspaceId/member",
     element: <WorkSpaceMember />,
@@ -113,6 +127,11 @@ const pagesData = [
     path: "/project/:projectId/role",
     element: <Project><ProjectRole /></Project>,
     title: "Project Member"
+  },
+  {
+    path: "/project/:projectId/activity-log",
+    element: <Project><ProjectActivityLog /></Project>,
+    title: "Project Activity Log"
   },
   {
     path: "/project/:projectId/section/:sectionId",

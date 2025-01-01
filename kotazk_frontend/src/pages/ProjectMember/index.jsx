@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import { setDeleteDialog } from '../../redux/actions/dialog.action';
 import EmailChipInput from '../../playgrounds/components/EmailChipInput';
 import AddProjectMember from './AddProjectMember';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
 
 
 const ProjectMember = ({ handleClose, isDialog }) => {
@@ -44,7 +45,7 @@ const ProjectMember = ({ handleClose, isDialog }) => {
             initialFetch();
     }, [project, workSpace, searchText, memberStatus]);
 
-    const initialFetch = async  () => {
+    const initialFetch = async () => {
         try {
             const memberFilter = {
                 pageSize: 6,
@@ -207,12 +208,12 @@ const ProjectMember = ({ handleClose, isDialog }) => {
 
                             <Stack spacing={1}>
                                 {members?.map((member) => (
-                                    <MemberItem key={member.id} member={member} memberRoles={memberRoles} />
+                                    <MemberItem key={member.id} member={member} memberRoles={memberRoles} initialFetch={initialFetch} />
                                 ))}
                             </Stack>
                         </Box>
                         <Box display={'flex'} justifyContent={'center'} width={'100%'} alignSelf={"flex-end"}>
-                            <Pagination count={pagination.totalPages} page={pagination.pageNumber + 1}  variant="outlined" shape="rounded" onChange={handlePagination} />
+                            <Pagination count={pagination.totalPages} page={pagination.pageNumber + 1} variant="outlined" shape="rounded" onChange={handlePagination} />
                         </Box>
                     </Stack>
                 </Box>
@@ -221,11 +222,36 @@ const ProjectMember = ({ handleClose, isDialog }) => {
     );
 };
 
-const MemberItem = ({ member, memberRoles }) => {
+const MemberItem = ({ member, memberRoles, initialFetch }) => {
     const theme = useTheme();
     const dispatch = useDispatch();
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const manageMemberPermission = currentMember?.role?.projectPermissions?.includes("MANAGE_MEMBER");
+
+    const handleStatusChange = async (event) => {
+        if (event.target.value == member?.memberRoleId)
+            return;
+
+        const data = {
+            memberRoleId: event.target.value
+        }
+
+        try {
+            const response = await apiService.memberAPI.updateRole(member?.id, data);
+            if (response?.data) {
+                dispatch(setSnackbar({
+                    open: true,
+                    content: "Update member successful!"
+                }))
+                initialFetch()
+            }
+
+        } catch (e) {
+            console.error(e);
+        }
+
+
+    }
 
     const handleOpenDeleteDialog = (event) => {
         event.stopPropagation();
@@ -281,6 +307,7 @@ const MemberItem = ({ member, memberRoles }) => {
                         <Select
                             value={member.role.id}
                             readOnly={!manageMemberPermission}
+                            onChange={(e) => handleStatusChange(e)}
                             size='small'
                             sx={{
                                 p: 0,
@@ -289,7 +316,7 @@ const MemberItem = ({ member, memberRoles }) => {
                         >
                             {
                                 memberRoles?.map((mr) => (
-                                    <MenuItem value={mr.id} >{mr.name}</MenuItem>
+                                    <MenuItem value={mr.id} key={mr.id}>{mr.name}</MenuItem>
                                 ))
                             }
                         </Select>

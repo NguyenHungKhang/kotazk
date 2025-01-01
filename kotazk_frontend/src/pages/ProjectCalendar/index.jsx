@@ -14,6 +14,8 @@ import { setTaskDialog } from '../../redux/actions/dialog.action';
 import { addAndUpdateGroupedTaskList, addAndUpdateTaskList, setCurrentTaskList } from '../../redux/actions/task.action';
 import * as TablerIcons from '@tabler/icons-react'
 import Tab from '@mui/material/Tab';
+import dayjs from "dayjs";
+import { Expand } from "@mui/icons-material";
 
 export const StyleWrapper = styled.div`
   .fc td {
@@ -30,7 +32,6 @@ const enhancedIconColors = [
   "#FFDC49", // Notion Yellow
   "#FFA344", // Notion Orange
   "#f5743d", // Notion Brown
-  "#979A9B", // Notion Grey
 ];
 
 // Create an array of 100 colors by repeating the enhancedIconColors
@@ -51,6 +52,7 @@ const ProjectCalendar = () => {
   const project = useSelector((state) => state.project.currentProject)
   const tasks = useSelector((state) => state.task.currentTaskList);
   const isGroupedList = useSelector((state) => state.task.isGroupedList);
+  const currentFilterList = useSelector((state) => state.filter.currentFilterList);
   const [listTaskView, setListTaskView] = useState("unscheduled")
   const [unScheduledTasks, setUnscheduledTasks] = useState([]);
   const [scheduledTasks, setScheduledTasks] = useState([]);
@@ -60,47 +62,93 @@ const ProjectCalendar = () => {
   const [tasksPagination, setTaskPagination] = useState(null);
   const [calendarTitle, setCalendarTitle] = useState('');
   const [showWeekends, setShowWeekends] = useState(true);
+  const [gridView, setGridView] = useState("dayGridWeek")
+  const taskSearchText = useSelector((state) => state.searchText.taskSearchText);
+  const ExpandIcon = TablerIcons["IconArrowsMaximize"];
   const dispatch = useDispatch();
 
   const GoToNextIcon = TablerIcons["IconChevronRight"]
   const GoToPrevIcon = TablerIcons["IconChevronLeft"]
 
   const TaskUncompleteIcon = TablerIcons["IconCircle"]
+  const currentMember = useSelector((state) => state.member.currentUserMember);
+
+  const scheduledTasksPermission = currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS");
+  // const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
+  // const assignTaskPermission = currentMember?.role?.projectPermissions?.includes("ASSIGN_TASKS");
 
   useEffect(() => {
     if (project != null)
       initialFetch();
-  }, [project])
+  }, [project, currentFilterList])
 
   useEffect(() => {
     if (tasks != null) {
+      fetchDisplayTask();
       setUnscheduledTasks(tasks.filter(ut => ut.startAt == null || ut.endAt == null));
       setScheduledTasks(tasks.filter(ut => ut.startAt != null && ut.endAt != null))
     }
   }, [tasks])
 
   const initialFetch = async () => {
-    const filter = {
-      'pageSize': 50,
-      filters: [],
-    };
+    const filterData = [
+      ...(currentFilterList?.flatMap((f) => {
+        if (f.field === "startAt") {
+          return {
+            key: f.field,
+            operation: "GREATER_THAN_OR_EQUAL",
+            value: dayjs(f.options?.[0]).valueOf(),
+          };
+        }
+        if (f.field === "endAt") {
+          return {
+            key: f.field,
+            operation: "LESS_THAN_OR_EQUAL",
+            value: dayjs(f.options?.[0]).valueOf(),
+          };
+        }
+        return {
+          key: f.field,
+          operation: "IN",
+          values: f.options,
+        };
+      }) || []),
+      {
+        key: "name",
+        operation: "LIKE",
+        value: taskSearchText,
+      },
+      {
+        key: "parentTask",
+        operation: "IS_NULL",
+        value: null,
+      },
+    ];
 
-    const tasksResponse = await apiService.taskAPI.getPageByProject(project?.id, filter);
+    const data = {
+      'pageSize': 50,
+      'filters': filterData || []
+    }
+
+    const tasksResponse = await apiService.taskAPI.getPageByProject(project?.id, data);
     if (tasksResponse?.data) {
       dispatch(setCurrentTaskList(tasksResponse.data.content));
-      setDisplayTasks(
-        tasksResponse.data.content.map(task => ({
-          id: task?.id,
-          title: task?.name,
-          start: task?.startAt,
-          end: task?.endAt,
-          allDay: false,
-          backgroundColor: getColorFromInteger(task?.id),
-          textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
-        }))
-      );
     }
   };
+
+  const fetchDisplayTask = () => {
+    setDisplayTasks(
+      tasks?.map(task => ({
+        id: task?.id,
+        title: task?.name,
+        start: task?.startAt,
+        end: task?.endAt,
+        allDay: calendarRef?.current?.getApi()?.view?.type != "timeGridWeek",
+        backgroundColor: getColorFromInteger(task?.id),
+        textColor: theme.palette.getContrastText(getColorFromInteger(task?.id))
+      }))
+    );
+  }
 
 
   const goToTask = (taskId) => {
@@ -138,20 +186,38 @@ const ProjectCalendar = () => {
   };
 
   const changeToMonthView = () => {
+    setGridView('dayGridMonth')
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView('dayGridMonth');
   };
 
   const changeToWeekWithTimeView = () => {
+    setGridView('timeGridWeek')
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView('timeGridWeek');
   };
 
 
   const changeToWeekView = () => {
+    setGridView('dayGridWeek')
     const calendarApi = calendarRef.current.getApi();
     calendarApi.changeView('dayGridWeek');
   };
+
+  useEffect(() => {
+    if (gridView == "timeGridWeek") {
+      setDisplayTasks((prev) => prev?.map(dt => ({
+        ...dt,
+        allDay: false
+      })))
+    }
+    else if (gridView == "dayGridWeek" || gridView == "dayGridMonth") {
+      setDisplayTasks((prev) => prev?.map(dt => ({
+        ...dt,
+        allDay: true
+      })))
+    }
+  }, [gridView])
 
   const handleTitleSet = () => {
     const calendarApi = calendarRef?.current?.getApi();
@@ -170,8 +236,6 @@ const ProjectCalendar = () => {
       "startAt": range.start,
       "endAt": range.end
     }
-
-    console.log(123);
     try {
       const response = await apiService.taskAPI.update(taskId, data);
       if (response?.data) {
@@ -198,8 +262,16 @@ const ProjectCalendar = () => {
     dispatch(setTaskDialog(taskDialogData));
   };
 
+  const handleExpandEvent = (id) => {
+    const clickedTask = tasks.find(t => t.id == id);
+    const taskDialogData = {
+      task: clickedTask,
+      open: true
+    }
+    dispatch(setTaskDialog(taskDialogData));
+  }
+
   const handleEventChange = (info) => {
-    console.log(info)
     saveEndDate(info.event._def.publicId, info.event._instance.range);
   };
 
@@ -233,7 +305,7 @@ const ProjectCalendar = () => {
   );
 
   useEffect(() => {
-    if (listTaskView == "unscheduled") {
+    if (listTaskView === "unscheduled" && scheduledTasksPermission) {
       const containerEl = document.querySelector("#outside-events");
       new Draggable(containerEl, {
         itemSelector: ".outside-event",
@@ -245,7 +317,8 @@ const ProjectCalendar = () => {
         }
       });
     }
-  }, [listTaskView]);
+  }, [listTaskView, scheduledTasksPermission]);
+
 
   return (
     <Box
@@ -314,10 +387,20 @@ const ProjectCalendar = () => {
                         direction={'row'}
                         spacing={2}
                         p={2}
+                        sx={{
+                          cursor: scheduledTasksPermission ? 'grab' : 'not-allowed'
+                        }}
+                        alignItems={'center'}
                       >
-                        <Typography>
+                        <Typography flexGrow={1}>
                           {t.name}
                         </Typography>
+                        <IconButton onClick={(e) => {
+                          e.stopPropagation();
+                          handleExpandEvent(t.id);
+                        }}>
+                          <ExpandIcon size={14} />
+                        </IconButton>
                       </Stack>
                     </li>
                   ))}
@@ -340,10 +423,20 @@ const ProjectCalendar = () => {
                         direction={'row'}
                         spacing={2}
                         p={2}
+                        sx={{
+                          cursor: 'pointer'
+                        }}
+                        alignItems={'center'}
                       >
-                        <Typography>
+                        <Typography flexGrow={1}>
                           {t.name}
                         </Typography>
+                        <IconButton onClick={(e) => {
+                          e.stopPropagation();
+                          handleExpandEvent(t.id);
+                        }}>
+                          <ExpandIcon size={14} />
+                        </IconButton>
                       </Stack>
                     </li>
                   ))}
@@ -459,14 +552,14 @@ const ProjectCalendar = () => {
               eventDrop={handleEventChange}
               eventReceive={handleEventReceive}
               nowIndicator={true}
-              editable={true}
+              editable={scheduledTasksPermission}
               selectable={true}
               height={'100%'}
               datesSet={handleTitleSet}
               eventContent={renderEventContent}
               headerToolbar={false}
               weekends={showWeekends}
-              droppable
+              droppable={scheduledTasksPermission}
             />
             <CustomTaskDialog />
           </Card>

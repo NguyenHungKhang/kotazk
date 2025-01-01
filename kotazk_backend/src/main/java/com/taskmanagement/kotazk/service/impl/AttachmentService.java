@@ -64,8 +64,6 @@ public class AttachmentService implements IAttachmentService {
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.CREATE_ATTACHMENTS))
             throw new CustomException("This user do not have permission to add attachment in this task");
 
-        // add task_comment case later
-
         String fileName = file.getOriginalFilename();
         String fileSize = String.valueOf(file.getSize());
         String fileType;

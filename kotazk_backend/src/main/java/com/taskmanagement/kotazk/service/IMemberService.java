@@ -21,6 +21,7 @@ import java.util.List;
 
 public interface IMemberService {
     MemberResponseDto create(MemberRequestDto member);
+    MemberResponseDto updateRole(MemberRequestDto memberRequestDto, Long id);
     MemberResponseDto updateStatus(MemberRequestDto memberRequestDto, Long id);
     List<MemberResponseDto> inviteList(MemberInviteRequestDto memberInviteRequestDto) throws MessagingException;
     MemberResponseDto revoke(Long id);
@@ -32,6 +33,7 @@ public interface IMemberService {
     MemberResponseDto getCurrentOneByWorkspace(Long projectId);
     PageResponse<MemberResponseDto> getListPageByWorkspace(SearchParamRequestDto searchParam, Long workspaceId);
     PageResponse<MemberResponseDto> getListPageByProject(SearchParamRequestDto searchParam, Long projectId);
+    PageResponse<MemberResponseDto> getAssignableListPageByProject(SearchParamRequestDto searchParam, Long projectId);
     List<MemberDetailResponseDto> getOwnInvitation();
     Member checkProjectMember(
             Long userId,

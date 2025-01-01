@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     AppBar, Toolbar, IconButton, Typography, Button, TextField, Card, CardContent, Grid,
     Box, Container, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -40,15 +40,17 @@ const WorkspaceList = () => {
     const navigate = useNavigate();
     const accessedWorkspaces = workspaces?.content;
     const myWorkspace = workspaces?.content?.filter(ws => ws.user.id == currentUser?.id);
+    const [searchText, setSearchText] = useState("");
+
     useEffect(() => {
         initialFetch();
-    }, [dispatch])
+    }, [dispatch, searchText])
 
 
     const initialFetch = async () => {
         const data = {
             "filters": [
-
+                { key: "name", value: searchText, operation: "LIKE" },
             ],
         }
         const response = await apiService.workspaceAPI.getPageDetail(data)
@@ -108,7 +110,7 @@ const WorkspaceList = () => {
                     <Stack direction={'row'} spacing={2} alignItems={'center'}>
                         <Box
                             component={'img'}
-                            height={280}
+                            height={200}
                             borderRadius={6}
                             p={4}
                             src={getTimeOfDay() == "Evening" ? "https://i.pinimg.com/originals/99/12/af/9912af0ae2745b5bf82f024a33b5e274.gif" : "https://i.pinimg.com/originals/85/9b/84/859b844d4cb109594eb93c6dfd11e4d1.gif"} />
@@ -166,12 +168,23 @@ const WorkspaceList = () => {
 
 
                     <Paper style={{ padding: '24px', height: '100%' }}>
+                        <Stack direction='row' spacing={2} alignItems={'center'}>
+                            <Typography variant="h6" >
+                                Search:
+                            </Typography>
+                            <TextField
+                                size='small'
+                                placeholder='Enter for searching...'
+                                onChange={(e) => setSearchText(e.target.value)}
+                            />
+                        </Stack>
+
                         <Typography variant="h6" style={{ margin: '16px 0' }}>
                             My Workspaces
                         </Typography>
                         <Grid container spacing={2}>
                             {myWorkspace?.length == 0 && (
-                                <Box px={2} py={4} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
+                                <Box px={2} py={2} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
                                     <Typography color='textSecondary'>
                                         <i>No Workspaces</i>
                                     </Typography>
@@ -285,7 +298,7 @@ const WorkspaceList = () => {
                         </Typography>
                         <Grid container spacing={2}>
                             {accessedWorkspaces?.length == 0 && (
-                                <Box px={2} py={4} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
+                                <Box px={2} py={2} borderRadius={2} border={'1px dashed'} width={'100%'} borderColor={getCustomTwoModeColor(theme, theme.palette.grey[300], theme.palette.grey[800])}>
                                     <Typography color='textSecondary'>
                                         <i>No Workspaces</i>
                                     </Typography>

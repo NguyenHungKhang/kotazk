@@ -20,6 +20,7 @@ import "./syncfusion-license";
 import { ThemeProviderWrapper } from './themes/ThemeContext';
 import CustomDeleteDialog from './components/CustomDeleteDialog';
 import CustomSnackbar from './components/CustomSnackbar';
+import CustomAlertDialog from './components/CustomAlertDialog';
 
 
 const App = () => {
@@ -30,6 +31,7 @@ const App = () => {
         <Router />
         <CustomDeleteDialog />
         <CustomSnackbar />
+        <CustomAlertDialog />
       </ThemeProviderWrapper>
     </BrowserRouter>
   );

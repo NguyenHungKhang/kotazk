@@ -290,7 +290,7 @@ const TaskTypeListItem = ({ taskType, setItems, itemIndex, isChange, setIsChange
                             fullWidth
                             slotProps={{
                                 input: {
-                                    readOnly: !manageTaskTypePermission,
+                                    readOnly: !manageTaskTypePermission && taskType.systemRequired,
                                 }
                             }}
                             onChange={(e) => {

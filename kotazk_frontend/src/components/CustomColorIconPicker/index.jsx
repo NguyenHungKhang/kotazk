@@ -62,9 +62,9 @@ const CustomColorIconPicker = ({ changeable, icons, customization, setCustomizat
         <div>
 
             <IconButton
-                onClick={() => {
+                onClick={(e) => {
                     if (!readOnly)
-                        handleClick()
+                        handleClick(e)
                 }}
                 sx={{
                     backgroundColor: selectedColor,

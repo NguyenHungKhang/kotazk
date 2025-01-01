@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import dayjs from "dayjs";
 import * as apiService from "../../api/index";
-import { setTaskDialog } from "../../redux/actions/dialog.action";
+import { setAlertDialog, setTaskDialog } from "../../redux/actions/dialog.action";
 import CustomTaskDialog from "../../components/CustomTaskDialog";
 import CustomTaskType from "../../components/CustomTaskType";
 import CustomStatus from "../../components/CustomStatus";
@@ -11,6 +11,8 @@ import { getCustomTwoModeColor } from "../../utils/themeUtil";
 // import WeekTaskCalendar from "./WeekTaskCalendar";
 import { getProjectCover } from "../../utils/coverUtil";
 import CustomWeekTaskCalendar from "../../components/CustomWeekTaskCalendar";
+import { setCurrentProject } from "../../redux/actions/project.action";
+import { setCurrentUserMember } from "../../redux/actions/member.action";
 
 const UserWorkspaceTaskDashBoard = () => {
     const theme = useTheme();
@@ -23,6 +25,8 @@ const UserWorkspaceTaskDashBoard = () => {
     const [completedTasks, setCompletedTasks] = useState([]);
     const [uncompletedTasks, setUncompletedTasks] = useState([]);
     const [tabIndex, setTabIndex] = useState(0);
+    const tasks = useSelector((state) => state.task.currentTaskList);
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
 
     useEffect(() => {
         if (currentUser && workspace) {
@@ -31,7 +35,7 @@ const UserWorkspaceTaskDashBoard = () => {
             completedTaskFetch();
             uncompletedTaskFetch();
         }
-    }, [currentUser, workspace]);
+    }, [currentUser, workspace, tasks]);
 
     const todayTaskFetch = async () => {
         console.log(123)
@@ -96,10 +100,30 @@ const UserWorkspaceTaskDashBoard = () => {
         }
     };
 
-    const openTaskDialog = (task) => {
-        dispatch(setTaskDialog({ task, open: true }));
-    };
 
+    const openTaskDialog = async (task) => {
+        try {
+            const response = await apiService.memberAPI.getCurrentOneByProject(task?.project?.id)
+            if (response?.data) {
+                dispatch(setCurrentProject(task?.project))
+                dispatch(setCurrentUserMember(response?.data))
+                dispatch(setTaskDialog({ task, open: true }));
+            }
+        } catch (e) {
+            dispatch(setAlertDialog({
+                open: true,
+                props: {
+                    title: "Access Denied",
+                    content: `You do not have permission to modify this task.
+                    <br/><br/>
+                    Please contact the workspace administrator if you believe this is a mistake.`,
+                    actionUrl: null
+                },
+                type: "error",
+            }))
+        }
+
+    };
     const renderTasks = (tasks) => {
         return tasks.map((task, index) => (
             <Box

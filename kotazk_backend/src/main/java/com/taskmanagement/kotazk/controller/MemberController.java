@@ -39,9 +39,15 @@ public class MemberController {
         return memberService.create(memberRequest);
     }
 
+    @PutMapping("/update-role/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public MemberResponseDto updateRole(@RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+        return memberService.updateRole(memberRequest, id);
+    }
+
     @PutMapping("/update-status/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public MemberResponseDto updateStatus(@Valid @RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
+    public MemberResponseDto updateStatus(@RequestBody MemberRequestDto memberRequest, @PathVariable Long id) {
         return memberService.updateStatus(memberRequest, id);
     }
 
@@ -82,6 +88,15 @@ public class MemberController {
             @PathVariable Long projectId
     ) {
         return memberService.getListPageByProject(searchParam, projectId);
+    }
+
+    @PostMapping("/page/assignable/by-project/{projectId}")
+    @ResponseStatus(HttpStatus.OK)
+    public PageResponse<MemberResponseDto> getAssignablePageByProject(
+            @RequestBody SearchParamRequestDto searchParam,
+            @PathVariable Long projectId
+    ) {
+        return memberService.getAssignableListPageByProject(searchParam, projectId);
     }
 
     @PostMapping("/invite-list")

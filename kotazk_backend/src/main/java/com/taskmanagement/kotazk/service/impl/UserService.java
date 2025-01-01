@@ -18,6 +18,7 @@ import com.taskmanagement.kotazk.payload.CustomResponse;
 import com.taskmanagement.kotazk.payload.request.auth.UserActiveRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserLoginRequestDto;
 import com.taskmanagement.kotazk.payload.request.auth.UserSignupRequestDto;
+import com.taskmanagement.kotazk.payload.request.user.UpdateBasicInfoUserRequestDto;
 import com.taskmanagement.kotazk.payload.response.auth.UserLoginResponseDto;
 import com.taskmanagement.kotazk.payload.response.project.ProjectResponseDto;
 import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
@@ -81,6 +82,23 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserResponseDto uploadBasicInfo(UpdateBasicInfoUserRequestDto updateInfo) {
+        User currentUser = userRepository.findById(SecurityUtil.getCurrentUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("user", "id", SecurityUtil.getCurrentUser().getId()));
+        Long userId = currentUser.getId();
+        boolean isAdmin = currentUser.getRole().equals(Role.ADMIN);
+        Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
+
+        currentUser.setFirstName(updateInfo.getFirstName());
+        currentUser.setLastName(updateInfo.getLastName());
+        currentUser.setChangedNameAt(currentTime);
+
+        User savedUser = userRepository.save(currentUser);
+
+        return ModelMapperUtil.mapOne(savedUser, UserResponseDto.class);
+    }
+
+    @Override
     public CustomResponse signup(UserSignupRequestDto signupRequest) throws java.io.IOException, InterruptedException, MessagingException {
         Optional<User> user = userRepository.findByEmail(signupRequest.getEmail());
         Timestamp currentTime = timeUtil.getCurrentUTCTimestamp();
@@ -109,6 +127,11 @@ public class UserService implements IUserService {
         customResponse.setMessage("Create account successful! Check your email to active account.");
         customResponse.setSuccess(true);
         return customResponse;
+    }
+
+    @Override
+    public UserResponseDto changePassword() {
+        return null;
     }
 
     @Override

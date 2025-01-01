@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as TablerIcons from '@tabler/icons-react';
+import * as apiService from '../../api/index'
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -19,34 +20,32 @@ import { getProjectCover } from '../../utils/coverUtil';
 import CustomCoverUploader from '../../components/CustomCoverUploader';
 import CustomTextFieldWithValidation from '../../components/CustomTextFieldWithValidation';
 import WorkspaceCoverUploader from './WorkspaceCoverUploader';
+import { useDispatch } from 'react-redux';
+import { setCurrentWorkspace } from '../../redux/actions/workspace.action';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
+import { setDeleteDialog } from '../../redux/actions/dialog.action';
 
 
 export default function WorkspaceSetting() {
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const dispatch = useDispatch();
     const [open, setOpen] = React.useState(false);
     const [maxWidth, setMaxWidth] = React.useState("log");
     const [children, setChildren] = React.useState(<CustomManageStatus />);
     const [name, setName] = React.useState(workspace?.name);
     const [description, setDescription] = React.useState(workspace?.description);
-    const [visibility, setVisibility] = React.useState('PUBLIC');
-    const [nameError, setNameError] = React.useState(false);
+    const [nameError, setNameError] = React.useState(true);
     const [descriptionError, setDescriptionError] = React.useState(false);
-    const [visibilityError, setVisibilityError] = React.useState(false);
     const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
 
     const modifyPermission = currentMember?.role?.workSpacePermissions?.includes("WORKSPACE_SETTING");
 
     const theme = useTheme();
-    const MemberIcon = TablerIcons["IconUsers"];
-    const RoleIcon = TablerIcons["IconUserCircle"]
-    const StatusIcon = TablerIcons["IconPlaystationCircle"];
-    const LabelsIcon = TablerIcons["IconTagsFilled"];
-    const PriorityIcon = TablerIcons["IconFlag"];
-    const TaskTypeIcon = TablerIcons["IconBoxModel2"];
     const SettingIcon = TablerIcons["IconSettings"];
-    const AccessIcon = TablerIcons["IconAccessible"];
-    const FieldIcon = TablerIcons["IconInputSpark"];
+    const RemoveIcon = TablerIcons["IconTrash"];
     const ImageIcon = TablerIcons["IconPhoto"];
+    const RoleIcon = TablerIcons["IconUserCircle"];
+    const AccessIcon = TablerIcons["IconAccessible"];
 
     React.useEffect(() => {
         if (workspace) {
@@ -55,8 +54,40 @@ export default function WorkspaceSetting() {
         }
     }, [workspace])
 
-    const handleVisibilityChange = (event) => {
-        setVisibility(event.target.value);
+    const handleSaveWorkspaceBasicInfo = async () => {
+        const data = {
+            name: name != workspace?.name ? name : null,
+            description: description != workspace?.description ? description : null
+        }
+        try {
+            const response = await apiService.workspaceAPI.update(workspace?.id, data);
+            if (response?.data) {
+                dispatch(setCurrentWorkspace(response?.data));
+                setNameError(true);
+                dispatch(setSnackbar({
+                    content: "Workspace update successful",
+                    type: "success",
+                    open: true
+                }))
+            }
+        } catch (e) {
+            console.warn(e);
+        }
+
+    }
+
+    const handleOpenDeleteDialog = () => {
+        dispatch(setDeleteDialog({
+            title: `Delete workspace "${workspace?.name}"?`,
+            content:
+                `You're about to permanently delete this workspace.`,
+            open: true,
+            deleteType: "DELETE_WORKSPACE",
+            deleteProps: {
+                workspaceId: workspace?.id
+            }
+            // deleteAction: () => handleDelete(),
+        }));
     };
 
     return (
@@ -166,7 +197,7 @@ export default function WorkspaceSetting() {
                                         </Grid2>
                                     </Grid2>
                                     <Stack direction={'row'} width={'100%'} justifyContent={'flex-end'} mt={1}>
-                                        <Button variant='contained' size='small' disabled={!modifyPermission}>
+                                        <Button variant='contained' size='small' disabled={!modifyPermission || nameError || descriptionError} onClick={() => handleSaveWorkspaceBasicInfo()}>
                                             Save
                                         </Button>
                                     </Stack>
@@ -178,90 +209,58 @@ export default function WorkspaceSetting() {
                     </Grid2>
 
                 </Grid2>
-                {/* <Grid2 size={3} overflow={'auto'} height={'100%'}>
-                    <Card
-                        sx={{
-                            height: '100%',
-                            p: 2
-                        }}
-                    >
-                        <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
-                            <AccessIcon size={20} />
-                            <Typography variant='h6' fontWeight={500}>
-                                Access and members
-                            </Typography>
-                            <Box flexGrow={1}>
-                                <Divider />
-                            </Box>
-                        </Stack>
-
-                        <Stack spacing={2}>
-                            <Button
+                <Grid2 size={3}>
+                    <Grid2 container spacing={2}>
+                        <Grid2 size={12}>
+                            <Card
                                 sx={{
-                                    p: 2
+                                    p: 4
                                 }}
-                                color={getCustomTwoModeColor(theme, "customBlack", "customWhite")}
-                                fullWidth
-                                size='small'
-                                variant='outlined'
-                                startIcon={<MemberIcon size={18} />}
-                                onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
                             >
-                                Members Setting
-                            </Button>
-                            <Button
+                                <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2}>
+                                    <AccessIcon size={20} />
+                                    <Typography variant='h6' fontWeight={500}>
+                                        Access and members
+                                    </Typography>
+                                    <Box flexGrow={1}>
+                                        <Divider />
+                                    </Box>
+                                </Stack>
+                                <Button
+                                    sx={{
+                                        p: 2
+                                    }}
+                                    component={Link} to={`/workspace/${workspace?.id}/setting/role`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' startIcon={<RoleIcon size={18} />}>
+                                    Roles Setting
+                                </Button>
+                            </Card>
+                        </Grid2>
+                        <Grid2 size={12}>
+                            <Card
                                 sx={{
-                                    p: 2
+                                    p: 4
                                 }}
-                                component={Link} to={`/project/${project?.id}/role`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' startIcon={<RoleIcon size={18} />}>
-                                Roles Setting
-                            </Button>
-                        </Stack>
+                            >
+                                <Stack direction={'row'} spacing={2} alignItems={'center'}>
+                                    <RemoveIcon size={20} />
+                                    <Typography variant='h6' fontWeight={500}>
+                                        Delete Workspace
+                                    </Typography>
+                                    <Box flexGrow={1}>
+                                        <Divider />
+                                    </Box>
+                                </Stack>
+                                <Typography variant='body1' textAlign={'justify'} my={2}>
+                                    Permanently remove a workspace along with all its data and settings. Make sure to back up any important information before proceeding.
+                                </Typography>
+                                <Button variant='contained' color='error' fullWidth onClick={() => handleOpenDeleteDialog()} disabled={!modifyPermission}>
+                                    Delete Workspace
+                                </Button>
+                            </Card>
+                        </Grid2>
+                    </Grid2>
 
-                        <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2} mt={4}>
-                            <FieldIcon size={20} />
-                            <Typography variant='h6' fontWeight={500} mt={4}>
-                                Fields
-                            </Typography>
-                            <Box flexGrow={1}>
-                                <Divider />
-                            </Box>
-                        </Stack>
-                        <Box sx={{ width: '100%', height: '100%' }}>
-                            <Stack spacing={2}>
-                                <Button
-                                    sx={{
-                                        p: 2
-                                    }}
-                                    color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<CustomManageStatus />); }} startIcon={<StatusIcon size={18} />}>
-                                    Status
-                                </Button>
-                                <Button
-                                    sx={{
-                                        p: 2
-                                    }}
-                                    color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<CustomManageTaskType />); }} startIcon={<TaskTypeIcon size={18} />}>
-                                    Task type
-                                </Button>
-                                <Button
-                                    sx={{
-                                        p: 2
-                                    }}
-                                    color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<CustomManagePriority />); }} startIcon={<PriorityIcon size={18} />}>
-                                    Priority
-                                </Button>
-                                <Button
-                                    sx={{
-                                        p: 2
-                                    }}
-                                    color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<CustomManageLabel />); }} startIcon={<LabelsIcon size={18} />}>
-                                    Label
-                                </Button>
-                            </Stack>
-                            <CustomDialogForManage open={open} setOpen={setOpen} children={children} customMaxWidth={maxWidth} />
-                        </Box>
-                    </Card>
-                </Grid2> */}
+                </Grid2>
             </Grid2>
         </Stack>
     );

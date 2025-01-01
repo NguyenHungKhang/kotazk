@@ -4,6 +4,10 @@ const ORIGINAL_BASE_URL = `${process.env.REACT_APP_SECURE_PART_URL}/workspace`;
 
 export const create = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/`, data);
 
+export const update = async (workspaceId, data) => await axiosInstance.put(`${ORIGINAL_BASE_URL}/${workspaceId}`, data);
+
+export const remove = async (workspaceId) => await axiosInstance.delete(`${ORIGINAL_BASE_URL}/${workspaceId}`);
+
 export const getDetailById = async (workspaceId) => await axiosInstance.get(`${ORIGINAL_BASE_URL}/detail/${workspaceId}`);
 
 export const getPageSumary = async (data) => await axiosInstance.post(`${ORIGINAL_BASE_URL}/page/summary`, data);

@@ -323,7 +323,7 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                             fullWidth
                             slotProps={{
                                 input: {
-                                    readOnly: !manageStatusPermission
+                                    readOnly: !manageStatusPermission || status.systemRequired
                                 }
                             }}
                             onChange={(e) => {
@@ -333,9 +333,9 @@ const StatusListItem = ({ status, setItems, itemIndex, isChange, setIsChange }) 
                             }
                         />
                     </Stack>
-                    <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} setIsChange={setIsChange} disabled={!manageStatusPermission} />
+                    {/* <IsFromStartButton selected={isFromStart} setSelected={setIsFromStart} setIsChange={setIsChange} disabled={!manageStatusPermission} /> */}
                     {/* <IsFromAnyButton selected={isFromAny} setSelected={setIsFromAny} setIsChange={setIsChange} /> */}
-                    <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} disabled={!manageStatusPermission} />
+                    {/* <IsCompletedButton selected={isCompletedStatus} setSelected={setIsCompletedStatus} setIsChange={setIsChange} disabled={!manageStatusPermission} /> */}
                 </Stack>
             </Box>
             {status.systemRequired == false ?

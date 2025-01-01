@@ -18,6 +18,7 @@ import { getAvatar } from "../../utils/avatarUtil";
 import CustomNavbarAvatar from "../CustomNavbarAvatar";
 import CustomAddWorkspaceDialog from "../CustomAddWorkspaceDialog";
 import CustomInvitation from "../CustomInvitation";
+import CustomNotificationList from "../CustomNotificationList";
 
 const CustomMainPageHeader = () => {
     const theme = useTheme();
@@ -57,21 +58,7 @@ const CustomMainPageHeader = () => {
                     <CustomInvitation />
                     <CustomAddWorkspaceDialog />
                     <CustomDarkModeSwitch />
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <NotificationsIcon fontSize="small" />
-                    </IconButton>
+                    <CustomNotificationList />
                    <CustomNavbarAvatar />
                 </Stack>
             </Stack>

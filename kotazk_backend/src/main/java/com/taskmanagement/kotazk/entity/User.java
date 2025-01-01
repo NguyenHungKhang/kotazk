@@ -70,6 +70,9 @@ public class User implements UserDetails {
     @Column(name = "reset_password_token")
     private String resetPasswordToken;
 
+    @Column(name = "changed_name_at")
+    private Timestamp changedNameAt;
+
     @Column(name = "reset_password_deadline")
     private Timestamp resetPasswordDeadline;
 

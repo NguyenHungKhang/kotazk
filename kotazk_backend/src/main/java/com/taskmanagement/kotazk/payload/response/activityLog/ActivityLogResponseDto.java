@@ -1,6 +1,8 @@
 package com.taskmanagement.kotazk.payload.response.activityLog;
 
 import com.taskmanagement.kotazk.entity.enums.ActivityLogType;
+import com.taskmanagement.kotazk.payload.response.user.UserResponseDto;
+import com.taskmanagement.kotazk.payload.response.user.UserSummaryResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +21,7 @@ public class ActivityLogResponseDto {
     Long taskId;
     Long sectionId;
     Long memberId;
-    Long userId;
+    UserSummaryResponseDto user;
     Boolean systemInitial;
     Boolean systemRequired;
     String userText;

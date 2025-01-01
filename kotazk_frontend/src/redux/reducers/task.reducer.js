@@ -1,7 +1,7 @@
 import { removeGroupedItemById, removeItemById, updateAndAddArray, updateOrAddGroupedTasks } from "../../utils/arrayUtil";
 
 const initialState = {
-    currentTaskList: null,
+    currentTaskList: [],
     currentGroupedTaskList: null,
     currentGroupedEntity: null,
     isGroupedList: false, 

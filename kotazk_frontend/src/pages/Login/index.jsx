@@ -165,25 +165,19 @@ const Login = () => {
                             LOGIN
                         </Button>
 
-                        {/* Social Media Buttons */}
+                        {/* Social Media Buttons
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
                             Or Sign Up Using
                         </Typography>
                         <Box display="flex" justifyContent="center" mt={2}>
-                            {/* <IconButton sx={{ mx: 1, backgroundColor: '#3b5998', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
-                                <FacebookIcon />
-                            </IconButton>
-                            <IconButton sx={{ mx: 1, backgroundColor: '#1DA1F2', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
-                                <TwitterIcon />
-                            </IconButton> */}
                             <IconButton sx={{ mx: 1, backgroundColor: '#DB4437', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
                                 <GoogleIcon />
                             </IconButton>
-                        </Box>
+                        </Box> */}
 
                         {/* Sign Up Link */}
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
-                            Or Sign Up Using{' '}
+                            {/* Or Sign Up Using{' '} */}
                             <Link
                                 component="button"
                                 variant="body2"

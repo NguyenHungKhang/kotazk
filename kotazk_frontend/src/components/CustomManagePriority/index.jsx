@@ -297,7 +297,7 @@ const PriorityListItem = ({ priority, setItems, itemIndex, isChange, setIsChange
                             fullWidth
                             slotProps={{
                                 input: {
-                                    readOnly: !managePriorityPermission,
+                                    readOnly: !managePriorityPermission || priority.systemRequired,
                                 }
                             }}
                             onChan

@@ -40,12 +40,6 @@ function KanbanDropNDrag() {
   const sortAscDirection = useSelector((state) => state.sort.currentSortDirection);
   const taskSearchText = useSelector((state) => state.searchText.taskSearchText)
   const dispatch = useDispatch();
-  const currentMember = useSelector((state) => state.member.currentUserMember);
-  const createTaskPermission = currentMember?.role?.projectPermissions?.includes("CREATE_TASKS");
-  const editTaskPermission = currentMember?.role?.projectPermissions?.includes("EDIT_TASKS");
-  const deleteTaskPermission = currentMember?.role?.projectPermissions?.includes("DELETE_TASKS");
-  const scheduleTaskPermission = currentMember?.role?.projectPermissions?.includes("SCHEDULE_TASKS");
-  const assignTaskPermission = currentMember?.role?.projectPermissions?.includes("ASSIGN_TASKS");
 
   useEffect(() => {
     if (project) {

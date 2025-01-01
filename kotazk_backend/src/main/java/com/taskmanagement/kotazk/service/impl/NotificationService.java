@@ -53,8 +53,8 @@ public class NotificationService implements INotificationService {
                         searchParamRequestDto.getSortBy() != null ? searchParamRequestDto.getSortBy() : "createdAt"));
 
         Specification<Notification> projectSpecification = (Root<Notification> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) -> {
-            Join<Notification, User> projectJoin = root.join("user");
-            return criteriaBuilder.equal(projectJoin.get("id"), currentUser.getId());
+            Join<Notification, User> userJoin = root.join("user");
+            return criteriaBuilder.equal(userJoin.get("id"), currentUser.getId());
         };
 
         Specification<Notification> filterSpecification = projectSpecification;

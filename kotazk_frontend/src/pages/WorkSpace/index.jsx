@@ -5,7 +5,7 @@ import CustomBreadcrumb from "../../components/CustomBreadcumbs";
 import { blueGrey, deepPurple, indigo } from "@mui/material/colors";
 import { getSecondBackgroundColor } from "../../utils/themeUtil";
 import ListProject from "./ListWorkspace";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import * as apiService from '../../api/index';
 import { useDispatch } from "react-redux";
 import { setCurrentWorkspace } from "../../redux/actions/workspace.action";
@@ -13,6 +13,8 @@ import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import CustomWorkspaceHeader from "../../components/CustomWorkspaceHeader";
 import { setCurrentWorkspaceMember } from "../../redux/actions/member.action";
+import { setAlertDialog } from "../../redux/actions/dialog.action";
+import { setCurrentProject } from "../../redux/actions/project.action";
 
 const Workspace = ({ children }) => {
     const theme = useTheme();
@@ -21,6 +23,7 @@ const Workspace = ({ children }) => {
     const [open, setOpen] = useState(true);
     // const [workspace, setWorkspace] = useState(null);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
+    const navigate = useNavigate();
 
 
     const breadcrumbData = [
@@ -34,6 +37,18 @@ const Workspace = ({ children }) => {
             const res = await apiService.memberAPI.getCurrentOneByWorkspace(workspaceId);
             if (res?.data) {
                 dispatch(setCurrentWorkspaceMember(res?.data))
+                if (!res?.data?.role?.workSpacePermissions?.includes("BROWSE_WORKSPACE"))
+                    dispatch(setAlertDialog({
+                        open: true,
+                        props: {
+                            title: "Access Denied",
+                            content: `You do not have permission to access this workspace.
+                        <br/><br/>
+                        Please contact the workspace administrator if you believe this is a mistake.`,
+                            actionUrl: `/workspace`
+                        },
+                        type: "error",
+                    }))
             }
         } catch (err) {
             console.error('Error fetching current member details:', err);
@@ -42,6 +57,8 @@ const Workspace = ({ children }) => {
 
     useEffect(() => {
         if (workspaceId != null) {
+            dispatch(setCurrentProject(null))
+            dispatch(setCurrentWorkspace(null))
             initalFetch();
             getCurrentUser();
         }
@@ -50,7 +67,19 @@ const Workspace = ({ children }) => {
     const initalFetch = async () => {
         await apiService.workspaceAPI.getDetailById(workspaceId)
             .then(res => { console.log(res); dispatch(setCurrentWorkspace(res.data)); })
-            .catch(err => console.log(err))
+            .catch(err => {
+                dispatch(setAlertDialog({
+                    open: true,
+                    props: {
+                        title: "Access Denied",
+                        content: `You do not have permission to access this workspace.
+                        <br/><br/>
+                        Please contact the workspace administrator if you believe this is a mistake.`,
+                        actionUrl: `/workspace`
+                    },
+                    type: "error",
+                }))
+            })
     }
 
     return (

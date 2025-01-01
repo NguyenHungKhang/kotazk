@@ -19,6 +19,8 @@ import CustomNewTaskPriorityPicker from '../CustomNewTaskPriorityPicker';
 import CustomNewTaskStatusPicker from '../CustomNewTaskStatusPicker';
 import CustomNewTaskTaskTypePicker from '../CustomNewTaskTaskTypePicker';
 import { NewTaskDescriptionComponent } from './NewTaskDescriptionComponent';
+import CustomTextFieldWithValidation from '../CustomTextFieldWithValidation';
+import { regexDefault, taskNameRegex } from '../../utils/regexUtil';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="down" ref={ref} {...props} />;
@@ -40,6 +42,7 @@ export default function CustomAddTaskDialog() {
     const [startAt, setStartAt] = useState(null);
     const [endAt, setEndAt] = useState(null);
     const [assignee, setAssignee] = useState(null);
+    const [nameError, setNameError] = useState(true);
 
     const handleClose = () => {
         dispatch(setAddTaskDialog({ open: false }))
@@ -70,14 +73,33 @@ export default function CustomAddTaskDialog() {
                     dispatch(addAndUpdateTaskList(newTaskResponse?.data));
 
                 dispatch(setAddTaskDialog({ open: false, props: null }));
+                setName(null);
+                setDesc(null);
+                setStatus(null);
+                setPriority(null);
+                setTaskType(null);
+                setStartAt(null);
+                setEndAt(null);
+                setAssignee(null);
+                setNameError(true);
+
                 dispatch(setSnackbar({
                     content: "Task created successful!",
+                    type: 'success',
                     open: true
                 }))
             }
         } catch (error) {
             console.error('Failed to add task:', error);
         }
+    }
+
+    const handleAvaiableSave = () => {
+        if (nameError) return false;
+        if (!status) return false;
+        if (!taskType) return false;
+
+        return true;
     }
 
     return (
@@ -120,23 +142,18 @@ export default function CustomAddTaskDialog() {
                     alignItems={'center'}
                     borderRadius={2}
                 >
-                    <CustomBasicTextField
-                        required
-                        // defaultValue={task?.name}
-                        size="small"
+                    <CustomTextFieldWithValidation
                         id="name"
                         name="name"
-                        fullWidth
-                        autoFocus
-                        placeholder='Name of task...'
-                        InputProps={{
-                            sx: {
-                                fontSize: 14,
-                                fontWeight: 650,
-                            }
-                        }}
+                        size="small"
+                        placeholder='Enter task name'
+                        value={name}
                         onChange={(e) => setName(e.target.value)}
-                    // onBlur={() => saveName()}
+                        setFormError={setNameError}
+                        maxLength={80}
+                        required
+                        defaultHelperText="Enter the task name."
+
                     />
                 </Box>
                 <Box mb={2}>
@@ -155,7 +172,7 @@ export default function CustomAddTaskDialog() {
                     bgcolor: theme.palette.mode == "light" ? 'white' : '#1e1e1e',
                 }}
             >
-                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small'>Add</Button>
+                <Button onClick={handleAddNewTask} color="success" variant='contained' size='small' disabled={!handleAvaiableSave()}>Add</Button>
                 <Button onClick={handleClose} color="error" variant='contained' size='small'>Cancle</Button>
             </DialogActions>
         </Dialog>

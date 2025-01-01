@@ -1,10 +1,7 @@
 package com.taskmanagement.kotazk.service.impl;
 
 import com.taskmanagement.kotazk.entity.*;
-import com.taskmanagement.kotazk.entity.enums.MemberStatus;
-import com.taskmanagement.kotazk.entity.enums.ProjectPermission;
-import com.taskmanagement.kotazk.entity.enums.Role;
-import com.taskmanagement.kotazk.entity.enums.WorkSpacePermission;
+import com.taskmanagement.kotazk.entity.enums.*;
 import com.taskmanagement.kotazk.exception.CustomException;
 import com.taskmanagement.kotazk.exception.ResourceNotFoundException;
 import com.taskmanagement.kotazk.payload.request.common.SearchParamRequestDto;
@@ -12,9 +9,7 @@ import com.taskmanagement.kotazk.payload.request.label.LabelRequestDto;
 import com.taskmanagement.kotazk.payload.response.common.PageResponse;
 import com.taskmanagement.kotazk.payload.response.label.LabelResponseDto;
 import com.taskmanagement.kotazk.payload.response.priority.PriorityResponseDto;
-import com.taskmanagement.kotazk.repository.ILabelRepository;
-import com.taskmanagement.kotazk.repository.IPriorityRepository;
-import com.taskmanagement.kotazk.repository.IProjectRepository;
+import com.taskmanagement.kotazk.repository.*;
 import com.taskmanagement.kotazk.service.ICustomizationService;
 import com.taskmanagement.kotazk.service.ILabelService;
 import com.taskmanagement.kotazk.service.IMemberService;
@@ -54,6 +49,10 @@ public class LabelService implements ILabelService {
     private final BasicSpecificationUtil<Label> specificationUtil = new BasicSpecificationUtil<>();
     @Autowired
     private TimeUtil timeUtil;
+    @Autowired
+    private IActivityLogRepository activityLogRepository;
+    @Autowired
+    private ITaskRepository taskRepository;
     @Override
     public LabelResponseDto create(LabelRequestDto labelRequestDto) {
         User currentUser = SecurityUtil.getCurrentUser();
@@ -136,11 +135,14 @@ public class LabelService implements ILabelService {
 
         AtomicInteger positionIndex = new AtomicInteger();
 
+        Set<Long> incomingLabelIds = new HashSet<>();
+
         List<Label> labels = labelRequestDtos.stream()
                 .map(l -> {
                     Label label = new Label();
                     Optional.ofNullable(l.getId()).ifPresent(id -> {
                         label.setId(id);
+                        incomingLabelIds.add(id);
                     });
                     if (l.getProjectId() != projectId)
                         throw new CustomException("Invalid input!");
@@ -154,9 +156,30 @@ public class LabelService implements ILabelService {
                     return label;
                 }).toList();
 
+        List<Label> deletedLabels = project.getLabels().stream()
+                .filter(lb -> {
+                    if (!incomingLabelIds.contains(lb.getId()) && lb.getSystemRequired()) {
+                        throw new CustomException("Cannot delete system label");
+                    }
+                    return !incomingLabelIds.contains(lb.getId());
+                })
+                .collect(Collectors.toList());
+
+        deletedLabels.forEach(label -> {
+            List<Task> tasks = label.getTasks().stream().toList();
+            if (tasks != null) {
+                tasks.forEach(task -> task.setLabels(task.getLabels().stream().filter(l -> l.getId() == label.getId()).collect(Collectors.toSet())));
+            }
+            taskRepository.saveAll(tasks);
+        });
+
         project.getLabels().clear();
         project.getLabels().addAll(labels);
         List<Label> savedLabels = projectRepository.save(project).getLabels();
+
+        ActivityLog activityLog = activityLogLabelTemplate(project, currentUser, String.format("update project's labels"));
+        activityLogRepository.save(activityLog);
+
         return ModelMapperUtil.mapList(savedLabels, LabelResponseDto.class);
     }
 
@@ -299,5 +322,18 @@ public class LabelService implements ILabelService {
         if (currentProjectMember != null) return currentProjectMember;
         else if (currentWorkspaceMember != null) return currentWorkspaceMember;
         else throw new CustomException("This user can not do this action");
+    }
+
+    private ActivityLog activityLogLabelTemplate(Project project, User user, String content) {
+        ActivityLog activityLogTemplate = new ActivityLog();
+        activityLogTemplate.setProject(project);
+        activityLogTemplate.setUser(user);
+        activityLogTemplate.setUserText(user.getFirstName() + " " + user.getLastName() + " ("+ user.getEmail() +")");
+        activityLogTemplate.setSystemInitial(false);
+        activityLogTemplate.setSystemRequired(false);
+        activityLogTemplate.setType(ActivityLogType.PROJECT_HISTORY);
+        activityLogTemplate.setContent(content);
+
+        return activityLogTemplate;
     }
 }

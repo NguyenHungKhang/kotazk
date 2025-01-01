@@ -14,6 +14,7 @@ import * as userAPI from './user.api.js'
 import * as projectReport from './projectReport.api.js'
 import * as taskComment from './taskComment.api.js'
 import * as activityLogAPI from './activityLog.api.js'
+import * as notificationAPI from './notification.api.js'
 export {
     authAPI,
     projectAPI,
@@ -30,5 +31,6 @@ export {
     userAPI,
     projectReport,
     taskComment,
-    activityLogAPI
+    activityLogAPI,
+    notificationAPI
 };

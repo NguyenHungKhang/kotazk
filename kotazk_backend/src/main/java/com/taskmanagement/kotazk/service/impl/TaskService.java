@@ -585,6 +585,9 @@ public class TaskService implements ITaskService {
     }
 
     private List<Timestamp> checkStartAndEndTime(Member currentMember, Timestamp startAt, Timestamp endAt) {
+        if(startAt == null && endAt == null)
+            return Arrays.asList(null, null);;
+
         if (!currentMember.getRole().getProjectPermissions().contains(ProjectPermission.SCHEDULE_TASKS))
             throw new CustomException("User does not have schedule tasks permission!");
 

@@ -36,7 +36,7 @@ import static jakarta.servlet.DispatcherType.FORWARD;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINT = {"/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/api/v1/public/**"};
+    private final String[] PUBLIC_ENDPOINT = {"/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**", "/swagger-resources/**", "/api/v1/public/**", "/ws/info/**"};
     private final String[] SECURE_ENDPOINT = {"/api/v1/secure/**"};
     @Autowired
     private CustomUserDetailsService myUserDetailsService;
@@ -80,6 +80,7 @@ public class SecurityConfig {
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/ws/**", configuration);  // Ensure WebSocket endpoints are handled
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }

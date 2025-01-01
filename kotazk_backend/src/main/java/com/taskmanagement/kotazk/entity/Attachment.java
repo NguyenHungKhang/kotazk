@@ -24,6 +24,10 @@ public class Attachment {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "member_id", nullable = true)
+    private Member member;
+
+    @ManyToOne
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 

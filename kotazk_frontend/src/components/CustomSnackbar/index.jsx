@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 import { setSnackbar } from '../../redux/actions/snackbar.action';
-import { Slide } from '@mui/material';
+import { Alert, Slide } from '@mui/material';
 
 export default function CustomSnackbar() {
     const dispatch = useDispatch();
@@ -16,7 +16,7 @@ export default function CustomSnackbar() {
         if (reason === 'clickaway') {
             return;
         }
-        dispatch(setSnackbar({ open: false }));
+        dispatch(setSnackbar({ open: false, type: null }));
     };
 
     const action = (
@@ -37,8 +37,16 @@ export default function CustomSnackbar() {
             autoHideDuration={6000}
             TransitionComponent={(props) => <Slide {...props} direction="up" />}
             onClose={handleClose}
-            message={content}
             action={action}
-        />
+        >
+
+            <Alert
+                onClose={handleClose}
+                severity={type || "info"}
+                sx={{ width: '100%' }}
+            >
+                {content}
+            </Alert>
+        </Snackbar>
     );
 }

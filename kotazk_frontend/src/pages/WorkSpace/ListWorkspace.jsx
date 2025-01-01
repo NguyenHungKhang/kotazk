@@ -23,6 +23,9 @@ const ListProject = () => {
     const [searchText, setSearchText] = useState("");
     const SearchIcon = TablerIcons["IconSearch"];
     const ExpandIcon = TablerIcons["IconCaretDownFilled"];
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
+
+    const createProjectPermission = currentMember?.role?.workSpacePermissions?.includes("CREATE_PROJECT");
 
     const dispatch = useDispatch();
 
@@ -88,9 +91,12 @@ const ListProject = () => {
             >
                 <Stack direction='row' spacing={2} alignItems='center' mb={2}>
                     <Stack direction='row' spacing={2} alignItems='center' flexGrow={1}>
-                        <Box>
-                            <CustomSaveProjectDialog />
-                        </Box>
+                        {createProjectPermission && (
+                            <Box>
+                                <CustomSaveProjectDialog />
+                            </Box>
+                        )}
+
                         <Box flexGrow={1}>
                             <TextField
                                 size='small'

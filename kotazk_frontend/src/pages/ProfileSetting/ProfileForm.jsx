@@ -15,21 +15,29 @@ import * as apiService from '../../api/index';
 import * as TablerIcons from '@tabler/icons-react';
 import { LoadingButton } from '@mui/lab';
 import CustomTextFieldWithValidation from '../../components/CustomTextFieldWithValidation';
+import { userNameRegex } from '../../utils/regexUtil';
+import { useDispatch } from 'react-redux';
+import { setCurrentUser } from '../../redux/actions/user.action';
+import { setSnackbar } from '../../redux/actions/snackbar.action';
+import dayjs from 'dayjs';
 
 const ProfileForm = () => {
     const currentUser = useSelector((state) => state.user.currentUser);
     const SaveIcon = TablerIcons["IconDeviceFloppy"];
     const [changeAvatar, setChangeImage] = useState(false);
     const [isUploadAvatar, setIsUploadAvatar] = useState(false);
+    const dispatch = useDispatch();
 
     // Separate states for profile fields
-    const [firstNameError, setFirstNameError] = useState(false);
-    const [lastNameError, setLastNameError] = useState(false);
+    const [firstNameError, setFirstNameError] = useState(true);
+    const [lastNameError, setLastNameError] = useState(true);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [bio, setBio] = useState('');
     const [email, setEmail] = useState('');
     const [avatar, setAvatar] = useState('');
+    const [changedNameAt, setChangedNameAt] = useState(null);
+    const nameChangeable = changedNameAt == null ? true : dayjs().diff(dayjs(changedNameAt), 'day') > 69;
 
     const [previewImage, setPreviewImage] = useState(null); // For image preview
     const [loading, setLoading] = useState(false); // For loading state on button
@@ -42,6 +50,7 @@ const ProfileForm = () => {
             setEmail(currentUser.email || '');
             setAvatar(currentUser.avatar || '');
             setPreviewImage(currentUser.avatar || null);
+            setChangedNameAt(currentUser.changedNameAt || null)
         }
     }, [currentUser]);
 
@@ -77,16 +86,24 @@ const ProfileForm = () => {
         }
     };
 
-    const handleSaveProfile = () => {
+    const handleSaveProfile = async () => {
         const updatedProfile = {
             firstName,
             lastName,
-            bio,
-            email, // Email is read-only
-            avatar,
         };
-        console.log('Profile Saved:', updatedProfile);
-        // Implement save logic here (e.g., API call to update the profile)
+        try {
+            const response = await apiService.userAPI.update(updatedProfile);
+            if (response?.data) {
+                dispatch(setSnackbar({
+                    open: true,
+                    content: 'Update User Succesful!',
+                    type: 'success'
+                }))
+                dispatch(setCurrentUser(response?.data))
+            }
+        } catch (e) {
+            console.log(123)
+        }
     };
 
     return (
@@ -147,7 +164,7 @@ const ProfileForm = () => {
                     <CustomTextFieldWithValidation
                         id="firstname"
                         name="First Name"
-                        label={"First Name*"}
+                        label={"First Name"}
                         placeholder='Enter first name'
                         fullWidth
                         value={firstName}
@@ -155,9 +172,8 @@ const ProfileForm = () => {
                         setFormError={setFirstNameError}
                         maxLength={50}
                         required
-                        validationRegex={/^[A-Za-z0-9À-ÿ ]*$/}
-                    //  regexErrorText="Only letters, numbers, and spaces are allowed."
-                    //  defaultHelperText="Enter the project name. Only letters, numbers, and spaces are allowed."
+                        validationRegex={userNameRegex}
+                        disabled={!nameChangeable}
                     />
                 </Grid>
 
@@ -166,21 +182,30 @@ const ProfileForm = () => {
                     <CustomTextFieldWithValidation
                         id="lastname"
                         name="Last Name"
-                        label={"Last Name*"}
+                        label={"Last Name"}
                         placeholder='Enter last name'
                         fullWidth
-                        value={firstName}
+                        value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         setFormError={setLastNameError}
                         maxLength={50}
                         required
-                        validationRegex={/^[A-Za-z0-9À-ÿ ]*$/}
+                        validationRegex={userNameRegex}
+                        disabled={!nameChangeable}
                     />
+
                 </Grid>
+                {!nameChangeable && (
+                    <Grid item xs={12}>
+                        <Typography color='textSecondary'>
+                            {`Can not change name before 60 days of last change. Last change: ${dayjs(changedNameAt).format("HH:mm MM/DD/YYYY")}`}
+                        </Typography>
+                    </Grid>
+                )}
 
                 {/* Bio */}
                 <Grid item xs={12}>
-                <CustomTextFieldWithValidation
+                    <CustomTextFieldWithValidation
                         id="bio"
                         name="Bio"
                         label={"Bio"}
@@ -213,7 +238,8 @@ const ProfileForm = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                onClick={handleSaveProfile}
+                onClick={() => handleSaveProfile()}
+                disabled={firstNameError || lastNameError || !nameChangeable}
             >
                 Save Profile
             </Button>

@@ -18,6 +18,9 @@ const ProjectCard = ({ project }) => {
     const projectList = useSelector((state) => state.project.currentProjectList);
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const currentMember = useSelector((state) => state.member.currentWorkspaceMember);
+
+    const repositionPermission = currentMember?.role?.workSpacePermissions?.includes("RE_POSITION_PROJECT");
 
     const handlePin = async (event) => {
         const data = {
@@ -95,16 +98,20 @@ const ProjectCard = ({ project }) => {
                             bgcolor: theme.palette.background.paper
                         }}
                     >
+                        {repositionPermission && (
+                            <>
+                                {project.isPinned ?
+                                    <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
+                                        <PinnedIcon size={18} />
+                                    </IconButton>
+                                    :
+                                    <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
+                                        <PinIcon size={18} />
+                                    </IconButton>
+                                }
+                            </>
+                        )}
 
-                        {project.isPinned ?
-                            <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
-                                <PinnedIcon size={18} />
-                            </IconButton>
-                            :
-                            <IconButton size='small' onClick={(e) => { e.stopPropagation(); handlePin(e); }}>
-                                <PinIcon size={18} />
-                            </IconButton>
-                        }
                     </Box>
                 </Box>
 

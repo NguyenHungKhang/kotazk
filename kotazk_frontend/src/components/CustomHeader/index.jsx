@@ -15,6 +15,7 @@ import * as apiService from "../../api/index"
 import { getAvatar } from "../../utils/avatarUtil";
 import CustomDialogForManage from "../CustomDialogForManage";
 import ProjectMember from "../../pages/ProjectMember";
+import CustomNotificationList from "../CustomNotificationList";
 
 const CustomHeader = () => {
     const theme = useTheme();
@@ -119,11 +120,11 @@ const CustomHeader = () => {
                             size='small'
                             variant="outlined"
                             color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                            startIcon={<ShareIcon size={16} />} 
+                            startIcon={<ShareIcon size={16} />}
                             sx={{
                                 textTransform: 'none'
                             }}
-                            onClick={() => {setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
+                            onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
                         >
                             Share
                         </Button>
@@ -147,37 +148,7 @@ const CustomHeader = () => {
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">
                     <CustomDarkModeSwitch />
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <NotificationsIcon fontSize="small" />
-                    </IconButton>
-
-                    <IconButton
-                        size="small"
-                        sx={{
-                            bgcolor: theme.palette.primary.main, // Màu nền ban đầu
-                            color: theme.palette.primary.contrastText, // Màu text
-                            '&:hover': {
-                                bgcolor: theme.palette.primary.light, // Màu khi hover
-                            },
-                            '&:active': {
-                                bgcolor: theme.palette.primary.dark, // Màu khi active
-                            },
-                        }}
-                    >
-                        <ChatIcon fontSize="small" />
-                    </IconButton>
+                    <CustomNotificationList />
                     <Avatar
                         sx={{
                             width: 30,

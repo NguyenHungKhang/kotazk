@@ -248,6 +248,27 @@ export default function ProjectSetting() {
                                 Roles Setting
                             </Button>
                         </Stack>
+                        
+
+                        <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2} mt={4}>
+                            <AccessIcon size={20} />
+                            <Typography variant='h6' fontWeight={500}>
+                                Activity Log
+                            </Typography>
+                            <Box flexGrow={1}>
+                                <Divider />
+                            </Box>
+                        </Stack>
+
+                        <Stack spacing={2}>
+                            <Button
+                                sx={{
+                                    p: 2
+                                }}
+                                component={Link} to={`/project/${project?.id}/activity-log`} color={getCustomTwoModeColor(theme, "customBlack", "customWhite")} fullWidth size='small' variant='outlined' startIcon={<RoleIcon size={18} />}>
+                                      Activity Log
+                            </Button>
+                        </Stack>
 
                         <Stack direction={'row'} spacing={2} alignItems={'center'} mb={2} mt={4}>
                             <FieldIcon size={20} />
