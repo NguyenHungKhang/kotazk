@@ -9,7 +9,7 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import CustomDarkModeSwitch from "../CustomDarkModeSwitch";
 import CustomColorIconPicker from "../CustomProjectColorIconPicker";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import * as apiService from "../../api/index"
 import { getAvatar } from "../../utils/avatarUtil";
@@ -18,8 +18,13 @@ import ProjectMember from "../../pages/ProjectMember";
 import CustomNotificationList from "../CustomNotificationList";
 
 const CustomHeader = () => {
+    const location = useLocation();
+    const currentPath = location.pathname;
     const theme = useTheme();
-    const AddIcon = allIcons["IconPlus"];
+    const [name, setName] = useState(null);
+    const [shareButtonDisplay, setShareButtonDisplay] = useState(false);
+    const [settingButtonDisplay, setSettingButtonDisplay] = useState(false);
+    const [groupAvatarDisplay, setGroupAvatarDisplay] = useState(false);
     const ShareIcon = allIcons["IconShare"];
     const SettingIcon = allIcons["IconSettings"];
     const project = useSelector((state) => state.project.currentProject);
@@ -30,9 +35,29 @@ const CustomHeader = () => {
     const [children, setChildren] = useState(<ProjectMember />);
 
     useEffect(() => {
-        if (project)
+        if (currentPath.includes("workspace")) {
+            setName("Welcome!");
+            setShareButtonDisplay(false);
+            setSettingButtonDisplay(false);
+            setGroupAvatarDisplay(false);
+        } else if (currentPath.startsWith("/workspace/")) {
+            setName("Welcome!");
+            setShareButtonDisplay(true);
+            setSettingButtonDisplay(false);
+            setGroupAvatarDisplay(true);
+        } else if (project && currentPath.startsWith("/project/")) {
+            setShareButtonDisplay(true);
+            setSettingButtonDisplay(true);
+            setGroupAvatarDisplay(true);
+            setName(project?.name);
             membersFetch();
-    }, [project]);
+        } else {
+            setName("Welcome!");
+            setShareButtonDisplay(false);
+            setSettingButtonDisplay(false);
+            setGroupAvatarDisplay(false);
+        }
+    }, [currentPath, project]);
 
     const membersFetch = async () => {
         const memberFilter = {
@@ -70,80 +95,73 @@ const CustomHeader = () => {
                             fontWeight={650}
                         >
 
-                            {project ? project.name : "Project name"}
+                            {name}
                         </Typography>
                     </Stack>
-
-                    <AvatarGroup
-                        max={5}
-                        spacing={6}
-                        sx={{
-                            '& .MuiAvatar-root': {
-                                width: 30,
-                                height: 30,
-                                fontSize: 14
-                            },
-                        }}
-                    >
-                        {members?.map((member) => (
-                            <Avatar
-                                sx={{
+                    {groupAvatarDisplay && (
+                        <AvatarGroup
+                            max={5}
+                            spacing={6}
+                            sx={{
+                                '& .MuiAvatar-root': {
                                     width: 30,
                                     height: 30,
-                                }}
-                                alt={member?.user?.lastName}
-                                src={getAvatar(member?.user?.id, member?.user?.avatar)}
-                            >
-                                {member?.user?.lastName.substring(0, 1)}
-                            </Avatar>
-                        ))}
-                    </AvatarGroup>
-                    {/* <Button
-                        component={Link}
-                        to={`/project/${project?.id}/member`}
-                        sx={{
-                            textTransform: 'none',
-                            borderRadius: 5
-                        }}
-                        variant="contained"
-                        size="small"
-                        startIcon={
-                            <AddIcon size={16} />
-                        }
-                    >
-                        Add member
-                    </Button> */}
+                                    fontSize: 14
+                                },
+                            }}
+                        >
+                            {members?.map((member) => (
+                                <Avatar
+                                    sx={{
+                                        width: 30,
+                                        height: 30,
+                                    }}
+                                    alt={member?.user?.lastName}
+                                    src={getAvatar(member?.user?.id, member?.user?.avatar)}
+                                >
+                                    {member?.user?.lastName.substring(0, 1)}
+                                </Avatar>
+                            ))}
+                        </AvatarGroup>
+                    )}
+
                 </Stack>
+
                 <Stack direction='row' spacing={2}>
-                    <Box>
-                        <Button
-                            size='small'
-                            variant="outlined"
-                            color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                            startIcon={<ShareIcon size={16} />}
-                            sx={{
-                                textTransform: 'none'
-                            }}
-                            onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
-                        >
-                            Share
-                        </Button>
-                    </Box>
-                    <Box>
-                        <Button
-                            component={Link}
-                            to={`/project/${project?.id}/setting`}
-                            size='small'
-                            variant='contained'
-                            color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
-                            startIcon={<SettingIcon size={16} />}
-                            sx={{
-                                textTransform: 'none'
-                            }}
-                        >
-                            Setting
-                        </Button>
-                    </Box>
+                    {shareButtonDisplay && (
+                        <Box>
+                            <Button
+                                size='small'
+                                variant="outlined"
+                                color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
+                                startIcon={<ShareIcon size={16} />}
+                                sx={{
+                                    textTransform: 'none'
+                                }}
+                                onClick={() => { setMaxWidth("md"); setOpen(true); setChildren(<ProjectMember />); }}
+                            >
+                                Share
+                            </Button>
+                        </Box>
+                    )}
+                    {settingButtonDisplay && (
+                        <Box>
+                            <Button
+                                component={Link}
+                                to={`/project/${project?.id}/setting`}
+                                size='small'
+                                variant='contained'
+                                color={theme.palette.mode === 'light' ? "customBlack" : "customWhite"}
+                                startIcon={<SettingIcon size={16} />}
+                                sx={{
+                                    textTransform: 'none'
+                                }}
+                            >
+                                Setting
+                            </Button>
+                        </Box>
+                    )}
+
                 </Stack>
                 <Divider orientation="vertical" variant="middle" flexItem />
                 <Stack direction="row" spacing={2} alignItems="center">

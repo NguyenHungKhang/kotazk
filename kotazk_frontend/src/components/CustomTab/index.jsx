@@ -10,23 +10,39 @@ import * as TablerIcons from '@tabler/icons-react';
 import { setSection, setSectionList } from '../../redux/actions/section.action';
 import MenuSection from './MenuSection';
 import ItemSection from './ItemSection';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 export default function CustomTab() {
+    const location = useLocation();
+    const currentPath = location.pathname;
     const theme = useTheme();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const location = useLocation();
+    const [display, setDisplay] = useState(false);
     const sections = useSelector((state) => state.section.currentSectionList);
     const { sectionId } = useParams();
     const project = useSelector((state) => state.project.currentProject);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const currentMember = useSelector((state) => state.member.currentUserMember);
     const pathname = window.location.pathname;
+
+    useEffect(() => {
+        if (currentPath.includes("workspace")) {
+            setDisplay(false);
+        } else if (workspace && currentPath.startsWith("/workspace/")) {
+            setDisplay(true);
+        } else if (project && workspace && currentPath.startsWith("/project/")) {
+            setDisplay(true);
+        } else {
+            setDisplay(false);
+        }
+    }, [currentPath, project, workspace]);
 
     const handleNavigate = (section) => {
         navigate(`/project/${project?.id}/section/${section?.id}`);
     };
 
-    // Handles drag end event
     const handleDragEnd = (result) => {
         if (!result.destination) return;
 
@@ -34,14 +50,19 @@ export default function CustomTab() {
         const [movedSection] = reorderedSections.splice(result.source.index, 1);
         reorderedSections.splice(result.destination.index, 0, movedSection);
 
-        // Dispatch updated sections to the Redux store or state
         dispatch(setSectionList(reorderedSections));
     };
 
     return sections == null ? (
         <Skeleton variant="rounded" width="100%" height="100%" />
     ) : (
-        <Stack direction="row" spacing={2} alignItems="center" width={'100%'}>
+        <Stack
+            direction="row"
+            spacing={2}
+            alignItems="center"
+            width={'100%'}
+            display={display ? "flex" : "none"}
+        >
             <Box
                 sx={{
                     minWidth: 0,

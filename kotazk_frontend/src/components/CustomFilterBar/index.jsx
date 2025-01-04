@@ -21,6 +21,10 @@ import { useLocation, useParams } from "react-router-dom";
 
 const CustomFilterBar = () => {
     const location = useLocation();
+    const currentPath = location.pathname;
+    const [display, setDisplay] = useState(false);
+    const project = useSelector((state) => state.project.currentProject);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const { projectId, sectionId } = useParams();
     const theme = useTheme();
     const section = useSelector((state) => state.section.currentSection)
@@ -31,8 +35,20 @@ const CustomFilterBar = () => {
     const InfoIcon = allIcons["IconInfoSquareRoundedFilled"];
     const isSectionPage = location.pathname.startsWith("/project/") && sectionId;
 
+    useEffect(() => {
+        if (currentPath.includes("workspace")) {
+            setDisplay(false);
+        } else if (workspace && currentPath.startsWith("/workspace/")) {
+            setDisplay(true);
+        } else if (project && workspace && currentPath.startsWith("/project/")) {
+            setDisplay(true);
+        } else {
+            setDisplay(false);
+        }
+    }, [currentPath, project, workspace]);
+
     return section == null ? <Skeleton variant="rounded" width={'100%'} height={'100%'} /> : (
-        <Stack direction='row' spacing={2} alignItems={'center'}>
+        <Stack direction='row' spacing={2} alignItems={'center'} display={display ? "flex" : "none"}>
             {section?.type != "REPORT" && isSectionPage
                 &&
                 (

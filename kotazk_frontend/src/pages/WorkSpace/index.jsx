@@ -21,7 +21,6 @@ const Workspace = ({ children }) => {
     const dispatch = useDispatch();
     const { workspaceId } = useParams();
     const [open, setOpen] = useState(true);
-    // const [workspace, setWorkspace] = useState(null);
     const workspace = useSelector((state) => state.workspace.currentWorkspace);
     const navigate = useNavigate();
 
@@ -131,6 +130,7 @@ const Workspace = ({ children }) => {
                     >
                         {children}
                     </Box>
+                    
                 </Stack>
             </Stack>
         </Box>

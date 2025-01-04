@@ -5,13 +5,11 @@ import Chip from '@mui/material/Chip';
 import HomeIcon from '@mui/icons-material/Home';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
-const dummyData = [
-    { label: 'Home', href: '#' },
-    { label: 'Catalog', href: '#' },
-    { label: 'Accessories' },
-];
 const StyledBreadcrumb = styled(Chip)(({ theme }) => {
     const backgroundColor =
         theme.palette.mode === 'light'
@@ -30,34 +28,82 @@ const StyledBreadcrumb = styled(Chip)(({ theme }) => {
             backgroundColor: emphasize(backgroundColor, 0.12),
         },
     };
-}); // TypeScript only: need a type cast here because https://github.com/Microsoft/TypeScript/issues/26591
+});
 
 function handleClick(event) {
     event.preventDefault();
     console.info('You clicked a breadcrumb.');
 }
 
-export default function CustomBreadcrumb({data}) {
+export default function CustomBreadcrumb() {
+    const location = useLocation();
+    const currentPath = location.pathname;
+    const [data, setData] = useState(null);
+    const [display, setDisplay] = useState(false);
+    const project = useSelector((state) => state.project.currentProject);
+    const workspace = useSelector((state) => state.workspace.currentWorkspace);
+
+    useEffect(() => {
+        if (currentPath.includes("workspace")) {
+            setDisplay(false);
+            setData([
+                {
+                    "label": "Home",
+                },
+            ])
+        } else if (workspace && currentPath.startsWith("/workspace/")) {
+            setDisplay(true);
+            setData([
+                {
+                    "label": "Home",
+                    "href": `/workspace`
+                },
+                {
+                    "label": workspace?.name,
+                },
+            ])
+        } else if (project && workspace && currentPath.startsWith("/project/")) {
+            setDisplay(true);
+            setData([
+                {
+                    "label": "Home",
+                    "href": `/workspace`
+                },
+                {
+                    "label": workspace?.name,
+                    "href": `/workspace/${workspace?.id}/projects`
+                },
+                {
+                    "label": project?.name,
+                }
+            ])
+        } else {
+            setDisplay(false);
+            setData([
+                {
+                    "label": "Home",
+                },
+            ])
+        }
+    }, [currentPath, project, workspace]);
+
     return (
         <Box
             mt={2}
             sx={{
                 pl: 9,
-                position: 'relative', // Để pseudo-element có thể được định vị tương đối
-                // overflow: 'hidden', // Để đảm bảo pseudo-element không tràn ra ngoài Box
+                position: 'relative',
                 '&::before': {
                     content: '""',
                     position: 'absolute',
-                    top: -5, // Điều chỉnh vị trí của đường cong
+                    top: -5,
                     left: 10,
                     width: 18,
-                    height: 21, // Chiều cao của đường cong
-                    background: 'transparent', // Màu sắc của đường cong
-                    // Tạo đường cong hình elip
+                    height: 21,
+                    background: 'transparent',
                     border: "2px solid grey",
                     borderBottomLeftRadius: 12,
                     borderTop: "none",
-                    // borderBottom: "none",
                     borderRight: "none"
                 },
             }}
@@ -73,7 +119,6 @@ export default function CustomBreadcrumb({data}) {
                             sx={{
                                 cursor: item.href && 'pointer'
                             }}
-                            // onClick={item.href ? handleClick : undefined}
                         />
                     ))}
                 </Breadcrumbs>

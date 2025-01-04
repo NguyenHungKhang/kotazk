@@ -47,20 +47,20 @@ const Login = () => {
         >
             <Card sx={{
                 width: 400,
-                borderRadius: 8,
+                borderRadius: 4,
                 boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.1)',
                 p: 4,
                 backgroundColor: theme.palette.background.paper, // Use paper color from theme
             }}>
                 <CardContent>
-                    <Typography variant="h4" component="h1" textAlign="center" gutterBottom>
+                    <Typography variant="h4" fontWeight={650} textAlign="center" gutterBottom>
                         Login
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
 
                         {/* Email Input */}
                         <Box fullWidth margin="normal" sx={{ mt: 4 }}>
-                            <Typography variant="body1" gutterBottom>
+                            <Typography variant="body1" gutterBottom >
                                 Email
                             </Typography>
                             <TextField
@@ -164,20 +164,7 @@ const Login = () => {
                         >
                             LOGIN
                         </Button>
-
-                        {/* Social Media Buttons
                         <Typography variant="body2" align="center" sx={{ mt: 4 }}>
-                            Or Sign Up Using
-                        </Typography>
-                        <Box display="flex" justifyContent="center" mt={2}>
-                            <IconButton sx={{ mx: 1, backgroundColor: '#DB4437', color: 'white', borderRadius: '50%', width: 48, height: 48 }}>
-                                <GoogleIcon />
-                            </IconButton>
-                        </Box> */}
-
-                        {/* Sign Up Link */}
-                        <Typography variant="body2" align="center" sx={{ mt: 4 }}>
-                            {/* Or Sign Up Using{' '} */}
                             <Link
                                 component="button"
                                 variant="body2"

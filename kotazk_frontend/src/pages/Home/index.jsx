@@ -15,7 +15,6 @@ const Home = () => {
                     overflow: 'hidden'
                 }}
             >
-                {/* Lớp phủ với hiệu ứng làm mờ */}
                 <Box
                     sx={{
                         position: 'absolute',
@@ -23,16 +22,11 @@ const Home = () => {
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        // backgroundImage: "linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(13,13,94,1) 100%)",
-                        // backgroundRepeat: 'no-repeat',
-                        // backgroundPosition: 'center',
-                        // backgroundSize: 'cover',
-                        filter: 'blur(100px)', // Thay đổi giá trị để điều chỉnh độ mờ
+                        filter: 'blur(100px)',
                         zIndex: -1
                     }}
                 />
-
-                {/* Nội dung chính */}
+                
                 <Stack direction='column' alignItems='center' spacing={4}>
                     <Box display='flex' justifyContent='center'>
                         <Box width={500}>

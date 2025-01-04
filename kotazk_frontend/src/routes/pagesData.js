@@ -1,45 +1,36 @@
-import CustomAddWorkspaceDialog from "../components/CustomAddWorkspaceDialog";
-import CustomDarkModeSwitch from "../components/CustomDarkModeSwitch";
-import CustomIconPicker from "../components/CustomProjectColorIconPicker";
-import CustomSaveProjectDialog from "../components/CustomSaveProjectDialog";
-import CustomTaskDialog from "../components/CustomTaskDialog";
-import Home from "../pages/Home";
-import Kanban from "../pages/Kanban";
-import Login from "../pages/Login";
-import Project from "../pages/Project";
-import ProjectDashBoard from "../pages/ProjectDashBoard";
-import ProjectMember from "../pages/ProjectMember";
-import Workspace from "../pages/WorkSpace";
-import AllIconDisplay from "../playgrounds/components/AllIconDisplay";
-import TestGantt from "../playgrounds/components/TestGantt";
-import CustomStatusColorIconPicker from "../components/CustomStatusColorIconPicker";
-import CustomTaskType from "../components/CustomTaskType";
-import CustomColorIconPicker from "../components/CustomColorIconPicker";
-import { taskTypeIconsList } from "../utils/iconsListUtil";
-import CustomTaskTypePicker from "../components/CustomTaskTypePicker";
 import CustomColorPicker from "../components/CustomColorPicker";
-import ProjectSetting from "../pages/ProjectSetting";
-import WorkspaceList from "../pages/WorkspaceList";
+import CustomStatusColorIconPicker from "../components/CustomStatusColorIconPicker";
+import CustomTaskDialog from "../components/CustomTaskDialog";
+import MainLayout from "../layouts";
+import ForgotPassword from "../pages/ForgotPassword";
 import Gantt from "../pages/Gantt";
-import ProjectCalendar from "../pages/ProjectCalendar";
-import ProjectList from "../pages/ProjectList";
-import Section from "../pages/Section";
-import ProjectRole from "../pages/ProjectRole";
-import ProjectReport from "../pages/ProjectReport";
-import DnDGrid from "../playgrounds/components/DndGrid";
-import ListWorkspace from "../playgrounds/components/TestDnDLap";
-import EmailChipInput from "../playgrounds/components/EmailChipInput";
-import WorkSpaceMember from "../pages/WorkSpaceMember";
-import WorkspaceDashBoard from "../pages/WorkSpaceProjectList";
-import Register from "../pages/Register";
+import Home from "../pages/Home";
+import Login from "../pages/Login";
 import OtpVerification from "../pages/OtpVerification";
 import ProfileSetting from "../pages/ProfileSetting";
-import ForgotPassword from "../pages/ForgotPassword";
-import WorkspaceSetting from "../pages/WorkspaceSetting";
-import UserWorkspaceTaskDashBoard from "../pages/WorkspaceDashboard";
-import WorkspaceRole from "../pages/WorkspaceRole";
-import WorkspaceActivityLog from "../pages/WorkspaceActivityLog";
+import Project from "../pages/Project";
 import ProjectActivityLog from "../pages/ProjectActivityLog";
+import ProjectCalendar from "../pages/ProjectCalendar";
+import ProjectDashBoard from "../pages/ProjectDashBoard";
+import ProjectList from "../pages/ProjectList";
+import ProjectMember from "../pages/ProjectMember";
+import ProjectReport from "../pages/ProjectReport";
+import ProjectRole from "../pages/ProjectRole";
+import ProjectSetting from "../pages/ProjectSetting";
+import Register from "../pages/Register";
+import Section from "../pages/Section";
+import Workspace from "../pages/WorkSpace";
+import UserWorkspaceTaskDashBoard from "../pages/WorkSpaceDashBoard";
+import WorkSpaceMember from "../pages/WorkSpaceMember";
+import WorkspaceDashBoard from "../pages/WorkSpaceProjectList";
+import WorkspaceActivityLog from "../pages/WorkspaceActivityLog";
+import WorkspaceList from "../pages/Dashboard";
+import WorkspaceRole from "../pages/WorkspaceRole";
+import WorkspaceSetting from "../pages/WorkspaceSetting";
+import DnDGrid from "../playgrounds/components/DndGrid";
+import EmailChipInput from "../playgrounds/components/EmailChipInput";
+import ListWorkspace from "../playgrounds/components/TestDnDLap";
+import TestGantt from "../playgrounds/components/TestGantt";
 
 const pagesData = [
   {
@@ -74,7 +65,7 @@ const pagesData = [
   },
   {
     path: "/workspace",
-    element: <WorkspaceList />,
+    element: <MainLayout> <WorkspaceList /> </MainLayout>,
     title: "workspace"
   },
   {
